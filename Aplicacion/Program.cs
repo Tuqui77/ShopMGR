@@ -1,15 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
-using ShopMGR.Dominio;
-using ShopMGR.Aplicacion.Servicios;
-using ShopMGR.Dominio.Modelo;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
-using ShopMGR.Repositorios;
-using ShopMGR.Infraestructura;
+using ShopMGR.WebApi.Infraestructura;
 
-namespace ShopMGR.Aplicacion
+namespace ShopMGR.WebApi.Aplicacion
 {
     public class Program
     {
@@ -25,11 +19,7 @@ namespace ShopMGR.Aplicacion
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
             });
-            builder.Services.InyectarServicios();
-            //builder.Services.AddScoped<AdministracionClientes>();
-            //builder.Services.AddScoped<ClienteRepositorio>();
-            //builder.Services.AddScoped<AdministracionDireccion>();
-            //builder.Services.AddScoped<DireccionRepositorio>();
+            builder.Services.InyectarServicioss();
 
 
 

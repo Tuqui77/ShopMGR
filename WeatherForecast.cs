@@ -1,4 +1,4 @@
-namespace ShopMGR
+namespace ShopMGR.WebApi
 {
     public class WeatherForecast
     {

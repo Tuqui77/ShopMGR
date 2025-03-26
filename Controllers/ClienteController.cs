@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Contexto;
-using ShopMGR.Dominio;
+using ShopMGR.Dominio.Modelo;
+using System.Threading.Tasks;
 
 namespace ShopMGR.WebApi.Controllers
 {
@@ -20,20 +22,38 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpGet]
+        [Route("ObtenerClientes")]
         public async Task<List<Cliente>> ObtenerClientesAsync()
         {
             var clientes = await _administracionClientes.ListarClientes();
             return clientes;
         }
 
+        [HttpGet]
+        [Route("ObtenerClientePorId")]
+        public async Task<Cliente> ObtenerClientePorIdAsync(int idCliente)
+        {
+            var cliente = await _administracionClientes.ObtenerClientePorId(idCliente);
+            return cliente;
+        }
+
+        [HttpGet]
+        [Route("ObtenerClientePorNombre")]
+        public async Task<Cliente> ObtenerClientePorNombreAsync(string nombre)
+        {
+            var cliente = await _administracionClientes.ObtenerClientePorNombre(nombre);
+            return cliente;
+        }
+
         [HttpPost]
         [Route("CrearCliente")]
-        public IActionResult CrearCliente(Cliente cliente)
+        public async Task<IActionResult> CrearCliente(Cliente cliente)
         {
-            _contexto.Clientes.Add(cliente);
-            _contexto.SaveChanges();
+            await _administracionClientes.CrearClienteAsync(cliente);
 
-            return Ok(cliente);
+            return Ok(cliente); //Cuando haga los DTO contrastar el acceso directo
+                                //a la base de datos en los controladores de todas
+                                //las entidades 
         }
 
     }

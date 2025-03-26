@@ -4,7 +4,7 @@ using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Contexto;
 using ShopMGR.Repositorios;
 
-namespace ShopMGR.Aplicacion
+namespace ShopMGR.WebApi.Infraestructura
 {
     public static class InyeccionServicios
     {

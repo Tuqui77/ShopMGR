@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using ShopMGR.WebApi;
 
-namespace ShopMGR.Controllers;
+namespace ShopMGR.WebApi.Controllers;
 
 [ApiController]
 [Route("[controller]")]
