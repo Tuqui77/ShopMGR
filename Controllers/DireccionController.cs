@@ -2,6 +2,7 @@
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
+using System.Threading.Tasks;
 
 namespace ShopMGR.WebApi.Controllers
 {
@@ -20,10 +21,10 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("CrearDireccion")]
-        public IActionResult CrearDireccion(Direccion direccion)
+        public async Task<IActionResult> CrearDireccion(Direccion direccion)
         {
-            _contexto.Direccion.Add(direccion);
-            _contexto.SaveChanges();
+            await _administracionDirecciones.CrearDireccionAsync(direccion);
+
             return Ok(direccion);
         }
     }
