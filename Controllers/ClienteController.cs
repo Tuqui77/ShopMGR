@@ -47,7 +47,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("CrearCliente")]
-        public async Task<IActionResult> CrearCliente(Cliente cliente)
+        public async Task<IActionResult> CrearCliente(ClienteDTO cliente)
         {
             await _administracionClientes.CrearClienteAsync(cliente);
 

@@ -1,10 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.DependencyInjection;
 using ShopMGR.Aplicacion.Servicios;
-using ShopMGR.Contexto;
 using ShopMGR.Repositorios;
 
-namespace ShopMGR.WebApi.Infraestructura
+namespace ShopMGR.Aplicacion
 {
     public static class InyeccionServicios
     {
@@ -14,6 +12,8 @@ namespace ShopMGR.WebApi.Infraestructura
             services.AddScoped<AdministracionClientes>();
             services.AddScoped<DireccionRepositorio>();
             services.AddScoped<AdministracionDireccion>();
+            services.AddScoped<TelefonoClienteRepositorio>();
+            services.AddScoped<AdministracionTelefonoCliente>();
             return services;
         }
     }

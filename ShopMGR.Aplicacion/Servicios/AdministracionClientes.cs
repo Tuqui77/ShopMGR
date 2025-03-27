@@ -1,0 +1,105 @@
+﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using ShopMGR.Dominio.Modelo;
+using ShopMGR.Repositorios;
+using System.Net.Http.Headers;
+
+namespace ShopMGR.Aplicacion.Servicios
+{
+    public class AdministracionClientes
+    {
+        #region viejo
+
+        //public static Cliente CrearCliente(string nombreCompleto, string telefono, string descripcion, Direccion direccion)
+        //{
+        //    Cliente cliente = new Cliente();
+        //    cliente.NombreCompleto = nombreCompleto;
+        //    cliente.Direccion = direccion;
+        //    ValidarYAgregarTelefono(cliente, telefono, descripcion);
+
+        //    return cliente;
+        //}
+
+        //private static void ValidarYAgregarTelefono(Cliente cliente, string telefono, string descripcion)
+        //{
+        //    if (telefono.Length == 10)
+        //    {
+        //        cliente.Telefono.Add(telefono, descripcion);
+        //    }
+        //    else
+        //    {
+        //        throw new ArgumentException("El telefono tiene que tener 10 caracteres");
+        //    }
+        //}
+        //public void ModificarNombre(Cliente cliente, string nuevoNombre)
+        //{
+        //    cliente.NombreCompleto = nuevoNombre;
+        //}
+        //public void AgregarTelefono(Cliente cliente, string nuevoTelefono, string descripcion)
+        //{
+        //    ValidarYAgregarTelefono(cliente, nuevoTelefono, descripcion);
+        //}
+        //private void ModificarTelefono(Cliente cliente, string telefono, string nuevoTelefono)
+        //{
+        //    string descripcionOriginal = cliente.Telefono[telefono];
+        //    cliente.Telefono.Remove(telefono);
+        //    ValidarYAgregarTelefono(cliente, nuevoTelefono, descripcionOriginal);
+        //}
+        //public void ModificarDirección(Cliente cliente, Direccion nuevaDireccion)
+        //{
+        //    cliente.Direccion = nuevaDireccion;
+        //}
+
+        ////Métodos para el manejo de dinero
+        //public decimal ReciboDeDinero(Cliente cliente, decimal cantidad)
+        //{
+        //    cliente.Balance += cantidad;
+        //    return cliente.Balance;
+        //}
+        //public decimal GastoDeDinero(Cliente cliente, decimal cantidad, string descripcion)
+        //{
+        //    cliente.Balance -= cantidad;
+        //    cliente.gastos.Add(descripcion);
+        //    return cliente.Balance;
+        //}
+        #endregion
+        // --------------------------------------------------------------------------------------------------------------------------------------------------------------
+        private readonly ClienteRepositorio _clienteRepositorio;
+
+        public AdministracionClientes(ClienteRepositorio clienteRepositorio)
+        {
+            _clienteRepositorio = clienteRepositorio;
+        }
+
+        public async Task CrearClienteAsync(ClienteDTO nuevoCliente)
+        {
+            if (await _clienteRepositorio.ObtenerPorNombreAsync(nuevoCliente.NombreCompleto) != null)
+                throw new ArgumentException("Ya existe un cliente con ese nombre");
+
+            var cliente = new Cliente
+            {
+                NombreCompleto = nuevoCliente.NombreCompleto,
+                Cuit = nuevoCliente.Cuit
+            };
+
+            await _clienteRepositorio.CrearAsync(cliente);
+        }
+
+        public async Task<Cliente> ObtenerClientePorId(int idCliente)
+        {
+            var cliente = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
+            return cliente;
+        }
+
+        public async Task<Cliente> ObtenerClientePorNombre(string nombre)
+        {
+            var cliente = await _clienteRepositorio.ObtenerPorNombreAsync(nombre);
+            return cliente;
+        }
+
+        public async Task<List<Cliente>> ListarClientes()
+        {
+            var clientes = await _clienteRepositorio.ListarTodosAsync();
+            return clientes;
+        }
+    }
+}

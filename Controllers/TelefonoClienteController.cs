@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 
 namespace ShopMGR.WebApi.Controllers
 {
@@ -21,9 +22,9 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("CrearTelefonoCliente")]
-        public async Task CrearTelefonoClienteAsync(TelefonoCliente telefono)
+        public async Task CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
         {
-            await _administracionTelefonoCliente.CrearTelefonoClienteAsync(telefono);
+            await _administracionTelefonoCliente.CrearTelefonoClienteAsync(nuevoTelefono);
         }
 
         [HttpGet]

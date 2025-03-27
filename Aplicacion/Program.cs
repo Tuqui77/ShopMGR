@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
-using ShopMGR.WebApi.Infraestructura;
+using ShopMGR.Aplicacion;
 
 namespace ShopMGR.WebApi.Aplicacion
 {
@@ -19,7 +18,7 @@ namespace ShopMGR.WebApi.Aplicacion
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
             });
-            builder.Services.InyectarServicioss();
+            builder.Services.InyectarServicios();
 
 
 

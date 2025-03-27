@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
@@ -21,7 +22,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("CrearDireccion")]
-        public async Task<IActionResult> CrearDireccion(Direccion direccion)
+        public async Task<IActionResult> CrearDireccion(DireccionDTO direccion)
         {
             await _administracionDirecciones.CrearDireccionAsync(direccion);
 
