@@ -21,7 +21,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ShopMGR.Dominio\ShopMGR.Dominio.csproj" />
-    <ProjectReference Include="..\ShorMGR.Repositorios\ShopMGR.Repositorios.csproj" />
+    <ProjectReference Include="..\ShopMGR.Repositorios\ShopMGR.Repositorios.csproj" />
+    
   </ItemGroup>
 
 </Project>
