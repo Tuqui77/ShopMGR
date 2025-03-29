@@ -11,7 +11,6 @@ namespace ShopMGR.Dominio.Modelo
         public Presupuesto? Presupuesto { get; set; }
         public Dictionary<float, string> HorasYDescripcion = [];
         public List<byte[]> Fotos { get; set; } = [];
-        [JsonIgnore]
         public Cliente cliente { get; set; }
     }
 }

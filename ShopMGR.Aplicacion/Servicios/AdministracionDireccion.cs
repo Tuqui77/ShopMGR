@@ -11,20 +11,6 @@ namespace ShopMGR.Aplicacion.Servicios
 {
     public class AdministracionDireccion
     {
-        #region viejo
-        //public static Direccion CrearDireccion(string calle, string altura, string codigoPostal = "2452", string? piso = null, string? departamento = null)
-        //{
-        //    Direccion direccion = new();
-        //    direccion.Calle = calle;
-        //    direccion.Altura = altura;
-        //    direccion.Piso = piso;
-        //    direccion.Departamento = departamento;
-        //    direccion.CodigoPostal = codigoPostal;
-
-        //    return direccion;
-        //}
-        #endregion
-
         private readonly DireccionRepositorio _direccionRepositorio;
 
         public AdministracionDireccion(DireccionRepositorio direccionRepositorio)
@@ -34,9 +20,6 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task CrearDireccionAsync(DireccionDTO nuevaDireccion)
         {
-            if (await _direccionRepositorio.ObtenerPorCalleYAlturaAsync(nuevaDireccion.Calle, nuevaDireccion.Altura) != null)
-                throw new ArgumentException("Ya existe una dirección con esa calle y altura");
-            
             var direccion = new Direccion
             {
                 IdCliente = nuevaDireccion.IdCliente,
@@ -47,7 +30,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 CodigoPostal = nuevaDireccion.CodigoPostal
             };
 
-            await _direccionRepositorio.CrearAsync(direccion);
+            await _direccionRepositorio.CrearDireccionAsync(direccion);
         }
 
 

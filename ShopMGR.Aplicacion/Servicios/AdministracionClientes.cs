@@ -64,24 +64,71 @@ namespace ShopMGR.Aplicacion.Servicios
         #endregion
         // --------------------------------------------------------------------------------------------------------------------------------------------------------------
         private readonly ClienteRepositorio _clienteRepositorio;
+        private readonly DireccionRepositorio _direccionRepositorio;
+        private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio;
 
-        public AdministracionClientes(ClienteRepositorio clienteRepositorio)
+        public AdministracionClientes(ClienteRepositorio clienteRepositorio, DireccionRepositorio direccionRepositorio, TelefonoClienteRepositorio telefonoRepositorio)
         {
             _clienteRepositorio = clienteRepositorio;
+            _direccionRepositorio = direccionRepositorio;
+            _telefonoClienteRepositorio = telefonoRepositorio;
         }
 
         public async Task CrearClienteAsync(ClienteDTO nuevoCliente)
         {
-            if (await _clienteRepositorio.ObtenerPorNombreAsync(nuevoCliente.NombreCompleto) != null)
-                throw new ArgumentException("Ya existe un cliente con ese nombre");
-
             var cliente = new Cliente
             {
                 NombreCompleto = nuevoCliente.NombreCompleto,
-                Cuit = nuevoCliente.Cuit
+                Cuit = nuevoCliente.Cuit,
+                Balance = nuevoCliente.Balance,
             };
 
-            await _clienteRepositorio.CrearAsync(cliente);
+            var clienteBD = await _clienteRepositorio.CrearAsync(cliente);
+
+            if (nuevoCliente.Direccion != null)
+            {
+                List<Direccion> listaDirecciones = [];
+
+                foreach (var direccion in nuevoCliente.Direccion)
+                {
+                    listaDirecciones.Add(new Direccion
+                    {
+                        IdCliente = clienteBD.Id,
+                        Calle = direccion.Calle,
+                        Altura = direccion.Altura,
+                        Piso = direccion.Piso,
+                        Departamento = direccion.Departamento,
+                        CodigoPostal = direccion.CodigoPostal
+                    });
+                }
+
+                foreach (var direccion in listaDirecciones)
+                {
+                    direccion.IdCliente = clienteBD.Id;
+                    await _direccionRepositorio.CrearDireccionAsync(direccion);
+                }
+            }
+
+            if (cliente.Telefono != null)
+            {
+                List<TelefonoCliente> listaTelefonos = [];
+
+                foreach (var telefono in nuevoCliente.Telefono!)
+                {
+                    listaTelefonos.Add(new TelefonoCliente
+                    {
+                        IdCliente = clienteBD.Id,
+                        Telefono = telefono.Telefono,
+                        Descripcion = telefono.Descripcion
+                    });
+                }
+
+                foreach (var telefono in listaTelefonos)
+                {
+                    telefono.IdCliente = clienteBD.Id;
+                    await _telefonoClienteRepositorio.CrearTelefonoAsync(telefono);
+                }
+            }
         }
 
         public async Task<Cliente> ObtenerClientePorId(int idCliente)

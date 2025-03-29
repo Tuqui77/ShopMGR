@@ -21,10 +21,16 @@ namespace ShopMGR.Contexto
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Cliente>();
-            modelBuilder.Entity<Direccion>();
+            modelBuilder.Entity<Direccion>()
+                .HasOne(d => d.Cliente)
+                .WithMany(c => c.Direccion)
+                .HasForeignKey("IdCliente");
             modelBuilder.Entity<Trabajo>();
             modelBuilder.Entity<Presupuesto>();
-            modelBuilder.Entity<TelefonoCliente>();
+            modelBuilder.Entity<TelefonoCliente>()
+                .HasOne(t => t.Cliente)
+                .WithMany(c => c.Telefono)
+                .HasForeignKey("IdCliente");
         }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

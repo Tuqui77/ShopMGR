@@ -32,10 +32,15 @@ namespace ShopMGR.Repositorios
             return await _contexto.Clientes.FirstOrDefaultAsync(x => x.NombreCompleto == nombre);
 
         }
-        public async Task CrearAsync(Cliente cliente)
+        public async Task<Cliente> CrearAsync(Cliente cliente)
         {
+            if (!await _contexto.Clientes.AnyAsync(x => x.NombreCompleto == cliente.NombreCompleto))
+                throw new ArgumentException("Ya existe un cliente con ese nombre");
+
             _contexto.Clientes.Add(cliente);
             await _contexto.SaveChangesAsync();
+
+            return cliente;
         }
 
         public async Task ActualizarAsync(Cliente cliente)

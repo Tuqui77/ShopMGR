@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using ShopMGR.Dominio.Enums;
+using System.Text.Json.Serialization;
 
 namespace ShopMGR.Dominio.Modelo
 {
@@ -12,7 +13,11 @@ namespace ShopMGR.Dominio.Modelo
         public decimal CostoLabor { get; set; }
         public decimal CostoInsumos { get; set; }
         public decimal Total { get; set; }
-        [JsonIgnore]
+        public EstadoTrabajo Estado { get; set; }
+
+        //Relaciones
         public Cliente Cliente { get; set; }
+        public int IdCliente { get; set; }
+        public Trabajo Trabajo { get; set; }
     }
 }

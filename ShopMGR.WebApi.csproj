@@ -43,7 +43,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--<ProjectReference Include="..\ClassLibrary2\ShopMGR.Aplicacion.csproj" />-->
     <ProjectReference Include="ShopMGR.Aplicacion\ShopMGR.Aplicacion.csproj" />
     <ProjectReference Include="ShopMGR.Contexto\ShopMGR.Contexto.csproj" />
     <ProjectReference Include="ShopMGR.Dominio\ShopMGR.Dominio.csproj" />

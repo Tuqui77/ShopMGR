@@ -51,10 +51,19 @@ namespace ShopMGR.WebApi.Controllers
         {
             await _administracionClientes.CrearClienteAsync(cliente);
 
-            return Ok(cliente); //Cuando haga los DTO contrastar el acceso directo
-                                //a la base de datos en los controladores de todas
-                                //las entidades 
+            return Ok(cliente);
         }
 
+        [HttpPost]
+        [Route("CrearClienteConDatos")]
+        public async Task<IActionResult> CrearClienteConDatos(ClienteDTO cliente)
+        {
+            if (cliente == null)
+            {
+                return BadRequest("Los datos del cliente no pueden estar vacíos.");
+            }
+            await _administracionClientes.CrearClienteAsync(cliente);
+            return Ok(cliente);
+        }
     }
 }

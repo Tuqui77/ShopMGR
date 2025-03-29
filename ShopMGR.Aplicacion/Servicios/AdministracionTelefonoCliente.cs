@@ -20,9 +20,6 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
         {
-            if (await _telefonoClienteRepositorio.ObtenerPorNumeroAsync(nuevoTelefono.Telefono) != null)
-                throw new ArgumentException("Ya existe un teléfono con ese número");
-
             var telefono = new TelefonoCliente
             {
                 IdCliente = nuevoTelefono.IdCliente,
@@ -30,7 +27,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 Descripcion = nuevoTelefono.Descripcion
             };
 
-            await _telefonoClienteRepositorio.CrearAsync(telefono);
+            await _telefonoClienteRepositorio.CrearTelefonoAsync(telefono);
         }
 
         public async Task<List<TelefonoCliente>> ObtenerTelefonosCliente(int idCliente)

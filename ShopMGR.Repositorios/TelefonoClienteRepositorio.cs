@@ -20,10 +20,10 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<TelefonoCliente>> BuscarPorIdCliente(int idCliente)
         {
-            if (_contexto.TelefonoCliente.Any(x => x.IdCliente == idCliente))
-                return await _contexto.TelefonoCliente.Where(x => x.IdCliente == idCliente).ToListAsync();
-            else
+            if (!await _contexto.TelefonoCliente.AnyAsync(x => x.IdCliente == idCliente))
                 throw new ArgumentException("No hay ningún teléfono asociado a ese Id");
+
+            return await _contexto.TelefonoCliente.Where(x => x.IdCliente == idCliente).ToListAsync();
         }
 
         public async Task<TelefonoCliente?> ObtenerPorNumeroAsync(string numero)
@@ -31,8 +31,13 @@ namespace ShopMGR.Repositorios
             return await _contexto.TelefonoCliente.FirstOrDefaultAsync(x => x.Telefono == numero);
         }
 
-        public async Task CrearAsync(TelefonoCliente telefono)
+        public async Task CrearTelefonoAsync(TelefonoCliente telefono)
         {
+            if (!await _contexto.Clientes.AnyAsync(x => x.Id == telefono.IdCliente))
+                throw new ArgumentException("No existe el cliente asociado a ese Id");
+            if (await _contexto.TelefonoCliente.AnyAsync(x => x.Telefono == telefono.Telefono))
+                throw new ArgumentException("Ya existe un teléfono con ese número");
+
             _contexto.TelefonoCliente.Add(telefono);
             await _contexto.SaveChangesAsync();
         }
