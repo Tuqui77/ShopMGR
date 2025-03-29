@@ -20,10 +20,10 @@ namespace ShopMGR.Repositorios
 
         public async Task<Cliente> ObtenerPorIdAsync(int id)
         {
-            if (!_contexto.Clientes.Any(x => x.Id == id)) 
+            if (!_contexto.Clientes.Any(x => x.Id == id))
                 throw new ArgumentException("No hay ningún cliente asociado a ese Id");
-                
-            
+
+
             return await _contexto.Clientes.FindAsync(id);
             
         }

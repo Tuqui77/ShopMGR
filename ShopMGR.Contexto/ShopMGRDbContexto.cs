@@ -20,13 +20,26 @@ namespace ShopMGR.Contexto
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Cliente>();
+
+            modelBuilder.Entity<Cliente>()
+                .HasMany(c => c.Direccion)
+                .WithOne(d => d.Cliente)
+                .HasForeignKey("IdCliente")
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Direccion>()
                 .HasOne(d => d.Cliente)
                 .WithMany(c => c.Direccion)
-                .HasForeignKey("IdCliente");
-            modelBuilder.Entity<Trabajo>();
+                .HasForeignKey("IdCliente")
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            modelBuilder.Entity<Trabajo>()
+                .HasOne(t => t.Presupuesto)
+                .WithOne(p => p.Trabajo)
+                .HasForeignKey<Presupuesto>("IdCliente");
+            
             modelBuilder.Entity<Presupuesto>();
+            
             modelBuilder.Entity<TelefonoCliente>()
                 .HasOne(t => t.Cliente)
                 .WithMany(c => c.Telefono)

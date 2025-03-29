@@ -8,9 +8,13 @@ namespace ShopMGR.Dominio.Modelo
         public int Id { get; set; }
         public EstadoTrabajo estado;
         public DateTime fechaInicio;
-        public Presupuesto? Presupuesto { get; set; }
         public Dictionary<float, string> HorasYDescripcion = [];
         public List<byte[]> Fotos { get; set; } = [];
+
+        //Relaciones
         public Cliente cliente { get; set; }
+        public Presupuesto? Presupuesto { get; set; }
+        public int IdPresupuesto { get; set; }
+
     }
 }

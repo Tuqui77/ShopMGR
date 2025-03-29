@@ -21,6 +21,7 @@ namespace ShopMGR.WebApi.Controllers
             _contexto = contexto;
         }
 
+        #region Gets
         [HttpGet]
         [Route("ObtenerClientes")]
         public async Task<List<Cliente>> ObtenerClientesAsync()
@@ -33,7 +34,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ObtenerClientePorId")]
         public async Task<Cliente> ObtenerClientePorIdAsync(int idCliente)
         {
-            var cliente = await _administracionClientes.ObtenerClientePorId(idCliente);
+            var cliente = await _administracionClientes.ObtenerClientePorIdAsync(idCliente);
             return cliente;
         }
 
@@ -45,25 +46,44 @@ namespace ShopMGR.WebApi.Controllers
             return cliente;
         }
 
+        #endregion
+
+        #region Posts
         [HttpPost]
         [Route("CrearCliente")]
         public async Task<IActionResult> CrearCliente(ClienteDTO cliente)
         {
-            await _administracionClientes.CrearClienteAsync(cliente);
-
-            return Ok(cliente);
-        }
-
-        [HttpPost]
-        [Route("CrearClienteConDatos")]
-        public async Task<IActionResult> CrearClienteConDatos(ClienteDTO cliente)
-        {
-            if (cliente == null)
+            if(cliente == null)
             {
                 return BadRequest("Los datos del cliente no pueden estar vacíos.");
             }
+
             await _administracionClientes.CrearClienteAsync(cliente);
             return Ok(cliente);
         }
+        #endregion
+
+        #region Patches
+        //[HttpPatch]
+        //[Route("ActualizarCliente")]
+
+        #endregion
+
+        #region Deletes
+        [HttpDelete]
+        [Route("EliminarCliente")]
+        public async Task<IActionResult> EliminarCliente(int idCliente)
+        {
+            var cliente = await _administracionClientes.ObtenerClientePorIdAsync(idCliente);
+            if (cliente == null)
+            {
+                return NotFound("No se encontró ningún cliente con ese Id.");
+            }
+
+            await _administracionClientes.EliminarClienteAsync(cliente);
+            return Ok("Cliente eliminado correctamente.");
+        }
+
+        #endregion
     }
 }

@@ -89,7 +89,7 @@ namespace ShopMGR.Aplicacion.Servicios
             {
                 List<Direccion> listaDirecciones = [];
 
-                foreach (var direccion in nuevoCliente.Direccion)
+                foreach (var direccion in nuevoCliente.Direccion) //Hacer todo esto en un solo loop y eliminar la lista temporal
                 {
                     listaDirecciones.Add(new Direccion
                     {
@@ -131,7 +131,13 @@ namespace ShopMGR.Aplicacion.Servicios
             }
         }
 
-        public async Task<Cliente> ObtenerClientePorId(int idCliente)
+
+        public async Task EliminarClienteAsync(Cliente cliente)
+        {
+            await _clienteRepositorio.EliminarAsync(cliente);
+        }
+
+        public async Task<Cliente> ObtenerClientePorIdAsync(int idCliente)
         {
             var cliente = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
             return cliente;
