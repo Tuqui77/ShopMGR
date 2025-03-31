@@ -87,11 +87,9 @@ namespace ShopMGR.Aplicacion.Servicios
 
             if (nuevoCliente.Direccion != null)
             {
-                List<Direccion> listaDirecciones = [];
-
-                foreach (var direccion in nuevoCliente.Direccion) //Hacer todo esto en un solo loop y eliminar la lista temporal
+                foreach (var direccion in nuevoCliente.Direccion)
                 {
-                    listaDirecciones.Add(new Direccion
+                    var dirTmp = new Direccion
                     {
                         IdCliente = clienteBD.Id,
                         Calle = direccion.Calle,
@@ -99,34 +97,24 @@ namespace ShopMGR.Aplicacion.Servicios
                         Piso = direccion.Piso,
                         Departamento = direccion.Departamento,
                         CodigoPostal = direccion.CodigoPostal
-                    });
-                }
+                    };
 
-                foreach (var direccion in listaDirecciones)
-                {
-                    direccion.IdCliente = clienteBD.Id;
-                    await _direccionRepositorio.CrearDireccionAsync(direccion);
+                    await _direccionRepositorio.CrearDireccionAsync(dirTmp);
                 }
             }
 
             if (cliente.Telefono != null)
             {
-                List<TelefonoCliente> listaTelefonos = [];
-
                 foreach (var telefono in nuevoCliente.Telefono!)
                 {
-                    listaTelefonos.Add(new TelefonoCliente
+                    var telefonoTmp = new TelefonoCliente
                     {
                         IdCliente = clienteBD.Id,
                         Telefono = telefono.Telefono,
                         Descripcion = telefono.Descripcion
-                    });
-                }
+                    };
 
-                foreach (var telefono in listaTelefonos)
-                {
-                    telefono.IdCliente = clienteBD.Id;
-                    await _telefonoClienteRepositorio.CrearTelefonoAsync(telefono);
+                    await _telefonoClienteRepositorio.CrearTelefonoAsync(telefonoTmp);
                 }
             }
         }
@@ -163,7 +151,7 @@ namespace ShopMGR.Aplicacion.Servicios
             var clienteDB = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
             if (clienteDB == null)
             {
-                throw new ArgumentException("No existe un cliente con ese Id");
+                throw new InvalidOperationException("No existe un cliente con ese Id");
             }
 
             clienteDB.NombreCompleto = clienteActualizado.NombreCompleto ?? clienteDB.NombreCompleto;

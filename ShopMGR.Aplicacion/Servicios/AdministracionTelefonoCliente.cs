@@ -34,5 +34,8 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             return await _telefonoClienteRepositorio.BuscarPorIdCliente(idCliente);
         }
+
+        //modificar un teléfono
+        //eliminar
     }
 }

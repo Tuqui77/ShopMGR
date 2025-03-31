@@ -1,11 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShopMGR.Repositorios
 {
@@ -25,7 +20,7 @@ namespace ShopMGR.Repositorios
             return telefono;
         }
 
-        public async Task<TelefonoCliente?> ObtenerPorNumeroAsync(string numero)
+        public async Task<TelefonoCliente?> ObtenerPorNumeroAsync(string numero) //Dudo de la utilidad de esta búsqueda.
         {
             return await _contexto.TelefonoCliente.FirstOrDefaultAsync(x => x.Telefono == numero);
         }
@@ -33,9 +28,7 @@ namespace ShopMGR.Repositorios
         public async Task CrearTelefonoAsync(TelefonoCliente telefono)
         {
             if (!await _contexto.Clientes.AnyAsync(x => x.Id == telefono.IdCliente))
-                throw new ArgumentException("No existe el cliente asociado a ese Id");
-            if (await _contexto.TelefonoCliente.AnyAsync(x => x.Telefono == telefono.Telefono))
-                throw new ArgumentException("Ya existe un teléfono con ese número");
+                throw new KeyNotFoundException("No existe el cliente asociado a ese Id");
 
             _contexto.TelefonoCliente.Add(telefono);
             await _contexto.SaveChangesAsync();

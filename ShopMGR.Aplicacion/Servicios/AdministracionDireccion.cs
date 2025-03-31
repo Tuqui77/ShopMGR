@@ -33,7 +33,9 @@ namespace ShopMGR.Aplicacion.Servicios
             await _direccionRepositorio.CrearDireccionAsync(direccion);
         }
 
-
+        //eliminar
+        //actualizar
+        //buscar 
 
     }
 }

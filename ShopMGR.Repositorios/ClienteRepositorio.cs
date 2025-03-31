@@ -20,21 +20,21 @@ namespace ShopMGR.Repositorios
 
         public async Task<Cliente> ObtenerPorIdAsync(int id)
         {
-            var cliente = await _contexto.Clientes.FindAsync(id);
-            if (cliente == null)
-                throw new ArgumentException("No existe un cliente con ese Id");
+            var cliente = await _contexto.Clientes.FindAsync(id) 
+                ?? throw new KeyNotFoundException("No existe un cliente con ese Id");
 
             return cliente;
         }
         public async Task<Cliente?> ObtenerPorNombreAsync(string nombre)
         {
-            return await _contexto.Clientes.FirstOrDefaultAsync(x => x.NombreCompleto == nombre);
+            var cliente = await _contexto.Clientes.FirstOrDefaultAsync(x => x.NombreCompleto == nombre) 
+                ?? throw new KeyNotFoundException("No existe un cliente con ese nombre");
 
+            return cliente;
         }
         public async Task<Cliente> CrearAsync(Cliente cliente)
         {
-            if (await _contexto.Clientes.AnyAsync(x => x.NombreCompleto == cliente.NombreCompleto))
-                throw new ArgumentException("Ya existe un cliente con ese nombre");
+            if (await _contexto.Clientes.AnyAsync(x => x.NombreCompleto == cliente.NombreCompleto)) throw new InvalidOperationException("Ya existe un cliente con ese nombre");
 
             _contexto.Clientes.Add(cliente);
             await _contexto.SaveChangesAsync();

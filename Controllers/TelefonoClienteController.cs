@@ -22,17 +22,17 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("CrearTelefonoCliente")]
-        public async Task CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
+        public async Task<IActionResult> CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
         {
             await _administracionTelefonoCliente.CrearTelefonoClienteAsync(nuevoTelefono);
+            return Ok(nuevoTelefono);
         }
 
         [HttpGet]
         [Route("ObtenerTelefonosCliente")]
         public async Task<List<TelefonoCliente>> ObtenerTelefonosClienteAsync(int idCliente)
         {
-            var telefonos = await _administracionTelefonoCliente.ObtenerTelefonosCliente(idCliente);
-            return telefonos;
+            return await _administracionTelefonoCliente.ObtenerTelefonosCliente(idCliente);
         }
     }
 }
