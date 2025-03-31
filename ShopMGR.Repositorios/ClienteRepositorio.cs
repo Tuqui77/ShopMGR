@@ -34,7 +34,7 @@ namespace ShopMGR.Repositorios
         }
         public async Task<Cliente> CrearAsync(Cliente cliente)
         {
-            if (!await _contexto.Clientes.AnyAsync(x => x.NombreCompleto == cliente.NombreCompleto))
+            if (await _contexto.Clientes.AnyAsync(x => x.NombreCompleto == cliente.NombreCompleto))
                 throw new ArgumentException("Ya existe un cliente con ese nombre");
 
             _contexto.Clientes.Add(cliente);

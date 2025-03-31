@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Azure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Contexto;
@@ -63,12 +65,6 @@ namespace ShopMGR.WebApi.Controllers
         }
         #endregion
 
-        #region Patches
-        //[HttpPatch]
-        //[Route("ActualizarCliente")]
-
-        #endregion
-
         #region Deletes
         [HttpDelete]
         [Route("EliminarCliente")]
@@ -84,6 +80,20 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Cliente eliminado correctamente.");
         }
 
+        #endregion
+
+        #region Puts
+        [HttpPatch]
+        [Route("ModificarCliente")]
+        public async Task<IActionResult> ActualizarCliente(int idCliente, [FromBody] ModificarCliente clienteActualizado)
+        {
+            if (clienteActualizado == null)
+            {
+                return BadRequest("Los datos del cliente no pueden estar vacíos.");
+            }
+            await _administracionClientes.ActualizarClienteAsync(idCliente, clienteActualizado);
+            return Ok(clienteActualizado);
+        }
         #endregion
     }
 }

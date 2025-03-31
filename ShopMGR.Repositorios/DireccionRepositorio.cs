@@ -28,9 +28,9 @@ namespace ShopMGR.Repositorios
 
         public async Task CrearDireccionAsync(Direccion direccion)
         {
-            if (! await _contexto.Clientes.AnyAsync(x => x.Id == direccion.IdCliente))
+            if (!await _contexto.Clientes.AnyAsync(x => x.Id == direccion.IdCliente))
                 throw new ArgumentException("No existe un cliente con ese Id");
-            if (!await _contexto.Direccion.AnyAsync(x => x.Calle == direccion.Calle && x.Altura == direccion.Altura))
+            if (await _contexto.Direccion.AnyAsync(x => x.Calle == direccion.Calle && x.Altura == direccion.Altura))
                 throw new ArgumentException("Ya existe una dirección con esa calle y altura");
 
             _contexto.Direccion.Add(direccion);

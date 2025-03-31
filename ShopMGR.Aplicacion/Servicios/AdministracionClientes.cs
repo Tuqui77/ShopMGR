@@ -154,5 +154,19 @@ namespace ShopMGR.Aplicacion.Servicios
             var clientes = await _clienteRepositorio.ListarTodosAsync();
             return clientes;
         }
+
+        public async Task ActualizarClienteAsync(int idCliente, ModificarCliente clienteActualizado)
+        {
+            var clienteDB = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
+            if (clienteDB == null)
+            {
+                throw new ArgumentException("No existe un cliente con ese Id");
+            }
+
+            clienteDB.NombreCompleto = clienteActualizado.NombreCompleto ?? clienteDB.NombreCompleto;
+            clienteDB.Cuit = clienteActualizado.Cuit ?? clienteDB.Cuit;
+            
+            await _clienteRepositorio.ActualizarAsync(clienteDB);
+        }
     }
 }
