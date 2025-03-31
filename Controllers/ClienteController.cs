@@ -82,7 +82,7 @@ namespace ShopMGR.WebApi.Controllers
 
         #endregion
 
-        #region Puts
+        #region Patch 
         [HttpPatch]
         [Route("ModificarCliente")]
         public async Task<IActionResult> ActualizarCliente(int idCliente, [FromBody] ModificarCliente clienteActualizado)

@@ -19,7 +19,10 @@ namespace ShopMGR.WebApi.Aplicacion
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
             });
             builder.Services.InyectarServicios();
-
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+            });
 
 
             // Add services to the container.

@@ -15,10 +15,11 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Direccion>> BuscarPorCliente(int idCliente)
         {
-            if (_contexto.Direccion.Any(x => x.IdCliente == idCliente))
-                return await _contexto.Direccion.Where(x => x.IdCliente == idCliente).ToListAsync();
-            else
+            var direccion = await _contexto.Direccion.Where(x => x.IdCliente == idCliente).ToListAsync();
+            if (!direccion.Any())
                 throw new ArgumentException("No hay ninguna dirección asociada a ese Id");
+
+            return direccion;
         }
 
         public async Task<Direccion?> ObtenerPorCalleYAlturaAsync(string calle, string altura)

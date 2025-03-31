@@ -20,12 +20,14 @@ namespace ShopMGR.Repositorios
 
         public async Task<Cliente> ObtenerPorIdAsync(int id)
         {
-            if (!_contexto.Clientes.Any(x => x.Id == id))
-                throw new ArgumentException("No hay ningún cliente asociado a ese Id");
+            var cliente = await _contexto.Clientes.FindAsync(id);
+            if (cliente == null)
+                throw new ArgumentException("No existe un cliente con ese Id");
 
+            cliente.Direccion = await _contexto.Direccion.Where(d => d.IdCliente == id).ToListAsync();
+            cliente.Telefono = await _contexto.TelefonoCliente.Where(t => t.IdCliente == id).ToListAsync();
 
-            return await _contexto.Clientes.FindAsync(id);
-            
+            return cliente;
         }
         public async Task<Cliente?> ObtenerPorNombreAsync(string nombre)
         {
