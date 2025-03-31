@@ -13,11 +13,9 @@ namespace ShopMGR.Repositorios
             _contexto = contexto;
         }
 
-        public async Task<List<Direccion>> BuscarPorCliente(int idCliente)
+        public async Task<List<Direccion>> BuscarPorIdCliente(int idCliente)
         {
             var direccion = await _contexto.Direccion.Where(x => x.IdCliente == idCliente).ToListAsync();
-            if (!direccion.Any())
-                throw new ArgumentException("No hay ninguna dirección asociada a ese Id");
 
             return direccion;
         }

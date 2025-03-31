@@ -10,7 +10,7 @@ namespace ShopMGR.Dominio.Modelo
         public string NombreCompleto { get; set; }
         public string? Cuit { get; set; }
         public List<TelefonoCliente> Telefono { get; set; } = [];
-        public List<Direccion> Direccion { get; set; }
+        public List<Direccion> Direccion { get; set; } = [];
         public decimal? Balance { get; set; }
         public List<string> gastos = [];
         public List<Trabajo> ListaDeTrabajos = [];

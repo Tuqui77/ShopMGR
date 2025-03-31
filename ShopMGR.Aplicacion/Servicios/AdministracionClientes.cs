@@ -140,6 +140,9 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task<Cliente> ObtenerClientePorIdAsync(int idCliente)
         {
             var cliente = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
+            cliente.Direccion = await _direccionRepositorio.BuscarPorIdCliente(idCliente);
+            cliente.Telefono = await _telefonoClienteRepositorio.BuscarPorIdCliente(idCliente);
+
             return cliente;
         }
 
@@ -165,7 +168,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             clienteDB.NombreCompleto = clienteActualizado.NombreCompleto ?? clienteDB.NombreCompleto;
             clienteDB.Cuit = clienteActualizado.Cuit ?? clienteDB.Cuit;
-            
+
             await _clienteRepositorio.ActualizarAsync(clienteDB);
         }
     }

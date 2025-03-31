@@ -21,8 +21,6 @@ namespace ShopMGR.Repositorios
         public async Task<List<TelefonoCliente>> BuscarPorIdCliente(int idCliente)
         {
             var telefono = await _contexto.TelefonoCliente.Where(t => t.IdCliente == idCliente).ToListAsync();
-            if (!telefono.Any())
-                throw new ArgumentException("No hay ningún teléfono asociado a ese Id");
 
             return telefono;
         }
