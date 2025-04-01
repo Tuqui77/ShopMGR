@@ -28,5 +28,28 @@ namespace ShopMGR.WebApi.Controllers
 
             return Ok(direccion);
         }
+
+        [HttpGet]
+        [Route("ObtenerDireccionesCliente")]
+        public async Task<List<Direccion>> ObtenerDireccionesCliente(int idCliente)
+        {
+            return await _administracionDirecciones.BuscarPorIdCliente(idCliente);
+        }
+
+        [HttpPatch]
+        [Route("ActualizarDireccion")]
+        public async Task<IActionResult> ActualizarDireccion(int idDireccion, ModificarDireccion direccion)
+        {
+            await _administracionDirecciones.ActualizarDireccionAsync(idDireccion, direccion);
+            return Ok(direccion);
+        }
+
+        [HttpDelete]
+        [Route("EliminarDireccion")]
+        public async Task<IActionResult> EliminarDireccion(int idDireccion)
+        {
+            await _administracionDirecciones.EliminarDireccionAsync(idDireccion);
+            return Ok();
+        }
     }
 }

@@ -13,9 +13,17 @@ namespace ShopMGR.Repositorios
             _contexto = contexto;
         }
 
-        public async Task<List<TelefonoCliente>> BuscarPorIdCliente(int idCliente)
+        public async Task<List<TelefonoCliente>> ObtenerPorIdCliente(int idCliente)
         {
             var telefono = await _contexto.TelefonoCliente.Where(t => t.IdCliente == idCliente).ToListAsync();
+
+            return telefono;
+        }
+
+        public async Task<TelefonoCliente?> ObtenerPorIdAsync(int idTelefono)
+        {
+            var telefono = await _contexto.TelefonoCliente.FirstOrDefaultAsync(x => x.Id == idTelefono)
+                ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
 
             return telefono;
         }
@@ -31,6 +39,18 @@ namespace ShopMGR.Repositorios
                 throw new KeyNotFoundException("No existe el cliente asociado a ese Id");
 
             _contexto.TelefonoCliente.Add(telefono);
+            await _contexto.SaveChangesAsync();
+        }
+
+        public async Task ModificarTelefonoAsync(TelefonoCliente telefono)
+        {
+            _contexto.TelefonoCliente.Update(telefono);
+            await _contexto.SaveChangesAsync();
+        }
+
+        public async Task EliminarTelefonoAsync(TelefonoCliente telefono)
+        {
+            _contexto.TelefonoCliente.Remove(telefono);
             await _contexto.SaveChangesAsync();
         }
     }

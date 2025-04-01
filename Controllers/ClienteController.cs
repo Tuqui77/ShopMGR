@@ -68,7 +68,7 @@ namespace ShopMGR.WebApi.Controllers
         #region Deletes
         [HttpDelete]
         [Route("EliminarCliente")]
-        public async Task<IActionResult> EliminarCliente(int idCliente)
+        public async Task<IActionResult> EliminarCliente(int idCliente) //Mover la validación a la capa de aplicación.
         {
             var cliente = await _administracionClientes.ObtenerClientePorIdAsync(idCliente);
             if (cliente == null)

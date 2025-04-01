@@ -34,5 +34,26 @@ namespace ShopMGR.WebApi.Controllers
         {
             return await _administracionTelefonoCliente.ObtenerTelefonosCliente(idCliente);
         }
+
+        [HttpPatch]
+        [Route("ModificarTelefonoCliente")]
+        public async Task<IActionResult> ModificarTelefonoClienteAsync(int idTelefono, ModificarTelefono telefonoModificado)
+        {
+            if (telefonoModificado == null)
+            {
+                return BadRequest("Los datos del teléfono no pueden estar vacíos.");
+            }
+
+            await _administracionTelefonoCliente.ModificarTelefonoClienteAsync(idTelefono, telefonoModificado);
+            return Ok(telefonoModificado);
+        }
+
+        [HttpDelete]
+        [Route("EliminarTelefonoCliente")]
+        public async Task<IActionResult> EliminarTelefonoClienteAsync(int idTelefono)
+        {
+            await _administracionTelefonoCliente.EliminarTelefonoClienteAsync(idTelefono);
+            return Ok();
+        }
     }
 }
