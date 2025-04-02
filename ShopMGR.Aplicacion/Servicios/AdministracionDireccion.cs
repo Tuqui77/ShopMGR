@@ -10,14 +10,9 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionDireccion : IAdministrarDireccion
+    public class AdministracionDireccion(DireccionRepositorio direccionRepositorio) : IAdministrarDireccion
     {
-        private readonly DireccionRepositorio _direccionRepositorio;
-
-        public AdministracionDireccion(DireccionRepositorio direccionRepositorio)
-        {
-            _direccionRepositorio = direccionRepositorio;
-        }
+        private readonly DireccionRepositorio _direccionRepositorio = direccionRepositorio;
 
         public async Task CrearAsync(DireccionDTO nuevaDireccion)
         {

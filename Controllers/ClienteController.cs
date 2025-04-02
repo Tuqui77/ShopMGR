@@ -13,16 +13,24 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ClienteController : ControllerBase
+    public class ClienteController(AdministracionClientes administracionClientes) : ControllerBase
     {
-        private readonly IAdministrarClientes _administracionClientes;
-        private readonly ShopMGRDbContexto _contexto;
+        private readonly IAdministrarClientes _administracionClientes = administracionClientes;
 
-        public ClienteController(AdministracionClientes administracionClientes, ShopMGRDbContexto contexto)
+        #region Posts
+        [HttpPost]
+        [Route("CrearCliente")]
+        public async Task<IActionResult> CrearCliente(ClienteDTO cliente)
         {
-            _administracionClientes = administracionClientes;
-            _contexto = contexto;
+            if(cliente == null)
+            {
+                return BadRequest("Los datos del cliente no pueden estar vacíos.");
+            }
+
+            await _administracionClientes.CrearAsync(cliente);
+            return Ok(cliente);
         }
+        #endregion
 
         #region Gets
         [HttpGet]
@@ -51,32 +59,6 @@ namespace ShopMGR.WebApi.Controllers
 
         #endregion
 
-        #region Posts
-        [HttpPost]
-        [Route("CrearCliente")]
-        public async Task<IActionResult> CrearCliente(ClienteDTO cliente)
-        {
-            if(cliente == null)
-            {
-                return BadRequest("Los datos del cliente no pueden estar vacíos.");
-            }
-
-            await _administracionClientes.CrearAsync(cliente);
-            return Ok(cliente);
-        }
-        #endregion
-
-        #region Deletes
-        [HttpDelete]
-        [Route("EliminarCliente")]
-        public async Task<IActionResult> EliminarCliente(int idCliente)//Mover la validación a la capa de aplicación.
-        {
-            await _administracionClientes.EliminarAsync(idCliente);
-            return Ok("Cliente eliminado correctamente.");
-        }
-
-        #endregion
-
         #region Patch 
         [HttpPatch]
         [Route("ModificarCliente")]
@@ -90,6 +72,17 @@ namespace ShopMGR.WebApi.Controllers
             await _administracionClientes.ActualizarAsync(idCliente, clienteActualizado);
             return Ok(clienteActualizado);
         }
+        #endregion
+
+        #region Deletes
+        [HttpDelete]
+        [Route("EliminarCliente")]
+        public async Task<IActionResult> EliminarCliente(int idCliente)//Mover la validación a la capa de aplicación.
+        {
+            await _administracionClientes.EliminarAsync(idCliente);
+            return Ok("Cliente eliminado correctamente.");
+        }
+
         #endregion
     }
 }

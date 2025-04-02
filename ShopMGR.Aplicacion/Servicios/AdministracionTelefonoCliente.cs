@@ -2,22 +2,12 @@
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionTelefonoCliente : IAdministrarTelefonoCliente
+    public class AdministracionTelefonoCliente(TelefonoClienteRepositorio telefonoClienteRepositorio) : IAdministrarTelefonoCliente
     {
-        private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio;
-
-        public AdministracionTelefonoCliente(TelefonoClienteRepositorio telefonoClienteRepositorio)
-        {
-            _telefonoClienteRepositorio = telefonoClienteRepositorio;
-        }
+        private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio = telefonoClienteRepositorio;
 
         public async Task CrearAsync(TelefonoClienteDTO nuevoTelefono)
         {
@@ -33,7 +23,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task<TelefonoCliente> ObtenerPorIdAsync(int idTelefono)
         {
-            var telefono = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono) 
+            var telefono = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono)
                 ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
             return telefono;
         }
@@ -44,7 +34,7 @@ namespace ShopMGR.Aplicacion.Servicios
         }
         public async Task ActualizarAsync(int idTelefono, ModificarTelefono telefonoModificado)
         {
-            var telefonoDB = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono) 
+            var telefonoDB = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono)
                 ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
 
             telefonoDB.IdCliente = telefonoModificado.IdCliente ?? telefonoDB.IdCliente;
@@ -60,9 +50,5 @@ namespace ShopMGR.Aplicacion.Servicios
 
             await _telefonoClienteRepositorio.EliminarAsync(telefono);
         }
-
-
-
-
     }
 }

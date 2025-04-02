@@ -5,18 +5,11 @@ using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionClientes : IAdministrarClientes
+    public class AdministracionClientes(ClienteRepositorio clienteRepositorio, DireccionRepositorio direccionRepositorio, TelefonoClienteRepositorio telefonoRepositorio) : IAdministrarClientes
     {
-        private readonly ClienteRepositorio _clienteRepositorio;
-        private readonly DireccionRepositorio _direccionRepositorio;
-        private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio;
-
-        public AdministracionClientes(ClienteRepositorio clienteRepositorio, DireccionRepositorio direccionRepositorio, TelefonoClienteRepositorio telefonoRepositorio)
-        {
-            _clienteRepositorio = clienteRepositorio;
-            _direccionRepositorio = direccionRepositorio;
-            _telefonoClienteRepositorio = telefonoRepositorio;
-        }
+        private readonly ClienteRepositorio _clienteRepositorio = clienteRepositorio;
+        private readonly DireccionRepositorio _direccionRepositorio = direccionRepositorio;
+        private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio = telefonoRepositorio;
 
         public async Task CrearAsync(ClienteDTO nuevoCliente)
         {

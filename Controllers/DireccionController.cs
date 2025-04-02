@@ -10,16 +10,9 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DireccionController : ControllerBase
+    public class DireccionController(AdministracionDireccion administracionDirecciones) : ControllerBase
     {
-        private readonly IAdministrarDireccion _administracionDirecciones;
-        private readonly ShopMGRDbContexto _contexto;
-
-        public DireccionController(AdministracionDireccion administracionDirecciones, ShopMGRDbContexto contexto)
-        {
-            _administracionDirecciones = administracionDirecciones;
-            _contexto = contexto;
-        }
+        private readonly IAdministrarDireccion _administracionDirecciones = administracionDirecciones;
 
         [HttpPost]
         [Route("CrearDireccion")]

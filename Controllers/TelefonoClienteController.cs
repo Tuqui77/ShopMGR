@@ -10,16 +10,9 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TelefonoClienteController : ControllerBase
+    public class TelefonoClienteController(AdministracionTelefonoCliente administracionTelefono) : ControllerBase
     {
-        private readonly IAdministrarTelefonoCliente _administracionTelefonoCliente;
-        private readonly ShopMGRDbContexto _contexto;
-
-        public TelefonoClienteController(AdministracionTelefonoCliente administracionTelefonoCliente, ShopMGRDbContexto contexto)
-        {
-            _administracionTelefonoCliente = administracionTelefonoCliente;
-            _contexto = contexto;
-        }
+        private readonly IAdministrarTelefonoCliente _administracionTelefonoCliente = administracionTelefono;
 
         [HttpPost]
         [Route("CrearTelefonoCliente")]
