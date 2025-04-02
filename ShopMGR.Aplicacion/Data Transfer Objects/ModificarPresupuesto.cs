@@ -1,4 +1,5 @@
 ﻿using ShopMGR.Dominio.Enums;
+using ShopMGR.Dominio.Modelo;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,8 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
     public class ModificarPresupuesto
     {
         public int? IdCliente { get; set; }
-        public Dictionary<List<string>, (decimal precio, decimal cantidad)>? Materiales = [];
+        //public Dictionary<string, (decimal precio, decimal cantidad)>? Materiales = [];
+        public List<Material>? Materiales { get; set; }
         public int? horaDeTrabajo = 10000;
         public float? HorasEstimadas { get; set; }
         public EstadoPresupuesto? Estado { get; set; }

@@ -22,7 +22,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 horaDeTrabajo = nuevoPresupuesto.horaDeTrabajo
             };
 
-            presupuesto.CostoMateriales = presupuesto.Materiales.Sum(d => d.Value.precio * d.Value.cantidad);
+            presupuesto.CostoMateriales = presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio);
             presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.horaDeTrabajo;
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
             presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;

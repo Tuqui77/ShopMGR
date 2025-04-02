@@ -6,7 +6,8 @@ namespace ShopMGR.Dominio.Modelo
     public class Presupuesto
     {
         public int Id { get; set; }
-        public Dictionary<List<string>, (decimal precio, decimal cantidad)> Materiales = [];
+        //public Dictionary<string, (decimal precio, decimal cantidad)> Materiales = [];
+        public List<Material> Materiales { get; set; }
         public int horaDeTrabajo = 10000;
         public float HorasEstimadas { get; set; }
         public DateTime Fecha { get; set; }
