@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionDireccion : IAdministrarEntidades<Direccion, DireccionDTO, ModificarDireccion>
+    public class AdministracionDireccion : IAdministrarDireccion
     {
         private readonly DireccionRepositorio _direccionRepositorio;
 
@@ -33,11 +33,13 @@ namespace ShopMGR.Aplicacion.Servicios
 
             await _direccionRepositorio.CrearAsync(direccion);
         }
+
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
         {
             return await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
         }
-        public async Task<List<Direccion>> BuscarPorIdCliente(int idCliente)
+
+        public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)
         {
             return await _direccionRepositorio.ObtenerPorIdCliente(idCliente);
         }

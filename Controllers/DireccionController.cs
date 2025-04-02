@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
@@ -11,7 +12,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class DireccionController : ControllerBase
     {
-        private readonly AdministracionDireccion _administracionDirecciones;
+        private readonly IAdministrarDireccion _administracionDirecciones;
         private readonly ShopMGRDbContexto _contexto;
 
         public DireccionController(AdministracionDireccion administracionDirecciones, ShopMGRDbContexto contexto)
@@ -33,7 +34,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ObtenerDireccionesCliente")]
         public async Task<List<Direccion>> ObtenerDireccionesCliente(int idCliente)
         {
-            return await _administracionDirecciones.BuscarPorIdCliente(idCliente);
+            return await _administracionDirecciones.ObtenerPorIdCliente(idCliente);
         }
 
         [HttpPatch]

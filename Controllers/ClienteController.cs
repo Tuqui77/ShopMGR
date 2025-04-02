@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
@@ -14,7 +15,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class ClienteController : ControllerBase
     {
-        private readonly AdministracionClientes _administracionClientes;
+        private readonly IAdministrarClientes _administracionClientes;
         private readonly ShopMGRDbContexto _contexto;
 
         public ClienteController(AdministracionClientes administracionClientes, ShopMGRDbContexto contexto)
@@ -28,7 +29,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ObtenerClientes")]
         public async Task<List<Cliente>> ObtenerClientesAsync()
         {
-            var clientes = await _administracionClientes.ListarClientes();
+            var clientes = await _administracionClientes.ListarTodosAsync();
             return clientes;
         }
 

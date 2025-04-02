@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using ShopMGR.Aplicacion.Interfaces;
 
 namespace ShopMGR.WebApi.Controllers
 {
@@ -11,7 +12,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class TelefonoClienteController : ControllerBase
     {
-        private readonly AdministracionTelefonoCliente _administracionTelefonoCliente;
+        private readonly IAdministrarTelefonoCliente _administracionTelefonoCliente;
         private readonly ShopMGRDbContexto _contexto;
 
         public TelefonoClienteController(AdministracionTelefonoCliente administracionTelefonoCliente, ShopMGRDbContexto contexto)

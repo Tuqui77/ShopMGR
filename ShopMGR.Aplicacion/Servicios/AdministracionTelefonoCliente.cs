@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionTelefonoCliente : IAdministrarEntidades<TelefonoCliente, TelefonoClienteDTO, ModificarTelefono>
+    public class AdministracionTelefonoCliente : IAdministrarTelefonoCliente
     {
         private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio;
 
@@ -30,12 +30,14 @@ namespace ShopMGR.Aplicacion.Servicios
 
             await _telefonoClienteRepositorio.CrearAsync(telefono);
         }
+
         public async Task<TelefonoCliente> ObtenerPorIdAsync(int idTelefono)
         {
             var telefono = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono) 
                 ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
             return telefono;
         }
+
         public async Task<List<TelefonoCliente>> ObtenerTelefonosCliente(int idCliente)
         {
             return await _telefonoClienteRepositorio.ObtenerPorIdCliente(idCliente);

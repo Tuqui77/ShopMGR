@@ -5,7 +5,7 @@ using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionClientes : IAdministrarEntidades<Cliente, ClienteDTO, ModificarCliente>
+    public class AdministracionClientes : IAdministrarClientes
     {
         private readonly ClienteRepositorio _clienteRepositorio;
         private readonly DireccionRepositorio _direccionRepositorio;
@@ -75,7 +75,7 @@ namespace ShopMGR.Aplicacion.Servicios
             var cliente = await _clienteRepositorio.ObtenerPorNombreAsync(nombre);
             return cliente;
         }
-        public async Task<List<Cliente>> ListarClientes()
+        public async Task<List<Cliente>> ListarTodosAsync()
         {
             var clientes = await _clienteRepositorio.ListarTodosAsync();
             return clientes;
