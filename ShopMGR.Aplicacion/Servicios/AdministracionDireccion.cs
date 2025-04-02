@@ -14,7 +14,7 @@ namespace ShopMGR.Aplicacion.Servicios
     {
         private readonly DireccionRepositorio _direccionRepositorio = direccionRepositorio;
 
-        public async Task CrearAsync(DireccionDTO nuevaDireccion)
+        public async Task<Direccion> CrearAsync(DireccionDTO nuevaDireccion)
         {
             var direccion = new Direccion
             {
@@ -27,6 +27,8 @@ namespace ShopMGR.Aplicacion.Servicios
             };
 
             await _direccionRepositorio.CrearAsync(direccion);
+
+            return direccion;
         }
 
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)

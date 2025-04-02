@@ -38,14 +38,18 @@ namespace ShopMGR.Contexto
                 .WithMany(c => c.Direccion)
                 .HasForeignKey("IdCliente")
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             modelBuilder.Entity<Trabajo>()
                 .HasOne(t => t.Presupuesto)
                 .WithOne(p => p.Trabajo)
-                .HasForeignKey<Presupuesto>("IdCliente");
-            
-            modelBuilder.Entity<Presupuesto>();
-            
+                .HasForeignKey("IdCliente");
+
+            modelBuilder.Entity<Presupuesto>()
+                .HasOne(p => p.Cliente)
+                .WithMany(c => c.Presupuestos)
+                .HasForeignKey("IdCliente");
+
+
             modelBuilder.Entity<TelefonoCliente>()
                 .HasOne(t => t.Cliente)
                 .WithMany(c => c.Telefono)

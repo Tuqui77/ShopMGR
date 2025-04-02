@@ -13,6 +13,9 @@ namespace ShopMGR.Dominio.Modelo
         public List<Direccion> Direccion { get; set; } = [];
         public decimal? Balance { get; set; }
         public List<string> gastos = [];
-        public List<Trabajo> ListaDeTrabajos = [];
+
+        //Relaciones
+        public List<Trabajo> Trabajos = [];
+        public List<Presupuesto> Presupuestos = [];
     }
 }

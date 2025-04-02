@@ -7,13 +7,14 @@ namespace ShopMGR.Dominio.Modelo
     {
         public int Id { get; set; }
         public Dictionary<List<string>, (decimal precio, decimal cantidad)> Materiales = [];
-        public int HoraDeTrabajo = 10000;
+        public int horaDeTrabajo = 10000;
+        public float HorasEstimadas { get; set; }
         public DateTime Fecha { get; set; }
         public decimal CostoMateriales { get; set; }
         public decimal CostoLabor { get; set; }
         public decimal CostoInsumos { get; set; }
         public decimal Total { get; set; }
-        public EstadoTrabajo Estado { get; set; }
+        public EstadoPresupuesto Estado { get; set; }
 
         //Relaciones
         public Cliente Cliente { get; set; }

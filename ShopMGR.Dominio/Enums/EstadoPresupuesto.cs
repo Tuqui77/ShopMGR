@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Dominio.Enums
 {
-    public enum EstadoProesupuesto
+    public enum EstadoPresupuesto
     {
         Pendiente = 1,
         Aceptado = 2,

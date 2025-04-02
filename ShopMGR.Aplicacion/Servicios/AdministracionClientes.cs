@@ -11,7 +11,7 @@ namespace ShopMGR.Aplicacion.Servicios
         private readonly DireccionRepositorio _direccionRepositorio = direccionRepositorio;
         private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio = telefonoRepositorio;
 
-        public async Task CrearAsync(ClienteDTO nuevoCliente)
+        public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
         {
             var cliente = new Cliente
             {
@@ -54,6 +54,8 @@ namespace ShopMGR.Aplicacion.Servicios
                     await _telefonoClienteRepositorio.CrearAsync(telefonoTmp);
                 }
             }
+
+            return clienteBD;
         }
         public async Task<Cliente> ObtenerPorIdAsync(int idCliente)
         {
