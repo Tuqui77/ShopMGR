@@ -24,7 +24,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("CrearTelefonoCliente")]
         public async Task<IActionResult> CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
         {
-            await _administracionTelefonoCliente.CrearTelefonoClienteAsync(nuevoTelefono);
+            await _administracionTelefonoCliente.CrearAsync(nuevoTelefono);
             return Ok(nuevoTelefono);
         }
 
@@ -44,7 +44,7 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del teléfono no pueden estar vacíos.");
             }
 
-            await _administracionTelefonoCliente.ModificarTelefonoClienteAsync(idTelefono, telefonoModificado);
+            await _administracionTelefonoCliente.ActualizarAsync(idTelefono, telefonoModificado);
             return Ok(telefonoModificado);
         }
 
@@ -52,7 +52,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("EliminarTelefonoCliente")]
         public async Task<IActionResult> EliminarTelefonoClienteAsync(int idTelefono)
         {
-            await _administracionTelefonoCliente.EliminarTelefonoClienteAsync(idTelefono);
+            await _administracionTelefonoCliente.EliminarAsync(idTelefono);
             return Ok();
         }
     }

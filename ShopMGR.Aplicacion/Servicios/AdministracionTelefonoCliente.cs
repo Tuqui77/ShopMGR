@@ -1,4 +1,5 @@
 ﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionTelefonoCliente
+    public class AdministracionTelefonoCliente : IAdministrarEntidades<TelefonoCliente, TelefonoClienteDTO, ModificarTelefono>
     {
         private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio;
 
@@ -18,7 +19,7 @@ namespace ShopMGR.Aplicacion.Servicios
             _telefonoClienteRepositorio = telefonoClienteRepositorio;
         }
 
-        public async Task CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
+        public async Task CrearAsync(TelefonoClienteDTO nuevoTelefono)
         {
             var telefono = new TelefonoCliente
             {
@@ -27,34 +28,39 @@ namespace ShopMGR.Aplicacion.Servicios
                 Descripcion = nuevoTelefono.Descripcion
             };
 
-            await _telefonoClienteRepositorio.CrearTelefonoAsync(telefono);
+            await _telefonoClienteRepositorio.CrearAsync(telefono);
         }
-
+        public async Task<TelefonoCliente> ObtenerPorIdAsync(int idTelefono)
+        {
+            var telefono = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono) 
+                ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
+            return telefono;
+        }
         public async Task<List<TelefonoCliente>> ObtenerTelefonosCliente(int idCliente)
         {
             return await _telefonoClienteRepositorio.ObtenerPorIdCliente(idCliente);
         }
-
-        public async Task<TelefonoCliente> ObtenerTelefonoClientePorId(int idTelefono)
+        public async Task ActualizarAsync(int idTelefono, ModificarTelefono telefonoModificado)
         {
-            return await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
-        }
-
-        public async Task ModificarTelefonoClienteAsync(int idTelefono, ModificarTelefono telefonoModificado)
-        {
-            var telefonoDB = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
+            var telefonoDB = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono) 
+                ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
 
             telefonoDB.IdCliente = telefonoModificado.IdCliente ?? telefonoDB.IdCliente;
             telefonoDB.Telefono = telefonoModificado.Telefono ?? telefonoDB.Telefono;
             telefonoDB.Descripcion = telefonoModificado.Descripcion ?? telefonoDB.Descripcion;
 
-            await _telefonoClienteRepositorio.ModificarTelefonoAsync(telefonoDB);
+            await _telefonoClienteRepositorio.ActualizarAsync(telefonoDB);
+        }
+        public async Task EliminarAsync(int idTelefono)
+        {
+            var telefono = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono)
+                ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
+
+            await _telefonoClienteRepositorio.EliminarAsync(telefono);
         }
 
-        public async Task EliminarTelefonoClienteAsync(int idTelefono)
-        {
-            var telefono = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
-            await _telefonoClienteRepositorio.EliminarTelefonoAsync(telefono);
-        }
+
+
+
     }
 }

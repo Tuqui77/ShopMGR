@@ -36,7 +36,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ObtenerClientePorId")]
         public async Task<Cliente> ObtenerClientePorIdAsync(int idCliente)
         {
-            var cliente = await _administracionClientes.ObtenerClientePorIdAsync(idCliente);
+            var cliente = await _administracionClientes.ObtenerPorIdAsync(idCliente);
             return cliente;
         }
 
@@ -60,7 +60,7 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del cliente no pueden estar vacíos.");
             }
 
-            await _administracionClientes.CrearClienteAsync(cliente);
+            await _administracionClientes.CrearAsync(cliente);
             return Ok(cliente);
         }
         #endregion
@@ -68,15 +68,9 @@ namespace ShopMGR.WebApi.Controllers
         #region Deletes
         [HttpDelete]
         [Route("EliminarCliente")]
-        public async Task<IActionResult> EliminarCliente(int idCliente) //Mover la validación a la capa de aplicación.
+        public async Task<IActionResult> EliminarCliente(int idCliente)//Mover la validación a la capa de aplicación.
         {
-            var cliente = await _administracionClientes.ObtenerClientePorIdAsync(idCliente);
-            if (cliente == null)
-            {
-                return NotFound("No se encontró ningún cliente con ese Id.");
-            }
-
-            await _administracionClientes.EliminarClienteAsync(cliente);
+            await _administracionClientes.EliminarAsync(idCliente);
             return Ok("Cliente eliminado correctamente.");
         }
 
@@ -91,7 +85,8 @@ namespace ShopMGR.WebApi.Controllers
             {
                 return BadRequest("Los datos del cliente no pueden estar vacíos.");
             }
-            await _administracionClientes.ActualizarClienteAsync(idCliente, clienteActualizado);
+
+            await _administracionClientes.ActualizarAsync(idCliente, clienteActualizado);
             return Ok(clienteActualizado);
         }
         #endregion

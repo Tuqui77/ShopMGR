@@ -24,7 +24,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("CrearDireccion")]
         public async Task<IActionResult> CrearDireccion(DireccionDTO direccion)
         {
-            await _administracionDirecciones.CrearDireccionAsync(direccion);
+            await _administracionDirecciones.CrearAsync(direccion);
 
             return Ok(direccion);
         }
@@ -40,7 +40,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ActualizarDireccion")]
         public async Task<IActionResult> ActualizarDireccion(int idDireccion, ModificarDireccion direccion)
         {
-            await _administracionDirecciones.ActualizarDireccionAsync(idDireccion, direccion);
+            await _administracionDirecciones.ActualizarAsync(idDireccion, direccion);
             return Ok(direccion);
         }
 
@@ -48,7 +48,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("EliminarDireccion")]
         public async Task<IActionResult> EliminarDireccion(int idDireccion)
         {
-            await _administracionDirecciones.EliminarDireccionAsync(idDireccion);
+            await _administracionDirecciones.EliminarAsync(idDireccion);
             return Ok();
         }
     }

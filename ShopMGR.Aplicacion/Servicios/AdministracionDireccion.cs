@@ -1,4 +1,5 @@
 ﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionDireccion
+    public class AdministracionDireccion : IAdministrarEntidades<Direccion, DireccionDTO, ModificarDireccion>
     {
         private readonly DireccionRepositorio _direccionRepositorio;
 
@@ -18,7 +19,7 @@ namespace ShopMGR.Aplicacion.Servicios
             _direccionRepositorio = direccionRepositorio;
         }
 
-        public async Task CrearDireccionAsync(DireccionDTO nuevaDireccion)
+        public async Task CrearAsync(DireccionDTO nuevaDireccion)
         {
             var direccion = new Direccion
             {
@@ -30,17 +31,20 @@ namespace ShopMGR.Aplicacion.Servicios
                 CodigoPostal = nuevaDireccion.CodigoPostal
             };
 
-            await _direccionRepositorio.CrearDireccionAsync(direccion);
+            await _direccionRepositorio.CrearAsync(direccion);
         }
-
+        public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
+        {
+            return await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
+        }
         public async Task<List<Direccion>> BuscarPorIdCliente(int idCliente)
         {
-            return await _direccionRepositorio.BuscarPorIdCliente(idCliente);
+            return await _direccionRepositorio.ObtenerPorIdCliente(idCliente);
         }
 
-        public async Task ActualizarDireccionAsync(int idDireccion, ModificarDireccion direccionActualizada)
+        public async Task ActualizarAsync(int idDireccion, ModificarDireccion direccionActualizada)
         {
-            var direccionDB = await _direccionRepositorio.ObtenerPorIdDireccion(idDireccion);
+            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
 
             direccionDB.IdCliente = direccionActualizada.IdCliente ?? direccionDB.IdCliente;
             direccionDB.Calle = direccionActualizada.Calle ?? direccionDB.Calle;
@@ -49,13 +53,13 @@ namespace ShopMGR.Aplicacion.Servicios
             direccionDB.Departamento = direccionActualizada.Departamento ?? direccionDB.Departamento;
             direccionDB.CodigoPostal = direccionActualizada.CodigoPostal ?? direccionDB.CodigoPostal;
 
-            await _direccionRepositorio.ActualizarDireccionAsync(direccionDB);
+            await _direccionRepositorio.ActualizarAsync(direccionDB);
         }
 
-        public async Task EliminarDireccionAsync(int idDireccion)
+        public async Task EliminarAsync(int idDireccion)
         {
-            var direccionDB = await _direccionRepositorio.ObtenerPorIdDireccion(idDireccion);
-            await _direccionRepositorio.EliminarDireccionAsync(direccionDB);
+            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
+            await _direccionRepositorio.EliminarAsync(direccionDB);
         }
     }
 }
