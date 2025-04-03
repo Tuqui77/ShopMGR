@@ -8,8 +8,8 @@ namespace ShopMGR.Dominio.Enums
 {
     public enum EstadoPresupuesto
     {
-        Pendiente = 1,
-        Aceptado = 2,
-        Rechazado = 3,
+        Pendiente = 0,
+        Aceptado = 1,
+        Rechazado = 2,
     }
 }

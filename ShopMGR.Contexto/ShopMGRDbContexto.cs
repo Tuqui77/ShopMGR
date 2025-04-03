@@ -13,6 +13,7 @@ namespace ShopMGR.Contexto
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Trabajo> Trabajos { get; set; }
         public DbSet<Presupuesto> Presupuestos { get; set; }
+        public DbSet<Material> Materiales { get; set; }
         public DbSet<Direccion> Direccion { get; set; }
         public DbSet<TelefonoCliente> TelefonoCliente { get; set; }
 
@@ -39,21 +40,25 @@ namespace ShopMGR.Contexto
                 .HasForeignKey("IdCliente")
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Trabajo>()
-                .HasOne(t => t.Presupuesto)
-                .WithOne(p => p.Trabajo)
-                .HasForeignKey("IdCliente");
+            modelBuilder.Entity<Trabajo>();
 
             modelBuilder.Entity<Presupuesto>()
                 .HasOne(p => p.Cliente)
                 .WithMany(c => c.Presupuestos)
-                .HasForeignKey("IdCliente");
+                .HasForeignKey("IdCliente")
+                .OnDelete(DeleteBehavior.Cascade);
+
 
 
             modelBuilder.Entity<TelefonoCliente>()
                 .HasOne(t => t.Cliente)
                 .WithMany(c => c.Telefono)
                 .HasForeignKey("IdCliente");
+
+            modelBuilder.Entity<Material>()
+                .HasOne(m => m.Presupuesto)
+                .WithMany(p => p.Materiales)
+                .HasForeignKey("IdPresupuesto");
         }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

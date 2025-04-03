@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
@@ -6,6 +8,7 @@ namespace ShopMGR.Dominio.Modelo
 {
     public class Cliente
     {
+        
         public int Id { get; set; }
         public string NombreCompleto { get; set; }
         public string? Cuit { get; set; }

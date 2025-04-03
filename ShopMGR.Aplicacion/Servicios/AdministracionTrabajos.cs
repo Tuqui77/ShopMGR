@@ -20,9 +20,9 @@ namespace ShopMGR.Aplicacion.Servicios
             if (presupuesto != null)
             {
                 trabajo.Presupuesto = presupuesto;
-                trabajo.cliente = presupuesto.Cliente;
+                trabajo.Cliente = presupuesto.Cliente;
             }
-            else trabajo.cliente = cliente!;
+            else trabajo.Cliente = cliente!;
             return trabajo;
         }
 

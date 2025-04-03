@@ -12,7 +12,8 @@ namespace ShopMGR.Dominio.Modelo
         public List<byte[]> Fotos { get; set; } = [];
 
         //Relaciones
-        public Cliente cliente { get; set; }
+        public Cliente Cliente { get; set; }
+        public int IdCliente { get; set; }
         public Presupuesto? Presupuesto { get; set; }
         public int IdPresupuesto { get; set; }
 

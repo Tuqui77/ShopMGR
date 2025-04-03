@@ -10,10 +10,14 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 {
     public class PresupuestoDTO
     {
-        public int IdCliente { get; set; }
-        //public Dictionary<string, (decimal precio, decimal cantidad)> Materiales { get; set; } = [];
-        public List<Material> Materiales { get; set; }
         public int horaDeTrabajo = 10000;
-        public float HorasEstimadas { get; set; }
+        public string Titulo { get; set; }
+        public string? Descripcion { get; set; }
+        public List<MaterialDTO> Materiales { get; set; }
+        public double HorasEstimadas { get; set; }
+
+        //Relaciones
+        public int IdCliente { get; set; }
+        public int IdTrabajo { get; set; }
     }
 }

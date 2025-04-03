@@ -17,6 +17,8 @@ namespace ShopMGR.Repositorios
         public async Task<Presupuesto> CrearAsync(Presupuesto presupuesto)
         {
             _contexto.Presupuestos.Add(presupuesto);
+            var materiales = presupuesto.Materiales;
+            _contexto.Materiales.AddRange(materiales);
             await _contexto.SaveChangesAsync();
 
             return presupuesto;

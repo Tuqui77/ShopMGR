@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Interfaces
 {
-    public interface IAdministrarEntidades<TEntidad, TDTO, TActualizacion>// : IAdministrarClientes
+    public interface IAdministrarEntidades<TEntidad, TDTO, TActualizacion>
     {
         public Task<TEntidad> CrearAsync(TDTO entidad);
         public Task<TEntidad> ObtenerPorIdAsync(int id);

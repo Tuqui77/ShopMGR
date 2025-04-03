@@ -21,6 +21,7 @@ namespace ShopMGR.WebApi.Controllers
             {
                 return BadRequest("Los datos del presupuesto no pueden estar vacíos.");
             }
+
             var presupuesto = await _administracionPresupuestos.CrearAsync(nuevoPresupuesto);
 
             return Ok(presupuesto);

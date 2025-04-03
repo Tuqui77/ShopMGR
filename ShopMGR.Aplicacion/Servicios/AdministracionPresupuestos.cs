@@ -1,4 +1,5 @@
-﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using AutoMapper;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
@@ -6,22 +7,17 @@ using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionPresupuestos(PresupuestoRepositorio presupuestoRepositorio) : IAdministrarPresupuestos
+    public class AdministracionPresupuestos(PresupuestoRepositorio presupuestoRepositorio, IMapper mapper) : IAdministrarPresupuestos
     {
         private readonly PresupuestoRepositorio _presupuestoRepositorio = presupuestoRepositorio;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<Presupuesto> CrearAsync(PresupuestoDTO nuevoPresupuesto)
         {
-            var presupuesto = new Presupuesto
-            {
-                IdCliente = nuevoPresupuesto.IdCliente,
-                Fecha = DateTime.Now,
-                Estado = EstadoPresupuesto.Pendiente,
-                Materiales = nuevoPresupuesto.Materiales,
-                HorasEstimadas = nuevoPresupuesto.HorasEstimadas,
-                horaDeTrabajo = nuevoPresupuesto.horaDeTrabajo
-            };
+            var presupuesto = _mapper.Map<Presupuesto>(nuevoPresupuesto);
 
+            presupuesto.Fecha = DateTime.Now;
+            presupuesto.Estado = EstadoPresupuesto.Pendiente;
             presupuesto.CostoMateriales = presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio);
             presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.horaDeTrabajo;
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
@@ -47,6 +43,8 @@ namespace ShopMGR.Aplicacion.Servicios
             var presupuestoDB = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
 
             presupuestoDB.IdCliente = entidad.IdCliente ?? presupuestoDB.IdCliente;
+            presupuestoDB.Titulo = entidad.Titulo ?? presupuestoDB.Titulo;
+            presupuestoDB.Descripcion = entidad.Descripcion ?? presupuestoDB.Descripcion;
             presupuestoDB.Materiales = entidad.Materiales ?? presupuestoDB.Materiales;
             presupuestoDB.horaDeTrabajo = entidad.horaDeTrabajo ?? presupuestoDB.horaDeTrabajo;
             presupuestoDB.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoDB.HorasEstimadas;
