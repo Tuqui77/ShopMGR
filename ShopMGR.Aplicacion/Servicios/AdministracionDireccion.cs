@@ -1,4 +1,5 @@
-﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using AutoMapper;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
@@ -10,21 +11,14 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionDireccion(DireccionRepositorio direccionRepositorio) : IAdministrarDireccion
+    public class AdministracionDireccion(DireccionRepositorio direccionRepositorio, IMapper mapper) : IAdministrarDireccion
     {
         private readonly DireccionRepositorio _direccionRepositorio = direccionRepositorio;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<Direccion> CrearAsync(DireccionDTO nuevaDireccion)
         {
-            var direccion = new Direccion
-            {
-                IdCliente = nuevaDireccion.IdCliente,
-                Calle = nuevaDireccion.Calle,
-                Altura = nuevaDireccion.Altura,
-                Piso = nuevaDireccion.Piso,
-                Departamento = nuevaDireccion.Departamento,
-                CodigoPostal = nuevaDireccion.CodigoPostal
-            };
+            var direccion = _mapper.Map<Direccion>(nuevaDireccion);
 
             await _direccionRepositorio.CrearAsync(direccion);
 

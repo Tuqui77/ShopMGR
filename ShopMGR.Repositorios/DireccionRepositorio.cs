@@ -5,14 +5,10 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class DireccionRepositorio : IRepositorio<Direccion>
+    public class DireccionRepositorio(ShopMGRDbContexto contexto) : IRepositorio<Direccion>
     {
-        private readonly ShopMGRDbContexto _contexto;
+        private readonly ShopMGRDbContexto _contexto = contexto;
 
-        public DireccionRepositorio(ShopMGRDbContexto contexto)
-        {
-            _contexto = contexto;
-        }
         public async Task<Direccion> CrearAsync(Direccion direccion)
         {
             if (!await _contexto.Clientes.AnyAsync(x => x.Id == direccion.IdCliente))

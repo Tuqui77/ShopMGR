@@ -14,5 +14,6 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
         public string? Piso { get; set; }
         public string? Departamento { get; set; }
         public string? CodigoPostal { get; set; }
+        public string? MapsID { get; set; }
     }
 }

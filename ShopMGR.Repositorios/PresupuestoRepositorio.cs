@@ -13,7 +13,7 @@ namespace ShopMGR.Repositorios
     public class PresupuestoRepositorio(ShopMGRDbContexto contexto) : IRepositorio<Presupuesto>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
-
+        
         public async Task<Presupuesto> CrearAsync(Presupuesto presupuesto)
         {
             _contexto.Presupuestos.Add(presupuesto);

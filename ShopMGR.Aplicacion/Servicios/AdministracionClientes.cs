@@ -1,24 +1,21 @@
-﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using AutoMapper;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionClientes(ClienteRepositorio clienteRepositorio, DireccionRepositorio direccionRepositorio, TelefonoClienteRepositorio telefonoRepositorio) : IAdministrarClientes
+    public class AdministracionClientes(ClienteRepositorio clienteRepositorio, DireccionRepositorio direccionRepositorio, TelefonoClienteRepositorio telefonoRepositorio, IMapper mapper) : IAdministrarClientes
     {
         private readonly ClienteRepositorio _clienteRepositorio = clienteRepositorio;
         private readonly DireccionRepositorio _direccionRepositorio = direccionRepositorio;
         private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio = telefonoRepositorio;
+        private readonly IMapper _mapper = mapper;
         
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
         {
-            var cliente = new Cliente
-            {
-                NombreCompleto = nuevoCliente.NombreCompleto,
-                Cuit = nuevoCliente.Cuit,
-                Balance = nuevoCliente.Balance,
-            };
+            var cliente = _mapper.Map<Cliente>(nuevoCliente);
 
             var clienteBD = await _clienteRepositorio.CrearAsync(cliente);
 
@@ -26,30 +23,19 @@ namespace ShopMGR.Aplicacion.Servicios
             {
                 foreach (var direccion in nuevoCliente.Direccion)
                 {
-                    var dirTmp = new Direccion
-                    {
-                        IdCliente = clienteBD.Id,
-                        Calle = direccion.Calle,
-                        Altura = direccion.Altura,
-                        Piso = direccion.Piso,
-                        Departamento = direccion.Departamento,
-                        CodigoPostal = direccion.CodigoPostal
-                    };
+                    var dirTmp = _mapper.Map<Direccion>(direccion);
+                    dirTmp.IdCliente = clienteBD.Id;
 
                     await _direccionRepositorio.CrearAsync(dirTmp);
                 }
             }
 
-            if (cliente.Telefono != null)
+            if (nuevoCliente.Telefono != null)
             {
-                foreach (var telefono in nuevoCliente.Telefono!)
+                foreach (var telefono in nuevoCliente.Telefono)
                 {
-                    var telefonoTmp = new TelefonoCliente
-                    {
-                        IdCliente = clienteBD.Id,
-                        Telefono = telefono.Telefono,
-                        Descripcion = telefono.Descripcion
-                    };
+                    var telefonoTmp = _mapper.Map<TelefonoCliente>(telefono);
+                    telefonoTmp.IdCliente = clienteBD.Id;
 
                     await _telefonoClienteRepositorio.CrearAsync(telefonoTmp);
                 }

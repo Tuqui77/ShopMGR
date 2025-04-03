@@ -4,12 +4,8 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Contexto
 {
-    public class ShopMGRDbContexto : DbContext
+    public class ShopMGRDbContexto(DbContextOptions<ShopMGRDbContexto> options) : DbContext(options)
     {
-        public ShopMGRDbContexto(DbContextOptions<ShopMGRDbContexto> options) : base(options)
-        {
-        }
-
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Trabajo> Trabajos { get; set; }
         public DbSet<Presupuesto> Presupuestos { get; set; }
@@ -25,8 +21,7 @@ namespace ShopMGR.Contexto
             modelBuilder.Entity<Cliente>()
                 .HasMany(c => c.Direccion)
                 .WithOne(d => d.Cliente)
-                .HasForeignKey("IdCliente")
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasForeignKey("IdCliente");
             modelBuilder.Entity<Cliente>()
                 .HasMany(c => c.Telefono)
                 .WithOne(t => t.Cliente)

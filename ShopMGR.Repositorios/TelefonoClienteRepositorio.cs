@@ -5,14 +5,10 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class TelefonoClienteRepositorio : IRepositorio<TelefonoCliente>
+    public class TelefonoClienteRepositorio(ShopMGRDbContexto contexto) : IRepositorio<TelefonoCliente>
     {
-        private readonly ShopMGRDbContexto _contexto;
+        private readonly ShopMGRDbContexto _contexto = contexto;
 
-        public TelefonoClienteRepositorio(ShopMGRDbContexto contexto)
-        {
-            _contexto = contexto;
-        }
         public async Task<TelefonoCliente> CrearAsync(TelefonoCliente telefono)
         {
             if (!await _contexto.Clientes.AnyAsync(x => x.Id == telefono.IdCliente))

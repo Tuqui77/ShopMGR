@@ -5,14 +5,9 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class ClienteRepositorio : IRepositorio<Cliente>
+    public class ClienteRepositorio(ShopMGRDbContexto contexto) : IRepositorio<Cliente>
     {
-        private readonly ShopMGRDbContexto _contexto;
-
-        public ClienteRepositorio(ShopMGRDbContexto contexto)
-        {
-            _contexto = contexto;
-        }
+        private readonly ShopMGRDbContexto _contexto = contexto;
 
         public async Task<Cliente> CrearAsync(Cliente cliente)
         {
