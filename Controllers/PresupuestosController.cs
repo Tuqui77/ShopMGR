@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.WebApi.Controllers
@@ -34,6 +35,24 @@ namespace ShopMGR.WebApi.Controllers
             var presupuesto = await _administracionPresupuestos.ObtenerPorIdAsync(idPresupuesto);
             return presupuesto;
         }
+
+        [HttpGet]
+        [Route("ObtenerPresupuestosPorCliente")]
+        public async Task<List<Presupuesto>> ObtenerPorCliente(int idCliente)
+        {
+            var presupuestos = await _administracionPresupuestos.ObtenerPorClienteAsync(idCliente);
+            return presupuestos;
+        }
+
+        [HttpGet]
+        [Route("ObtenerPresupuestosEstado")]
+        public async Task<List<Presupuesto>> ObtenerPorEstado(EstadoPresupuesto estado)
+        {
+            var presupuestos = await _administracionPresupuestos.ObtenerPorEstadoAsync(estado);
+            return presupuestos;
+        }
+
+
 
         [HttpPatch]
         [Route("ActualizarPresupuesto")]

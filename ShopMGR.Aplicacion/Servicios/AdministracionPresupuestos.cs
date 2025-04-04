@@ -36,8 +36,24 @@ namespace ShopMGR.Aplicacion.Servicios
         }
 
         //Agregar métodos para listar presupuestos por clientes o por estado.
+        public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
+        {
+            var presupuestos = await _presupuestoRepositorio.ObtenerPorClienteAsync(idCliente);
+
+            return presupuestos;
+        }
+
+        public async Task<List<Presupuesto>> ObtenerPorEstadoAsync(EstadoPresupuesto estado)
+        {
+            var presupuestos = await _presupuestoRepositorio.ObtenerPorEstadoAsync(estado);
+            return presupuestos;
+        }
 
 
+
+
+
+        //Fin Metodos nuevos
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
         {
             var presupuestoDB = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);

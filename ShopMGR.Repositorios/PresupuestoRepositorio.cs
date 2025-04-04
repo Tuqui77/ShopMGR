@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,24 @@ namespace ShopMGR.Repositorios
 
             return presupuestoDB;
         }
+
+        //nuevo
+        public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
+        {
+            var presupuestos = await _contexto.Presupuestos
+                .Where(p => p.IdCliente == idCliente)
+                .ToListAsync();
+            return presupuestos;
+        }
+
+        public async Task<List<Presupuesto>> ObtenerPorEstadoAsync(EstadoPresupuesto estado)
+        {
+            var presupuestos = await _contexto.Presupuestos
+                .Where(p => p.Estado == estado)
+                .ToListAsync();
+            return presupuestos;
+        }
+        //
 
         public async Task ActualizarAsync(Presupuesto presupuesto)
         {
