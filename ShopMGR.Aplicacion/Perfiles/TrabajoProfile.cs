@@ -13,7 +13,8 @@ namespace ShopMGR.Aplicacion.Perfiles
     {
         public TrabajoProfile()
         {
-            //CreateMap<Trabajo, TrabajoDTO>();
+            CreateMap<Trabajo, TrabajoDTO>();
+            CreateMap<TrabajoDTO, Trabajo>();
         }
     }
 }

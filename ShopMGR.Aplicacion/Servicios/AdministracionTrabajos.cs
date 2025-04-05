@@ -1,47 +1,61 @@
-﻿using ShopMGR.Dominio.Enums;
+﻿using ShopMGR.Dominio.Abstracciones;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
+using ShopMGR.Aplicacion.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using AutoMapper;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    class AdministracionTrabajos
+    class AdministracionTrabajos(IRepositorio<Trabajo> repositorio, IMapper mapper) : IAdministrarTrabajos
     {
-        public Trabajo AgregarTrabajo(Cliente? cliente = null, Presupuesto? presupuesto = null)
-        {
-            if (cliente == null && presupuesto == null) throw new ArgumentException("Debe proporcionar al menos un parametro");
+        private readonly IRepositorio<Trabajo> _repositorio = repositorio;
+        private readonly IMapper _mapper = mapper;
 
-            Trabajo trabajo = new();
-            trabajo.fechaInicio = DateTime.Now;
+        public async Task<Trabajo> CrearAsync(TrabajoDTO entidad)
+        {
+            var trabajo = _mapper.Map<Trabajo>(entidad);
             trabajo.estado = EstadoTrabajo.Pendiente;
-            if (presupuesto != null)
-            {
-                trabajo.Presupuesto = presupuesto;
-                trabajo.Cliente = presupuesto.Cliente;
-            }
-            else trabajo.Cliente = cliente!;
+
+            await _repositorio.CrearAsync(trabajo);
+            return trabajo;
+        }
+        public Task<List<Trabajo>> ObtenerPorEstado(EstadoTrabajo estado)
+        {
+            var trabajos = _repositorio.ObtenerPorEstado(estado);
+
+            return trabajos;
+        }
+
+        public Task<Trabajo> ObtenerPorIdAsync(int id)
+        {
+            var trabajo = _repositorio.ObtenerPorIdAsync(id) 
+                ?? throw new KeyNotFoundException($"No se encontró el trabajo con Id {id}.");
+
             return trabajo;
         }
 
-        public float AgregarHoras(float cantidad, string descripcion)
+        public Task<List<Trabajo>> ObtenerPorIdCliente(int idCliente)
         {
-            if (cantidad <= 0) throw new ArgumentException("La cantidad de horas tiene que ser mayor a 0");
+            var trabajos = _repositorio.ObtenerPorIdCliente(idCliente) 
+                ?? throw new KeyNotFoundException($"No se encontraron trabajos para el cliente con Id {idCliente}.");
 
-            Trabajo trabajo = new();
-            trabajo.HorasYDescripcion.Add(cantidad, descripcion);
-            return trabajo.HorasYDescripcion.Sum(d => d.Key);
+            return trabajos;
         }
 
-        public void AgregarFotos(byte[] foto)
+        public Task ActualizarAsync(int id, ModificarTrabajo entidad)
         {
-            Trabajo trabajo = new();
-            if (foto! != null && foto.Length > 0)
-            {
-                trabajo.Fotos.Add(foto);
-            }
+            throw new NotImplementedException();
+        }
+
+        public Task EliminarAsync(int id)
+        {
+            throw new NotImplementedException();
         }
     }
 }

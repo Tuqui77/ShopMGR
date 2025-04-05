@@ -13,7 +13,6 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
         public int? horaDeTrabajo = 10000;
         public string? Titulo { get; set; }
         public string? Descripcion { get; set; }
-        public List<Material>? Materiales { get; set; }
         public double? HorasEstimadas { get; set; }
         public EstadoPresupuesto? Estado { get; set; }
 

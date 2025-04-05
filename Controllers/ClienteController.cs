@@ -17,7 +17,6 @@ namespace ShopMGR.WebApi.Controllers
     {
         private readonly IAdministrarClientes _administracionClientes = administracionClientes;
 
-        #region Posts
         [HttpPost]
         [Route("CrearCliente")]
         public async Task<IActionResult> CrearCliente(ClienteDTO cliente)
@@ -30,9 +29,7 @@ namespace ShopMGR.WebApi.Controllers
             await _administracionClientes.CrearAsync(cliente);
             return Ok(cliente);
         }
-        #endregion
 
-        #region Gets
         [HttpGet]
         [Route("ObtenerClientes")]
         public async Task<List<Cliente>> ObtenerClientesAsync()
@@ -57,9 +54,6 @@ namespace ShopMGR.WebApi.Controllers
             return cliente;
         }
 
-        #endregion
-
-        #region Patch 
         [HttpPatch]
         [Route("ModificarCliente")]
         public async Task<IActionResult> ActualizarCliente(int idCliente, [FromBody] ModificarCliente clienteActualizado)
@@ -72,17 +66,14 @@ namespace ShopMGR.WebApi.Controllers
             await _administracionClientes.ActualizarAsync(idCliente, clienteActualizado);
             return Ok(clienteActualizado);
         }
-        #endregion
 
-        #region Deletes
         [HttpDelete]
         [Route("EliminarCliente")]
-        public async Task<IActionResult> EliminarCliente(int idCliente)//Mover la validación a la capa de aplicación.
+        public async Task<IActionResult> EliminarCliente(int idCliente)
         {
             await _administracionClientes.EliminarAsync(idCliente);
             return Ok("Cliente eliminado correctamente.");
         }
 
-        #endregion
     }
 }

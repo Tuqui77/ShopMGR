@@ -49,7 +49,6 @@ namespace ShopMGR.Repositorios
                 .ToListAsync();
             return presupuestos;
         }
-        //
 
         public async Task ActualizarAsync(Presupuesto presupuesto)
         {

@@ -61,7 +61,6 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuestoDB.IdCliente = entidad.IdCliente ?? presupuestoDB.IdCliente;
             presupuestoDB.Titulo = entidad.Titulo ?? presupuestoDB.Titulo;
             presupuestoDB.Descripcion = entidad.Descripcion ?? presupuestoDB.Descripcion;
-            presupuestoDB.Materiales = entidad.Materiales ?? presupuestoDB.Materiales;
             presupuestoDB.horaDeTrabajo = entidad.horaDeTrabajo ?? presupuestoDB.horaDeTrabajo;
             presupuestoDB.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoDB.HorasEstimadas;
             presupuestoDB.Estado = entidad.Estado ?? presupuestoDB.Estado;
