@@ -12,50 +12,52 @@ using AutoMapper;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    class AdministracionTrabajos(IRepositorio<Trabajo> repositorio, IMapper mapper) : IAdministrarTrabajos
+    class AdministracionTrabajos(IRepositorioConEstado<Trabajo, EstadoTrabajo> repositorio, IMapper mapper) : IAdministrarTrabajos
     {
-        private readonly IRepositorio<Trabajo> _repositorio = repositorio;
+        private readonly IRepositorioConEstado<Trabajo, EstadoTrabajo> _repositorio = repositorio;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Trabajo> CrearAsync(TrabajoDTO entidad)
         {
             var trabajo = _mapper.Map<Trabajo>(entidad);
-            trabajo.estado = EstadoTrabajo.Pendiente;
+            trabajo.Estado = EstadoTrabajo.Pendiente;
 
             await _repositorio.CrearAsync(trabajo);
             return trabajo;
         }
-        public Task<List<Trabajo>> ObtenerPorEstado(EstadoTrabajo estado)
-        {
-            var trabajos = _repositorio.ObtenerPorEstado(estado);
 
-            return trabajos;
+        public async Task<Trabajo> ObtenerPorIdAsync(int id)
+        {
+            return await _repositorio.ObtenerPorIdAsync(id);
         }
 
-        public Task<Trabajo> ObtenerPorIdAsync(int id)
+        public async Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
         {
-            var trabajo = _repositorio.ObtenerPorIdAsync(id) 
-                ?? throw new KeyNotFoundException($"No se encontró el trabajo con Id {id}.");
-
-            return trabajo;
+            return await _repositorio.ObtenerPorEstadoAsync(estado);
         }
 
-        public Task<List<Trabajo>> ObtenerPorIdCliente(int idCliente)
+        public async Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente)
         {
-            var trabajos = _repositorio.ObtenerPorIdCliente(idCliente) 
-                ?? throw new KeyNotFoundException($"No se encontraron trabajos para el cliente con Id {idCliente}.");
-
-            return trabajos;
+            return await _repositorio.ObtenerPorClienteAsync(idCliente);
         }
 
-        public Task ActualizarAsync(int id, ModificarTrabajo entidad)
+        public async Task ActualizarAsync(int id, ModificarTrabajo entidad)
         {
-            throw new NotImplementedException();
+            var trabajoDB = await _repositorio.ObtenerPorIdAsync(id);
+
+            trabajoDB.IdCliente = entidad.IdCliente ?? trabajoDB.IdCliente;
+            trabajoDB.Titulo = entidad.Titulo ?? trabajoDB.Titulo;
+            trabajoDB.Estado = entidad.Estado ?? trabajoDB.Estado;
+            trabajoDB.IdPresupuesto = entidad.IdPresupuesto ?? trabajoDB.IdPresupuesto;
+
+            await _repositorio.ActualizarAsync(trabajoDB);
         }
 
-        public Task EliminarAsync(int id)
+        public async Task EliminarAsync(int id)
         {
-            throw new NotImplementedException();
+            var trabajoDB = await _repositorio.ObtenerPorIdAsync(id);
+
+            await _repositorio.EliminarAsync(trabajoDB);
         }
     }
 }

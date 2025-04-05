@@ -1,4 +1,5 @@
-﻿using ShopMGR.Contexto;
+﻿using Microsoft.EntityFrameworkCore;
+using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
@@ -10,33 +11,52 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Repositorios
 {
-    public class TrabajoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConEstado<Trabajo>
+    public class TrabajoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConEstado<Trabajo, EstadoTrabajo>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
 
-        public Task ActualizarAsync(Trabajo entidad)
+        public async Task<Trabajo> CrearAsync(Trabajo nuevoTrabajo)
         {
-            throw new NotImplementedException();
+            _contexto.Trabajos.Add(nuevoTrabajo);
+            await _contexto.SaveChangesAsync();
+
+            return nuevoTrabajo;
         }
 
-        public Task<Trabajo> CrearAsync(Trabajo entidad)
+        public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var trabajoDB = await _contexto.Trabajos.FindAsync(id) 
+                ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {id}");
+
+            return trabajoDB;
         }
 
-        public Task EliminarAsync(Trabajo entidad)
+        public async Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente)
         {
-            throw new NotImplementedException();
+            var trabajos = await _contexto.Trabajos.Where(t => t.IdCliente == idCliente).ToListAsync()
+                ?? throw new KeyNotFoundException($"No se encuentran trabajos para el cliente con Id {idCliente}");
+
+            return trabajos;
         }
 
-        public Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
+        public async Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
         {
-            throw new NotImplementedException();
+            var trabajos = await _contexto.Trabajos.Where(t => t.Estado == estado).ToListAsync()
+                ?? throw new KeyNotFoundException($"No se encuentran trabajos con el estado {estado}");
+
+            return trabajos;
         }
 
-        public Task<Trabajo> ObtenerPorIdAsync(int id)
+        public async Task ActualizarAsync(Trabajo entidad)
         {
-            throw new NotImplementedException();
+            _contexto.Trabajos.Update(entidad);
+            await _contexto.SaveChangesAsync();
+        }
+
+        public async Task EliminarAsync(Trabajo entidad)
+        {
+            _contexto.Trabajos.Remove(entidad);
+            await _contexto.SaveChangesAsync();
         }
     }
 }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Repositorios
 {
-    public class PresupuestoRepositorio(ShopMGRDbContexto contexto) : IRepositorio<Presupuesto>
+    public class PresupuestoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConEstado<Presupuesto, EstadoPresupuesto>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
         
@@ -33,7 +33,6 @@ namespace ShopMGR.Repositorios
             return presupuestoDB;
         }
 
-        //nuevo
         public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
         {
             var presupuestos = await _contexto.Presupuestos

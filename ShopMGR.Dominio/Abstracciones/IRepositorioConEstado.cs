@@ -7,8 +7,11 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Dominio.Abstracciones
 {
-    public interface IRepositorioConEstado<TEntidad> : IRepositorio<TEntidad>
+    public interface IRepositorioConEstado<TEntidad, TEstado> : IRepositorio<TEntidad>
+        where TEntidad : class
+        where TEstado : Enum
     {
-        public Task<List<TEntidad>> ObtenerPorEstadoAsync();
+        public Task<List<TEntidad>> ObtenerPorEstadoAsync(TEstado estado);
+        public Task<List<TEntidad>> ObtenerPorClienteAsync(int idCliente);
     }
 }

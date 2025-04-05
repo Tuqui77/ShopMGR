@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 using System;
@@ -11,9 +12,9 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionDireccion(DireccionRepositorio direccionRepositorio, IMapper mapper) : IAdministrarDireccion
+    public class AdministracionDireccion(IRepositorioConCliente<Direccion> direccionRepositorio, IMapper mapper) : IAdministrarDireccion
     {
-        private readonly DireccionRepositorio _direccionRepositorio = direccionRepositorio;
+        private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Direccion> CrearAsync(DireccionDTO nuevaDireccion)
@@ -52,7 +53,9 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task EliminarAsync(int idDireccion)
         {
-            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
+            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion) 
+                ?? throw new KeyNotFoundException($"No se encuentra la direccion con el Id {idDireccion}");
+
             await _direccionRepositorio.EliminarAsync(direccionDB);
         }
     }

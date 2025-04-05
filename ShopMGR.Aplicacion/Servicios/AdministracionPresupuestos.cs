@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionPresupuestos(PresupuestoRepositorio presupuestoRepositorio, IMapper mapper) : IAdministrarPresupuestos
+    public class AdministracionPresupuestos(IRepositorioConEstado<Presupuesto, EstadoPresupuesto> presupuestoRepositorio, IMapper mapper) : IAdministrarPresupuestos
     {
-        private readonly PresupuestoRepositorio _presupuestoRepositorio = presupuestoRepositorio;
+        private readonly IRepositorioConEstado<Presupuesto, EstadoPresupuesto> _presupuestoRepositorio = presupuestoRepositorio;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Presupuesto> CrearAsync(PresupuestoDTO nuevoPresupuesto)
@@ -35,7 +36,6 @@ namespace ShopMGR.Aplicacion.Servicios
             return presupuesto;
         }
 
-        //Agregar métodos para listar presupuestos por clientes o por estado.
         public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
         {
             var presupuestos = await _presupuestoRepositorio.ObtenerPorClienteAsync(idCliente);

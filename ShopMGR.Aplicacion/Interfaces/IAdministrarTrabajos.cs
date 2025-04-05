@@ -11,7 +11,7 @@ namespace ShopMGR.Aplicacion.Interfaces
 {
     public interface IAdministrarTrabajos : IAdministrarEntidades<Trabajo, TrabajoDTO, ModificarTrabajo>
     {
-        Task<List<Trabajo>> ObtenerPorIdCliente(int idCliente);
-        Task<List<Trabajo>> ObtenerPorEstado(EstadoTrabajo estado);
+        Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente);
+        Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado);
     }
 }

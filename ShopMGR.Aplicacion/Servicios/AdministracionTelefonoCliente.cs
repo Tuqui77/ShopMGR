@@ -1,14 +1,15 @@
 ﻿using AutoMapper;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionTelefonoCliente(TelefonoClienteRepositorio telefonoClienteRepositorio, IMapper mapper) : IAdministrarTelefonoCliente
+    public class AdministracionTelefonoCliente(IRepositorioConCliente<TelefonoCliente> telefonoClienteRepositorio, IMapper mapper) : IAdministrarTelefonoCliente
     {
-        private readonly TelefonoClienteRepositorio _telefonoClienteRepositorio = telefonoClienteRepositorio;
+        private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoClienteRepositorio;
         private readonly IMapper _mapper = mapper;
 
         public async Task<TelefonoCliente> CrearAsync(TelefonoClienteDTO nuevoTelefono)

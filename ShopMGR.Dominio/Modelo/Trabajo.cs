@@ -7,8 +7,8 @@ namespace ShopMGR.Dominio.Modelo
     {
         public int Id { get; set; }
 
-        public EstadoTrabajo estado;
-        public DateTime fechaInicio;
+        public EstadoTrabajo Estado { get; set; }
+        public DateTime FechaInicio { get; set; }
         public string Titulo { get; set; }
         public List<HorasYDescripcion> HorasDeTrabajo { get; set; } = [];
         public List<string> Fotos { get; set; } = [];
