@@ -45,6 +45,7 @@ namespace ShopMGR.Aplicacion.Servicios
             direccionDB.Piso = direccionActualizada.Piso ?? direccionDB.Piso;
             direccionDB.Departamento = direccionActualizada.Departamento ?? direccionDB.Departamento;
             direccionDB.CodigoPostal = direccionActualizada.CodigoPostal ?? direccionDB.CodigoPostal;
+            direccionDB.Descripcion = direccionActualizada.Descripcion ?? direccionDB.Descripcion;
 
             await _direccionRepositorio.ActualizarAsync(direccionDB);
         }
