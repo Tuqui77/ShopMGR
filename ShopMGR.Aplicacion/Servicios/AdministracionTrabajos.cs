@@ -1,14 +1,9 @@
-﻿using ShopMGR.Dominio.Abstracciones;
+﻿using AutoMapper;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
+using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
-using ShopMGR.Aplicacion.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ShopMGR.Aplicacion.Data_Transfer_Objects;
-using AutoMapper;
 
 namespace ShopMGR.Aplicacion.Servicios
 {

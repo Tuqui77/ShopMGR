@@ -3,7 +3,6 @@ using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
-using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {

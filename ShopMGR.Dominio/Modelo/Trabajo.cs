@@ -1,5 +1,4 @@
 ﻿using ShopMGR.Dominio.Enums;
-using System.Text.Json.Serialization;
 
 namespace ShopMGR.Dominio.Modelo
 {

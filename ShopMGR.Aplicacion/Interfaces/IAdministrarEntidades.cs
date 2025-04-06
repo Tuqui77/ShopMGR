@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ShopMGR.Aplicacion.Interfaces
+﻿namespace ShopMGR.Aplicacion.Interfaces
 {
     public interface IAdministrarEntidades<TEntidad, TDTO, TActualizacion>
     {

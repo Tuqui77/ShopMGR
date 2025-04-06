@@ -3,18 +3,13 @@ using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShopMGR.Repositorios
 {
     public class PresupuestoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConEstado<Presupuesto, EstadoPresupuesto>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
-        
+
         public async Task<Presupuesto> CrearAsync(Presupuesto presupuesto)
         {
             _contexto.Presupuestos.Add(presupuesto);

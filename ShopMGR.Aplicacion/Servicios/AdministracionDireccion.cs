@@ -3,12 +3,6 @@ using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
-using ShopMGR.Repositorios;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
@@ -53,7 +47,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task EliminarAsync(int idDireccion)
         {
-            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion) 
+            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion)
                 ?? throw new KeyNotFoundException($"No se encuentra la direccion con el Id {idDireccion}");
 
             await _direccionRepositorio.EliminarAsync(direccionDB);

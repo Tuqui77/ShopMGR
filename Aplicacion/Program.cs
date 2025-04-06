@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using ShopMGR.Contexto;
+using Microsoft.OpenApi.Models;
 using ShopMGR.Aplicacion;
+using ShopMGR.Contexto;
+using System.Reflection;
 
 namespace ShopMGR.WebApi.Aplicacion
 {
@@ -26,11 +29,21 @@ namespace ShopMGR.WebApi.Aplicacion
 
             // Add services to the container.
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                var API_NAME = Assembly.GetExecutingAssembly().GetName().Name;
 
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = API_NAME,
+                    Description = "API ShopMGR"
 
+                });
+
+            });
+            //
 
             var app = builder.Build();
 
@@ -38,7 +51,10 @@ namespace ShopMGR.WebApi.Aplicacion
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(o =>
+                {
+                    o.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+                });
             }
 
             app.UseHttpsRedirection();

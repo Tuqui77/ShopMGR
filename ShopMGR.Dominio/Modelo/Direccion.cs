@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace ShopMGR.Dominio.Modelo
+﻿namespace ShopMGR.Dominio.Modelo
 {
     public class Direccion
     {

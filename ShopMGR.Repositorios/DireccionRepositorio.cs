@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Contexto;
+using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class DireccionRepositorio(ShopMGRDbContexto contexto) : IRepositorio<Direccion>
+    public class DireccionRepositorio(ShopMGRDbContexto contexto) : IRepositorioConCliente<Direccion>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
 
@@ -25,9 +25,9 @@ namespace ShopMGR.Repositorios
         }
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
         {
-            var direccion = await _contexto.Direccion.FirstOrDefaultAsync(x => x.Id == idDireccion) 
+            var direccion = await _contexto.Direccion.FirstOrDefaultAsync(x => x.Id == idDireccion)
                 ?? throw new KeyNotFoundException("No existe una dirección con ese Id");
-            
+
             return direccion;
         }
         public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)

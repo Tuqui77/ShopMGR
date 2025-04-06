@@ -1,13 +1,8 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
-using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
-using System.Threading.Tasks;
 
 namespace ShopMGR.WebApi.Controllers
 {
@@ -21,7 +16,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("CrearCliente")]
         public async Task<IActionResult> CrearCliente(ClienteDTO cliente)
         {
-            if(cliente == null)
+            if (cliente == null)
             {
                 return BadRequest("Los datos del cliente no pueden estar vacíos.");
             }

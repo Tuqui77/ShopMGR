@@ -1,10 +1,8 @@
-﻿using ShopMGR.Aplicacion.Servicios;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using ShopMGR.Contexto;
-using ShopMGR.Dominio.Modelo;
+﻿using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Aplicacion.Servicios;
+using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.WebApi.Controllers
 {

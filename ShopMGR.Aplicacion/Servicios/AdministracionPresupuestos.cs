@@ -4,7 +4,6 @@ using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
-using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {

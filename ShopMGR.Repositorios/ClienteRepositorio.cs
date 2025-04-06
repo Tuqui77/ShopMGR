@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Contexto;
+using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class ClienteRepositorio(ShopMGRDbContexto contexto) : IRepositorio<Cliente>
+    public class ClienteRepositorio(ShopMGRDbContexto contexto) : IRepositorioCliente<Cliente>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
 

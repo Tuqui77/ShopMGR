@@ -3,11 +3,6 @@ using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShopMGR.Repositorios
 {
@@ -25,7 +20,7 @@ namespace ShopMGR.Repositorios
 
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
-            var trabajoDB = await _contexto.Trabajos.FindAsync(id) 
+            var trabajoDB = await _contexto.Trabajos.FindAsync(id)
                 ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {id}");
 
             return trabajoDB;

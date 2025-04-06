@@ -2,9 +2,7 @@
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
-using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
-using System.Threading.Tasks;
 
 namespace ShopMGR.WebApi.Controllers
 {

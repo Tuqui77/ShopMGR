@@ -3,14 +3,13 @@ using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
-using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
     public class AdministracionClientes(
-        IRepositorioCliente<Cliente> clienteRepositorio, 
-        IRepositorioConCliente<Direccion> direccionRepositorio, 
-        IRepositorioConCliente<TelefonoCliente> telefonoRepositorio, 
+        IRepositorioCliente<Cliente> clienteRepositorio,
+        IRepositorioConCliente<Direccion> direccionRepositorio,
+        IRepositorioConCliente<TelefonoCliente> telefonoRepositorio,
         IMapper mapper) : IAdministrarClientes
 
     {
@@ -18,7 +17,7 @@ namespace ShopMGR.Aplicacion.Servicios
         private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
         private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoRepositorio;
         private readonly IMapper _mapper = mapper;
-        
+
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
         {
             var cliente = _mapper.Map<Cliente>(nuevoCliente);

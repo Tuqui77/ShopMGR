@@ -5,7 +5,7 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class TelefonoClienteRepositorio(ShopMGRDbContexto contexto) : IRepositorio<TelefonoCliente>
+    public class TelefonoClienteRepositorio(ShopMGRDbContexto contexto) : IRepositorioConCliente<TelefonoCliente>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
 
