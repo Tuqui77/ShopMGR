@@ -45,8 +45,11 @@ namespace ShopMGR.Repositorios
             await _contexto.SaveChangesAsync();
         }
 
-        public async Task EliminarAsync(Cliente cliente)
+        public async Task EliminarAsync(int idCliente)
         {
+            var cliente = await ObtenerPorIdAsync(idCliente)
+                ?? throw new KeyNotFoundException($"No existe un cliente con el Id {idCliente}");
+
             _contexto.Clientes.Remove(cliente);
             await _contexto.SaveChangesAsync();
         }

@@ -47,10 +47,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task EliminarAsync(int idDireccion)
         {
-            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion)
-                ?? throw new KeyNotFoundException($"No se encuentra la direccion con el Id {idDireccion}");
-
-            await _direccionRepositorio.EliminarAsync(direccionDB);
+            await _direccionRepositorio.EliminarAsync(idDireccion);
         }
     }
 }

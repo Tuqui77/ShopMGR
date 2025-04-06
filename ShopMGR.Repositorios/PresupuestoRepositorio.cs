@@ -33,6 +33,7 @@ namespace ShopMGR.Repositorios
             var presupuestos = await _contexto.Presupuestos
                 .Where(p => p.IdCliente == idCliente)
                 .ToListAsync();
+
             return presupuestos;
         }
 
@@ -41,6 +42,7 @@ namespace ShopMGR.Repositorios
             var presupuestos = await _contexto.Presupuestos
                 .Where(p => p.Estado == estado)
                 .ToListAsync();
+
             return presupuestos;
         }
 
@@ -50,9 +52,12 @@ namespace ShopMGR.Repositorios
             await _contexto.SaveChangesAsync();
         }
 
-        public async Task EliminarAsync(Presupuesto entidad)
+        public async Task EliminarAsync(int idPresupuesto)
         {
-            _contexto.Presupuestos.Remove(entidad);
+            var presupuesto = await ObtenerPorIdAsync(idPresupuesto)
+                ?? throw new KeyNotFoundException($"No existe un presupuestos con el id {idPresupuesto}");
+
+            _contexto.Presupuestos.Remove(presupuesto);
             await _contexto.SaveChangesAsync();
         }
     }

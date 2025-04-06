@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
@@ -21,8 +22,8 @@ namespace ShopMGR.Repositorios
         }
         public async Task<TelefonoCliente> ObtenerPorIdAsync(int idTelefono)
         {
-            var telefono = await _contexto.TelefonoCliente.FirstOrDefaultAsync(x => x.Id == idTelefono)
-                ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
+            var telefono = await _contexto.TelefonoCliente.FindAsync(idTelefono)
+                ?? throw new KeyNotFoundException($"No existe un teléfono con el Id {idTelefono}");
 
             return telefono;
         }
@@ -41,8 +42,11 @@ namespace ShopMGR.Repositorios
             _contexto.TelefonoCliente.Update(telefono);
             await _contexto.SaveChangesAsync();
         }
-        public async Task EliminarAsync(TelefonoCliente telefono)
+        public async Task EliminarAsync(int idTelefono)
         {
+            var telefono = await ObtenerPorIdAsync(idTelefono)
+                ?? throw new KeyNotFoundException($"No existe un teléfono con el id {idTelefono}");
+
             _contexto.TelefonoCliente.Remove(telefono);
             await _contexto.SaveChangesAsync();
         }

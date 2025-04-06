@@ -48,11 +48,9 @@ namespace ShopMGR.Aplicacion.Servicios
             await _repositorio.ActualizarAsync(trabajoDB);
         }
 
-        public async Task EliminarAsync(int id)
+        public async Task EliminarAsync(int idTrabajo)
         {
-            var trabajoDB = await _repositorio.ObtenerPorIdAsync(id);
-
-            await _repositorio.EliminarAsync(trabajoDB);
+            await _repositorio.EliminarAsync(idTrabajo);
         }
     }
 }

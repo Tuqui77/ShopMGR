@@ -48,9 +48,11 @@ namespace ShopMGR.Repositorios
             await _contexto.SaveChangesAsync();
         }
 
-        public async Task EliminarAsync(Trabajo entidad)
+        public async Task EliminarAsync(int idTrabajo)
         {
-            _contexto.Trabajos.Remove(entidad);
+            var trabajo = await ObtenerPorIdAsync(idTrabajo);
+
+            _contexto.Trabajos.Remove(trabajo);
             await _contexto.SaveChangesAsync();
         }
     }

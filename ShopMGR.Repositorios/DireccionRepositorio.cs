@@ -25,7 +25,7 @@ namespace ShopMGR.Repositorios
         }
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
         {
-            var direccion = await _contexto.Direccion.FirstOrDefaultAsync(x => x.Id == idDireccion)
+            var direccion = await _contexto.Direccion.FindAsync(idDireccion)
                 ?? throw new KeyNotFoundException("No existe una dirección con ese Id");
 
             return direccion;
@@ -36,17 +36,23 @@ namespace ShopMGR.Repositorios
 
             return direccion;
         }
-        public async Task<Direccion?> ObtenerPorCalleYAlturaAsync(string calle, string altura)
+        public async Task<Direccion> ObtenerPorCalleYAlturaAsync(string calle, string altura)
         {
-            return await _contexto.Direccion.FirstOrDefaultAsync(x => x.Calle == calle && x.Altura == altura);
+            var direccion = await _contexto.Direccion.FirstOrDefaultAsync(x => x.Calle == calle && x.Altura == altura)
+                ?? throw new KeyNotFoundException($"No existe esa direccion en la base de datos");
+
+            return direccion;
         }
         public async Task ActualizarAsync(Direccion direccion)
         {
             _contexto.Direccion.Update(direccion);
             await _contexto.SaveChangesAsync();
         }
-        public async Task EliminarAsync(Direccion direccion)
+        public async Task EliminarAsync(int idDireccion)
         {
+            var direccion = await ObtenerPorIdAsync(idDireccion)
+                ?? throw new KeyNotFoundException($"No existe una direccion con el id {idDireccion}");
+
             _contexto.Direccion.Remove(direccion);
             await _contexto.SaveChangesAsync();
         }

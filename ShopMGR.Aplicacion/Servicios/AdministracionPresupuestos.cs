@@ -48,11 +48,6 @@ namespace ShopMGR.Aplicacion.Servicios
             return presupuestos;
         }
 
-
-
-
-
-        //Fin Metodos nuevos
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
         {
             var presupuestoDB = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
@@ -69,9 +64,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task EliminarAsync(int idPresupuesto)
         {
-            var presupuestoDB = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
-
-            await _presupuestoRepositorio.EliminarAsync(presupuestoDB);
+            await _presupuestoRepositorio.EliminarAsync(idPresupuesto);
         }
 
     }

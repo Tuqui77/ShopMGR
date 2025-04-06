@@ -77,10 +77,7 @@ namespace ShopMGR.Aplicacion.Servicios
         }
         public async Task EliminarAsync(int idCliente)
         {
-            var cliente = await _clienteRepositorio.ObtenerPorIdAsync(idCliente)
-                ?? throw new KeyNotFoundException("No existe un cliente con ese Id");
-
-            await _clienteRepositorio.EliminarAsync(cliente);
+            await _clienteRepositorio.EliminarAsync(idCliente);
         }
     }
 }
