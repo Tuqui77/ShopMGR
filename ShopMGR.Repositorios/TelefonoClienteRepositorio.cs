@@ -14,6 +14,8 @@ namespace ShopMGR.Repositorios
         {
             if (!await _contexto.Clientes.AnyAsync(x => x.Id == telefono.IdCliente))
                 throw new KeyNotFoundException("No existe el cliente asociado a ese Id");
+            if (await _contexto.TelefonoCliente.AnyAsync(x => x.Telefono == telefono.Telefono))
+                throw new InvalidOperationException($"Ya existe un teléfono con el número {telefono.Telefono}");
 
             _contexto.TelefonoCliente.Add(telefono);
             await _contexto.SaveChangesAsync();
