@@ -15,7 +15,14 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task<Trabajo> CrearAsync(TrabajoDTO entidad)
         {
             var trabajo = _mapper.Map<Trabajo>(entidad);
-            trabajo.Estado = EstadoTrabajo.Pendiente;
+            if (entidad.Estado == EstadoTrabajo.Iniciado)
+            {
+                trabajo.FechaInicio = DateTime.Now;
+            }
+            else if (entidad.Estado == null)
+            {
+                trabajo.Estado = EstadoTrabajo.Pendiente;
+            }
 
             await _repositorio.CrearAsync(trabajo);
             return trabajo;
