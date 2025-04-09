@@ -40,6 +40,10 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var trabajoDB = await _repositorio.ObtenerPorIdAsync(id);
 
+            if (entidad.Estado == EstadoTrabajo.Iniciado)
+            {
+                trabajoDB.FechaInicio = DateTime.Now;
+            }
             trabajoDB.IdCliente = entidad.IdCliente ?? trabajoDB.IdCliente;
             trabajoDB.Titulo = entidad.Titulo ?? trabajoDB.Titulo;
             trabajoDB.Estado = entidad.Estado ?? trabajoDB.Estado;
