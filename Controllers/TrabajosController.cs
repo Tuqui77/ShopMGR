@@ -27,6 +27,19 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajo);
         }
 
+        [HttpPost]
+        [Route("AgregarFotosTrabajo")]
+        public async Task<IActionResult> AgregarFotosTrabajo(int idTrabajo, [FromBody] List<FotoDTO> fotos)
+        {
+            if (fotos == null || fotos.Count == 0)
+            {
+                return BadRequest("La lista de fotos no puede estar vacía.");
+            }
+
+            await _administrarTrabajos.AgregarFotosAsync(idTrabajo, fotos);
+            return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
+        }
+
         [HttpGet]
         [Route("ObtenerTrabajoPorId")]
         public async Task<IActionResult> ObtenerTrabajoPorId(int idTrabajo)

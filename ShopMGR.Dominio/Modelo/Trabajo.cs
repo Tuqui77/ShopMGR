@@ -7,9 +7,9 @@ namespace ShopMGR.Dominio.Modelo
         public int Id { get; set; }
 
         public EstadoTrabajo Estado { get; set; }
-        public DateTime FechaInicio { get; set; }
+        public DateTime? FechaInicio { get; set; }
         public string Titulo { get; set; }
-        public List<string> Fotos { get; set; } = []; //cambiar esto por una entidad separada que almacene las fotos
+        public List<Foto> Fotos { get; set; } = [];
 
         //Relaciones
         public List<HorasYDescripcion> HorasDeTrabajo { get; set; } = [];

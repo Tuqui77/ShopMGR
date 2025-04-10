@@ -12,6 +12,7 @@ namespace ShopMGR.Contexto
         public DbSet<Material> Materiales { get; set; }
         public DbSet<Direccion> Direccion { get; set; }
         public DbSet<TelefonoCliente> TelefonoCliente { get; set; }
+        public DbSet<Foto> Fotos { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -42,6 +43,11 @@ namespace ShopMGR.Contexto
                 .HasOne(t => t.Presupuesto)
                 .WithOne(p => p.Trabajo)
                 .HasForeignKey<Trabajo>("IdPresupuesto");
+            modelBuilder.Entity<Trabajo>()
+                .HasMany(t => t.Fotos)
+                .WithOne(f => f.Trabajo)
+                .HasForeignKey("IdTrabajo");
+            //Falta la relación con HorasDeTrabajo
 
             modelBuilder.Entity<Presupuesto>()
                 .HasOne(p => p.Cliente)

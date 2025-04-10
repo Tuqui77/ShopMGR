@@ -7,9 +7,9 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    class AdministracionTrabajos(IRepositorioConEstado<Trabajo, EstadoTrabajo> repositorio, IMapper mapper) : IAdministrarTrabajos
+    class AdministracionTrabajos(IRepositorioConFoto repositorio, IMapper mapper) : IAdministrarTrabajos
     {
-        private readonly IRepositorioConEstado<Trabajo, EstadoTrabajo> _repositorio = repositorio;
+        private readonly IRepositorioConFoto _repositorio = repositorio;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Trabajo> CrearAsync(TrabajoDTO entidad)
@@ -26,6 +26,18 @@ namespace ShopMGR.Aplicacion.Servicios
 
             await _repositorio.CrearAsync(trabajo);
             return trabajo;
+        }
+
+        public async Task<List<Foto>> AgregarFotosAsync(int idTrabajo, List<FotoDTO> fotos)
+        {
+            var Fotos = _mapper.Map<List<Foto>>(fotos);
+
+            foreach (var foto in Fotos)
+            {
+                foto.IdTrabajo = idTrabajo;
+            }
+
+            return await _repositorio.AgregarFotosAsync(idTrabajo, Fotos);
         }
 
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
@@ -63,5 +75,6 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             await _repositorio.EliminarAsync(idTrabajo);
         }
+
     }
 }

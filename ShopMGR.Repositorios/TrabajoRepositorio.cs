@@ -6,7 +6,7 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class TrabajoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConEstado<Trabajo, EstadoTrabajo>
+    public class TrabajoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConFoto
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
 
@@ -17,6 +17,17 @@ namespace ShopMGR.Repositorios
 
             return nuevoTrabajo;
         }
+
+        public async Task<List<Foto>> AgregarFotosAsync(int idTrabajo, List<Foto> fotos)
+        {
+            var trabajo = await ObtenerPorIdAsync(idTrabajo) ??
+                throw new KeyNotFoundException($"No existe un trabajo con el Id {idTrabajo}");
+
+            _contexto.Fotos.AddRange(fotos);
+            await _contexto.SaveChangesAsync();
+            return fotos;
+        }
+
 
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
