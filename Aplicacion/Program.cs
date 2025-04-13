@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
+using ShopMGR.Infraestructura.Drive;
 using System.Reflection;
 
 namespace ShopMGR.WebApi.Aplicacion
@@ -26,6 +27,8 @@ namespace ShopMGR.WebApi.Aplicacion
             {
                 options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
             });
+            builder.Services.Configure<GoogleDriveSettings>(
+                builder.Configuration.GetSection("GoogleDrive"));
 
             // Add services to the container.
             builder.Services.AddControllers();
