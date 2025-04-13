@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Google.Apis.Drive.v3;
+using Microsoft.Extensions.DependencyInjection;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
+using ShopMGR.Infraestructura.Drive;
 using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion
@@ -12,8 +14,7 @@ namespace ShopMGR.Aplicacion
     {
         public static IServiceCollection InyectarServicios(this IServiceCollection services)
         {
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
+            //Dependencias de entidades de la aplicación.
             services.AddScoped<IRepositorioCliente<Cliente>, ClienteRepositorio>();
             services.AddScoped<IAdministrarClientes, AdministracionClientes>();
             services.AddScoped<IRepositorioConCliente<Direccion>, DireccionRepositorio>();
@@ -25,6 +26,13 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioConFoto, TrabajoRepositorio>();
             services.AddScoped<IAdministrarTrabajos, AdministracionTrabajos>();
 
+            //Dependencias de almacenamiento en la nube.
+            services.AddScoped<GoogleDriveClient>();
+            services.AddScoped<IGoogleDriveServicio, GoogleDriveServicio>();
+            services.AddScoped<DriveService>();
+
+            //Herramientas adicionales
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             return services;
         }
