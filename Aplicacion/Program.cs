@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
+using ShopMGR.Infraestructura;
 using ShopMGR.Infraestructura.Drive;
 using System.Reflection;
 
@@ -44,8 +45,9 @@ namespace ShopMGR.WebApi.Aplicacion
 
                 });
 
+                //c.OperationFilter<SwaggerFileUploadFilter>();
+
             });
-            //
 
             var app = builder.Build();
 
