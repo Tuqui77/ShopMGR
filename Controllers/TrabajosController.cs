@@ -149,17 +149,20 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("SubirArchivoDrive")]
-        public async Task<IActionResult> SubirArchivo(IFormFile archivos)
+        public async Task<IActionResult> SubirArchivo([FromForm] List<IFormFile> archivos)
         {
-            if (archivos == null || archivos.Length == 0)
+            if (archivos == null || archivos.Count == 0)
             {
                 return BadRequest("No se seleccionó ningún archivo.");
             }
-            var credenciales = await _servicio.ConectarConGoogleDrive();
+            await _servicio.ConectarConGoogleDrive();
 
-            await _servicio.SubirArchivoAsync(archivos);
+            foreach (var archivo in archivos)
+            {
+                await _servicio.SubirArchivoAsync(archivo);
+            }
 
-            return Ok("Archivo subido correctamente.");
+            return Ok("Archivos subidos correctamente.");
         }
 
     }

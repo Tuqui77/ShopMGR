@@ -50,7 +50,7 @@ namespace ShopMGR.Infraestructura.Drive
                 Name = nombreArchivo,
             };
 
-            var request = _driveService.Files.Create(fileMetadata, archivoStream, mimeType); //Al request le falta agregarle las credenciales para autorizar la acción
+            var request = _driveService.Files.Create(fileMetadata, archivoStream, mimeType);
             request.Fields = "id"; //Solo prueba, en realidad necesito que devuelva el enlace del archivo.
 
             var result = await request.UploadAsync();
