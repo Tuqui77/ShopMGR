@@ -8,7 +8,7 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ClienteController(AdministracionClientes administracionClientes) : ControllerBase
+    public class ClienteController(IAdministrarClientes administracionClientes) : ControllerBase
     {
         private readonly IAdministrarClientes _administracionClientes = administracionClientes;
 

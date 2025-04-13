@@ -11,7 +11,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class TrabajosController(IAdministrarTrabajos administrarTrabajos) : ControllerBase
     {
-        IAdministrarTrabajos _administrarTrabajos = administrarTrabajos;
+        private readonly IAdministrarTrabajos _administrarTrabajos = administrarTrabajos;
 
 
         [HttpPost]

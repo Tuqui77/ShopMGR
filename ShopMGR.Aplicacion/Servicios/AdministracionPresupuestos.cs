@@ -27,7 +27,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             return presupuesto;
         }
-
+        
         public async Task<Presupuesto> ObtenerPorIdAsync(int idPresupuesto)
         {
             var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
