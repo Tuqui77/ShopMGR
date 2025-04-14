@@ -73,6 +73,15 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpGet]
+        [Route("ObtenerTrabajosDetallados")]
+        public async Task<ActionResult<Trabajo>> ObtenerTrabajosDetallados(int idTrabajo)
+        {
+            var trabajo = await _administrarTrabajos.ObtenerDetallePorIdAsync(idTrabajo);
+
+            return Ok(trabajo);
+        }
+
+        [HttpGet]
         [Route("ObtenerTrabajosPorCliente")]
         public async Task<ActionResult<List<Trabajo>>> ObtenerTrabajosPorCliente(int idCliente)
         {

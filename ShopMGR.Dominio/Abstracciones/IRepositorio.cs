@@ -8,5 +8,6 @@ namespace ShopMGR.Dominio.Abstracciones
         public Task<TEntidad> ObtenerPorIdAsync(int id);
         public Task ActualizarAsync(TEntidad entidad);
         public Task EliminarAsync(int id);
+        public Task<TEntidad> ObtenerDetallePorIdAsync(int id);
     }
 }
