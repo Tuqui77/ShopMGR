@@ -11,6 +11,6 @@ namespace ShopMGR.Aplicacion.Interfaces
     public interface IGoogleDriveServicio
     {
         public Task<UserCredential> ConectarConGoogleDrive();
-        public Task SubirArchivoAsync(IFormFile archivos);
+        public Task<string> SubirArchivoAsync(IFormFile archivos);
     }
 }
