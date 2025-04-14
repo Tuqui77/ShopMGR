@@ -23,6 +23,7 @@ namespace ShopMGR.Repositorios
 
             return direccion;
         }
+
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
         {
             var direccion = await _contexto.Direccion.FindAsync(idDireccion)
@@ -30,12 +31,19 @@ namespace ShopMGR.Repositorios
 
             return direccion;
         }
+
+        public Task<Direccion> ObtenerDetallePorIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)
         {
             var direccion = await _contexto.Direccion.Where(x => x.IdCliente == idCliente).ToListAsync();
 
             return direccion;
         }
+
         public async Task<Direccion> ObtenerPorCalleYAlturaAsync(string calle, string altura)
         {
             var direccion = await _contexto.Direccion.FirstOrDefaultAsync(x => x.Calle == calle && x.Altura == altura)
@@ -43,11 +51,13 @@ namespace ShopMGR.Repositorios
 
             return direccion;
         }
+
         public async Task ActualizarAsync(Direccion direccion)
         {
             _contexto.Direccion.Update(direccion);
             await _contexto.SaveChangesAsync();
         }
+
         public async Task EliminarAsync(int idDireccion)
         {
             var direccion = await ObtenerPorIdAsync(idDireccion)

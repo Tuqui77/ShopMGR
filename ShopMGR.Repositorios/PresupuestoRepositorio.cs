@@ -27,6 +27,10 @@ namespace ShopMGR.Repositorios
 
             return presupuestoDB;
         }
+        public Task<Presupuesto> ObtenerDetallePorIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
         {

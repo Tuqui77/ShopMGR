@@ -22,6 +22,7 @@ namespace ShopMGR.Repositorios
 
             return telefono;
         }
+
         public async Task<TelefonoCliente> ObtenerPorIdAsync(int idTelefono)
         {
             var telefono = await _contexto.TelefonoCliente.FindAsync(idTelefono)
@@ -29,21 +30,31 @@ namespace ShopMGR.Repositorios
 
             return telefono;
         }
+
+
+        public Task<TelefonoCliente> ObtenerDetallePorIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<List<TelefonoCliente>> ObtenerPorIdCliente(int idCliente)
         {
             var telefono = await _contexto.TelefonoCliente.Where(t => t.IdCliente == idCliente).ToListAsync();
 
             return telefono;
         }
+
         public async Task<TelefonoCliente?> ObtenerPorNumeroAsync(string numero) //Dudo de la utilidad de esta búsqueda.
         {
             return await _contexto.TelefonoCliente.FirstOrDefaultAsync(x => x.Telefono == numero);
         }
+
         public async Task ActualizarAsync(TelefonoCliente telefono)
         {
             _contexto.TelefonoCliente.Update(telefono);
             await _contexto.SaveChangesAsync();
         }
+
         public async Task EliminarAsync(int idTelefono)
         {
             var telefono = await ObtenerPorIdAsync(idTelefono)

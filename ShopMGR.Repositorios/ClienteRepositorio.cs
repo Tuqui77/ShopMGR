@@ -25,6 +25,12 @@ namespace ShopMGR.Repositorios
 
             return cliente;
         }
+
+        public Task<Cliente> ObtenerDetallePorIdAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<Cliente?> ObtenerPorNombreAsync(string nombre)
         {
             var cliente = await _contexto.Clientes.FirstOrDefaultAsync(x => x.NombreCompleto == nombre)
@@ -53,5 +59,6 @@ namespace ShopMGR.Repositorios
             _contexto.Clientes.Remove(cliente);
             await _contexto.SaveChangesAsync();
         }
+
     }
 }

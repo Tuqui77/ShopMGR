@@ -40,6 +40,11 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _repositorio.ObtenerPorIdAsync(id);
         }
 
+        public async Task<Trabajo> ObtenerDetallePorIdAsync(int id)
+        {
+            return await _repositorio.ObtenerDetallePorIdAsync(id);
+        }
+
         public async Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
         {
             return await _repositorio.ObtenerPorEstadoAsync(estado);
