@@ -26,13 +26,15 @@ namespace ShopMGR.Aplicacion.Servicios
             return credentials;
         }
 
-        public async Task SubirArchivoAsync(IFormFile archivos)
+        public async Task<string> SubirArchivoAsync(IFormFile archivos)
         {
             await _client.LoginAsync(_settings.ClientId, _settings.ClientSecret);
 
             using var stream = archivos.OpenReadStream();
 
-            await _client.SubirArchivoAsync(stream, archivos.FileName, archivos.ContentType);
+            var link = await _client.SubirArchivoAsync(stream, archivos.FileName, archivos.ContentType);
+
+            return link;
         }
     }
 }

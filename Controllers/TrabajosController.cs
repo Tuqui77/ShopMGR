@@ -33,12 +33,7 @@ namespace ShopMGR.WebApi.Controllers
         [Route("AgregarFotosTrabajo")]
         public async Task<IActionResult> AgregarFotosTrabajo(int idTrabajo, [FromBody] List<FotoDTO> fotos)
         {
-            if (fotos == null || fotos.Count == 0)
-            {
-                return BadRequest("La lista de fotos no puede estar vacía.");
-            }
-
-            await _administrarTrabajos.AgregarFotosAsync(idTrabajo, fotos);
+            
             return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
         }
 
@@ -149,20 +144,23 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("SubirArchivoDrive")]
-        public async Task<IActionResult> SubirArchivo([FromForm] List<IFormFile> archivos)
+        public async Task<List<string>> SubirArchivo([FromForm] List<IFormFile> archivos)
         {
-            if (archivos == null || archivos.Count == 0)
-            {
-                return BadRequest("No se seleccionó ningún archivo.");
-            }
+            //if (archivos == null || archivos.Count == 0)
+            //{
+            //    return BadRequest("No se seleccionó ningún archivo.");
+            //}
             await _servicio.ConectarConGoogleDrive();
+
+            var Links = new List<string>();
 
             foreach (var archivo in archivos)
             {
-                await _servicio.SubirArchivoAsync(archivo);
+                var link = await _servicio.SubirArchivoAsync(archivo);
+                Links.Add(link);
             }
 
-            return Ok("Archivos subidos correctamente.");
+            return Links;
         }
 
     }

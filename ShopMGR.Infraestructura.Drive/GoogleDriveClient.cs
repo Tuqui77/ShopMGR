@@ -51,13 +51,13 @@ namespace ShopMGR.Infraestructura.Drive
             };
 
             var request = _driveService.Files.Create(fileMetadata, archivoStream, mimeType);
-            request.Fields = "id"; //Solo prueba, en realidad necesito que devuelva el enlace del archivo.
+            request.Fields = "webViewLink"; //Solo prueba, en realidad necesito que devuelva el enlace del archivo.
 
             var result = await request.UploadAsync();
 
             if (result.Status == Google.Apis.Upload.UploadStatus.Completed)
             {
-                return request.ResponseBody.Id;
+                return request.ResponseBody.WebViewLink;
             }
             else
             {
