@@ -18,14 +18,13 @@ namespace ShopMGR.Repositorios
             return nuevoTrabajo;
         }
 
-        public async Task<List<Foto>> AgregarFotosAsync(int idTrabajo, List<Foto> fotos)
+        public async Task AgregarFotosAsync(List<Foto> fotos)
         {
-            var trabajo = await ObtenerPorIdAsync(idTrabajo) ??
-                throw new KeyNotFoundException($"No existe un trabajo con el Id {idTrabajo}");
+            var trabajo = await ObtenerPorIdAsync(fotos[0].IdTrabajo) 
+                ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {fotos[0].IdTrabajo}");
 
             _contexto.Fotos.AddRange(fotos);
             await _contexto.SaveChangesAsync();
-            return fotos;
         }
 
 

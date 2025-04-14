@@ -10,7 +10,7 @@ namespace ShopMGR.Dominio.Abstracciones
 {
     public interface IRepositorioConFoto : IRepositorioConEstado<Trabajo, EstadoTrabajo>
     {
-        Task<List<Foto>> AgregarFotosAsync(int idTrabajo, List<Foto> fotos);
+        Task AgregarFotosAsync(List<Foto> fotos);
         //    Task<List<Foto>> ObtenerFotosAsync(int idTrabajo);
         //    Task EliminarFotoAsync(int idTrabajo, int idFoto);
     }
