@@ -28,16 +28,11 @@ namespace ShopMGR.Aplicacion.Servicios
             return trabajo;
         }
 
-        public async Task<List<Foto>> AgregarFotosAsync(int idTrabajo, List<FotoDTO> fotos)
+        public async Task AgregarFotosAsync(List<FotoDTO> fotos)
         {
             var Fotos = _mapper.Map<List<Foto>>(fotos);
 
-            foreach (var foto in Fotos)
-            {
-                foto.IdTrabajo = idTrabajo;
-            }
-
-            return await _repositorio.AgregarFotosAsync(idTrabajo, Fotos);
+            await _repositorio.AgregarFotosAsync(Fotos);
         }
 
         public async Task<Trabajo> ObtenerPorIdAsync(int id)

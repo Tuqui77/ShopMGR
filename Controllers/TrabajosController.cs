@@ -31,9 +31,31 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("AgregarFotosTrabajo")]
-        public async Task<IActionResult> AgregarFotosTrabajo(int idTrabajo, [FromBody] List<FotoDTO> fotos)
+        public async Task<IActionResult> AgregarFotosTrabajo(int idTrabajo, [FromForm] IFormFileCollection fotos)
         {
-            
+            if (fotos == null || fotos.Count == 0)
+            {
+                return BadRequest("No se seleccionó ningún archivo.");
+            }
+            await _servicio.ConectarConGoogleDrive();
+
+            var DTOs = new List<FotoDTO>();
+
+            foreach (var foto in fotos)
+            {
+                var enlace = await _servicio.SubirArchivoAsync(foto);
+                
+                var fotoDTO = new FotoDTO
+                {
+                    IdTrabajo = idTrabajo,
+                    Enlace = enlace
+                };
+
+                DTOs.Add(fotoDTO);
+            }
+
+            await _administrarTrabajos.AgregarFotosAsync(DTOs);
+
             return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
         }
 
@@ -105,63 +127,5 @@ namespace ShopMGR.WebApi.Controllers
             await _administrarTrabajos.EliminarAsync(idTrabajo);
             return Ok($"Trabajo con ID {idTrabajo} eliminado correctamente.");
         }
-
-        // Autenticación de Google Drive para pruebas.
-
-        [HttpPost]
-        [Route("AutenticarGooglePrueba")]
-        public async Task<IActionResult> Autenticar()
-        {
-            await _servicio.ConectarConGoogleDrive();
-            return Ok("Autenticación exitosa");
-        }
-
-        [HttpGet]
-        [Route("ObtenerArchivosDrive")]
-        public async Task<List<string>> ListarArchivos()
-        {
-            var credenciales = await _servicio.ConectarConGoogleDrive();
-            //var archivos = await _auth.ListarArchivos(credenciales); Implementar las operaciones que faltan, por ahora es solo una prueba.
-
-            using (var driveService = new DriveService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credenciales,
-                ApplicationName = "ShopMGR",
-            }))
-            {
-                var nombresArchivos = new List<string>();
-                var request = driveService.Files.List();
-                request.Fields = "nextPageToken, files(id, name)";
-                var result = await request.ExecuteAsync();
-                foreach (var file in result.Files)
-                {
-                    nombresArchivos.Add(file.Name);
-                }
-
-                return nombresArchivos;
-            }
-        }
-
-        [HttpPost]
-        [Route("SubirArchivoDrive")]
-        public async Task<List<string>> SubirArchivo([FromForm] List<IFormFile> archivos)
-        {
-            //if (archivos == null || archivos.Count == 0)
-            //{
-            //    return BadRequest("No se seleccionó ningún archivo.");
-            //}
-            await _servicio.ConectarConGoogleDrive();
-
-            var Links = new List<string>();
-
-            foreach (var archivo in archivos)
-            {
-                var link = await _servicio.SubirArchivoAsync(archivo);
-                Links.Add(link);
-            }
-
-            return Links;
-        }
-
     }
 }

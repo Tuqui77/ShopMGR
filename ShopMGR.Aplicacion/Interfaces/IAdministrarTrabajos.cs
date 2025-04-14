@@ -8,6 +8,6 @@ namespace ShopMGR.Aplicacion.Interfaces
     {
         Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente);
         Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado);
-        Task<List<Foto>> AgregarFotosAsync(int idTrabajo, List<FotoDTO> fotos);
+        Task AgregarFotosAsync(List<FotoDTO> fotos);
     }
 }
