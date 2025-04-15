@@ -9,7 +9,7 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PresupuestosController(AdministracionPresupuestos administracionPresupuestos) : ControllerBase
+    public class PresupuestosController(IAdministrarPresupuestos administracionPresupuestos) : ControllerBase
     {
         private readonly IAdministrarPresupuestos _administracionPresupuestos = administracionPresupuestos;
 

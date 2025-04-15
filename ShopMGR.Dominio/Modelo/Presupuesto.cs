@@ -4,7 +4,7 @@ namespace ShopMGR.Dominio.Modelo
 {
     public class Presupuesto
     {
-        public int horaDeTrabajo = 10000;
+        public int ValorHoraDeTrabajo { get; set; }
         public int Id { get; set; }
         public string Titulo { get; set; }
         public string? Descripcion { get; set; }
@@ -21,6 +21,6 @@ namespace ShopMGR.Dominio.Modelo
         public Cliente Cliente { get; set; }
         public int IdCliente { get; set; }
         public Trabajo Trabajo { get; set; }
-        public int IdTrabajo { get; set; }
+        public int? IdTrabajo { get; set; }
     }
 }
