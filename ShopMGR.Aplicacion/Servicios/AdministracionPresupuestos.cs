@@ -19,7 +19,7 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuesto.Fecha = DateTime.Now;
             presupuesto.Estado = EstadoPresupuesto.Pendiente;
             presupuesto.CostoMateriales = presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio);
-            presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.horaDeTrabajo;
+            presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.ValorHoraDeTrabajo;
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
             presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
 
@@ -55,7 +55,7 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuestoDB.IdCliente = entidad.IdCliente ?? presupuestoDB.IdCliente;
             presupuestoDB.Titulo = entidad.Titulo ?? presupuestoDB.Titulo;
             presupuestoDB.Descripcion = entidad.Descripcion ?? presupuestoDB.Descripcion;
-            presupuestoDB.horaDeTrabajo = entidad.horaDeTrabajo ?? presupuestoDB.horaDeTrabajo;
+            presupuestoDB.ValorHoraDeTrabajo = entidad.ValorHoraDeTrabajo ?? presupuestoDB.ValorHoraDeTrabajo;
             presupuestoDB.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoDB.HorasEstimadas;
             presupuestoDB.Estado = entidad.Estado ?? presupuestoDB.Estado;
 

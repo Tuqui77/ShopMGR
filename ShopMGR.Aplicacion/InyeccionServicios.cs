@@ -21,8 +21,10 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IAdministrarDireccion, AdministracionDireccion>();
             services.AddScoped<IRepositorioConCliente<TelefonoCliente>, TelefonoClienteRepositorio>();
             services.AddScoped<IAdministrarTelefonoCliente, AdministracionTelefonoCliente>();
+
             services.AddScoped<IRepositorioConEstado<Presupuesto, EstadoPresupuesto>, PresupuestoRepositorio>();
             services.AddScoped<IAdministrarPresupuestos, AdministracionPresupuestos>();
+
             services.AddScoped<IRepositorioConFoto, TrabajoRepositorio>();
             services.AddScoped<IAdministrarTrabajos, AdministracionTrabajos>();
 

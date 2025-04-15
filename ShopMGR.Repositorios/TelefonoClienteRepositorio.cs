@@ -31,7 +31,6 @@ namespace ShopMGR.Repositorios
             return telefono;
         }
 
-
         public Task<TelefonoCliente> ObtenerDetallePorIdAsync(int id)
         {
             throw new NotImplementedException();
