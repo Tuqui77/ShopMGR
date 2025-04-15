@@ -29,29 +29,29 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerPresupuestoPorId")]
-        public async Task<Presupuesto> ObtenerPorId(int idPresupuesto)
+        public async Task<IActionResult> ObtenerPorId(int idPresupuesto)
         {
             var presupuesto = await _administracionPresupuestos.ObtenerPorIdAsync(idPresupuesto);
-            return presupuesto;
+            return Ok(presupuesto);
         }
 
         [HttpGet]
         [Route("ObtenerPresupuestosPorCliente")]
-        public async Task<List<Presupuesto>> ObtenerPorCliente(int idCliente)
+        public async Task<IActionResult> ObtenerPorCliente(int idCliente)
         {
             var presupuestos = await _administracionPresupuestos.ObtenerPorClienteAsync(idCliente);
-            return presupuestos;
+
+            return Ok(presupuestos);
         }
 
         [HttpGet]
         [Route("ObtenerPresupuestosEstado")]
-        public async Task<List<Presupuesto>> ObtenerPorEstado(EstadoPresupuesto estado)
+        public async Task<IActionResult> ObtenerPorEstado(EstadoPresupuesto estado)
         {
             var presupuestos = await _administracionPresupuestos.ObtenerPorEstadoAsync(estado);
-            return presupuestos;
+
+            return Ok(presupuestos);
         }
-
-
 
         [HttpPatch]
         [Route("ActualizarPresupuesto")]
