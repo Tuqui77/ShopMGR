@@ -69,7 +69,9 @@ namespace ShopMGR.Aplicacion.Servicios
         //Método local para calcular los costos del presupuesto
         private static Presupuesto CalcularCostos(Presupuesto presupuesto)
         {
-            presupuesto.CostoMateriales = presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio);
+            presupuesto.CostoMateriales = presupuesto.Materiales.Count > 0 
+                ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) 
+                : 0;
             presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.ValorHoraDeTrabajo;
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
             presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
