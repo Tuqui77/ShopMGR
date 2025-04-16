@@ -4,6 +4,7 @@ using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
 using ShopMGR.Infraestructura;
 using ShopMGR.Infraestructura.Drive;
+using System;
 using System.Reflection;
 
 namespace ShopMGR.WebApi.Aplicacion
@@ -50,6 +51,15 @@ namespace ShopMGR.WebApi.Aplicacion
             });
 
             var app = builder.Build();
+
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
+            //    db.Database.Migrate(); // Aplica migraciones automáticamente
+            //    DbSeeder.Seed(db);     // Carga los datos iniciales
+            //}
+
+
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
