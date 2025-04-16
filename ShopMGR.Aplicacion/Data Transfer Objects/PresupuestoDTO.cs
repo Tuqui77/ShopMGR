@@ -4,7 +4,7 @@
     {
         public string Titulo { get; set; }
         public string? Descripcion { get; set; }
-        public List<MaterialDTO> Materiales { get; set; }
+        public List<MaterialDTO>? Materiales { get; set; }
         public double HorasEstimadas { get; set; }
 
         //Relaciones
