@@ -9,21 +9,25 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DBSeeder\**" />
     <Compile Remove="ShopMGR.Aplicacion\**" />
     <Compile Remove="ShopMGR.Contexto\**" />
     <Compile Remove="ShopMGR.Dominio\**" />
     <Compile Remove="ShopMGR.Infraestructura.Drive\**" />
     <Compile Remove="ShopMGR.Repositorios\**" />
+    <Content Remove="DBSeeder\**" />
     <Content Remove="ShopMGR.Aplicacion\**" />
     <Content Remove="ShopMGR.Contexto\**" />
     <Content Remove="ShopMGR.Dominio\**" />
     <Content Remove="ShopMGR.Infraestructura.Drive\**" />
     <Content Remove="ShopMGR.Repositorios\**" />
+    <EmbeddedResource Remove="DBSeeder\**" />
     <EmbeddedResource Remove="ShopMGR.Aplicacion\**" />
     <EmbeddedResource Remove="ShopMGR.Contexto\**" />
     <EmbeddedResource Remove="ShopMGR.Dominio\**" />
     <EmbeddedResource Remove="ShopMGR.Infraestructura.Drive\**" />
     <EmbeddedResource Remove="ShopMGR.Repositorios\**" />
+    <None Remove="DBSeeder\**" />
     <None Remove="ShopMGR.Aplicacion\**" />
     <None Remove="ShopMGR.Contexto\**" />
     <None Remove="ShopMGR.Dominio\**" />

@@ -15,10 +15,7 @@ namespace ShopMGR.WebApi.Aplicacion
         {
             var builder = WebApplication.CreateBuilder(args);
 
-
-
             //inyeccion de dependencias
-
             builder.Services.AddDbContext<ShopMGRDbContexto>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
@@ -51,15 +48,6 @@ namespace ShopMGR.WebApi.Aplicacion
             });
 
             var app = builder.Build();
-
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
-            //    db.Database.Migrate(); // Aplica migraciones automáticamente
-            //    DbSeeder.Seed(db);     // Carga los datos iniciales
-            //}
-
-
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
