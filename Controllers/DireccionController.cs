@@ -8,7 +8,7 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class DireccionController(AdministracionDireccion administracionDirecciones) : ControllerBase
+    public class DireccionController(IAdministrarDireccion administracionDirecciones) : ControllerBase
     {
         private readonly IAdministrarDireccion _administracionDirecciones = administracionDirecciones;
 
@@ -17,6 +17,15 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> CrearDireccion(DireccionDTO direccion)
         {
             await _administracionDirecciones.CrearAsync(direccion);
+
+            return Ok(direccion);
+        }
+
+        [HttpGet]
+        [Route("Obtener detalle por id")]
+        public async Task<IActionResult> ObtenerDetallePorIdAsync(int idDireccion)
+        {
+            var direccion = await _administracionDirecciones.ObtenerDetallePorIdAsync(idDireccion);
 
             return Ok(direccion);
         }

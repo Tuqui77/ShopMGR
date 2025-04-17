@@ -30,6 +30,11 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _direccionRepositorio.ObtenerPorIdCliente(idCliente);
         }
 
+        public async Task<Direccion> ObtenerDetallePorIdAsync(int idDireccion)
+        {
+            return await _direccionRepositorio.ObtenerDetallePorIdAsync(idDireccion);
+        }
+
         public async Task ActualizarAsync(int idDireccion, ModificarDireccion direccionActualizada)
         {
             var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
