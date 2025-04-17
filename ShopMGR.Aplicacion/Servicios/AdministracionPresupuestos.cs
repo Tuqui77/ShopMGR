@@ -18,7 +18,6 @@ namespace ShopMGR.Aplicacion.Servicios
 
             presupuesto.Fecha = DateTime.Now;
             presupuesto.Estado = EstadoPresupuesto.Pendiente;
-            presupuesto.ValorHoraDeTrabajo = 10000; //solo para la prueba, el valor lo tiene que buscar en la base de datos.
             presupuesto = CalcularCostos(presupuesto);
 
             await _presupuestoRepositorio.CrearAsync(presupuesto);
@@ -31,6 +30,11 @@ namespace ShopMGR.Aplicacion.Servicios
             var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
 
             return presupuesto;
+        }
+
+        public async Task<Presupuesto> ObtenerDetallePorIdAsync(int idPresupuesto)
+        {
+            return await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
         }
 
         public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
@@ -53,7 +57,6 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuestoDB.IdCliente = entidad.IdCliente ?? presupuestoDB.IdCliente;
             presupuestoDB.Titulo = entidad.Titulo ?? presupuestoDB.Titulo;
             presupuestoDB.Descripcion = entidad.Descripcion ?? presupuestoDB.Descripcion;
-            presupuestoDB.ValorHoraDeTrabajo = entidad.ValorHoraDeTrabajo ?? presupuestoDB.ValorHoraDeTrabajo;
             presupuestoDB.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoDB.HorasEstimadas;
             presupuestoDB.Estado = entidad.Estado ?? presupuestoDB.Estado;
             presupuestoDB = CalcularCostos(presupuestoDB);
@@ -72,7 +75,7 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuesto.CostoMateriales = presupuesto.Materiales.Count > 0 
                 ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) 
                 : 0;
-            presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.ValorHoraDeTrabajo;
+            //presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.ValorHoraDeTrabajo; //Cambio por la lectura de la base de datos.
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
             presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
             return presupuesto;
