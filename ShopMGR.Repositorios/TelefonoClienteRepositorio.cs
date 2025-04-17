@@ -31,9 +31,14 @@ namespace ShopMGR.Repositorios
             return telefono;
         }
 
-        public Task<TelefonoCliente> ObtenerDetallePorIdAsync(int id)
+        public async Task<TelefonoCliente> ObtenerDetallePorIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var telefono = await _contexto.TelefonoCliente
+                .Include(t => t.Cliente)
+                .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new KeyNotFoundException($"No existe un teléfono con el Id {id}");
+
+            return telefono;
         }
 
         public async Task<List<TelefonoCliente>> ObtenerPorIdCliente(int idCliente)
