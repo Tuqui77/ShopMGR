@@ -17,12 +17,14 @@ namespace ShopMGR.Aplicacion
             //Dependencias de entidades de la aplicación.
             services.AddScoped<IRepositorioCliente<Cliente>, ClienteRepositorio>();
             services.AddScoped<IAdministrarClientes, AdministracionClientes>();
+
             services.AddScoped<IRepositorioConCliente<Direccion>, DireccionRepositorio>();
             services.AddScoped<IAdministrarDireccion, AdministracionDireccion>();
+
             services.AddScoped<IRepositorioConCliente<TelefonoCliente>, TelefonoClienteRepositorio>();
             services.AddScoped<IAdministrarTelefonoCliente, AdministracionTelefonoCliente>();
 
-            services.AddScoped<IRepositorioConEstado<Presupuesto, EstadoPresupuesto>, PresupuestoRepositorio>();
+            services.AddScoped<IRepositorioConValorHora, PresupuestoRepositorio>();
             services.AddScoped<IAdministrarPresupuestos, AdministracionPresupuestos>();
 
             services.AddScoped<IRepositorioConFoto, TrabajoRepositorio>();
