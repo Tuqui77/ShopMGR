@@ -42,6 +42,15 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpGet]
+        [Route("ObtenerDetallePorId")]
+        public async Task<IActionResult> ObtenerDetallePorIdAsync(int idCliente)
+        {
+            var cliente = await _administracionClientes.ObtenerDetallePorIdAsync(idCliente);
+
+            return Ok(cliente);
+        }
+
+        [HttpGet]
         [Route("ObtenerClientePorNombre")]
         public async Task<Cliente> ObtenerClientePorNombreAsync(string nombre)
         {

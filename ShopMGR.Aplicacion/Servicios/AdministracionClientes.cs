@@ -56,6 +56,12 @@ namespace ShopMGR.Aplicacion.Servicios
 
             return cliente;
         }
+
+        public async Task<Cliente> ObtenerDetallePorIdAsync(int idCliente)
+        {
+            return await _clienteRepositorio.ObtenerDetallePorIdAsync(idCliente);
+        }
+
         public async Task<Cliente> ObtenerClientePorNombre(string nombre)
         {
             var cliente = await _clienteRepositorio.ObtenerPorNombreAsync(nombre);
