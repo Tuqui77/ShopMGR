@@ -4,7 +4,6 @@ namespace ShopMGR.Dominio.Modelo
 {
     public class Presupuesto
     {
-        public int ValorHoraDeTrabajo { get; set; }
         public int Id { get; set; }
         public string Titulo { get; set; }
         public string? Descripcion { get; set; }
