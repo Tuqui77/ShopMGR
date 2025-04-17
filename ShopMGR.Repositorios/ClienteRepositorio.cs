@@ -34,7 +34,7 @@ namespace ShopMGR.Repositorios
                 .Include(c => c.Trabajos)
                 .Include(c => c.Presupuestos)
                 .FirstOrDefaultAsync(x => x.Id == id)
-                ?? throw new KeyNotFoundException($"No existe un cliente con el Id {id}");
+                    ?? throw new KeyNotFoundException("No existe un cliente con ese Id");
 
             return cliente;
         }
