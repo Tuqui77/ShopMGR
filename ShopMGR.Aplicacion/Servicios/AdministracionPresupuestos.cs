@@ -7,9 +7,9 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionPresupuestos(IRepositorioConEstado<Presupuesto, EstadoPresupuesto> presupuestoRepositorio, IMapper mapper) : IAdministrarPresupuestos
+    public class AdministracionPresupuestos(IRepositorioConValorHora presupuestoRepositorio, IMapper mapper) : IAdministrarPresupuestos
     {
-        private readonly IRepositorioConEstado<Presupuesto, EstadoPresupuesto> _presupuestoRepositorio = presupuestoRepositorio;
+        private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
         private readonly IMapper _mapper = mapper;
 
         public async Task<Presupuesto> CrearAsync(PresupuestoDTO nuevoPresupuesto)
@@ -79,6 +79,11 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
             presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
             return presupuesto;
+        }
+
+        public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
+        {
+            await _presupuestoRepositorio.ActualizarCostoHoraDeTrabajo(nuevoCosto);
         }
     }
 }

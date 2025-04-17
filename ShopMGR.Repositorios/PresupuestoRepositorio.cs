@@ -6,7 +6,7 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class PresupuestoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConEstado<Presupuesto, EstadoPresupuesto>
+    public class PresupuestoRepositorio(ShopMGRDbContexto contexto) : IRepositorioConValorHora
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
 
@@ -69,6 +69,29 @@ namespace ShopMGR.Repositorios
                 ?? throw new KeyNotFoundException($"No existe un presupuestos con el id {idPresupuesto}");
 
             _contexto.Presupuestos.Remove(presupuesto);
+            await _contexto.SaveChangesAsync();
+        }
+
+        public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
+        {
+            var valorHoraDeTrabajo = await _contexto.Configuraciones.Where(c => c.Clave == "ValorHoraDeTrabajo").FirstOrDefaultAsync();
+
+            if (valorHoraDeTrabajo != null)
+            {
+                valorHoraDeTrabajo.Valor = nuevoCosto;
+                _contexto.Configuraciones.Update(valorHoraDeTrabajo);
+            }
+            else
+            {
+                valorHoraDeTrabajo = new ConfiguracionGlobal()
+                {
+                    Clave = "ValorHoraDeTrabajo",
+                    Valor = nuevoCosto
+                };
+
+                _contexto.Configuraciones.Add(valorHoraDeTrabajo);
+            }
+
             await _contexto.SaveChangesAsync();
         }
     }
