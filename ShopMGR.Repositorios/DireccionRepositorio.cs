@@ -32,9 +32,14 @@ namespace ShopMGR.Repositorios
             return direccion;
         }
 
-        public Task<Direccion> ObtenerDetallePorIdAsync(int id)
+        public async Task<Direccion> ObtenerDetallePorIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var direccion = await _contexto.Direccion
+                .Include(d => d.Cliente)
+                .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new KeyNotFoundException($"No existe una dirección con el Id {id}");
+
+            return direccion;
         }
 
         public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)
