@@ -36,6 +36,10 @@ namespace ShopMGR.Contexto
                 .HasMany(c => c.Trabajos)
                 .WithOne(t => t.Cliente)
                 .HasForeignKey("IdCliente");
+            modelBuilder.Entity<Cliente>()
+                .HasMany(c => c.Presupuestos)
+                .WithOne(p => p.Cliente)
+                .HasForeignKey("IdCliente");
 
             modelBuilder.Entity<Direccion>()
                 .HasOne(d => d.Cliente)
