@@ -27,7 +27,7 @@ namespace DBSeeder
             using var scope = host.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
             var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
-            //db.Database.Migrate();
+            db.Database.Migrate();
             await seeder.SeedAsync();
 
             Console.WriteLine("Seeding completo.");
@@ -125,6 +125,12 @@ namespace DBSeeder
                     (6, 6, NULL, N'Corrientes', '7109', NULL, NULL, '2452', NULL),
                     (7, 18, NULL, N'Lisandro de la Torre', '3738', '2', '2A', '2452', NULL)
                     SET IDENTITY_INSERT [dbo].[Direccion] OFF
+
+                    -- Insert en Configuraciones
+                    SET IDENTITY_INSERT [dbo].[Configuraciones] ON
+                    INSERT [dbo].[Configuraciones] ([Id], [Clave], [Valor]) VALUES 
+                    (1, N'ValorHoraDeTrabajo', '10000')
+                    SET IDENTITY_INSERT [dbo].[Configuraciones] OFF
 
                     -- Actualización de Presupuestos para asignar IdTrabajo correspondiente
                     UPDATE P

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using ShopMGR.Dominio.Modelo;
 
 
@@ -13,6 +14,9 @@ namespace ShopMGR.Contexto
         public DbSet<Direccion> Direccion { get; set; }
         public DbSet<TelefonoCliente> TelefonoCliente { get; set; }
         public DbSet<Foto> Fotos { get; set; }
+
+        //Persistencia de configuraciones de la aplicación.
+        public DbSet<ConfiguracionGlobal> Configuraciones { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -68,6 +72,9 @@ namespace ShopMGR.Contexto
                 .HasOne(m => m.Presupuesto)
                 .WithMany(p => p.Materiales)
                 .HasForeignKey("IdPresupuesto");
+
+            modelBuilder.Entity<ConfiguracionGlobal>()
+                .HasKey(c => c.Id);
         }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
