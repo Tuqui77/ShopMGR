@@ -26,9 +26,17 @@ namespace ShopMGR.Repositorios
             return cliente;
         }
 
-        public Task<Cliente> ObtenerDetallePorIdAsync(int id)
+        public async Task<Cliente> ObtenerDetallePorIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var cliente = await _contexto.Clientes
+                .Include(c => c.Telefono)
+                .Include(c => c.Direccion)
+                .Include(c => c.Trabajos)
+                .Include(c => c.Presupuestos)
+                .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new KeyNotFoundException($"No existe un cliente con el Id {id}");
+
+            return cliente;
         }
 
         public async Task<Cliente?> ObtenerPorNombreAsync(string nombre)
