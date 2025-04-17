@@ -8,7 +8,7 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TelefonoClienteController(AdministracionTelefonoCliente administracionTelefono) : ControllerBase
+    public class TelefonoClienteController(IAdministrarTelefonoCliente administracionTelefono) : ControllerBase
     {
         private readonly IAdministrarTelefonoCliente _administracionTelefonoCliente = administracionTelefono;
 
@@ -18,6 +18,15 @@ namespace ShopMGR.WebApi.Controllers
         {
             await _administracionTelefonoCliente.CrearAsync(nuevoTelefono);
             return Ok(nuevoTelefono);
+        }
+
+        [HttpGet]
+        [Route("ObtenerDetallePorId")]
+        public async Task<IActionResult> ObtenerDetalleePorIdAsync(int idTelefono)
+        {
+            var telefono = await _administracionTelefonoCliente.ObtenerDetallePorIdAsync(idTelefono);
+
+            return Ok(telefono);
         }
 
         [HttpGet]

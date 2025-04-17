@@ -26,6 +26,11 @@ namespace ShopMGR.Aplicacion.Servicios
             return telefono;
         }
 
+        public async Task<TelefonoCliente> ObtenerDetallePorIdAsync(int idTelefono)
+        {
+            return await _telefonoClienteRepositorio.ObtenerDetallePorIdAsync(idTelefono);
+        }
+
         public async Task<List<TelefonoCliente>> ObtenerTelefonosCliente(int idCliente)
         {
             return await _telefonoClienteRepositorio.ObtenerPorIdCliente(idCliente);
