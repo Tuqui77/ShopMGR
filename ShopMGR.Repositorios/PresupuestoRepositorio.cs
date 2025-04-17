@@ -23,10 +23,11 @@ namespace ShopMGR.Repositorios
         public async Task<Presupuesto> ObtenerPorIdAsync(int idPresupuesto)
         {
             var presupuestoDB = await _contexto.Presupuestos.FindAsync(idPresupuesto)
-                ?? throw new KeyNotFoundException("No existe un presupuesto con ese Id");
+                ?? throw new KeyNotFoundException($"No existe un presupuesto con el Id {idPresupuesto}");
 
             return presupuestoDB;
         }
+
         public async Task<Presupuesto> ObtenerDetallePorIdAsync(int id)
         {
             var presupuestoDB = await _contexto.Presupuestos

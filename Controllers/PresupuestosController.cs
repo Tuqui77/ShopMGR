@@ -36,6 +36,15 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpGet]
+        [Route("ObtenerDetallePresupuesto")]
+        public async Task<IActionResult> ObtenerDetallePorId(int idPresupuesto)
+        {
+            var presupuesto = await _administracionPresupuestos.ObtenerDetallePorIdAsync(idPresupuesto);
+
+            return Ok(presupuesto);
+        }
+
+        [HttpGet]
         [Route("ObtenerPresupuestosPorCliente")]
         public async Task<IActionResult> ObtenerPorCliente(int idCliente)
         {
