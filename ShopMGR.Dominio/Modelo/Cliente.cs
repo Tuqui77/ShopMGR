@@ -10,8 +10,8 @@
         public List<string> gastos = [];
 
         //Relaciones
-        public List<Trabajo> Trabajos = [];
-        public List<Presupuesto> Presupuestos = [];
+        public List<Trabajo> Trabajos { get; set; } = [];
+        public List<Presupuesto> Presupuestos { get; set; } = [];
         public List<TelefonoCliente> Telefono { get; set; } = [];
         public List<Direccion> Direccion { get; set; } = [];
     }
