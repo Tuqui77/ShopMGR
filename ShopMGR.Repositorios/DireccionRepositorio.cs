@@ -44,7 +44,10 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)
         {
-            var direccion = await _contexto.Direccion.Where(x => x.IdCliente == idCliente).ToListAsync();
+            var direccion = await _contexto.Direccion
+                .Include(d => d.Cliente)
+                .Where(x => x.IdCliente == idCliente) //Probablemente sea demasiado el cliente completo, tal vez solo el nombre sea suficiente.
+                .ToListAsync();
 
             return direccion;
         }
