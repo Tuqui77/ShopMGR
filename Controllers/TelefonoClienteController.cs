@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Newtonsoft.Json.Linq;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
@@ -22,7 +24,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerDetallePorId")]
-        public async Task<IActionResult> ObtenerDetalleePorIdAsync(int idTelefono)
+        public async Task<IActionResult> ObtenerDetallePorIdAsync(int idTelefono)
         {
             var telefono = await _administracionTelefonoCliente.ObtenerDetallePorIdAsync(idTelefono);
 
@@ -31,9 +33,10 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerTelefonosCliente")]
-        public async Task<List<TelefonoCliente>> ObtenerTelefonosClienteAsync(int idCliente)
+        public async Task<IActionResult> ObtenerTelefonosClienteAsync(int idCliente)
         {
-            return await _administracionTelefonoCliente.ObtenerTelefonosCliente(idCliente);
+            var telefonos = await _administracionTelefonoCliente.ObtenerTelefonosCliente(idCliente);
+            return Ok(telefonos);
         }
 
         [HttpPatch]
@@ -46,7 +49,7 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             await _administracionTelefonoCliente.ActualizarAsync(idTelefono, telefonoModificado);
-            return Ok(telefonoModificado);
+            return Ok("Teléfono modificado con éxito.");
         }
 
         [HttpDelete]
@@ -54,7 +57,7 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> EliminarTelefonoClienteAsync(int idTelefono)
         {
             await _administracionTelefonoCliente.EliminarAsync(idTelefono);
-            return Ok();
+            return Ok("Teléfono eliminado con éxito.");
         }
     }
 }
