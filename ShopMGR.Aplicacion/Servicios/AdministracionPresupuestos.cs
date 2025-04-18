@@ -18,7 +18,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             presupuesto.Fecha = DateTime.Now;
             presupuesto.Estado = EstadoPresupuesto.Pendiente;
-            presupuesto = CalcularCostos(presupuesto);
+            presupuesto = await CalcularCostos(presupuesto);
 
             await _presupuestoRepositorio.CrearAsync(presupuesto);
 
@@ -59,7 +59,7 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuestoDB.Descripcion = entidad.Descripcion ?? presupuestoDB.Descripcion;
             presupuestoDB.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoDB.HorasEstimadas;
             presupuestoDB.Estado = entidad.Estado ?? presupuestoDB.Estado;
-            presupuestoDB = CalcularCostos(presupuestoDB);
+            presupuestoDB = await CalcularCostos(presupuestoDB);
 
             await _presupuestoRepositorio.ActualizarAsync(presupuestoDB);
         }
@@ -67,18 +67,6 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task EliminarAsync(int idPresupuesto)
         {
             await _presupuestoRepositorio.EliminarAsync(idPresupuesto);
-        }
-
-        //Método local para calcular los costos del presupuesto
-        private static Presupuesto CalcularCostos(Presupuesto presupuesto)
-        {
-            presupuesto.CostoMateriales = presupuesto.Materiales.Count > 0 
-                ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) 
-                : 0;
-            //presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * presupuesto.ValorHoraDeTrabajo; //Cambio por la lectura de la base de datos.
-            presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
-            presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
-            return presupuesto;
         }
 
         public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
@@ -92,6 +80,19 @@ namespace ShopMGR.Aplicacion.Servicios
 
             var valorHoraDeTrabajo = decimal.Parse(config.Valor);
             return valorHoraDeTrabajo;
+        }
+
+        //Método local para calcular los costos del presupuesto
+        private async Task<Presupuesto> CalcularCostos(Presupuesto presupuesto)
+        {
+            var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
+            presupuesto.CostoMateriales = presupuesto.Materiales.Count > 0 
+                ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) 
+                : 0;
+            presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * valorHoraDeTrabajo;
+            presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
+            presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
+            return presupuesto;
         }
     }
 }
