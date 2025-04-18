@@ -22,23 +22,23 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             await _administracionClientes.CrearAsync(cliente);
-            return Ok(cliente);
+            return Ok($"Cliente creado correctamente:\n\n{cliente}");
         }
 
         [HttpGet]
         [Route("ObtenerClientes")]
-        public async Task<List<Cliente>> ObtenerClientesAsync()
+        public async Task<IActionResult> ObtenerClientesAsync()
         {
             var clientes = await _administracionClientes.ListarTodosAsync();
-            return clientes;
+            return Ok(clientes);
         }
 
         [HttpGet]
         [Route("ObtenerClientePorId")]
-        public async Task<Cliente> ObtenerClientePorIdAsync(int idCliente)
+        public async Task<IActionResult> ObtenerClientePorIdAsync(int idCliente)
         {
             var cliente = await _administracionClientes.ObtenerPorIdAsync(idCliente);
-            return cliente;
+            return Ok(cliente);
         }
 
         [HttpGet]
@@ -52,10 +52,10 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerClientePorNombre")]
-        public async Task<Cliente> ObtenerClientePorNombreAsync(string nombre)
+        public async Task<IActionResult> ObtenerClientePorNombreAsync(string nombre)
         {
             var cliente = await _administracionClientes.ObtenerClientePorNombre(nombre);
-            return cliente;
+            return Ok(cliente);
         }
 
         [HttpPatch]
@@ -68,7 +68,7 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             await _administracionClientes.ActualizarAsync(idCliente, clienteActualizado);
-            return Ok(clienteActualizado);
+            return Ok($"Cliente actualizado correctamente.");
         }
 
         [HttpDelete]
