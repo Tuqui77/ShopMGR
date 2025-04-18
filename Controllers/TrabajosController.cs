@@ -14,7 +14,7 @@ namespace ShopMGR.WebApi.Controllers
     public class TrabajosController(IAdministrarTrabajos administrarTrabajos, IGoogleDriveServicio servicio) : ControllerBase
     {
         private readonly IAdministrarTrabajos _administrarTrabajos = administrarTrabajos;
-        private readonly IGoogleDriveServicio _servicio = servicio;
+        private readonly IGoogleDriveServicio _servicioDrive = servicio;
 
         [HttpPost]
         [Route("CrearTrabajo")]
@@ -37,13 +37,13 @@ namespace ShopMGR.WebApi.Controllers
             {
                 return BadRequest("No se seleccionó ningún archivo.");
             }
-            await _servicio.ConectarConGoogleDrive();
+            await _servicioDrive.ConectarConGoogleDrive();
 
             var DTOs = new List<FotoDTO>();
 
             foreach (var foto in fotos)
             {
-                var enlace = await _servicio.SubirArchivoAsync(foto);
+                var enlace = await _servicioDrive.SubirArchivoAsync(foto);
                 
                 var fotoDTO = new FotoDTO
                 {
@@ -74,7 +74,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerTrabajosDetallados")]
-        public async Task<ActionResult<Trabajo>> ObtenerTrabajosDetallados(int idTrabajo)
+        public async Task<IActionResult> ObtenerTrabajosDetallados(int idTrabajo)
         {
             var trabajo = await _administrarTrabajos.ObtenerDetallePorIdAsync(idTrabajo);
 
@@ -83,7 +83,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerTrabajosPorCliente")]
-        public async Task<ActionResult<List<Trabajo>>> ObtenerTrabajosPorCliente(int idCliente)
+        public async Task<IActionResult> ObtenerTrabajosPorCliente(int idCliente)
         {
             var trabajos = await _administrarTrabajos.ObtenerPorClienteAsync(idCliente);
 
@@ -97,7 +97,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerTrabajosPorEstado")]
-        public async Task<ActionResult<List<Trabajo>>> ObtenerTrabajosPorEstado(EstadoTrabajo estado)
+        public async Task<IActionResult> ObtenerTrabajosPorEstado(EstadoTrabajo estado)
         {
             var trabajos = await _administrarTrabajos.ObtenerPorEstadoAsync(estado);
 
@@ -119,7 +119,7 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             await _administrarTrabajos.ActualizarAsync(idTrabajo, trabajoModificado);
-            return Ok($"Trabajo con ID {idTrabajo} actualizado correctamente.");
+            return Ok("Trabajo actualizado correctamente.");
         }
 
 
@@ -134,7 +134,7 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             await _administrarTrabajos.EliminarAsync(idTrabajo);
-            return Ok($"Trabajo con ID {idTrabajo} eliminado correctamente.");
+            return Ok("Trabajo eliminado correctamente.");
         }
     }
 }
