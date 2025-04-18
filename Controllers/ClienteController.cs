@@ -22,7 +22,7 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             await _administracionClientes.CrearAsync(cliente);
-            return Ok($"Cliente creado correctamente:\n\n{cliente}");
+            return Ok(cliente);
         }
 
         [HttpGet]

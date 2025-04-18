@@ -83,7 +83,7 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ActualizarCostoHora(string nuevoCosto)
         {
             await _administracionPresupuestos.ActualizarCostoHoraDeTrabajo(nuevoCosto);
-            return Ok($"Valor de la hora de trabajo actualizado correctamente, nuevo valor: {nuevoCosto}");
+            return Ok($"Valor de la hora de trabajo actualizado correctamente, nuevo valor: ${nuevoCosto}");
         }
 
         [HttpGet]
