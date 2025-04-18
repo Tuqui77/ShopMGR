@@ -17,7 +17,6 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> CrearDireccion(DireccionDTO direccion)
         {
             await _administracionDirecciones.CrearAsync(direccion);
-
             return Ok(direccion);
         }
 
@@ -26,15 +25,15 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idDireccion)
         {
             var direccion = await _administracionDirecciones.ObtenerDetallePorIdAsync(idDireccion);
-
             return Ok(direccion);
         }
 
         [HttpGet]
         [Route("ObtenerDireccionesCliente")]
-        public async Task<List<Direccion>> ObtenerDireccionesCliente(int idCliente)
+        public async Task<IActionResult> ObtenerDireccionesCliente(int idCliente)
         {
-            return await _administracionDirecciones.ObtenerPorIdCliente(idCliente);
+            var direcciones = await _administracionDirecciones.ObtenerPorIdCliente(idCliente);
+            return Ok(direcciones);
         }
 
         [HttpPatch]
@@ -42,7 +41,7 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ActualizarDireccion(int idDireccion, ModificarDireccion direccion)
         {
             await _administracionDirecciones.ActualizarAsync(idDireccion, direccion);
-            return Ok(direccion);
+            return Ok("Direccion actualizada correctamente.");
         }
 
         [HttpDelete]
@@ -50,7 +49,7 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> EliminarDireccion(int idDireccion)
         {
             await _administracionDirecciones.EliminarAsync(idDireccion);
-            return Ok();
+            return Ok("Direccion eliminada correctamente.");
         }
     }
 }
