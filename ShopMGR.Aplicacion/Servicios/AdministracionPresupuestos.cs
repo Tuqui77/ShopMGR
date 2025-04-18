@@ -85,5 +85,13 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             await _presupuestoRepositorio.ActualizarCostoHoraDeTrabajo(nuevoCosto);
         }
+
+        public async Task<decimal> ObtenerCostoHoraDeTrabajo()
+        {
+            var config = await _presupuestoRepositorio.ObtenerCostoHoraDeTrabajo();
+
+            var valorHoraDeTrabajo = decimal.Parse(config.Valor);
+            return valorHoraDeTrabajo;
+        }
     }
 }

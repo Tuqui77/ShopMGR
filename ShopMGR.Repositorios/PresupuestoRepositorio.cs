@@ -94,5 +94,15 @@ namespace ShopMGR.Repositorios
 
             await _contexto.SaveChangesAsync();
         }
+
+        public async Task<ConfiguracionGlobal> ObtenerCostoHoraDeTrabajo()
+        {
+            var valorHoraDeTrabajo = await _contexto.Configuraciones
+                .Where(c => c.Clave == "ValorHoraDeTrabajo")
+                .FirstOrDefaultAsync()
+                ?? throw new KeyNotFoundException("No existe un valor de hora de trabajo configurado");
+
+            return valorHoraDeTrabajo;
+        }
     }
 }

@@ -78,12 +78,20 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(idPresupuesto);
         }
 
-        [HttpGet]
+        [HttpPatch]
         [Route("ActualizarCostoHoraDeTrabajo")]
         public async Task<IActionResult> ActualizarCostoHora(string nuevoCosto)
         {
             await _administracionPresupuestos.ActualizarCostoHoraDeTrabajo(nuevoCosto);
             return Ok($"Valor de la hora de trabajo actualizado correctamente, nuevo valor: {nuevoCosto}");
+        }
+
+        [HttpGet]
+        [Route("ObtenerCostoHoraDeTrabajo")]
+        public async Task<IActionResult> ObtenerCostoHora()
+        {
+            var costoHora = await _administracionPresupuestos.ObtenerCostoHoraDeTrabajo();
+            return Ok($"El costo de la hora de trabajo es: ${costoHora}");
         }
     }
 }

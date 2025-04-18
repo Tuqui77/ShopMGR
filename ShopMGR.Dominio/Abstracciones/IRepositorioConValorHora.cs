@@ -11,5 +11,6 @@ namespace ShopMGR.Dominio.Abstracciones
     public interface IRepositorioConValorHora : IRepositorioConEstado<Presupuesto, EstadoPresupuesto>
     {
         public Task ActualizarCostoHoraDeTrabajo(string nuevoCosto);
+        public Task<ConfiguracionGlobal> ObtenerCostoHoraDeTrabajo();
     }
 }
