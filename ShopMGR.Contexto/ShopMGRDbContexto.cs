@@ -5,20 +5,8 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Contexto
 {
-    public class ShopMGRDbContexto(DbContextOptions<ShopMGRDbContexto> options) : DbContext(options)
+    public partial class ShopMGRDbContexto(DbContextOptions<ShopMGRDbContexto> options) : DbContext(options)
     {
-        public DbSet<Cliente> Clientes { get; set; }
-        public DbSet<Trabajo> Trabajos { get; set; }
-        public DbSet<Presupuesto> Presupuestos { get; set; }
-        public DbSet<Material> Materiales { get; set; }
-        public DbSet<Direccion> Direccion { get; set; }
-        public DbSet<TelefonoCliente> TelefonoCliente { get; set; }
-        public DbSet<Foto> Fotos { get; set; }
-
-        //Persistencia de configuraciones de la aplicación.
-        public DbSet<ConfiguracionGlobal> Configuraciones { get; set; }
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
