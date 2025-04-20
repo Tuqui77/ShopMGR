@@ -18,12 +18,6 @@ namespace ShopMGR.Contexto
                 .HasForeignKey("IdCliente")
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Presupuesto>()
-                .HasOne(p => p.Cliente)
-                .WithMany(c => c.Presupuestos)
-                .HasForeignKey("IdCliente")
-                .OnDelete(DeleteBehavior.Cascade); //Revisar las cascadas de eliminación, hay datos que es mejor dejarlos.
-
             modelBuilder.Entity<TelefonoCliente>()
                 .HasOne(t => t.Cliente)
                 .WithMany(c => c.Telefono)
