@@ -21,9 +21,6 @@ namespace ShopMGR.Contexto
                 .HasOne(m => m.Presupuesto)
                 .WithMany(p => p.Materiales)
                 .HasForeignKey("IdPresupuesto");
-
-            modelBuilder.Entity<ConfiguracionGlobal>()
-                .HasKey(c => c.Id);
         }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
