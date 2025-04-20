@@ -12,12 +12,6 @@ namespace ShopMGR.Contexto
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShopMGRDbContexto).Assembly);
 
-            modelBuilder.Entity<Direccion>()
-                .HasOne(d => d.Cliente)
-                .WithMany(c => c.Direccion)
-                .HasForeignKey("IdCliente")
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<TelefonoCliente>()
                 .HasOne(t => t.Cliente)
                 .WithMany(c => c.Telefono)
