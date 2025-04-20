@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShopMGR.Contexto;
 
@@ -11,9 +12,11 @@ using ShopMGR.Contexto;
 namespace ShopMGR.Contexto.Migrations
 {
     [DbContext(typeof(ShopMGRDbContexto))]
-    partial class ShopMGRDbContextoModelSnapshot : ModelSnapshot
+    [Migration("20250420023709_TrabajoConfiguracion")]
+    partial class TrabajoConfiguracion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -128,12 +131,9 @@ namespace ShopMGR.Contexto.Migrations
                     b.Property<int>("IdTrabajo")
                         .HasColumnType("int");
 
-                    b.Property<int>("TrabajoId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TrabajoId");
+                    b.HasIndex("IdTrabajo");
 
                     b.ToTable("Fotos");
                 });
@@ -282,8 +282,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.Property<string>("Estado")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("FechaInicio")
                         .HasColumnType("datetime");
@@ -328,7 +327,7 @@ namespace ShopMGR.Contexto.Migrations
                 {
                     b.HasOne("ShopMGR.Dominio.Modelo.Trabajo", "Trabajo")
                         .WithMany("Fotos")
-                        .HasForeignKey("TrabajoId")
+                        .HasForeignKey("IdTrabajo")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
