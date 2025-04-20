@@ -11,11 +11,6 @@ namespace ShopMGR.Contexto
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ShopMGRDbContexto).Assembly);
-
-            modelBuilder.Entity<TelefonoCliente>()
-                .HasOne(t => t.Cliente)
-                .WithMany(c => c.Telefono)
-                .HasForeignKey("IdCliente");
         }
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
