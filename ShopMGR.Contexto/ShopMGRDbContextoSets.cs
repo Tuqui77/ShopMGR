@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using ShopMGR.Dominio.Modelo;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ namespace ShopMGR.Contexto
         public DbSet<Direccion> Direccion { get; set; }
         public DbSet<TelefonoCliente> TelefonoCliente { get; set; }
         public DbSet<Foto> Fotos { get; set; }
+        public DbSet<HorasYDescripcion> HorasYDescripcion { get; set; }
 
         //Persistencia de configuraciones de la aplicación.
         public DbSet<ConfiguracionGlobal> Configuraciones { get; set; }
