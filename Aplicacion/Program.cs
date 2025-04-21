@@ -1,9 +1,13 @@
+using AspNetCore.Scalar;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
 using ShopMGR.Infraestructura;
 using ShopMGR.Infraestructura.Drive;
+using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Reflection;
 
@@ -53,9 +57,12 @@ namespace ShopMGR.WebApi.Aplicacion
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI(o =>
+                //app.UseSwaggerUI();
+
+                app.MapOpenApi();
+                app.MapScalarApiReference(options =>
                 {
-                    o.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+                    options.WithOpenApiRoutePattern("swagger/v1/swagger.json");
                 });
             }
 
