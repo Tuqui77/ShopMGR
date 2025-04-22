@@ -55,6 +55,7 @@ namespace DBSeeder
                     DELETE FROM [dbo].[Direccion];
                     DELETE FROM [dbo].[TelefonoCliente];
                     DELETE FROM [dbo].[Clientes];
+                    DELETE FROM [dbo].[Configuraciones];
 
                     -- Insert en Clientes
                     SET IDENTITY_INSERT [dbo].[Clientes] ON
