@@ -43,10 +43,6 @@ namespace DBSeeder
         public async Task SeedAsync()
         {
             var sql = """
-                    -- Seteo de IdPresupuesto en NULL para evitar conflictos de FK antes del DELETE
-                    UPDATE [dbo].[Presupuestos]
-                    SET IdTrabajo = NULL;
-
                     -- Limpieza previa
                     DELETE FROM [dbo].[Fotos];
                     DELETE FROM [dbo].[Materiales];
@@ -75,20 +71,20 @@ namespace DBSeeder
                         [Id], [IdCliente], [Titulo], [Descripcion], [Fecha], [Total], [Estado], 
                         [CostoMateriales], [CostoLabor], [CostoInsumos], [HorasEstimadas]
                     ) VALUES 
-                    (1, 1, N'Reparacion general', N'Se requiere reparacion completa de equipos.', '2023-12-15', 1500.00, 0, 600.00, 700.00, 200.00, 12),
-                    (2, 2, N'Mantenimiento programado', N'Revision y limpieza de sistemas.', '2024-01-10', 800.00, 1, 300.00, 400.00, 100.00, 8),
-                    (3, 3, N'Instalacion electrica', N'Instalacion de nuevo sistema de iluminacion.', '2024-02-05', 2300.00, 0, 1000.00, 1000.00, 300.00, 16),
-                    (4, 4, N'Actualizacion de software', N'Se requiere migracion y configuracion.', '2024-02-28', 1200.00, 2, 500.00, 600.00, 100.00, 6),
-                    (5, 5, N'Presupuesto personalizado', N'Detalles entregados por el cliente.', '2024-03-01', 1750.00, 1, 800.00, 800.00, 150.00, 10),
-                    (6, 18, N'Servicio especial', N'Servicio premium personalizado.', '2024-04-01', 10000.00, 0, 3000.00, 5000.00, 2000.00, 20)
+                    (1, 1, N'Reparacion general', N'Se requiere reparacion completa de equipos.', '2023-12-15', 1500.00, N'Pendiente', 600.00, 700.00, 200.00, 12),
+                    (2, 2, N'Mantenimiento programado', N'Revision y limpieza de sistemas.', '2024-01-10', 800.00, N'Aceptado', 300.00, 400.00, 100.00, 8),
+                    (3, 3, N'Instalacion electrica', N'Instalacion de nuevo sistema de iluminacion.', '2024-02-05', 2300.00, N'Pendiente', 1000.00, 1000.00, 300.00, 16),
+                    (4, 4, N'Actualizacion de software', N'Se requiere migracion y configuracion.', '2024-02-28', 1200.00, N'Rechazado', 500.00, 600.00, 100.00, 6),
+                    (5, 5, N'Presupuesto personalizado', N'Detalles entregados por el cliente.', '2024-03-01', 1750.00, N'Aceptado', 800.00, 800.00, 150.00, 10),
+                    (6, 18, N'Servicio especial', N'Servicio premium personalizado.', '2024-04-01', 10000.00, N'Pendiente', 3000.00, 5000.00, 2000.00, 20)
                     SET IDENTITY_INSERT [dbo].[Presupuestos] OFF
 
                     -- Insert en Trabajos
                     SET IDENTITY_INSERT [dbo].[Trabajos] ON
                     INSERT [dbo].[Trabajos] ([Id], [Titulo], [IdCliente], [IdPresupuesto], [Estado], [FechaInicio]) VALUES 
-                    (1, N'Reparacion general', 1, 1, 1, '2024-01-15'),
-                    (2, N'Mantenimiento programado', 2, 2, 1, '2024-03-02'),
-                    (3, N'Instalacion electrica', 3, 3, 0, NULL)
+                    (1, N'Reparacion general', 1, 1, N'Iniciado', '2024-01-15'),
+                    (2, N'Mantenimiento programado', 2, 2, N'Iniciado', '2024-03-02'),
+                    (3, N'Instalacion electrica', 3, 3, N'Pendiente', NULL)
                     SET IDENTITY_INSERT [dbo].[Trabajos] OFF
 
                     -- Insert en Materiales
