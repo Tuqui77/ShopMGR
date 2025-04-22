@@ -256,9 +256,6 @@ namespace ShopMGR.Contexto.Migrations
                     b.Property<int>("IdCliente")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdTrabajo")
-                        .HasColumnType("int");
-
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -447,7 +444,8 @@ namespace ShopMGR.Contexto.Migrations
                 {
                     b.Navigation("Materiales");
 
-                    b.Navigation("Trabajo");
+                    b.Navigation("Trabajo")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Trabajo", b =>
