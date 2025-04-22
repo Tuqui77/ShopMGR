@@ -72,15 +72,15 @@ namespace DBSeeder
                     -- Insert en Presupuestos
                     SET IDENTITY_INSERT [dbo].[Presupuestos] ON
                     INSERT [dbo].[Presupuestos] (
-                        [Id], [IdCliente], [Titulo], [Descripcion], [Fecha], [Total], [Estado],
-                        [IdTrabajo], [CostoMateriales], [CostoLabor], [CostoInsumos], [HorasEstimadas]
+                        [Id], [IdCliente], [Titulo], [Descripcion], [Fecha], [Total], [Estado], 
+                        [CostoMateriales], [CostoLabor], [CostoInsumos], [HorasEstimadas]
                     ) VALUES 
-                    (1, 1, N'Reparacion general', N'Se requiere reparacion completa de equipos.', '2023-12-15', 1500.00, 0, NULL, 600.00, 700.00, 200.00, 12),
-                    (2, 2, N'Mantenimiento programado', N'Revision y limpieza de sistemas.', '2024-01-10', 800.00, 1, NULL, 300.00, 400.00, 100.00, 8),
-                    (3, 3, N'Instalacion electrica', N'Instalacion de nuevo sistema de iluminacion.', '2024-02-05', 2300.00, 0, NULL, 1000.00, 1000.00, 300.00, 16),
-                    (4, 4, N'Actualizacion de software', N'Se requiere migracion y configuracion.', '2024-02-28', 1200.00, 2, NULL, 500.00, 600.00, 100.00, 6),
-                    (5, 5, N'Presupuesto personalizado', N'Detalles entregados por el cliente.', '2024-03-01', 1750.00, 1, NULL, 800.00, 800.00, 150.00, 10),
-                    (6, 18, N'Servicio especial', N'Servicio premium personalizado.', '2024-04-01', 10000.00, 0, NULL, 3000.00, 5000.00, 2000.00, 20)
+                    (1, 1, N'Reparacion general', N'Se requiere reparacion completa de equipos.', '2023-12-15', 1500.00, 0, 600.00, 700.00, 200.00, 12),
+                    (2, 2, N'Mantenimiento programado', N'Revision y limpieza de sistemas.', '2024-01-10', 800.00, 1, 300.00, 400.00, 100.00, 8),
+                    (3, 3, N'Instalacion electrica', N'Instalacion de nuevo sistema de iluminacion.', '2024-02-05', 2300.00, 0, 1000.00, 1000.00, 300.00, 16),
+                    (4, 4, N'Actualizacion de software', N'Se requiere migracion y configuracion.', '2024-02-28', 1200.00, 2, 500.00, 600.00, 100.00, 6),
+                    (5, 5, N'Presupuesto personalizado', N'Detalles entregados por el cliente.', '2024-03-01', 1750.00, 1, 800.00, 800.00, 150.00, 10),
+                    (6, 18, N'Servicio especial', N'Servicio premium personalizado.', '2024-04-01', 10000.00, 0, 3000.00, 5000.00, 2000.00, 20)
                     SET IDENTITY_INSERT [dbo].[Presupuestos] OFF
 
                     -- Insert en Trabajos
@@ -132,13 +132,6 @@ namespace DBSeeder
                     INSERT [dbo].[Configuraciones] ([Id], [Clave], [Valor]) VALUES 
                     (1, N'ValorHoraDeTrabajo', '10000')
                     SET IDENTITY_INSERT [dbo].[Configuraciones] OFF
-
-                    -- Actualización de Presupuestos para asignar IdTrabajo correspondiente
-                    UPDATE P
-                    SET P.IdTrabajo = T.Id
-                    FROM [dbo].[Presupuestos] P
-                    INNER JOIN [dbo].[Trabajos] T ON P.Id = T.IdPresupuesto;
-
                     """;
 
             await _contexto.Database.ExecuteSqlRawAsync(sql);
