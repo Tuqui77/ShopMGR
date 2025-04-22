@@ -61,10 +61,6 @@ namespace ShopMGR.Contexto.Configuracion_entidades
                 .WithMany(c => c.Presupuestos)
                 .HasForeignKey("IdCliente")
                 .OnDelete(DeleteBehavior.Cascade);
-            builder.HasOne(p => p.Trabajo)
-                .WithOne(t => t.Presupuesto)
-                .HasForeignKey<Presupuesto>("IdTrabajo")
-                .IsRequired(false);
         }
     }
 }
