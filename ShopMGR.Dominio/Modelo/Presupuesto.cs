@@ -18,6 +18,7 @@ namespace ShopMGR.Dominio.Modelo
         //Relaciones
         public int IdCliente { get; set; }
         public Cliente Cliente { get; set; }
+        public int? IdTrabajo { get; set; }
         public Trabajo Trabajo { get; set; }
         public List<Material> Materiales { get; set; }
     }
