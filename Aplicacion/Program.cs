@@ -10,6 +10,7 @@ using ShopMGR.Infraestructura.Drive;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace ShopMGR.WebApi.Aplicacion
 {
@@ -50,6 +51,11 @@ namespace ShopMGR.WebApi.Aplicacion
                 //c.OperationFilter<SwaggerFileUploadFilter>();
 
             });
+            builder.Services.ConfigureHttpJsonOptions(options =>
+            {
+                options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
 
             var app = builder.Build();
 
