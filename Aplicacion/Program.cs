@@ -63,6 +63,8 @@ namespace ShopMGR.WebApi.Aplicacion
                 app.MapScalarApiReference(options =>
                 {
                     options.WithOpenApiRoutePattern("swagger/v1/swagger.json");
+                    options.Theme = ScalarTheme.DeepSpace;
+                    options.Title = "ShopMGR WebAPI";
                 });
             }
 
