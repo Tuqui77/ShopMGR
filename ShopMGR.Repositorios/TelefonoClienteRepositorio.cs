@@ -43,7 +43,9 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<TelefonoCliente>> ObtenerPorIdCliente(int idCliente)
         {
-            var telefono = await _contexto.TelefonoCliente.Where(t => t.IdCliente == idCliente).ToListAsync();
+            var telefono = await _contexto.TelefonoCliente
+                .Where(t => t.IdCliente == idCliente)
+                .ToListAsync();
 
             return telefono;
         }
@@ -61,8 +63,7 @@ namespace ShopMGR.Repositorios
 
         public async Task EliminarAsync(int idTelefono)
         {
-            var telefono = await ObtenerPorIdAsync(idTelefono)
-                ?? throw new KeyNotFoundException($"No existe un teléfono con el id {idTelefono}");
+            var telefono = await ObtenerPorIdAsync(idTelefono);
 
             _contexto.TelefonoCliente.Remove(telefono);
             await _contexto.SaveChangesAsync();
