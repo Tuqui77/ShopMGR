@@ -18,17 +18,39 @@ namespace ShopMGR.WebApi.Controllers
         [Route("CrearTelefonoCliente")]
         public async Task<IActionResult> CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
         {
-            await _administracionTelefonoCliente.CrearAsync(nuevoTelefono);
-            return Ok(nuevoTelefono);
+            if (nuevoTelefono == null)
+            {
+                return BadRequest("Los datos del teléfono no pueden estar vacíos.");
+            }
+
+            try
+            {
+                await _administracionTelefonoCliente.CrearAsync(nuevoTelefono);
+                return Ok(nuevoTelefono);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         [HttpGet]
         [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idTelefono)
         {
-            var telefono = await _administracionTelefonoCliente.ObtenerDetallePorIdAsync(idTelefono);
-
-            return Ok(telefono);
+            try
+            {
+                var telefono = await _administracionTelefonoCliente.ObtenerDetallePorIdAsync(idTelefono);
+                return Ok(telefono);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
@@ -36,6 +58,10 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ObtenerTelefonosClienteAsync(int idCliente)
         {
             var telefonos = await _administracionTelefonoCliente.ObtenerTelefonosCliente(idCliente);
+            if (!telefonos.Any())
+            {
+                return NotFound($"No se encontraron teléfonos para el cliente con ID {idCliente}.");
+            }
             return Ok(telefonos);
         }
 
@@ -48,16 +74,30 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del teléfono no pueden estar vacíos.");
             }
 
-            await _administracionTelefonoCliente.ActualizarAsync(idTelefono, telefonoModificado);
-            return Ok("Teléfono modificado con éxito.");
+            try
+            {
+                await _administracionTelefonoCliente.ActualizarAsync(idTelefono, telefonoModificado);
+                return Ok("Teléfono modificado con éxito.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpDelete]
         [Route("EliminarTelefonoCliente")]
         public async Task<IActionResult> EliminarTelefonoClienteAsync(int idTelefono)
         {
-            await _administracionTelefonoCliente.EliminarAsync(idTelefono);
-            return Ok("Teléfono eliminado con éxito.");
+            try
+            {
+                await _administracionTelefonoCliente.EliminarAsync(idTelefono);
+                return Ok("Teléfono eliminado con éxito.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
     }
 }

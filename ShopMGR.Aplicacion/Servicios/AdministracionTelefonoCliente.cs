@@ -21,9 +21,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task<TelefonoCliente> ObtenerPorIdAsync(int idTelefono)
         {
-            var telefono = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
-
-            return telefono;
+            return await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
         }
 
         public async Task<TelefonoCliente> ObtenerDetallePorIdAsync(int idTelefono)
@@ -37,8 +35,7 @@ namespace ShopMGR.Aplicacion.Servicios
         }
         public async Task ActualizarAsync(int idTelefono, ModificarTelefono telefonoModificado)
         {
-            var telefonoDB = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono)
-                ?? throw new KeyNotFoundException("No existe un teléfono con ese Id");
+            var telefonoDB = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
 
             telefonoDB.IdCliente = telefonoModificado.IdCliente ?? telefonoDB.IdCliente;
             telefonoDB.Telefono = telefonoModificado.Telefono ?? telefonoDB.Telefono;
