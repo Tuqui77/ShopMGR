@@ -15,9 +15,7 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var direccion = _mapper.Map<Direccion>(nuevaDireccion);
 
-            await _direccionRepositorio.CrearAsync(direccion);
-
-            return direccion;
+            return await _direccionRepositorio.CrearAsync(direccion);
         }
 
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
@@ -25,15 +23,16 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
         }
 
+        public async Task<Direccion> ObtenerDetallePorIdAsync(int idDireccion)
+        {
+            return await _direccionRepositorio.ObtenerDetallePorIdAsync(idDireccion);
+        }
+
         public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)
         {
             return await _direccionRepositorio.ObtenerPorIdCliente(idCliente);
         }
 
-        public async Task<Direccion> ObtenerDetallePorIdAsync(int idDireccion)
-        {
-            return await _direccionRepositorio.ObtenerDetallePorIdAsync(idDireccion);
-        }
 
         public async Task ActualizarAsync(int idDireccion, ModificarDireccion direccionActualizada)
         {

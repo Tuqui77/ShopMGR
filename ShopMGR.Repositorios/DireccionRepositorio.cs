@@ -12,10 +12,11 @@ namespace ShopMGR.Repositorios
         public async Task<Direccion> CrearAsync(Direccion direccion)
         {
             if (!await _contexto.Clientes.AnyAsync(x => x.Id == direccion.IdCliente))
-                throw new KeyNotFoundException("No existe un cliente con ese Id");
+                throw new KeyNotFoundException($"No existe un cliente con el ID {direccion.IdCliente}");
 
             //Esta validación la dejo por si acaso, pero puede haber dos clientes con la misma dirección. Se puede cambiar por una alerta en la UI.
-            if (await _contexto.Direccion.AnyAsync(x => x.Calle == direccion.Calle && x.Altura == direccion.Altura))
+            if (await _contexto.Direccion.AnyAsync(x => x.Calle == direccion.Calle && x.Altura == direccion.Altura) &&
+                direccion.Piso == null)
                 throw new InvalidOperationException("Ya existe una dirección con esa calle y altura");
 
             _contexto.Direccion.Add(direccion);
@@ -27,7 +28,7 @@ namespace ShopMGR.Repositorios
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
         {
             var direccion = await _contexto.Direccion.FindAsync(idDireccion)
-                ?? throw new KeyNotFoundException("No existe una dirección con ese Id");
+                ?? throw new KeyNotFoundException($"No existe una dirección con el Id {idDireccion}");
 
             return direccion;
         }
@@ -45,8 +46,8 @@ namespace ShopMGR.Repositorios
         public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)
         {
             var direccion = await _contexto.Direccion
-                .Include(d => d.Cliente)
-                .Where(x => x.IdCliente == idCliente) //Probablemente sea demasiado el cliente completo, tal vez solo el nombre sea suficiente.
+                .Include(d => d.Cliente) //Probablemente sea demasiado el cliente completo, tal vez solo el nombre sea suficiente.
+                .Where(x => x.IdCliente == idCliente)
                 .ToListAsync();
 
             return direccion;
@@ -68,8 +69,7 @@ namespace ShopMGR.Repositorios
 
         public async Task EliminarAsync(int idDireccion)
         {
-            var direccion = await ObtenerPorIdAsync(idDireccion)
-                ?? throw new KeyNotFoundException($"No existe una direccion con el id {idDireccion}");
+            var direccion = await ObtenerPorIdAsync(idDireccion);
 
             _contexto.Direccion.Remove(direccion);
             await _contexto.SaveChangesAsync();
