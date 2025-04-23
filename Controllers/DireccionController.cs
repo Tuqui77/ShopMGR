@@ -16,7 +16,23 @@ namespace ShopMGR.WebApi.Controllers
         [Route("CrearDireccion")]
         public async Task<IActionResult> CrearDireccion(DireccionDTO direccion)
         {
-            await _administracionDirecciones.CrearAsync(direccion);
+            if (direccion == null)
+            {
+                return BadRequest("Los datos de la dirección no pueden estar vacíos.");
+            }
+
+            try
+            {
+                await _administracionDirecciones.CrearAsync(direccion);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
             return Ok(direccion);
         }
 
@@ -24,8 +40,15 @@ namespace ShopMGR.WebApi.Controllers
         [Route("Obtener detalle por id")]
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idDireccion)
         {
-            var direccion = await _administracionDirecciones.ObtenerDetallePorIdAsync(idDireccion);
-            return Ok(direccion);
+            try
+            {
+                var direccion = await _administracionDirecciones.ObtenerDetallePorIdAsync(idDireccion);
+                return Ok(direccion);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
@@ -33,6 +56,12 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ObtenerDireccionesCliente(int idCliente)
         {
             var direcciones = await _administracionDirecciones.ObtenerPorIdCliente(idCliente);
+
+            if (!direcciones.Any())
+            {
+                return NotFound($"No se encontraron direcciones para el cliente con ID {idCliente}.");
+            }
+
             return Ok(direcciones);
         }
 
@@ -40,16 +69,36 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ActualizarDireccion")]
         public async Task<IActionResult> ActualizarDireccion(int idDireccion, ModificarDireccion direccion)
         {
-            await _administracionDirecciones.ActualizarAsync(idDireccion, direccion);
-            return Ok("Direccion actualizada correctamente.");
+
+            if (direccion == null)
+            {
+                return BadRequest("Los datos de la dirección no pueden estar vacíos.");
+            }
+
+            try
+            {
+                await _administracionDirecciones.ActualizarAsync(idDireccion, direccion);
+                return Ok("Direccion actualizada correctamente.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpDelete]
-        [Route("EliminarDireccion")]
+        [Route("EliminarDireccion")] //Aca
         public async Task<IActionResult> EliminarDireccion(int idDireccion)
         {
-            await _administracionDirecciones.EliminarAsync(idDireccion);
-            return Ok("Direccion eliminada correctamente.");
+            try
+            {
+                await _administracionDirecciones.EliminarAsync(idDireccion);
+                return Ok("Direccion eliminada correctamente.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
     }
 }
