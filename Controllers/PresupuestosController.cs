@@ -22,26 +22,45 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del presupuesto no pueden estar vacíos.");
             }
 
-            var presupuesto = await _administracionPresupuestos.CrearAsync(nuevoPresupuesto);
-
-            return Ok(presupuesto);
+            try
+            {
+                var presupuesto = await _administracionPresupuestos.CrearAsync(nuevoPresupuesto);
+                return Ok(presupuesto);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
         [Route("ObtenerPresupuestoPorId")]
         public async Task<IActionResult> ObtenerPorId(int idPresupuesto)
         {
-            var presupuesto = await _administracionPresupuestos.ObtenerPorIdAsync(idPresupuesto);
-            return Ok(presupuesto);
+            try
+            {
+                var presupuesto = await _administracionPresupuestos.ObtenerPorIdAsync(idPresupuesto);
+                return Ok(presupuesto);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
         [Route("ObtenerDetallePresupuesto")]
         public async Task<IActionResult> ObtenerDetallePorId(int idPresupuesto)
         {
-            var presupuesto = await _administracionPresupuestos.ObtenerDetallePorIdAsync(idPresupuesto);
-
-            return Ok(presupuesto);
+            try
+            {
+                var presupuesto = await _administracionPresupuestos.ObtenerDetallePorIdAsync(idPresupuesto);
+                return Ok(presupuesto);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
@@ -50,6 +69,10 @@ namespace ShopMGR.WebApi.Controllers
         {
             var presupuestos = await _administracionPresupuestos.ObtenerPorClienteAsync(idCliente);
 
+            if (!presupuestos.Any())
+            {
+                return NotFound($"No se encontraron presupuestos para el cliente con ID {idCliente}.");
+            }
             return Ok(presupuestos);
         }
 
@@ -59,6 +82,10 @@ namespace ShopMGR.WebApi.Controllers
         {
             var presupuestos = await _administracionPresupuestos.ObtenerPorEstadoAsync(estado);
 
+            if (!presupuestos.Any())
+            {
+                return NotFound($"No se encontro ningun presupuesto {estado}.");
+            }
             return Ok(presupuestos);
         }
 
@@ -66,16 +93,35 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ActualizarPresupuesto")]
         public async Task<IActionResult> ActualizarPresupuesto(int idPresupuesto, ModificarPresupuesto presupuestoModificado)
         {
-            await _administracionPresupuestos.ActualizarAsync(idPresupuesto, presupuestoModificado);
-            return Ok(presupuestoModificado);
+            if (presupuestoModificado == null)
+            {
+                return BadRequest("Los datos del presupuesto no pueden estar vacíos.");
+            }
+
+            try
+            {
+                await _administracionPresupuestos.ActualizarAsync(idPresupuesto, presupuestoModificado);
+                return Ok("Presupuesto modificado correctamente");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpDelete]
         [Route("EliminarPresupuesto")]
         public async Task<IActionResult> EliminarPresupuesto(int idPresupuesto)
         {
-            await _administracionPresupuestos.EliminarAsync(idPresupuesto);
-            return Ok(idPresupuesto);
+            try
+            {
+                await _administracionPresupuestos.EliminarAsync(idPresupuesto);
+                return Ok("Presupuesto eliminado correctamente.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpPatch]
@@ -90,8 +136,15 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ObtenerCostoHoraDeTrabajo")]
         public async Task<IActionResult> ObtenerCostoHora()
         {
-            var costoHora = await _administracionPresupuestos.ObtenerCostoHoraDeTrabajo();
-            return Ok($"El costo de la hora de trabajo es: ${costoHora}");
+            try
+            {
+                var costoHora = await _administracionPresupuestos.ObtenerCostoHoraDeTrabajo();
+                return Ok($"El costo de la hora de trabajo es: ${costoHora}");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
     }
 }

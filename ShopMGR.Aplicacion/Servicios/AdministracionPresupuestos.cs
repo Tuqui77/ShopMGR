@@ -27,9 +27,7 @@ namespace ShopMGR.Aplicacion.Servicios
         
         public async Task<Presupuesto> ObtenerPorIdAsync(int idPresupuesto)
         {
-            var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
-
-            return presupuesto;
+            return await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
         }
 
         public async Task<Presupuesto> ObtenerDetallePorIdAsync(int idPresupuesto)
@@ -39,15 +37,12 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
         {
-            var presupuestos = await _presupuestoRepositorio.ObtenerPorClienteAsync(idCliente);
-
-            return presupuestos;
+            return await _presupuestoRepositorio.ObtenerPorClienteAsync(idCliente);
         }
 
         public async Task<List<Presupuesto>> ObtenerPorEstadoAsync(EstadoPresupuesto estado)
         {
-            var presupuestos = await _presupuestoRepositorio.ObtenerPorEstadoAsync(estado);
-            return presupuestos;
+            return await _presupuestoRepositorio.ObtenerPorEstadoAsync(estado);
         }
 
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
@@ -76,9 +71,9 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task<decimal> ObtenerCostoHoraDeTrabajo()
         {
-            var config = await _presupuestoRepositorio.ObtenerCostoHoraDeTrabajo();
+            var configuracionValorHoraDeTrabajo = await _presupuestoRepositorio.ObtenerCostoHoraDeTrabajo();
 
-            var valorHoraDeTrabajo = decimal.Parse(config.Valor);
+            var valorHoraDeTrabajo = decimal.Parse(configuracionValorHoraDeTrabajo.Valor);
             return valorHoraDeTrabajo;
         }
 

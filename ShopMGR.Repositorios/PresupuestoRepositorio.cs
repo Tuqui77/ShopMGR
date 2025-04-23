@@ -65,8 +65,7 @@ namespace ShopMGR.Repositorios
 
         public async Task EliminarAsync(int idPresupuesto)
         {
-            var presupuesto = await ObtenerPorIdAsync(idPresupuesto)
-                ?? throw new KeyNotFoundException($"No existe un presupuestos con el id {idPresupuesto}");
+            var presupuesto = await ObtenerPorIdAsync(idPresupuesto);
 
             _contexto.Presupuestos.Remove(presupuesto);
             await _contexto.SaveChangesAsync();
@@ -74,7 +73,8 @@ namespace ShopMGR.Repositorios
 
         public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
         {
-            var valorHoraDeTrabajo = await _contexto.Configuraciones.Where(c => c.Clave == "ValorHoraDeTrabajo").FirstOrDefaultAsync();
+            var valorHoraDeTrabajo = await _contexto.Configuraciones
+                .Where(c => c.Clave == "ValorHoraDeTrabajo").FirstOrDefaultAsync();
 
             if (valorHoraDeTrabajo != null)
             {
@@ -97,12 +97,12 @@ namespace ShopMGR.Repositorios
 
         public async Task<ConfiguracionGlobal> ObtenerCostoHoraDeTrabajo()
         {
-            var valorHoraDeTrabajo = await _contexto.Configuraciones
+            var configuracionValorHoraDeTrabajo = await _contexto.Configuraciones
                 .Where(c => c.Clave == "ValorHoraDeTrabajo")
                 .FirstOrDefaultAsync()
-                ?? throw new KeyNotFoundException("No existe un valor de hora de trabajo configurado");
+                ?? throw new KeyNotFoundException("El valor de la hora de trabajo no esta configurado");
 
-            return valorHoraDeTrabajo;
+            return configuracionValorHoraDeTrabajo;
         }
     }
 }
