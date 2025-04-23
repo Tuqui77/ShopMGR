@@ -48,13 +48,15 @@ namespace ShopMGR.Aplicacion.Servicios
 
             return clienteBD;
         }
+
+        public async Task<List<Cliente>> ListarTodosAsync()
+        {
+            return await _clienteRepositorio.ListarTodosAsync();
+        }
+
         public async Task<Cliente> ObtenerPorIdAsync(int idCliente)
         {
-            var cliente = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
-            cliente.Direccion = await _direccionRepositorio.ObtenerPorIdCliente(idCliente);
-            cliente.Telefono = await _telefonoClienteRepositorio.ObtenerPorIdCliente(idCliente);
-
-            return cliente;
+            return await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
         }
 
         public async Task<Cliente> ObtenerDetallePorIdAsync(int idCliente)
@@ -62,15 +64,9 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _clienteRepositorio.ObtenerDetallePorIdAsync(idCliente);
         }
 
-        public async Task<Cliente> ObtenerClientePorNombre(string nombre)
+        public async Task<Cliente> ObtenerClientePorNombreAsync(string nombre)
         {
-            var cliente = await _clienteRepositorio.ObtenerPorNombreAsync(nombre);
-            return cliente;
-        }
-        public async Task<List<Cliente>> ListarTodosAsync()
-        {
-            var clientes = await _clienteRepositorio.ListarTodosAsync();
-            return clientes;
+            return await _clienteRepositorio.ObtenerPorNombreAsync(nombre);
         }
         public async Task ActualizarAsync(int idCliente, ModificarCliente clienteActualizado)
         {
