@@ -27,7 +27,13 @@ namespace ShopMGR.Repositorios
             await _contexto.SaveChangesAsync();
         }
 
+        public async Task AgregarHorasAsync(HorasYDescripcion horas)
+        {
+            var trabajo = await ObtenerPorIdAsync(horas.IdTrabajo);
 
+            _contexto.HorasYDescripcion.Add(horas);
+            await _contexto.SaveChangesAsync();
+        }
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
             var trabajoDB = await _contexto.Trabajos.FindAsync(id)
@@ -43,6 +49,7 @@ namespace ShopMGR.Repositorios
                 .Include(t => t.Presupuesto)
                     .ThenInclude(p => p.Materiales)
                 .Include(t => t.Fotos)
+                .Include(t => t.HorasDeTrabajo)
                 .FirstOrDefaultAsync(t => t.Id == id)
                 ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {id}");
 

@@ -35,6 +35,12 @@ namespace ShopMGR.Aplicacion.Servicios
             await _repositorio.AgregarFotosAsync(Fotos);
         }
 
+        public async Task AgregarHorasAsync(HorasYDescripcionDTO horas)
+        {
+            var horasYDescripcion = _mapper.Map<HorasYDescripcion>(horas);
+            await _repositorio.AgregarHorasAsync(horasYDescripcion);
+        }
+
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
             return await _repositorio.ObtenerPorIdAsync(id);
