@@ -59,6 +59,20 @@ namespace ShopMGR.WebApi.Controllers
             return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
         }
 
+        [HttpPost]
+        [Route("AgregarHorasDeTrabajo")]
+        public async Task<IActionResult> AgregarHorasDeTrabajo([FromBody] HorasYDescripcionDTO horas)
+        {
+            if (horas == null)
+            {
+                return BadRequest("La petición no puede estar vacía.");
+            }
+
+            horas.Fecha = horas.Fecha == default ? DateTime.Now : horas.Fecha;
+            await _administrarTrabajos.AgregarHorasAsync(horas);
+            return Ok($"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente.");
+        }
+
         [HttpGet]
         [Route("ObtenerTrabajoPorId")]
         public async Task<IActionResult> ObtenerTrabajoPorId(int idTrabajo)
@@ -73,8 +87,8 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpGet]
-        [Route("ObtenerTrabajosDetallados")]
-        public async Task<IActionResult> ObtenerTrabajosDetallados(int idTrabajo)
+        [Route("ObtenerDetallePorId")]
+        public async Task<IActionResult> ObtenerDetallePorId(int idTrabajo)
         {
             var trabajo = await _administrarTrabajos.ObtenerDetallePorIdAsync(idTrabajo);
 
