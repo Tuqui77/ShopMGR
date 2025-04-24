@@ -14,7 +14,6 @@ namespace ShopMGR.Repositorios
         {
             _contexto.Trabajos.Add(nuevoTrabajo);
             await _contexto.SaveChangesAsync();
-
             return nuevoTrabajo;
         }
 
@@ -58,16 +57,16 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente)
         {
-            var trabajos = await _contexto.Trabajos.Where(t => t.IdCliente == idCliente).ToListAsync()
-                ?? throw new KeyNotFoundException($"No se encuentran trabajos para el cliente con Id {idCliente}");
+            var trabajos = await _contexto.Trabajos
+                .Where(t => t.IdCliente == idCliente).ToListAsync();
 
             return trabajos;
         }
 
         public async Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
         {
-            var trabajos = await _contexto.Trabajos.Where(t => t.Estado == estado).ToListAsync()
-                ?? throw new KeyNotFoundException($"No se encuentran trabajos con el estado {estado}");
+            var trabajos = await _contexto.Trabajos
+                .Where(t => t.Estado == estado).ToListAsync();
 
             return trabajos;
         }
