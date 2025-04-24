@@ -51,7 +51,7 @@ namespace ShopMGR.Infraestructura.Drive
             };
 
             var request = _driveService.Files.Create(fileMetadata, archivoStream, mimeType);
-            request.Fields = "webViewLink"; //Solo prueba, en realidad necesito que devuelva el enlace del archivo.
+            request.Fields = "webViewLink";
 
             var result = await request.UploadAsync();
 
