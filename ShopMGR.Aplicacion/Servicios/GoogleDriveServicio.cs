@@ -8,16 +8,10 @@ using ShopMGR.Infraestructura.Drive;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class GoogleDriveServicio : IGoogleDriveServicio
+    public class GoogleDriveServicio(GoogleDriveClient client, IOptions<GoogleDriveSettings> options) : IGoogleDriveServicio
     {
-        private readonly GoogleDriveClient _client;
-        private readonly GoogleDriveSettings _settings;
-
-        public GoogleDriveServicio(GoogleDriveClient client, IOptions<GoogleDriveSettings> options)
-        {
-            _client = client;
-            _settings = options.Value;
-        }
+        private readonly GoogleDriveClient _client = client;
+        private readonly GoogleDriveSettings _settings = options.Value;
 
         public async Task<UserCredential> ConectarConGoogleDrive()
         {
