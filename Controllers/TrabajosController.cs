@@ -37,14 +37,22 @@ namespace ShopMGR.WebApi.Controllers
             {
                 return BadRequest("No se seleccionó ningún archivo.");
             }
-            await _servicioDrive.ConectarConGoogleDrive();
+
+            try
+            {
+                await _servicioDrive.ConectarConGoogleDrive();
+            }
+            catch (InvalidOperationException e)
+            {
+                return BadRequest(e.Message);
+            }
 
             var DTOs = new List<FotoDTO>();
 
             foreach (var foto in fotos)
             {
                 var enlace = await _servicioDrive.SubirArchivoAsync(foto);
-                
+
                 var fotoDTO = new FotoDTO
                 {
                     IdTrabajo = idTrabajo,
@@ -61,7 +69,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPost]
         [Route("AgregarHorasDeTrabajo")]
-        public async Task<IActionResult> AgregarHorasDeTrabajo([FromBody] HorasYDescripcionDTO horas)
+        public async Task<IActionResult> AgregarHorasDeTrabajo(HorasYDescripcionDTO horas)
         {
             if (horas == null)
             {
@@ -69,30 +77,45 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             horas.Fecha = horas.Fecha == default ? DateTime.Now : horas.Fecha;
-            await _administrarTrabajos.AgregarHorasAsync(horas);
-            return Ok($"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente.");
+            try
+            {
+                await _administrarTrabajos.AgregarHorasAsync(horas);
+                return Ok($"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
         [Route("ObtenerTrabajoPorId")]
         public async Task<IActionResult> ObtenerTrabajoPorId(int idTrabajo)
         {
-            var trabajo = await _administrarTrabajos.ObtenerPorIdAsync(idTrabajo);
-            if (trabajo == null)
+            try
             {
-                return NotFound($"No se encontró un trabajo con el ID {idTrabajo}.");
+                var trabajo = await _administrarTrabajos.ObtenerPorIdAsync(idTrabajo);
+                return Ok(trabajo);
             }
-
-            return Ok(trabajo);
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
         [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorId(int idTrabajo)
         {
-            var trabajo = await _administrarTrabajos.ObtenerDetallePorIdAsync(idTrabajo);
-
-            return Ok(trabajo);
+            try
+            {
+                var trabajo = await _administrarTrabajos.ObtenerDetallePorIdAsync(idTrabajo);
+                return Ok(trabajo);
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpGet]
@@ -105,7 +128,6 @@ namespace ShopMGR.WebApi.Controllers
             {
                 return NotFound($"No se encontraron trabajos para el cliente con ID {idCliente}.");
             }
-
             return Ok(trabajos);
         }
 
@@ -117,14 +139,13 @@ namespace ShopMGR.WebApi.Controllers
 
             if (trabajos == null || trabajos.Count == 0)
             {
-                return NotFound($"No se encontraron trabajos con el estado {estado}.");
+                return NotFound($"No se encontro ningun trabajo {estado}.");
             }
-
             return Ok(trabajos);
         }
 
         [HttpPatch]
-        [Route("ModificarTrabajo")]
+        [Route("ModificarTrabajo")] //Acá
         public async Task<IActionResult> ModificarTrabajo(int idTrabajo, [FromBody] ModificarTrabajo trabajoModificado)
         {
             if (trabajoModificado == null)
@@ -132,8 +153,15 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del trabajo no pueden estar vacíos.");
             }
 
-            await _administrarTrabajos.ActualizarAsync(idTrabajo, trabajoModificado);
-            return Ok("Trabajo actualizado correctamente.");
+            try
+            {
+                await _administrarTrabajos.ActualizarAsync(idTrabajo, trabajoModificado);
+                return Ok("Trabajo actualizado correctamente.");
+            }
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
 
@@ -141,14 +169,15 @@ namespace ShopMGR.WebApi.Controllers
         [Route("EliminarTrabajo")]
         public async Task<IActionResult> EliminarTrabajo(int idTrabajo)
         {
-            var trabajo = await _administrarTrabajos.ObtenerPorIdAsync(idTrabajo);
-            if (trabajo == null)
+            try
             {
-                return NotFound($"No se encontró un trabajo con el ID {idTrabajo}.");
+                await _administrarTrabajos.EliminarAsync(idTrabajo);
+                return Ok("Trabajo eliminado correctamente.");
             }
-
-            await _administrarTrabajos.EliminarAsync(idTrabajo);
-            return Ok("Trabajo eliminado correctamente.");
+            catch (KeyNotFoundException e)
+            {
+                return NotFound(e.Message);
+            }
         }
     }
 }
