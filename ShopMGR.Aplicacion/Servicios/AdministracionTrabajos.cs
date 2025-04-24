@@ -63,18 +63,19 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task ActualizarAsync(int id, ModificarTrabajo entidad)
         {
-            var trabajoDB = await _repositorio.ObtenerPorIdAsync(id);
+            var trabajoDb = await _repositorio.ObtenerPorIdAsync(id);
 
-            if (entidad.Estado == EstadoTrabajo.Iniciado)
+            if (trabajoDb.FechaInicio == null &&
+                entidad.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajoDB.FechaInicio = DateTime.Now;
+                trabajoDb.FechaInicio = DateTime.Now;
             }
-            trabajoDB.IdCliente = entidad.IdCliente ?? trabajoDB.IdCliente;
-            trabajoDB.Titulo = entidad.Titulo ?? trabajoDB.Titulo;
-            trabajoDB.Estado = entidad.Estado ?? trabajoDB.Estado;
-            trabajoDB.IdPresupuesto = entidad.IdPresupuesto ?? trabajoDB.IdPresupuesto;
+            trabajoDb.IdCliente = entidad.IdCliente ?? trabajoDb.IdCliente;
+            trabajoDb.Titulo = entidad.Titulo ?? trabajoDb.Titulo;
+            trabajoDb.Estado = entidad.Estado ?? trabajoDb.Estado;
+            trabajoDb.IdPresupuesto = entidad.IdPresupuesto ?? trabajoDb.IdPresupuesto;
 
-            await _repositorio.ActualizarAsync(trabajoDB);
+            await _repositorio.ActualizarAsync(trabajoDb);
         }
 
         public async Task EliminarAsync(int idTrabajo)
