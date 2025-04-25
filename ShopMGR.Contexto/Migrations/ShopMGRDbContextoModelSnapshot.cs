@@ -48,7 +48,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.ToTable("Clientes");
+                    b.ToTable("Clientes", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.ConfiguracionGlobal", b =>
@@ -74,7 +74,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.ToTable("Configuraciones");
+                    b.ToTable("Configuraciones", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Direccion", b =>
@@ -125,7 +125,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("Direccion");
+                    b.ToTable("Direccion", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Foto", b =>
@@ -150,7 +150,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("TrabajoId");
 
-                    b.ToTable("Fotos");
+                    b.ToTable("Fotos", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.HorasYDescripcion", b =>
@@ -182,7 +182,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdTrabajo");
 
-                    b.ToTable("HorasYDescripcion");
+                    b.ToTable("HorasYDescripcion", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Material", b =>
@@ -215,7 +215,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdPresupuesto");
 
-                    b.ToTable("Materiales");
+                    b.ToTable("Materiales", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Presupuesto", b =>
@@ -272,7 +272,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("Presupuestos");
+                    b.ToTable("Presupuestos", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.TelefonoCliente", b =>
@@ -302,7 +302,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("TelefonoCliente");
+                    b.ToTable("TelefonoCliente", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Trabajo", b =>
@@ -343,7 +343,7 @@ namespace ShopMGR.Contexto.Migrations
                         .IsUnique()
                         .HasFilter("[IdPresupuesto] IS NOT NULL");
 
-                    b.ToTable("Trabajos");
+                    b.ToTable("Trabajos", (string)null);
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Direccion", b =>
