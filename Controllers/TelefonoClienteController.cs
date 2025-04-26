@@ -12,8 +12,6 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class TelefonoClienteController(IAdministrarTelefonoCliente administracionTelefono) : ControllerBase
     {
-        private readonly IAdministrarTelefonoCliente _administracionTelefonoCliente = administracionTelefono;
-
         [HttpPost]
         [Route("CrearTelefonoCliente")]
         public async Task<IActionResult> CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
@@ -23,81 +21,51 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del teléfono no pueden estar vacíos.");
             }
 
-            try
-            {
-                await _administracionTelefonoCliente.CrearAsync(nuevoTelefono);
-                return Ok(nuevoTelefono);
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
-            catch (InvalidOperationException e)
-            {
-                return BadRequest(e.Message);
-            }
+            await administracionTelefono.CrearAsync(nuevoTelefono);
+            return Ok(nuevoTelefono);
         }
 
         [HttpGet]
         [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idTelefono)
         {
-            try
-            {
-                var telefono = await _administracionTelefonoCliente.ObtenerDetallePorIdAsync(idTelefono);
-                return Ok(telefono);
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            var telefono = await administracionTelefono.ObtenerDetallePorIdAsync(idTelefono);
+            return Ok(telefono);
         }
 
         [HttpGet]
         [Route("ObtenerTelefonosCliente")]
         public async Task<IActionResult> ObtenerTelefonosClienteAsync(int idCliente)
         {
-            var telefonos = await _administracionTelefonoCliente.ObtenerTelefonosCliente(idCliente);
+            var telefonos = await administracionTelefono.ObtenerTelefonosCliente(idCliente);
             if (!telefonos.Any())
             {
                 return NotFound($"No se encontraron teléfonos para el cliente con ID {idCliente}.");
             }
+
             return Ok(telefonos);
         }
 
         [HttpPatch]
         [Route("ModificarTelefonoCliente")]
-        public async Task<IActionResult> ModificarTelefonoClienteAsync(int idTelefono, ModificarTelefono telefonoModificado)
+        public async Task<IActionResult> ModificarTelefonoClienteAsync(int idTelefono,
+            ModificarTelefono telefonoModificado)
         {
             if (telefonoModificado == null)
             {
                 return BadRequest("Los datos del teléfono no pueden estar vacíos.");
             }
 
-            try
-            {
-                await _administracionTelefonoCliente.ActualizarAsync(idTelefono, telefonoModificado);
-                return Ok("Teléfono modificado con éxito.");
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            await administracionTelefono.ActualizarAsync(idTelefono, telefonoModificado);
+            return Ok("Teléfono modificado con éxito.");
         }
 
         [HttpDelete]
         [Route("EliminarTelefonoCliente")]
         public async Task<IActionResult> EliminarTelefonoClienteAsync(int idTelefono)
         {
-            try
-            {
-                await _administracionTelefonoCliente.EliminarAsync(idTelefono);
-                return Ok("Teléfono eliminado con éxito.");
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            await administracionTelefono.EliminarAsync(idTelefono);
+            return Ok("Teléfono eliminado con éxito.");
         }
     }
 }

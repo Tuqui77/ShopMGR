@@ -11,11 +11,9 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TrabajosController(IAdministrarTrabajos administrarTrabajos, IGoogleDriveServicio servicio) : ControllerBase
+    public class TrabajosController(IAdministrarTrabajos administrarTrabajos, IGoogleDriveServicio servicio)
+        : ControllerBase
     {
-        private readonly IAdministrarTrabajos _administrarTrabajos = administrarTrabajos;
-        private readonly IGoogleDriveServicio _servicioDrive = servicio;
-
         [HttpPost]
         [Route("CrearTrabajo")]
         public async Task<IActionResult> CrearTrabajo([FromBody] TrabajoDTO trabajo)
@@ -25,7 +23,7 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del trabajo no pueden estar vacíos.");
             }
 
-            await _administrarTrabajos.CrearAsync(trabajo);
+            await administrarTrabajos.CrearAsync(trabajo);
             return Ok(trabajo);
         }
 
@@ -38,20 +36,13 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("No se seleccionó ningún archivo.");
             }
 
-            try
-            {
-                await _servicioDrive.ConectarConGoogleDrive();
-            }
-            catch (InvalidOperationException e)
-            {
-                return BadRequest(e.Message);
-            }
+            await servicio.ConectarConGoogleDrive();
 
             var DTOs = new List<FotoDTO>();
 
             foreach (var foto in fotos)
             {
-                var enlace = await _servicioDrive.SubirArchivoAsync(foto);
+                var enlace = await servicio.SubirArchivoAsync(foto);
 
                 var fotoDTO = new FotoDTO
                 {
@@ -62,7 +53,7 @@ namespace ShopMGR.WebApi.Controllers
                 DTOs.Add(fotoDTO);
             }
 
-            await _administrarTrabajos.AgregarFotosAsync(DTOs);
+            await administrarTrabajos.AgregarFotosAsync(DTOs);
 
             return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
         }
@@ -77,57 +68,38 @@ namespace ShopMGR.WebApi.Controllers
             }
 
             horas.Fecha = horas.Fecha == default ? DateTime.Now : horas.Fecha;
-            try
-            {
-                await _administrarTrabajos.AgregarHorasAsync(horas);
-                return Ok($"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente.");
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            await administrarTrabajos.AgregarHorasAsync(horas);
+            return Ok(
+                $"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente.");
         }
 
         [HttpGet]
         [Route("ObtenerTrabajoPorId")]
         public async Task<IActionResult> ObtenerTrabajoPorId(int idTrabajo)
         {
-            try
-            {
-                var trabajo = await _administrarTrabajos.ObtenerPorIdAsync(idTrabajo);
-                return Ok(trabajo);
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            var trabajo = await administrarTrabajos.ObtenerPorIdAsync(idTrabajo);
+            return Ok(trabajo);
         }
 
         [HttpGet]
         [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorId(int idTrabajo)
         {
-            try
-            {
-                var trabajo = await _administrarTrabajos.ObtenerDetallePorIdAsync(idTrabajo);
-                return Ok(trabajo);
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            var trabajo = await administrarTrabajos.ObtenerDetallePorIdAsync(idTrabajo);
+            return Ok(trabajo);
         }
 
         [HttpGet]
         [Route("ObtenerTrabajosPorCliente")]
         public async Task<IActionResult> ObtenerTrabajosPorCliente(int idCliente)
         {
-            var trabajos = await _administrarTrabajos.ObtenerPorClienteAsync(idCliente);
+            var trabajos = await administrarTrabajos.ObtenerPorClienteAsync(idCliente);
 
             if (trabajos == null || trabajos.Count == 0)
             {
                 return NotFound($"No se encontraron trabajos para el cliente con ID {idCliente}.");
             }
+
             return Ok(trabajos);
         }
 
@@ -135,12 +107,13 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ObtenerTrabajosPorEstado")]
         public async Task<IActionResult> ObtenerTrabajosPorEstado(EstadoTrabajo estado)
         {
-            var trabajos = await _administrarTrabajos.ObtenerPorEstadoAsync(estado);
+            var trabajos = await administrarTrabajos.ObtenerPorEstadoAsync(estado);
 
             if (trabajos == null || trabajos.Count == 0)
             {
                 return NotFound($"No se encontro ningun trabajo {estado}.");
             }
+
             return Ok(trabajos);
         }
 
@@ -153,15 +126,8 @@ namespace ShopMGR.WebApi.Controllers
                 return BadRequest("Los datos del trabajo no pueden estar vacíos.");
             }
 
-            try
-            {
-                await _administrarTrabajos.ActualizarAsync(idTrabajo, trabajoModificado);
-                return Ok("Trabajo actualizado correctamente.");
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            await administrarTrabajos.ActualizarAsync(idTrabajo, trabajoModificado);
+            return Ok("Trabajo actualizado correctamente.");
         }
 
 
@@ -169,15 +135,8 @@ namespace ShopMGR.WebApi.Controllers
         [Route("EliminarTrabajo")]
         public async Task<IActionResult> EliminarTrabajo(int idTrabajo)
         {
-            try
-            {
-                await _administrarTrabajos.EliminarAsync(idTrabajo);
-                return Ok("Trabajo eliminado correctamente.");
-            }
-            catch (KeyNotFoundException e)
-            {
-                return NotFound(e.Message);
-            }
+            await administrarTrabajos.EliminarAsync(idTrabajo);
+            return Ok("Trabajo eliminado correctamente.");
         }
     }
 }
