@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>8d7c1292-7fa6-4804-82be-fec69c9dd53d</UserSecretsId>
     <OutputType>WinExe</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,6 +38,9 @@
     <None Remove="ShopMGR.Dominio\**" />
     <None Remove="ShopMGR.Infraestructura.Drive\**" />
     <None Remove="ShopMGR.Repositorios\**" />
+    <Compile Update="Middleware\ExceptionHandlingMiddleware.cs">
+      <Link>ExceptionHandlingMiddleware\ExceptionHandlingMiddleware.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

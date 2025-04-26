@@ -11,6 +11,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using System;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using Middleware;
 
 namespace ShopMGR.WebApi.Aplicacion
 {
@@ -78,6 +79,7 @@ namespace ShopMGR.WebApi.Aplicacion
 
             app.UseAuthorization();
 
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.MapControllers();
             app.Run();
