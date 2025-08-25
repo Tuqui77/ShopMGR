@@ -1,4 +1,4 @@
-# 📋 Aplicación de Gestión para Taller
+# Aplicación de Gestión para Taller
 
 ## Sobre el proyecto
 
