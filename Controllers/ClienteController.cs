@@ -67,7 +67,7 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpPatch]
-        [Route("ModificarCliente")] //Acá
+        [Route("ModificarCliente")]
         public async Task<IActionResult> ActualizarCliente(int idCliente,
             [FromBody] ModificarCliente clienteActualizado)
         {
