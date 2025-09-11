@@ -9,9 +9,11 @@ public class ShopMGRDbContextoFactory : IDesignTimeDbContextFactory<ShopMGRDbCon
 {
     public ShopMGRDbContexto CreateDbContext(string[] args)
     {
+        IConfigurationRoot configuracion = (IConfigurationRoot)new ConfigurationBuilder().AddJsonFile("appsettings.json");
+        var connectionString = configuracion.GetConnectionString("ShopMGRDbContexto");
+
         var optionsBuilder = new DbContextOptionsBuilder<ShopMGRDbContexto>();
-        optionsBuilder.UseSqlServer(WebApplication.CreateBuilder(args).Configuration.GetConnectionString("ShopMGRDbContexto"));
-        
+        optionsBuilder.UseSqlServer(connectionString);
         return new ShopMGRDbContexto(optionsBuilder.Options);
     }
 }

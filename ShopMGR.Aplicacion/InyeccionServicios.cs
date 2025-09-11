@@ -1,6 +1,8 @@
-﻿using Google.Apis.Drive.v3;
+﻿using AutoMapper;
+using Google.Apis.Drive.v3;
 using Microsoft.Extensions.DependencyInjection;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Aplicacion.Perfiles;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
@@ -36,7 +38,8 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<DriveService>();
 
             //Herramientas adicionales
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            //services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services.AddAutoMapper();
 
             return services;
         }
