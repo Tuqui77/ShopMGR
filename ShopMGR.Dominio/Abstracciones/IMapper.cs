@@ -4,6 +4,9 @@ namespace ShopMGR.Dominio.Abstracciones;
 public interface IMapper<TOrigen, TDestino>
 {
     TDestino Map(TOrigen origen);
-}
 
-// TODO: Mapear colecciones
+    IEnumerable<TDestino> Map(IEnumerable<TOrigen> origen)
+    {
+        return origen.Select(Map);
+    }
+}

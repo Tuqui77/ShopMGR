@@ -10,13 +10,20 @@ public class MapperRegistry(IServiceProvider serviceProvider)
     private IMapper<TOrigen, TDestino> Resolve<TOrigen, TDestino>()
     {
         var mapper = _serviceProvider.GetService(typeof(IMapper<TOrigen, TDestino>));
-        
-        return mapper as IMapper<TOrigen, TDestino> 
-               ?? throw new InvalidOperationException($"No se encontró un mapeador de {typeof(TOrigen).Name} a {typeof(TDestino).Name}");
+
+        return mapper as IMapper<TOrigen, TDestino>
+               ?? throw new InvalidOperationException(
+                   $"No se encontró un mapeador de {typeof(TOrigen).Name} a {typeof(TDestino).Name}");
     }
 
     public TDestino Map<TOrigen, TDestino>(TOrigen origen)
     {
         return Resolve<TOrigen, TDestino>().Map(origen);
     }
+
+    public IEnumerable<TDestino> Map<TOrigen, TDestino>(IEnumerable<TOrigen> origen)
+    {
+        return Resolve<TOrigen, TDestino>().Map(origen);
+    }
+
 }
