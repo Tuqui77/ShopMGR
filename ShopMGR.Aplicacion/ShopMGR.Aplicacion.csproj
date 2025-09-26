@@ -21,9 +21,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="NPOI" Version="2.7.3" />
+    <PackageReference Include="Riok.Mapperly" Version="4.3.0-next.4" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Infraestructura\Extensiones\Extensiones.csproj" />
     <ProjectReference Include="..\ShopMGR.Dominio\ShopMGR.Dominio.csproj" />
     <ProjectReference Include="..\ShopMGR.Infraestructura.Drive\ShopMGR.Infraestructura.Drive.csproj" />
     <ProjectReference Include="..\ShopMGR.Repositorios\ShopMGR.Repositorios.csproj" />

@@ -1,11 +1,10 @@
-﻿using AutoMapper;
+﻿using Extensiones;
 using Google.Apis.Drive.v3;
 using Microsoft.Extensions.DependencyInjection;
 using ShopMGR.Aplicacion.Interfaces;
-using ShopMGR.Aplicacion.Perfiles;
+using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
-using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Infraestructura.Drive;
 using ShopMGR.Repositorios;
@@ -38,9 +37,10 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<DriveService>();
 
             //Herramientas adicionales
-            //services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-            services.AddAutoMapper();
-
+            // Mapeadores manuales
+            services.AddMappersFromAssembly(typeof(ClienteMapper));
+            services.AddScoped<MapperRegistry>();
+            
             return services;
         }
     }
