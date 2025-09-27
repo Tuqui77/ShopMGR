@@ -5,8 +5,10 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Mappers;
 
-public class ClienteMapper : IMapper<ClienteDTO, Cliente>
+public class ClienteMapper(MapperRegistry mapper) : IMapper<ClienteDTO, Cliente>
 {
+    private readonly MapperRegistry _mapper = mapper;
+    
     public Cliente Map(ClienteDTO clienteDTO)
     {
         return new Cliente
@@ -14,14 +16,15 @@ public class ClienteMapper : IMapper<ClienteDTO, Cliente>
             NombreCompleto = clienteDTO.NombreCompleto,
             Cuit = clienteDTO.Cuit,
             Balance = clienteDTO.Balance,
-            // Direccion = clienteDTO.Direccion,
-            // Telefono = clienteDTO.Telefono
+            Direccion = _mapper.Map<DireccionDTO, Direccion>(clienteDTO.Direccion).ToList(),
+            Telefono = _mapper.Map<TelefonoClienteDTO, TelefonoCliente>(clienteDTO.Telefono).ToList(), // TODO: Probar estos mapeadores con valores null, tal vez haga falta una validación
         };
     }
 }
 
-public class ClienteDTOMapper :IMapper<Cliente, ClienteDTO>
+public class ClienteDTOMapper(MapperRegistry mapper) :IMapper<Cliente, ClienteDTO>
 {
+    private readonly MapperRegistry _mapper = mapper;
     public ClienteDTO Map(Cliente cliente)
     {
         return new ClienteDTO
@@ -29,9 +32,8 @@ public class ClienteDTOMapper :IMapper<Cliente, ClienteDTO>
             NombreCompleto = cliente.NombreCompleto,
             Cuit = cliente.Cuit,
             Balance = cliente.Balance,
-            // TODO: mapear direccion y teléfono con un mapeador
-            // Direccion = cliente.Direccion,
-            // Telefono = cliente.Telefono
+            Direccion = _mapper.Map<Direccion, DireccionDTO>(cliente.Direccion).ToList(),
+            Telefono = _mapper.Map<TelefonoCliente, TelefonoClienteDTO>(cliente.Telefono).ToList(),
         };
     }
 }
