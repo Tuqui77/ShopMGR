@@ -1,19 +1,21 @@
-﻿using AutoMapper;
-using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionDireccion(IRepositorioConCliente<Direccion> direccionRepositorio, IMapper mapper) : IAdministrarDireccion
+    public class AdministracionDireccion(
+        IRepositorioConCliente<Direccion> direccionRepositorio, 
+        MapperRegistry mapper) : IAdministrarDireccion
     {
         private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
-        private readonly IMapper _mapper = mapper;
+        private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Direccion> CrearAsync(DireccionDTO nuevaDireccion)
         {
-            var direccion = _mapper.Map<Direccion>(nuevaDireccion);
+            var direccion = _mapper.Map<DireccionDTO, Direccion>(nuevaDireccion);
 
             return await _direccionRepositorio.CrearAsync(direccion);
         }
@@ -36,17 +38,17 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task ActualizarAsync(int idDireccion, ModificarDireccion direccionActualizada)
         {
-            var direccionDB = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
+            var direccionBd = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
 
-            direccionDB.IdCliente = direccionActualizada.IdCliente ?? direccionDB.IdCliente;
-            direccionDB.Calle = direccionActualizada.Calle ?? direccionDB.Calle;
-            direccionDB.Altura = direccionActualizada.Altura ?? direccionDB.Altura;
-            direccionDB.Piso = direccionActualizada.Piso ?? direccionDB.Piso;
-            direccionDB.Departamento = direccionActualizada.Departamento ?? direccionDB.Departamento;
-            direccionDB.CodigoPostal = direccionActualizada.CodigoPostal ?? direccionDB.CodigoPostal;
-            direccionDB.Descripcion = direccionActualizada.Descripcion ?? direccionDB.Descripcion;
+            direccionBd.IdCliente = direccionActualizada.IdCliente ?? direccionBd.IdCliente;
+            direccionBd.Calle = direccionActualizada.Calle ?? direccionBd.Calle;
+            direccionBd.Altura = direccionActualizada.Altura ?? direccionBd.Altura;
+            direccionBd.Piso = direccionActualizada.Piso ?? direccionBd.Piso;
+            direccionBd.Departamento = direccionActualizada.Departamento ?? direccionBd.Departamento;
+            direccionBd.CodigoPostal = direccionActualizada.CodigoPostal ?? direccionBd.CodigoPostal;
+            direccionBd.Descripcion = direccionActualizada.Descripcion ?? direccionBd.Descripcion;
 
-            await _direccionRepositorio.ActualizarAsync(direccionDB);
+            await _direccionRepositorio.ActualizarAsync(direccionBd);
         }
 
         public async Task EliminarAsync(int idDireccion)

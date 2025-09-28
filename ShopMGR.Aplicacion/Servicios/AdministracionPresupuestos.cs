@@ -1,20 +1,22 @@
-﻿using AutoMapper;
-using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionPresupuestos(IRepositorioConValorHora presupuestoRepositorio, IMapper mapper) : IAdministrarPresupuestos
+    public class AdministracionPresupuestos(
+        IRepositorioConValorHora presupuestoRepositorio, 
+        MapperRegistry mapper) : IAdministrarPresupuestos
     {
         private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
-        private readonly IMapper _mapper = mapper;
+        private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Presupuesto> CrearAsync(PresupuestoDTO nuevoPresupuesto)
         {
-            var presupuesto = _mapper.Map<Presupuesto>(nuevoPresupuesto);
+            var presupuesto = _mapper.Map<PresupuestoDTO, Presupuesto>(nuevoPresupuesto);
 
             presupuesto.Fecha = DateTime.Now;
             presupuesto.Estado = EstadoPresupuesto.Pendiente;
@@ -47,16 +49,16 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
         {
-            var presupuestoDB = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
+            var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
 
-            presupuestoDB.IdCliente = entidad.IdCliente ?? presupuestoDB.IdCliente;
-            presupuestoDB.Titulo = entidad.Titulo ?? presupuestoDB.Titulo;
-            presupuestoDB.Descripcion = entidad.Descripcion ?? presupuestoDB.Descripcion;
-            presupuestoDB.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoDB.HorasEstimadas;
-            presupuestoDB.Estado = entidad.Estado ?? presupuestoDB.Estado;
-            presupuestoDB = await CalcularCostos(presupuestoDB);
+            presupuestoBd.IdCliente = entidad.IdCliente ?? presupuestoBd.IdCliente;
+            presupuestoBd.Titulo = entidad.Titulo ?? presupuestoBd.Titulo;
+            presupuestoBd.Descripcion = entidad.Descripcion ?? presupuestoBd.Descripcion;
+            presupuestoBd.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoBd.HorasEstimadas;
+            presupuestoBd.Estado = entidad.Estado ?? presupuestoBd.Estado;
+            presupuestoBd = await CalcularCostos(presupuestoBd);
 
-            await _presupuestoRepositorio.ActualizarAsync(presupuestoDB);
+            await _presupuestoRepositorio.ActualizarAsync(presupuestoBd);
         }
 
         public async Task EliminarAsync(int idPresupuesto)

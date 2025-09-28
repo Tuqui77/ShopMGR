@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
 
@@ -10,26 +10,26 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioCliente<Cliente> clienteRepositorio,
         IRepositorioConCliente<Direccion> direccionRepositorio,
         IRepositorioConCliente<TelefonoCliente> telefonoRepositorio,
-        IMapper mapper) : IAdministrarClientes
+        MapperRegistry mapper) : IAdministrarClientes
 
     {
         private readonly IRepositorioCliente<Cliente> _clienteRepositorio = clienteRepositorio;
         private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
         private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoRepositorio;
-        private readonly IMapper _mapper = mapper;
+        private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
         {
-            var cliente = _mapper.Map<Cliente>(nuevoCliente);
-
-            var clienteBD = await _clienteRepositorio.CrearAsync(cliente);
+            var cliente = _mapper.Map<ClienteDTO, Cliente>(nuevoCliente);
+            
+            var clienteBd = await _clienteRepositorio.CrearAsync(cliente);
 
             if (nuevoCliente.Direccion != null)
             {
                 foreach (var direccion in nuevoCliente.Direccion)
                 {
-                    var dirTmp = _mapper.Map<Direccion>(direccion);
-                    dirTmp.IdCliente = clienteBD.Id;
+                    var dirTmp = _mapper.Map<DireccionDTO, Direccion>(direccion);
+                    dirTmp.IdCliente = clienteBd.Id;
 
                     await _direccionRepositorio.CrearAsync(dirTmp);
                 }
@@ -39,14 +39,14 @@ namespace ShopMGR.Aplicacion.Servicios
             {
                 foreach (var telefono in nuevoCliente.Telefono)
                 {
-                    var telefonoTmp = _mapper.Map<TelefonoCliente>(telefono);
-                    telefonoTmp.IdCliente = clienteBD.Id;
+                    var telefonoTmp = _mapper.Map<TelefonoClienteDTO, TelefonoCliente>(telefono);
+                    telefonoTmp.IdCliente = clienteBd.Id;
 
                     await _telefonoClienteRepositorio.CrearAsync(telefonoTmp);
                 }
             }
 
-            return clienteBD;
+            return clienteBd;
         }
 
         public async Task<List<Cliente>> ListarTodosAsync()
@@ -70,12 +70,12 @@ namespace ShopMGR.Aplicacion.Servicios
         }
         public async Task ActualizarAsync(int idCliente, ModificarCliente clienteActualizado)
         {
-            var clienteDB = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
+            var clienteBd = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
 
-            clienteDB.NombreCompleto = clienteActualizado.NombreCompleto ?? clienteDB.NombreCompleto;
-            clienteDB.Cuit = clienteActualizado.Cuit ?? clienteDB.Cuit;
+            clienteBd.NombreCompleto = clienteActualizado.NombreCompleto ?? clienteBd.NombreCompleto;
+            clienteBd.Cuit = clienteActualizado.Cuit ?? clienteBd.Cuit;
 
-            await _clienteRepositorio.ActualizarAsync(clienteDB);
+            await _clienteRepositorio.ActualizarAsync(clienteBd);
         }
         public async Task EliminarAsync(int idCliente)
         {

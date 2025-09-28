@@ -1,43 +1,41 @@
-﻿using AutoMapper;
-using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    class AdministracionTrabajos(IRepositorioConFoto repositorio, IMapper mapper) : IAdministrarTrabajos
+    class AdministracionTrabajos(IRepositorioConFoto repositorio, 
+        MapperRegistry mapper) : IAdministrarTrabajos
     {
         private readonly IRepositorioConFoto _repositorio = repositorio;
-        private readonly IMapper _mapper = mapper;
+        private readonly MapperRegistry _mapper = mapper;
 
-        public async Task<Trabajo> CrearAsync(TrabajoDTO entidad)
+        public async Task<Trabajo> CrearAsync(TrabajoDTO nuevoTrabajo)
         {
-            var trabajo = _mapper.Map<Trabajo>(entidad);
-            if (entidad.Estado == EstadoTrabajo.Iniciado)
+            var trabajo = _mapper.Map<TrabajoDTO, Trabajo>(nuevoTrabajo);
+            
+            if (nuevoTrabajo.Estado == EstadoTrabajo.Iniciado)
             {
                 trabajo.FechaInicio = DateTime.Now;
-            }
-            else if (entidad.Estado == null)
-            {
-                trabajo.Estado = EstadoTrabajo.Pendiente;
             }
 
             await _repositorio.CrearAsync(trabajo);
             return trabajo;
         }
 
-        public async Task AgregarFotosAsync(List<FotoDTO> fotos)
+        public async Task AgregarFotosAsync(List<FotoDTO> nuevasFotos)
         {
-            var Fotos = _mapper.Map<List<Foto>>(fotos);
+            var fotos = _mapper.Map<FotoDTO, Foto>(nuevasFotos); 
 
-            await _repositorio.AgregarFotosAsync(Fotos);
+            await _repositorio.AgregarFotosAsync(fotos.ToList()); // TODO: Generalizar los métodos del repositorio para que reciban IEnumerable y así evitar conversiones innecesarias
         }
 
         public async Task AgregarHorasAsync(HorasYDescripcionDTO horas)
         {
-            var horasYDescripcion = _mapper.Map<HorasYDescripcion>(horas);
+            var horasYDescripcion = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horas);
             await _repositorio.AgregarHorasAsync(horasYDescripcion);
         }
 
@@ -61,19 +59,19 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _repositorio.ObtenerPorClienteAsync(idCliente);
         }
 
-        public async Task ActualizarAsync(int id, ModificarTrabajo entidad)
+        public async Task ActualizarAsync(int id, ModificarTrabajo trabajoModificado)
         {
             var trabajoDb = await _repositorio.ObtenerPorIdAsync(id);
 
             if (trabajoDb.FechaInicio == null &&
-                entidad.Estado == EstadoTrabajo.Iniciado)
+                trabajoModificado.Estado == EstadoTrabajo.Iniciado)
             {
                 trabajoDb.FechaInicio = DateTime.Now;
             }
-            trabajoDb.IdCliente = entidad.IdCliente ?? trabajoDb.IdCliente;
-            trabajoDb.Titulo = entidad.Titulo ?? trabajoDb.Titulo;
-            trabajoDb.Estado = entidad.Estado ?? trabajoDb.Estado;
-            trabajoDb.IdPresupuesto = entidad.IdPresupuesto ?? trabajoDb.IdPresupuesto;
+            trabajoDb.IdCliente = trabajoModificado.IdCliente ?? trabajoDb.IdCliente;
+            trabajoDb.Titulo = trabajoModificado.Titulo ?? trabajoDb.Titulo;
+            trabajoDb.Estado = trabajoModificado.Estado ?? trabajoDb.Estado;
+            trabajoDb.IdPresupuesto = trabajoModificado.IdPresupuesto ?? trabajoDb.IdPresupuesto;
 
             await _repositorio.ActualizarAsync(trabajoDb);
         }

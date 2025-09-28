@@ -1,19 +1,21 @@
-﻿using AutoMapper;
-using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionTelefonoCliente(IRepositorioConCliente<TelefonoCliente> telefonoClienteRepositorio, IMapper mapper) : IAdministrarTelefonoCliente
+    public class AdministracionTelefonoCliente(
+        IRepositorioConCliente<TelefonoCliente> telefonoClienteRepositorio, 
+        MapperRegistry mapper) : IAdministrarTelefonoCliente
     {
         private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoClienteRepositorio;
-        private readonly IMapper _mapper = mapper;
+        private readonly MapperRegistry _mapper = mapper;
 
         public async Task<TelefonoCliente> CrearAsync(TelefonoClienteDTO nuevoTelefono)
         {
-            var telefono = _mapper.Map<TelefonoCliente>(nuevoTelefono);
+            var telefono = _mapper.Map<TelefonoClienteDTO, TelefonoCliente>(nuevoTelefono);
 
             await _telefonoClienteRepositorio.CrearAsync(telefono);
             return telefono;
@@ -35,13 +37,13 @@ namespace ShopMGR.Aplicacion.Servicios
         }
         public async Task ActualizarAsync(int idTelefono, ModificarTelefono telefonoModificado)
         {
-            var telefonoDB = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
+            var telefonoBd = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
 
-            telefonoDB.IdCliente = telefonoModificado.IdCliente ?? telefonoDB.IdCliente;
-            telefonoDB.Telefono = telefonoModificado.Telefono ?? telefonoDB.Telefono;
-            telefonoDB.Descripcion = telefonoModificado.Descripcion ?? telefonoDB.Descripcion;
+            telefonoBd.IdCliente = telefonoModificado.IdCliente ?? telefonoBd.IdCliente;
+            telefonoBd.Telefono = telefonoModificado.Telefono ?? telefonoBd.Telefono;
+            telefonoBd.Descripcion = telefonoModificado.Descripcion ?? telefonoBd.Descripcion;
 
-            await _telefonoClienteRepositorio.ActualizarAsync(telefonoDB);
+            await _telefonoClienteRepositorio.ActualizarAsync(telefonoBd);
         }
         public async Task EliminarAsync(int idTelefono)
         {
