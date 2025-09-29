@@ -19,7 +19,10 @@ namespace ShopMGR.WebApi.Aplicacion
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var builder = WebApplication.CreateBuilder(args); // TODO: Checkear que cargue los user-secrets para obtener el ConnectionString.
+            
+            Console.WriteLine("ConnString desde config: " +
+                              builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
 
             //inyeccion de dependencias
             builder.Services.AddDbContext<ShopMGRDbContexto>(options =>
@@ -29,7 +32,8 @@ namespace ShopMGR.WebApi.Aplicacion
             builder.Services.InyectarServicios();
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+                options.JsonSerializerOptions.ReferenceHandler =
+                    System.Text.Json.Serialization.ReferenceHandler.Preserve;
             });
             builder.Services.Configure<GoogleDriveSettings>(
                 builder.Configuration.GetSection("GoogleDrive"));
@@ -46,11 +50,9 @@ namespace ShopMGR.WebApi.Aplicacion
                     Version = "v1",
                     Title = API_NAME,
                     Description = "API ShopMGR"
-
                 });
 
                 //c.OperationFilter<SwaggerFileUploadFilter>();
-
             });
             builder.Services.ConfigureHttpJsonOptions(options =>
             {

@@ -13,7 +13,9 @@ namespace DBSeeder
             var host = Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((context, config) =>
                 {
-                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                        .AddUserSecrets<DatabaseSeeder>()
+                        .AddEnvironmentVariables();
                 })
                 .ConfigureServices((context, services) =>
                 {
