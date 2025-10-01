@@ -35,5 +35,3 @@ public class ClienteDTOMapper(MapperRegistry mapper) :IMapper<Cliente, ClienteDT
         };
     }
 }
-
-// TODO: Editor de clientes

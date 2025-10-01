@@ -19,7 +19,7 @@ namespace ShopMGR.WebApi.Aplicacion
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args); // TODO: Checkear que cargue los user-secrets para obtener el ConnectionString.
+            var builder = WebApplication.CreateBuilder(args);
             
             Console.WriteLine("ConnString desde config: " +
                               builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
