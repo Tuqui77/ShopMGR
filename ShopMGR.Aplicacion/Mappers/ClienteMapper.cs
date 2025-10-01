@@ -16,8 +16,6 @@ public class ClienteMapper(MapperRegistry mapper) : IMapper<ClienteDTO, Cliente>
             NombreCompleto = clienteDTO.NombreCompleto,
             Cuit = clienteDTO.Cuit,
             Balance = clienteDTO.Balance,
-            Direccion = _mapper.Map<DireccionDTO, Direccion>(clienteDTO.Direccion).ToList(),
-            Telefono = _mapper.Map<TelefonoClienteDTO, TelefonoCliente>(clienteDTO.Telefono).ToList(), // TODO: Probar estos mapeadores con valores null, tal vez haga falta una validación
         };
     }
 }
