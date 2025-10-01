@@ -4,7 +4,6 @@
     {
         public string Descripcion { get; set; }
         public decimal Precio { get; set; }
-        public float Cantidad { get; set; }
-
+        public double Cantidad { get; set; }
     }
 }
