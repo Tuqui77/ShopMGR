@@ -7,7 +7,7 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    class AdministracionTrabajos(IRepositorioConFoto repositorio, 
+    public class AdministracionTrabajos(IRepositorioConFoto repositorio, 
         MapperRegistry mapper) : IAdministrarTrabajos
     {
         private readonly IRepositorioConFoto _repositorio = repositorio;
