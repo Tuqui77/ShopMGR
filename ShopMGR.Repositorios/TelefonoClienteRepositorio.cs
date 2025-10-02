@@ -13,9 +13,8 @@ namespace ShopMGR.Repositorios
         public async Task<TelefonoCliente> CrearAsync(TelefonoCliente telefono)
         {
             if (!await _contexto.Clientes.AnyAsync(x => x.Id == telefono.IdCliente))
-                throw new KeyNotFoundException("No existe el cliente asociado a ese Id");
-            if (await _contexto.TelefonoCliente.AnyAsync(x => x.Telefono == telefono.Telefono))
-                throw new InvalidOperationException($"Ya existe un teléfono con el número {telefono.Telefono}");
+                throw new KeyNotFoundException($"No existe un cliente copn el Id {telefono.IdCliente}");
+            await Validar(telefono);
 
             _contexto.TelefonoCliente.Add(telefono);
             await _contexto.SaveChangesAsync();
@@ -67,6 +66,14 @@ namespace ShopMGR.Repositorios
 
             _contexto.TelefonoCliente.Remove(telefono);
             await _contexto.SaveChangesAsync();
+        }
+
+        public async Task Validar(TelefonoCliente telefono)
+        {
+            if (telefono.Telefono.Length != 10)
+                throw new InvalidOperationException("El número de teléfono debe contener 10 caracteres");
+            if (await _contexto.TelefonoCliente.AnyAsync(t => t.Telefono == telefono.Telefono))
+                throw new InvalidOperationException($"Ya existe un teléfono con el número {telefono.Telefono}");
         }
     }
 }

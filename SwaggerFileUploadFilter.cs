@@ -1,8 +1,7 @@
 ﻿using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System;
 
-namespace ShopMGR.Infraestructura
+namespace ShopMGR.WebApi
 {
     public class SwaggerFileUploadFilter : IOperationFilter
     {

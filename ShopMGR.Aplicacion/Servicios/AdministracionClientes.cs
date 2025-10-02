@@ -21,32 +21,18 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
         {
             var cliente = _mapper.Map<ClienteDTO, Cliente>(nuevoCliente);
+
+            foreach (var direccion in cliente.Direccion)
+            {
+                await _direccionRepositorio.Validar(direccion);
+            }
+
+            foreach (var telefono in cliente.Telefono)
+            {
+                await _telefonoClienteRepositorio.Validar(telefono);
+            }
             
-            var clienteBd = await _clienteRepositorio.CrearAsync(cliente);
-
-            if (nuevoCliente.Direccion != null)
-            {
-                foreach (var direccion in nuevoCliente.Direccion)
-                {
-                    var dirTmp = _mapper.Map<DireccionDTO, Direccion>(direccion);
-                    dirTmp.IdCliente = clienteBd.Id;
-
-                    await _direccionRepositorio.CrearAsync(dirTmp);
-                }
-            }
-
-            if (nuevoCliente.Telefono != null)
-            {
-                foreach (var telefono in nuevoCliente.Telefono)
-                {
-                    var telefonoTmp = _mapper.Map<TelefonoClienteDTO, TelefonoCliente>(telefono);
-                    telefonoTmp.IdCliente = clienteBd.Id;
-
-                    await _telefonoClienteRepositorio.CrearAsync(telefonoTmp);
-                }
-            }
-
-            return clienteBd;
+            return await _clienteRepositorio.CrearAsync(cliente);
         }
 
         public async Task<List<Cliente>> ListarTodosAsync()
