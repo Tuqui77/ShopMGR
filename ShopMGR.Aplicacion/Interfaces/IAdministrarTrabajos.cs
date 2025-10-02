@@ -1,4 +1,5 @@
-﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using Microsoft.AspNetCore.Http;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
@@ -8,7 +9,7 @@ namespace ShopMGR.Aplicacion.Interfaces
     {
         Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente);
         Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado);
-        Task AgregarFotosAsync(List<FotoDTO> fotos);
+        Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotos);
         Task AgregarHorasAsync(HorasYDescripcionDTO horas);
     }
 }

@@ -31,29 +31,12 @@ namespace ShopMGR.WebApi.Controllers
         [Route("AgregarFotosTrabajo")]
         public async Task<IActionResult> AgregarFotosTrabajo(int idTrabajo, [FromForm] IFormFileCollection fotos)
         {
-            if (fotos == null || fotos.Count == 0)
+            if (fotos.Count == 0)
             {
                 return BadRequest("No se seleccionó ningún archivo.");
             }
 
-            await servicio.ConectarConGoogleDrive();
-
-            var DTOs = new List<FotoDTO>();
-
-            foreach (var foto in fotos)
-            {
-                var enlace = await servicio.SubirArchivoAsync(foto);
-
-                var fotoDTO = new FotoDTO
-                {
-                    IdTrabajo = idTrabajo,
-                    Enlace = enlace
-                };
-
-                DTOs.Add(fotoDTO);
-            }
-
-            await administrarTrabajos.AgregarFotosAsync(DTOs);
+            await administrarTrabajos.AgregarFotosAsync(idTrabajo, fotos);
 
             return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
         }

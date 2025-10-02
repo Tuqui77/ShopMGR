@@ -1,4 +1,5 @@
-﻿using ShopMGR.Aplicacion.Data_Transfer_Objects;
+﻿using Microsoft.AspNetCore.Http;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
@@ -7,10 +8,13 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionTrabajos(IRepositorioConFoto repositorio, 
+    public class AdministracionTrabajos(
+        IRepositorioConFoto repositorio, 
+        IGoogleDriveServicio drive,
         MapperRegistry mapper) : IAdministrarTrabajos
     {
         private readonly IRepositorioConFoto _repositorio = repositorio;
+        private readonly IGoogleDriveServicio _drive = drive;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Trabajo> CrearAsync(TrabajoDTO nuevoTrabajo)
@@ -26,9 +30,22 @@ namespace ShopMGR.Aplicacion.Servicios
             return trabajo;
         }
 
-        public async Task AgregarFotosAsync(List<FotoDTO> nuevasFotos)
+        public async Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotosNuevas)
         {
-            var fotos = _mapper.Map<FotoDTO, Foto>(nuevasFotos).ToList(); 
+            await _drive.ConectarConGoogleDrive();
+            var fotos = new List<Foto>();
+
+            foreach (var foto in fotosNuevas)
+            {
+                var enlace = await _drive.SubirArchivoAsync(foto);
+
+                var fotoTmp = new Foto
+                {
+                    IdTrabajo = idTrabajo,
+                    Enlace = enlace
+                };
+                fotos.Add(fotoTmp);
+            }
 
             await _repositorio.AgregarFotosAsync(fotos);
         }
