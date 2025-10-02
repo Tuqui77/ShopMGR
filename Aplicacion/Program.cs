@@ -21,10 +21,7 @@ namespace ShopMGR.WebApi.Aplicacion
         {
             var builder = WebApplication.CreateBuilder(args);
             
-            Console.WriteLine("ConnString desde config: " +
-                              builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
-
-            //inyeccion de dependencias
+           //inyeccion de dependencias
             builder.Services.AddDbContext<ShopMGRDbContexto>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"));

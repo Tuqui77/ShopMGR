@@ -28,9 +28,9 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task AgregarFotosAsync(List<FotoDTO> nuevasFotos)
         {
-            var fotos = _mapper.Map<FotoDTO, Foto>(nuevasFotos); 
+            var fotos = _mapper.Map<FotoDTO, Foto>(nuevasFotos).ToList(); 
 
-            await _repositorio.AgregarFotosAsync(fotos.ToList()); // TODO: Generalizar los métodos del repositorio para que reciban IEnumerable y así evitar conversiones innecesarias
+            await _repositorio.AgregarFotosAsync(fotos);
         }
 
         public async Task AgregarHorasAsync(HorasYDescripcionDTO horas)
