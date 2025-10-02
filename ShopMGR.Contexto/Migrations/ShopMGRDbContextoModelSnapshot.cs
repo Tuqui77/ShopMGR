@@ -17,7 +17,7 @@ namespace ShopMGR.Contexto.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.4")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -48,7 +48,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.ToTable("Clientes", (string)null);
+                    b.ToTable("Clientes");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.ConfiguracionGlobal", b =>
@@ -74,7 +74,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.ToTable("Configuraciones", (string)null);
+                    b.ToTable("Configuraciones");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Direccion", b =>
@@ -125,7 +125,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("Direccion", (string)null);
+                    b.ToTable("Direccion");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Foto", b =>
@@ -138,19 +138,20 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.Property<string>("Enlace")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("IdTrabajo")
                         .HasColumnType("int");
 
-                    b.Property<int>("TrabajoId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("TrabajoId");
+                    b.HasIndex("Id")
+                        .IsUnique();
 
-                    b.ToTable("Fotos", (string)null);
+                    b.HasIndex("IdTrabajo");
+
+                    b.ToTable("Fotos");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.HorasYDescripcion", b =>
@@ -182,7 +183,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdTrabajo");
 
-                    b.ToTable("HorasYDescripcion", (string)null);
+                    b.ToTable("HorasYDescripcion");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Material", b =>
@@ -215,7 +216,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdPresupuesto");
 
-                    b.ToTable("Materiales", (string)null);
+                    b.ToTable("Materiales");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Presupuesto", b =>
@@ -272,7 +273,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("Presupuestos", (string)null);
+                    b.ToTable("Presupuestos");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.TelefonoCliente", b =>
@@ -302,7 +303,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("TelefonoCliente", (string)null);
+                    b.ToTable("TelefonoCliente");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Trabajo", b =>
@@ -343,7 +344,7 @@ namespace ShopMGR.Contexto.Migrations
                         .IsUnique()
                         .HasFilter("[IdPresupuesto] IS NOT NULL");
 
-                    b.ToTable("Trabajos", (string)null);
+                    b.ToTable("Trabajos");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Direccion", b =>
@@ -361,7 +362,7 @@ namespace ShopMGR.Contexto.Migrations
                 {
                     b.HasOne("ShopMGR.Dominio.Modelo.Trabajo", "Trabajo")
                         .WithMany("Fotos")
-                        .HasForeignKey("TrabajoId")
+                        .HasForeignKey("IdTrabajo")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

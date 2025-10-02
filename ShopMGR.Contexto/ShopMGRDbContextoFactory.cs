@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -9,7 +11,12 @@ public class ShopMGRDbContextoFactory : IDesignTimeDbContextFactory<ShopMGRDbCon
 {
     public ShopMGRDbContexto CreateDbContext(string[] args)
     {
-        IConfigurationRoot configuracion = (IConfigurationRoot)new ConfigurationBuilder().AddJsonFile("appsettings.json");
+        IConfigurationRoot configuracion = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json")
+            .AddUserSecrets(Assembly.GetExecutingAssembly(), optional: true)
+            .Build();
+        
         var connectionString = configuracion.GetConnectionString("ShopMGRDbContexto");
 
         var optionsBuilder = new DbContextOptionsBuilder<ShopMGRDbContexto>();
