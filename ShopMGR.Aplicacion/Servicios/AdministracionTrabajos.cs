@@ -23,7 +23,7 @@ namespace ShopMGR.Aplicacion.Servicios
             
             if (nuevoTrabajo.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajo.FechaInicio = DateTime.Now;
+                trabajo.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
             }
 
             await _repositorio.CrearAsync(trabajo);
@@ -83,7 +83,13 @@ namespace ShopMGR.Aplicacion.Servicios
             if (trabajoDb.FechaInicio == null &&
                 trabajoModificado.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajoDb.FechaInicio = DateTime.Now;
+                trabajoDb.FechaInicio = DateOnly.FromDateTime(DateTime.Now);;
+            }
+
+            if (trabajoDb.Estado == EstadoTrabajo.Iniciado &&
+                trabajoModificado.Estado == EstadoTrabajo.Terminado)
+            {
+                trabajoDb.FechaFin = DateOnly.FromDateTime(DateTime.Now);
             }
             trabajoDb.IdCliente = trabajoModificado.IdCliente ?? trabajoDb.IdCliente;
             trabajoDb.Titulo = trabajoModificado.Titulo ?? trabajoDb.Titulo;

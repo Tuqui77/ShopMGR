@@ -29,7 +29,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
 
             builder.Property(p => p.Fecha)
                 .IsRequired(true)
-                .HasColumnType("datetime");
+                .HasColumnType("date");
 
             builder.Property(p => p.HorasEstimadas)
                 .IsRequired(true);

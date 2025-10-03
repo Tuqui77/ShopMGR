@@ -18,7 +18,7 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var presupuesto = _mapper.Map<PresupuestoDTO, Presupuesto>(nuevoPresupuesto);
 
-            presupuesto.Fecha = DateTime.Now;
+            presupuesto.Fecha = DateOnly.FromDateTime(DateTime.Now);
             presupuesto.Estado = EstadoPresupuesto.Pendiente;
             presupuesto = await CalcularCostos(presupuesto);
 

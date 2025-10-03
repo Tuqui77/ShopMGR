@@ -30,11 +30,11 @@ namespace ShopMGR.Contexto.Configuracion_entidades
 
             builder.Property(t => t.FechaInicio)
                 .IsRequired(false)
-                .HasColumnType("datetime");
+                .HasColumnType("date");
             
             builder.Property(t => t.FechaFin)
                 .IsRequired(false)
-                .HasColumnType("datetime");
+                .HasColumnType("date");
 
             //Relaciones
             builder.HasOne(t => t.Cliente)

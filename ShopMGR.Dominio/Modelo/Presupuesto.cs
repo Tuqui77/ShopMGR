@@ -8,7 +8,7 @@ namespace ShopMGR.Dominio.Modelo
         public string Titulo { get; set; }
         public string? Descripcion { get; set; }
         public double HorasEstimadas { get; set; }
-        public DateTime Fecha { get; set; }
+        public DateOnly Fecha { get; set; }
         public decimal CostoMateriales { get; set; }
         public decimal CostoLabor { get; set; }
         public decimal CostoInsumos { get; set; }
