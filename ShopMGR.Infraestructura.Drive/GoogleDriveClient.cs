@@ -57,7 +57,10 @@ namespace ShopMGR.Infraestructura.Drive
 
             if (result.Status == Google.Apis.Upload.UploadStatus.Completed)
             {
-                return request.ResponseBody.WebViewLink;
+                var uri = new Uri(request.ResponseBody.WebViewLink);
+                var fileId = uri.Segments[3].TrimEnd('/');
+
+                return $"https://drive.google.com/uc?export=view&id={fileId}";
             }
             else
             {
