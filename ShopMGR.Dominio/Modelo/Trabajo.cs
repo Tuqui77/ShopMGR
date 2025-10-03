@@ -8,6 +8,7 @@ namespace ShopMGR.Dominio.Modelo
         public int Id { get; set; }
         public EstadoTrabajo Estado { get; set; }
         public DateTime? FechaInicio { get; set; }
+        public DateTime? FechaFin { get; set; }
         public string Titulo { get; set; }
         [NotMapped] 
         public float TotalHoras => HorasDeTrabajo.Sum(h => h.Horas);
