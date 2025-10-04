@@ -54,6 +54,15 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpGet]
+        [Route("BuscarSaldosNegativos")]
+        public async Task<IActionResult> BuscarSaldosNegativos()
+        {
+            var clientesConSaldoNegativo = await administracionClientes.BuscarSaldosNegativosAsync();
+
+            return clientesConSaldoNegativo.Any() ? Ok(clientesConSaldoNegativo) : Ok($"No hay clientes con saldo negativo.");
+        }
+
+        [HttpGet]
         [Route("ObtenerClientePorNombre")]
         public async Task<IActionResult> ObtenerClientePorNombreAsync(string nombre)
         {

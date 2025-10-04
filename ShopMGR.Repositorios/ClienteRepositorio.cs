@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
@@ -54,6 +55,15 @@ namespace ShopMGR.Repositorios
                 ?? throw new KeyNotFoundException("No existe un cliente con ese nombre");
 
             return cliente;
+        }
+
+        public async Task<List<Cliente>> BuscarSaldosNegativosAsync()
+        {
+            return await _contexto.Clientes
+                .Where(c => c.Balance < 0)
+                .Include(c => c.Trabajos
+                    .Where(t => t.Estado == EstadoTrabajo.Terminado))
+                .ToListAsync();
         }
 
         public async Task ActualizarAsync(Cliente cliente)

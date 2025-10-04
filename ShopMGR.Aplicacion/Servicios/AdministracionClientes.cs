@@ -54,6 +54,12 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             return await _clienteRepositorio.ObtenerPorNombreAsync(nombre);
         }
+
+        public async Task<List<Cliente>> BuscarSaldosNegativosAsync()
+        {
+            return await _clienteRepositorio.BuscarSaldosNegativosAsync();
+        }
+
         public async Task ActualizarAsync(int idCliente, ModificarCliente clienteActualizado)
         {
             var clienteBd = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);

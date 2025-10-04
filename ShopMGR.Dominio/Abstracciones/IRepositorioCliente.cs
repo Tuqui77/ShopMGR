@@ -4,5 +4,6 @@
     {
         public Task<Cliente> ObtenerPorNombreAsync(string nombre);
         public Task<List<Cliente>> ListarTodosAsync();
+        public Task<List<Cliente>> BuscarSaldosNegativosAsync();
     }
 }
