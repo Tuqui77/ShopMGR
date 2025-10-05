@@ -9,11 +9,13 @@ using ShopMGR.Dominio.Modelo;
 namespace ShopMGR.Aplicacion.Servicios
 {
     public class AdministracionTrabajos(
-        IRepositorioConFoto repositorio, 
+        IRepositorioConFoto repositorio,
+        IRepositorioConValorHora repositorioPresupuestos,
         IGoogleDriveServicio drive,
         MapperRegistry mapper) : IAdministrarTrabajos
     {
         private readonly IRepositorioConFoto _repositorio = repositorio;
+        private readonly IRepositorioConValorHora _repositorioPresupuestos = repositorioPresupuestos;
         private readonly IGoogleDriveServicio _drive = drive;
         private readonly MapperRegistry _mapper = mapper;
 
@@ -26,6 +28,12 @@ namespace ShopMGR.Aplicacion.Servicios
                 trabajo.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
             }
 
+            if (nuevoTrabajo.IdPresupuesto != null)
+            {
+                var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(nuevoTrabajo.IdPresupuesto.Value);
+                trabajo.TotalLabor = presupuesto.CostoLabor;
+            }
+            
             await _repositorio.CrearAsync(trabajo);
             return trabajo;
         }
@@ -78,7 +86,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task ActualizarAsync(int id, ModificarTrabajo trabajoModificado)
         {
-            var trabajoDb = await _repositorio.ObtenerPorIdAsync(id);
+            var trabajoDb = await _repositorio.ObtenerDetallePorIdAsync(id);
 
             if (trabajoDb.FechaInicio == null &&
                 trabajoModificado.Estado == EstadoTrabajo.Iniciado)
@@ -90,6 +98,12 @@ namespace ShopMGR.Aplicacion.Servicios
                 trabajoModificado.Estado == EstadoTrabajo.Terminado)
             {
                 trabajoDb.FechaFin = DateOnly.FromDateTime(DateTime.Now);
+
+                if (trabajoDb.TotalLabor == null)
+                {
+                    var costoHoraDeTrabajo = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
+                    trabajoDb.TotalLabor = costoHoraDeTrabajo * (decimal)trabajoDb.TotalHoras;
+                }
             }
             trabajoDb.IdCliente = trabajoModificado.IdCliente ?? trabajoDb.IdCliente;
             trabajoDb.Titulo = trabajoModificado.Titulo ?? trabajoDb.Titulo;
