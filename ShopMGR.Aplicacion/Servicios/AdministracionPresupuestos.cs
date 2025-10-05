@@ -73,10 +73,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task<decimal> ObtenerCostoHoraDeTrabajo()
         {
-            var configuracionValorHoraDeTrabajo = await _presupuestoRepositorio.ObtenerCostoHoraDeTrabajo();
-
-            var valorHoraDeTrabajo = decimal.Parse(configuracionValorHoraDeTrabajo.Valor);
-            return valorHoraDeTrabajo;
+            return await _presupuestoRepositorio.ObtenerCostoHoraDeTrabajo();
         }
 
         //Método local para calcular los costos del presupuesto

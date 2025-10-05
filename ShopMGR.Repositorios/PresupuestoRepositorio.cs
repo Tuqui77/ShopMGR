@@ -95,14 +95,14 @@ namespace ShopMGR.Repositorios
             await _contexto.SaveChangesAsync();
         }
 
-        public async Task<ConfiguracionGlobal> ObtenerCostoHoraDeTrabajo()
+        public async Task<decimal> ObtenerCostoHoraDeTrabajo()
         {
             var configuracionValorHoraDeTrabajo = await _contexto.Configuraciones
                 .Where(c => c.Clave == "ValorHoraDeTrabajo")
                 .FirstOrDefaultAsync()
                 ?? throw new KeyNotFoundException("El valor de la hora de trabajo no esta configurado");
 
-            return configuracionValorHoraDeTrabajo;
+            return decimal.Parse(configuracionValorHoraDeTrabajo.Valor);
         }
     }
 }
