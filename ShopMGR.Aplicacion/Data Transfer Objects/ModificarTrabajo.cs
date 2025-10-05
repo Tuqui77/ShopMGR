@@ -8,5 +8,7 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
         public string? Titulo { get; set; }
         public int? IdCliente { get; set; }
         public int? IdPresupuesto { get; set; }
+        public decimal? TotalLabor { get; set; }
+
     }
 }

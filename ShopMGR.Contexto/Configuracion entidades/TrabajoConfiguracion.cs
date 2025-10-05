@@ -35,6 +35,10 @@ namespace ShopMGR.Contexto.Configuracion_entidades
             builder.Property(t => t.FechaFin)
                 .IsRequired(false)
                 .HasColumnType("date");
+            
+            builder.Property(t => t.TotalLabor)
+                .IsRequired(false)
+                .HasColumnType("decimal(18,2)");
 
             //Relaciones
             builder.HasOne(t => t.Cliente)
