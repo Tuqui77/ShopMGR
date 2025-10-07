@@ -19,6 +19,7 @@ namespace ShopMGR.Contexto
         public DbSet<TelefonoCliente> TelefonoCliente { get; set; }
         public DbSet<Foto> Fotos { get; set; }
         public DbSet<HorasYDescripcion> HorasYDescripcion { get; set; }
+        public DbSet<MovimientoBalance>  MovimientoBalance { get; set; }
 
         //Persistencia de configuraciones de la aplicación.
         public DbSet<ConfiguracionGlobal> Configuraciones { get; set; }
