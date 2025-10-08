@@ -11,5 +11,6 @@ namespace ShopMGR.Aplicacion.Interfaces
         Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado);
         Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotos);
         Task AgregarHorasAsync(HorasYDescripcionDTO horas);
+        public Task TerminarTrabajo(int idTrabajo);
     }
 }
