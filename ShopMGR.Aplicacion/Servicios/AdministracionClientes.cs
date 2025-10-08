@@ -10,23 +10,25 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioCliente<Cliente> clienteRepositorio,
         IRepositorioConCliente<Direccion> direccionRepositorio,
         IRepositorioConCliente<TelefonoCliente> telefonoRepositorio,
+        IMovimientoBalanceRepositorio movimientoBalanceRepositorio,
         MapperRegistry mapper) : IAdministrarClientes
 
     {
         private readonly IRepositorioCliente<Cliente> _clienteRepositorio = clienteRepositorio;
         private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
         private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoRepositorio;
+        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio = movimientoBalanceRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
         {
             var cliente = _mapper.Map<ClienteDTO, Cliente>(nuevoCliente);
-
+            
             foreach (var direccion in cliente.Direccion)
             {
                 await _direccionRepositorio.Validar(direccion);
             }
-
+            
             foreach (var telefono in cliente.Telefono)
             {
                 await _telefonoClienteRepositorio.Validar(telefono);
@@ -69,6 +71,17 @@ namespace ShopMGR.Aplicacion.Servicios
 
             await _clienteRepositorio.ActualizarAsync(clienteBd);
         }
+
+        public async Task RegistrarMovimientoAsync(int idCliente, MovimientoBalance movimiento)
+        {
+            var cliente = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
+
+            cliente.Balance += movimiento.Monto;
+            await _clienteRepositorio.ActualizarAsync(cliente);
+
+            await _movimientoBalanceRepositorio.AgregarAsync(movimiento);
+        }
+
         public async Task EliminarAsync(int idCliente)
         {
             await _clienteRepositorio.EliminarAsync(idCliente);
