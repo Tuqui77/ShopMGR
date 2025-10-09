@@ -11,13 +11,13 @@ namespace ShopMGR.Aplicacion.Servicios
     public class AdministracionTrabajos(
         IRepositorioConFoto repositorio,
         IRepositorioConValorHora repositorioPresupuestos,
-        IMovimientoBalanceRepositorio movimientoBalanceRepositorio,
+        IAdministrarClientes clientes,
         IGoogleDriveServicio drive,
         MapperRegistry mapper) : IAdministrarTrabajos
     {
         private readonly IRepositorioConFoto _repositorio = repositorio;
         private readonly IRepositorioConValorHora _repositorioPresupuestos = repositorioPresupuestos;
-        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio = movimientoBalanceRepositorio;
+        private readonly IAdministrarClientes _clientes = clientes;
         private readonly IGoogleDriveServicio _drive = drive;
         private readonly MapperRegistry _mapper = mapper;
 
@@ -121,6 +121,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             var movimiento = new MovimientoBalance
             {
+                Tipo = TipoMovimiento.Cargo,
                 Monto = -(decimal)trabajo.TotalLabor,
                 Descripcion = $"Trabajo #{idTrabajo} - {trabajo.Titulo}",
                 Fecha = DateOnly.FromDateTime(DateTime.Now),
@@ -130,7 +131,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 IdTrabajo = trabajo.Id
             };
 
-            await _movimientoBalanceRepositorio.AgregarAsync(movimiento);
+            await _clientes.RegistrarMovimientoAsync(trabajo.IdCliente, movimiento);
         }
 
         public async Task EliminarAsync(int idTrabajo)
