@@ -101,7 +101,7 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpPatch]
-        [Route("ModificarTrabajo")] //Acá
+        [Route("ModificarTrabajo")]
         public async Task<IActionResult> ModificarTrabajo(int idTrabajo, [FromBody] ModificarTrabajo trabajoModificado)
         {
             if (trabajoModificado == null)
@@ -113,6 +113,13 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Trabajo actualizado correctamente.");
         }
 
+        [HttpPatch]
+        [Route("TerminarTrabajo")]
+        public async Task<IActionResult> TerminarTrabajo(int idTrabajo)
+        {
+            await administrarTrabajos.TerminarTrabajo(idTrabajo);
+            return Ok($"Trabajo #{idTrabajo} marcado como terminado.");
+        }
 
         [HttpDelete]
         [Route("EliminarTrabajo")]
