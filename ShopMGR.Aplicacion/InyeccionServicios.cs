@@ -30,6 +30,8 @@ namespace ShopMGR.Aplicacion
 
             services.AddScoped<IRepositorioConFoto, TrabajoRepositorio>();
             services.AddScoped<IAdministrarTrabajos, AdministracionTrabajos>();
+            
+            services.AddScoped<IMovimientoBalanceRepositorio, MovimientoBalanceRepoositorio>();
 
             //Dependencias de almacenamiento en la nube.
             services.AddScoped<GoogleDriveClient>();
