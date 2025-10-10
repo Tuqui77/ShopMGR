@@ -14,5 +14,5 @@ public class MovimientoBalance
 	public Cliente Cliente {get; set;}
 	public int IdCliente {get; set;}
 	public Trabajo Trabajo {get; set;}
-	public int IdTrabajo {get; set;}
+	public int? IdTrabajo {get; set;}
 }

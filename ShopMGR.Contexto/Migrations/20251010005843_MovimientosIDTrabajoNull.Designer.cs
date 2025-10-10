@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShopMGR.Contexto;
 
@@ -11,9 +12,11 @@ using ShopMGR.Contexto;
 namespace ShopMGR.Contexto.Migrations
 {
     [DbContext(typeof(ShopMGRDbContexto))]
-    partial class ShopMGRDbContextoModelSnapshot : ModelSnapshot
+    [Migration("20251010005843_MovimientosIDTrabajoNull")]
+    partial class MovimientosIDTrabajoNull
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -238,7 +241,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.Property<int>("IdCliente")
                         .HasColumnType("int");
 
-                    b.Property<int?>("IdTrabajo")
+                    b.Property<int>("IdTrabajo")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Monto")

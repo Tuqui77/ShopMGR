@@ -33,6 +33,7 @@ public class MovimientoBalanceConfiguracion :IEntityTypeConfiguration<Movimiento
 		builder.HasOne(m => m.Trabajo)
 			.WithMany()
 			.HasForeignKey(m => m.IdTrabajo)
-			.OnDelete(DeleteBehavior.NoAction);
+			.OnDelete(DeleteBehavior.NoAction)
+			.IsRequired(false);
 	}
 }
