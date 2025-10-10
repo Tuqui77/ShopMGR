@@ -62,6 +62,8 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task AgregarHorasAsync(HorasYDescripcionDTO horas)
         {
+            horas.Fecha = horas.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horas.Fecha;
+            
             var horasYDescripcion = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horas);
             await _repositorio.AgregarHorasAsync(horasYDescripcion);
         }

@@ -49,8 +49,7 @@ namespace ShopMGR.WebApi.Controllers
             {
                 return BadRequest("La petición no puede estar vacía.");
             }
-
-            horas.Fecha = horas.Fecha == default ? DateTime.Now : horas.Fecha;
+            
             await administrarTrabajos.AgregarHorasAsync(horas);
             return Ok(
                 $"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente.");
