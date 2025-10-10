@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public float Horas { get; set; }
         public string Descripcion { get; set; }
-        public DateTime Fecha { get; set; }
+        public DateOnly Fecha { get; set; }
 
         //relaciones
         public Trabajo Trabajo { get; set; }

@@ -27,7 +27,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
 
             builder.Property(h => h.Fecha)
                 .IsRequired(true)
-                .HasColumnType("datetime");
+                .HasColumnType("date");
 
             //Relaciones
             builder.HasOne(h => h.Trabajo)
