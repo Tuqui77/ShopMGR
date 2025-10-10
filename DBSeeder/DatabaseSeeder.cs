@@ -137,7 +137,16 @@ namespace DBSeeder
 			          -- ============================================
 			          -- Script de Seed para Base de Datos
 			          -- ============================================
-
+			          
+			          -- ============================================
+			          -- AJUSTAR TIPOS DE COLUMNAS A 'date'
+			          -- ============================================
+			          ALTER TABLE Trabajos ALTER COLUMN FechaInicio date NULL;
+			          ALTER TABLE Trabajos ALTER COLUMN FechaFin date NULL;
+			          ALTER TABLE Presupuestos ALTER COLUMN Fecha date NOT NULL;
+			          ALTER TABLE MovimientoBalance ALTER COLUMN Fecha date NOT NULL;
+			          ALTER TABLE HorasYDescripcion ALTER COLUMN Fecha date NOT NULL;
+			          
 			          -- Deshabilitar constraints temporalmente
 			          ALTER TABLE MovimientoBalance NOCHECK CONSTRAINT ALL;
 			          ALTER TABLE TelefonoCliente NOCHECK CONSTRAINT ALL;
@@ -148,7 +157,7 @@ namespace DBSeeder
 			          ALTER TABLE Trabajos NOCHECK CONSTRAINT ALL;
 			          ALTER TABLE Presupuestos NOCHECK CONSTRAINT ALL;
 			          ALTER TABLE Clientes NOCHECK CONSTRAINT ALL;
-
+			          
 			          -- Limpiar datos existentes (en orden por dependencias)
 			          DELETE FROM MovimientoBalance;
 			          DELETE FROM HorasYDescripcion;
@@ -160,7 +169,7 @@ namespace DBSeeder
 			          DELETE FROM Direccion;
 			          DELETE FROM Clientes;
 			          DELETE FROM Configuraciones;
-
+			          
 			          -- Reiniciar identities
 			          DBCC CHECKIDENT ('MovimientoBalance', RESEED, 0);
 			          DBCC CHECKIDENT ('HorasYDescripcion', RESEED, 0);
@@ -172,18 +181,18 @@ namespace DBSeeder
 			          DBCC CHECKIDENT ('Direccion', RESEED, 0);
 			          DBCC CHECKIDENT ('Clientes', RESEED, 0);
 			          DBCC CHECKIDENT ('Configuraciones', RESEED, 0);
-
+			          
 			          -- ============================================
 			          -- CLIENTES
 			          -- ============================================
 			          INSERT INTO Clientes (NombreCompleto, Cuit, Balance) VALUES
-			          ('Juan Pérez', '20-12345678-9', -15000.00),
+			          ('Juan Pérez', '20-12345678-9', -5000.00),
 			          ('María González', '27-23456789-0', 5000.00),
 			          ('Carlos Rodríguez', '20-34567890-1', -8500.00),
 			          ('Ana Martínez', NULL, 0.00),
 			          ('Roberto Silva', '20-45678901-2', -22000.00),
 			          ('Laura Fernández', '27-56789012-3', 3500.00);
-
+			          
 			          -- ============================================
 			          -- TELÉFONOS CLIENTES
 			          -- ============================================
@@ -196,7 +205,7 @@ namespace DBSeeder
 			          ('3425-456789', 'Celular', 4),
 			          ('3425-567890', 'Trabajo', 5),
 			          ('3425-678901', 'Celular', 6);
-
+			          
 			          -- ============================================
 			          -- DIRECCIONES
 			          -- ============================================
@@ -207,7 +216,7 @@ namespace DBSeeder
 			          ('Rivadavia', '432', '1', 'A', NULL, '3000', NULL, 4),
 			          ('Mitre', '765', NULL, NULL, 'Frente a la plaza', '3000', NULL, 5),
 			          ('Sarmiento', '321', '2', NULL, NULL, '3000', NULL, 6);
-
+			          
 			          -- ============================================
 			          -- PRESUPUESTOS
 			          -- ============================================
@@ -221,7 +230,7 @@ namespace DBSeeder
 			          ('Ampliación de cocina', 'Agregar mesada y alacenas', 25.0, '2024-10-09', 35000.00, 62500.00, 4000.00, 101500.00, 0, 4),
 			          -- Presupuesto Rechazado
 			          ('Remodelación completa', 'Demolición y reconstrucción', 80.0, '2024-09-20', 150000.00, 200000.00, 15000.00, 365000.00, 2, 6);
-
+			          
 			          -- ============================================
 			          -- MATERIALES (para presupuestos)
 			          -- ============================================
@@ -251,7 +260,7 @@ namespace DBSeeder
 			          ('Alacenas melamina', 18000.00, 3, 5),
 			          ('Grifería cocina', 8000.00, 1, 5),
 			          ('Bacha acero inoxidable', 7500.00, 1, 5);
-
+			          
 			          -- ============================================
 			          -- TRABAJOS
 			          -- ============================================
@@ -265,7 +274,7 @@ namespace DBSeeder
 			          -- Trabajos sin presupuesto
 			          (2, '2024-09-01', '2024-09-10', 'Reparación urgente de instalación', 12000.00, 2, NULL),
 			          (1, '2024-10-01', NULL, 'Mantenimiento preventivo', 8000.00, 4, NULL);
-
+			          
 			          -- ============================================
 			          -- HORAS Y DESCRIPCIÓN
 			          -- ============================================
@@ -284,7 +293,7 @@ namespace DBSeeder
 			          (4.0, 'Revisión completa de instalación', '2024-09-10', 4),
 			          -- Trabajo 5 (sin presupuesto, iniciado)
 			          (5.0, 'Revisión de tablero y conexiones', '2024-10-01', 5);
-
+			          
 			          -- ============================================
 			          -- FOTOS
 			          -- ============================================
@@ -302,7 +311,7 @@ namespace DBSeeder
 			          -- Trabajo 4
 			          ('https://ejemplo.com/fotos/trabajo4_problema.jpg', 4),
 			          ('https://ejemplo.com/fotos/trabajo4_solucion.jpg', 4);
-
+			          
 			          -- ============================================
 			          -- MOVIMIENTOS BALANCE
 			          -- ============================================
@@ -325,7 +334,7 @@ namespace DBSeeder
 			          -- Cliente 6: Saldo a favor por anticipo devuelto
 			          (5000.00, 'Devolución anticipo por presupuesto rechazado', '2024-09-25', 4, 6, NULL),
 			          (-1500.00, 'Ajuste contable', '2024-09-30', 4, 6, NULL);
-
+			          
 			          -- Rehabilitar constraints
 			          ALTER TABLE MovimientoBalance CHECK CONSTRAINT ALL;
 			          ALTER TABLE TelefonoCliente CHECK CONSTRAINT ALL;
@@ -336,7 +345,7 @@ namespace DBSeeder
 			          ALTER TABLE Trabajos CHECK CONSTRAINT ALL;
 			          ALTER TABLE Presupuestos CHECK CONSTRAINT ALL;
 			          ALTER TABLE Clientes CHECK CONSTRAINT ALL;
-
+			          
 			          """;
 			await _contexto.Database.ExecuteSqlRawAsync(sql);
 		}
