@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>8d7c1292-7fa6-4804-82be-fec69c9dd53d</UserSecretsId>
     <OutputType>WinExe</OutputType>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>
@@ -41,6 +41,10 @@
     <Compile Update="Middleware\ExceptionHandlingMiddleware.cs">
       <Link>ExceptionHandlingMiddleware\ExceptionHandlingMiddleware.cs</Link>
     </Compile>
+    <Compile Remove="ExceptionHandlingMiddleware\**" />
+    <EmbeddedResource Remove="ExceptionHandlingMiddleware\**" />
+    <Content Remove="ExceptionHandlingMiddleware\**" />
+    <None Remove="ExceptionHandlingMiddleware\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,19 +57,21 @@
     <PackageReference Include="FluentAssertions" Version="8.2.0" />
     <PackageReference Include="Google.Apis.Drive.v3" Version="1.70.0.3893" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.14.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="NSwag.Annotations" Version="14.3.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.1.17" />
@@ -73,6 +79,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="Middleware\Middleware.csproj" />
     <ProjectReference Include="ShopMGR.Aplicacion\ShopMGR.Aplicacion.csproj" />
     <ProjectReference Include="ShopMGR.Contexto\ShopMGR.Contexto.csproj" />
     <ProjectReference Include="ShopMGR.Dominio\ShopMGR.Dominio.csproj" />
