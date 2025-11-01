@@ -9,8 +9,12 @@ using ShopMGR.Infraestructura;
 using ShopMGR.Infraestructura.Drive;
 using Swashbuckle.AspNetCore.Swagger;
 using System;
+using System.Configuration;
 using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Middleware;
 
 namespace ShopMGR.WebApi.Aplicacion
@@ -35,7 +39,7 @@ namespace ShopMGR.WebApi.Aplicacion
             builder.Services.Configure<GoogleDriveSettings>(
                 builder.Configuration.GetSection("GoogleDrive"));
 
-            // Add services to the container.
+            //servicios del contenedor
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
@@ -56,7 +60,21 @@ namespace ShopMGR.WebApi.Aplicacion
                 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
-
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(opciones =>
+                {
+                    opciones.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidateAudience = true,
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Token"]!)),
+                    };
+                });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

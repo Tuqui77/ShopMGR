@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
@@ -35,5 +36,13 @@ public class AuthController(IAdministrarAuth administrarAuth) :ControllerBase
         }
         
         return Ok(token);
+    }
+
+
+    [Authorize]
+    [HttpGet]
+    public IActionResult AuthorizedOnly()
+    {
+        return Ok("Autenticado");
     }
 }
