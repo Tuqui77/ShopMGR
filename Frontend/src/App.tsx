@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { FAB } from './components/FAB';
@@ -9,6 +10,15 @@ import { Clientes } from './pages/Clientes';
 import { Trabajos } from './pages/Trabajos';
 import { Presupuestos } from './pages/Presupuestos';
 import { useStore } from './store';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 1,
+    },
+  },
+});
 
 function Layout() {
   const [fabOpen, setFabOpen] = useState(false);
@@ -44,9 +54,11 @@ function Layout() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Layout />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Layout />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 

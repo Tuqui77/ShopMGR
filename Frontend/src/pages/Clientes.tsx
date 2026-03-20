@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStore } from '../store';
 import clsx from 'clsx';
-import { Search, User, Phone, MapPin, Wrench, FileText } from 'lucide-react';
+import { Search, User, Phone, MapPin, Wrench, FileText, Loader2 } from 'lucide-react';
+import { useClientes } from '../hooks/useClientes';
 
 type FilterType = 'todos' | 'conDeuda' | 'nuevos';
 
 export function Clientes() {
-  const { clientes } = useStore();
+  const { data: clientes, isLoading, error } = useClientes();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterType>('todos');
   
-  const filtered = clientes.filter(c => {
+  const filtered = (clientes || []).filter(c => {
     const matchesSearch = 
       c.nombreCompleto.toLowerCase().includes(search.toLowerCase()) ||
       c.telefono.some(t => t.includes(search));
@@ -32,11 +32,30 @@ export function Clientes() {
     if (balance < 0) return 'adeuda';
     return 'al día';
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
+        <div className="text-center">
+          <p style={{ color: 'var(--color-danger)' }}>Error al cargar clientes</p>
+          <p className="text-sm mt-2" style={{ color: 'var(--color-muted)' }}>¿El backend está corriendo?</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
       {/* Header */}
-      <header className="p-4 safe-area-top lg:pt-8 sticky top-0 bg-bg-page z-10">
+      <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
         <h1 className="text-xl font-bold font-display mb-4">Clientes</h1>
         
         {/* Search */}
