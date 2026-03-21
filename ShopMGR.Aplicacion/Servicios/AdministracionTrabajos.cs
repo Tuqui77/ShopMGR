@@ -40,6 +40,10 @@ namespace ShopMGR.Aplicacion.Servicios
             return trabajo;
         }
 
+        public async Task<List<Trabajo>> ListarTodosAsync() {
+          return await _repositorio.ListarTodosAsync();
+        }
+
         public async Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotosNuevas)
         {
             await _drive.ConectarConGoogleDrive();

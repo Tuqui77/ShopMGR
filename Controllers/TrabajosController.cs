@@ -27,6 +27,13 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajo);
         }
 
+        [HttpGet]
+        [Route("ObtenerListaTrabajos")]
+        public async Task<IActionResult> ObtenerListaTrabajos() {
+           var trabajos = await administrarTrabajos.ListarTodosAsync();
+           return Ok(trabajos);
+        }
+
         [HttpPost]
         [Route("AgregarFotosTrabajo")]
         public async Task<IActionResult> AgregarFotosTrabajo(int idTrabajo, [FromForm] IFormFileCollection fotos)

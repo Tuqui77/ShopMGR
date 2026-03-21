@@ -92,7 +92,7 @@ namespace ShopMGR.WebApi.Aplicacion
                 });
             }
 
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
