@@ -8,11 +8,14 @@ export function useClientes() {
   });
 }
 
-export function useCliente(id: number) {
+export function useCliente(id: number | undefined) {
+  const idValido = typeof id === 'number' && id >= 0;
+  
   return useQuery({
     queryKey: ['clientes', id],
-    queryFn: () => clientesService.obtenerPorId(id),
-    enabled: !!id,
+    queryFn: () => clientesService.obtenerPorId(id!),
+    enabled: idValido,
+    staleTime: 1000 * 30,
   });
 }
 

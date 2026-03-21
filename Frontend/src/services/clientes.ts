@@ -2,14 +2,29 @@ import { apiClient } from './api';
 import type { Cliente } from '../types';
 
 interface ClienteBackendDTO {
-  idCliente: number;
+  id: number;
   nombreCompleto: string;
-  telefono: string[];
-  direccion?: string;
-  CUIT?: string;
+  cuit?: string;
   balance: number;
-  trabajosCount: number;
-  presupuestosCount: number;
+  telefono: { $id: string; $values: TelefonoItem[] };
+  direccion: { $id: string; $values: DireccionItem[] };
+  trabajos: { $id: string; $values: unknown[] };
+  presupuestos: { $id: string; $values: unknown[] };
+  movimientosBalance: { $id: string; $values: unknown[] };
+}
+
+interface TelefonoItem {
+  id: number;
+  telefono: string;
+  descripcion?: string;
+}
+
+interface DireccionItem {
+  id: number;
+  calle: string;
+  altura: string;
+  piso?: string;
+  departamento?: string;
 }
 
 export interface CrearClienteRequest {
@@ -27,53 +42,64 @@ export interface ModificarClienteRequest {
 }
 
 function mapBackendToFrontend(dto: ClienteBackendDTO): Cliente {
+  const telefonos = dto.telefono?.$values?.map((t: TelefonoItem) => t.telefono) || [];
+  const primeraDireccion = dto.direccion?.$values?.[0];
+  const direccionCompleta = primeraDireccion 
+    ? `${primeraDireccion.calle} ${primeraDireccion.altura}`
+    : undefined;
+  
   return {
-    id: dto.idCliente,
+    id: dto.id,
     nombreCompleto: dto.nombreCompleto,
-    telefono: dto.telefono || [],
-    direccion: dto.direccion,
-    cuit: dto.CUIT,
+    telefono: telefonos,
+    direccion: direccionCompleta,
+    cuit: dto.cuit,
     balance: dto.balance || 0,
-    trabajosCount: dto.trabajosCount || 0,
-    presupuestosCount: dto.presupuestosCount || 0,
+    trabajosCount: dto.trabajos?.$values?.length || 0,
+    presupuestosCount: dto.presupuestos?.$values?.length || 0,
   };
+}
+
+function extractData(response: unknown): ClienteBackendDTO[] {
+  const data = response as { $values?: ClienteBackendDTO[] };
+  return data.$values || [];
 }
 
 export const clientesService = {
   async listar(): Promise<Cliente[]> {
-    const response = await apiClient.get<ClienteBackendDTO[]>('/api/Cliente/ObtenerListaClientes');
-    return response.data.map(mapBackendToFrontend);
+    const response = await apiClient.get<ClienteBackendDTO[]>('/Cliente/ObtenerListaClientes');
+    return extractData(response.data).map(mapBackendToFrontend);
   },
 
   async obtenerPorId(id: number): Promise<Cliente> {
-    const response = await apiClient.get<ClienteBackendDTO>('/api/Cliente/ObtenerClientePorId', {
+    const response = await apiClient.get<ClienteBackendDTO>('/Cliente/ObtenerClientePorId', {
       params: { idCliente: id },
     });
     return mapBackendToFrontend(response.data);
   },
 
   async obtenerDetalle(id: number): Promise<Cliente> {
-    const response = await apiClient.get<ClienteBackendDTO>('/api/Cliente/ObtenerDetallePorId', {
+    const response = await apiClient.get<ClienteBackendDTO>('/Cliente/ObtenerDetallePorId', {
       params: { idCliente: id },
     });
     return mapBackendToFrontend(response.data);
   },
 
   async crear(cliente: CrearClienteRequest): Promise<Cliente> {
-    const response = await apiClient.post<ClienteBackendDTO>('/api/Cliente/CrearCliente', cliente);
+    const response = await apiClient.post<ClienteBackendDTO>('/Cliente/CrearCliente', cliente);
     return mapBackendToFrontend(response.data);
   },
 
   async modificar(id: number, cliente: ModificarClienteRequest): Promise<void> {
-    await apiClient.patch(`/api/Cliente/ModificarCliente?idCliente=${id}`, cliente);
+    await apiClient.patch(`/Cliente/ModificarCliente?idCliente=${id}`, cliente);
   },
 
   async eliminar(id: number): Promise<void> {
-    await apiClient.delete(`/api/Cliente/EliminarCliente?idCliente=${id}`);
+    await apiClient.delete(`/Cliente/EliminarCliente?idCliente=${id}`);
   },
 
   async buscarSaldosNegativos(): Promise<Cliente[]> {
-    const response = await apiClient.get<ClienteBackendDTO[]>('/api/Cliente/BuscarSaldosNegativos');
-    return response.data.map(mapBackendToFrontend);
+    const response = await apiClient.get<ClienteBackendDTO[]>('/Cliente/BuscarSaldosNegativos');
+    return extractData(response.data).map(mapBackendToFrontend);
   },
 };
