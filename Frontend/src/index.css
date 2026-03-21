@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-page: #07070a;
-  --color-card: #0d0d14;
-  --color-elevated: #131320;
-  --color-surface: #191928;
-  --color-border: #28283a;
+  --color-page: #0c0c10;
+  --color-card: #12121a;
+  --color-elevated: #181824;
+  --color-surface: #1e1e2a;
+  --color-border: #2a2a3c;
   --color-text: #e8e8f0;
-  --color-muted: #8080a0;
+  --color-muted: #8888a8;
   --color-accent: #ff6b35;
   --color-success: #00d4aa;
   --color-warning: #ffb800;
@@ -413,15 +413,15 @@ input, button, textarea, select {
   flex-shrink: 0;
 }
 
-.status-dot.pendiente {
+.status-dot.Pendiente {
   background-color: var(--color-warning);
 }
 
-.status-dot.activo {
+.status-dot.Iniciado {
   background-color: var(--color-accent);
 }
 
-.status-dot.terminado {
+.status-dot.Terminado {
   background-color: var(--color-success);
 }
 

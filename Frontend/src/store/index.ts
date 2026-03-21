@@ -64,7 +64,7 @@ export const useStore = create<AppState>((set, get) => ({
         return {
           ...t,
           horasRegistradas: t.horasRegistradas + horas,
-          estado: 'iniciado' as const,
+          estado: 'Iniciado' as const,
         };
       }
       return t;

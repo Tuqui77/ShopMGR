@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function TrabajoCard({ trabajo, onRegisterHours }: Props) {
-  const progress = (trabajo.horasRegistradas / trabajo.horasEstimadas) * 100;
+  const progress = (trabajo.horasRegistradas / (trabajo.horasEstimadas || 1)) * 100;
   
   return (
     <div className="card">
@@ -20,33 +20,33 @@ export function TrabajoCard({ trabajo, onRegisterHours }: Props) {
         </div>
       </div>
       
-      {trabajo.estado !== 'pendiente' && (
+      {trabajo.estado !== 'Pendiente' && (
         <div className="mt-3">
           <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--color-muted)' }}>
             <span>Progreso</span>
-            <span>{trabajo.horasRegistradas}h / {trabajo.horasEstimadas}h</span>
+            <span>{trabajo.horasRegistradas}h / {trabajo.horasEstimadas || 0}h</span>
           </div>
           <div className="progress-bar">
             <div 
-              className={clsx('progress-fill', trabajo.estado === 'terminado')}
+              className={clsx('progress-fill', trabajo.estado === 'Terminado')}
               style={{ 
                 width: `${Math.min(progress, 100)}%`,
-                backgroundColor: trabajo.estado === 'terminado' ? 'var(--color-success)' : undefined
+                backgroundColor: trabajo.estado === 'Terminado' ? 'var(--color-success)' : undefined
               }}
             />
           </div>
         </div>
       )}
       
-      {trabajo.estado === 'pendiente' && (
+      {trabajo.estado === 'Pendiente' && (
         <div className="mt-3 flex justify-between text-sm" style={{ color: 'var(--color-muted)' }}>
           <span>Estimado: {trabajo.horasEstimadas}h</span>
-          <span>${trabajo.total.toLocaleString()}</span>
+          <span>${(trabajo.totalLabor || 0).toLocaleString()}</span>
         </div>
       )}
       
       <div className="mt-3 flex gap-2">
-        {trabajo.estado === 'iniciado' && (
+        {trabajo.estado === 'Iniciado' && (
           <>
             <button 
               onClick={onRegisterHours}
@@ -60,12 +60,12 @@ export function TrabajoCard({ trabajo, onRegisterHours }: Props) {
             </button>
           </>
         )}
-        {trabajo.estado === 'pendiente' && (
+        {trabajo.estado === 'Pendiente' && (
           <button className="btn-secondary flex-1 text-sm">
             Iniciar
           </button>
         )}
-        {trabajo.estado === 'terminado' && (
+        {trabajo.estado === 'Terminado' && (
           <span className="text-sm flex items-center gap-1" style={{ color: 'var(--color-success)' }}>
             <Check className="w-4 h-4" />
             Terminado

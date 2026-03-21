@@ -1,12 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
+import { useTrabajos, useAgregarHoras } from '../hooks/useTrabajos';
 import clsx from 'clsx';
 import type { Trabajo } from '../types';
-import { X, ArrowLeft, Search, Star, CheckCircle } from 'lucide-react';
+import { X, ArrowLeft, Search, Star, CheckCircle, Loader2 } from 'lucide-react';
+
+// Valor hora por defecto (esto podría venir del backend en el futuro)
+const VALOR_HORA_DEFAULT = 3000;
 
 export function HoursModal() {
-  const { showHoursModal, setShowHoursModal, trabajos, lastTrabajoId, 
-          setSelectedTrabajo, selectedTrabajo, addHoras, valorHora } = useStore();
+  const { 
+    showHoursModal, 
+    setShowHoursModal, 
+    lastTrabajoId, 
+    setSelectedTrabajo, 
+    selectedTrabajo 
+  } = useStore();
+  
+  // Obtener trabajos de la API
+  const { data: trabajos = [] } = useTrabajos();
+  
+  // Mutation para agregar horas
+  const agregarHorasMutation = useAgregarHoras();
+  
   const [step, setStep] = useState<'select' | 'hours'>('select');
   const [hours, setHours] = useState(0.5);
   const [description, setDescription] = useState('');
@@ -32,18 +48,28 @@ export function HoursModal() {
 
   if (!showHoursModal) return null;
   
-  const handleSelectTrabajo = (trabajo: typeof trabajos[0]) => {
+  const handleSelectTrabajo = (trabajo: Trabajo) => {
     setSelectedTrabajo(trabajo);
     setStep('hours');
   };
   
-  const handleAddHours = () => {
+  const handleAddHours = async () => {
     if (selectedTrabajo) {
-      addHoras(selectedTrabajo.id, hours, description);
-      setShowSuccess(true);
-      setTimeout(() => {
-        handleClose();
-      }, 1500);
+      try {
+        await agregarHorasMutation.mutateAsync({
+          idTrabajo: selectedTrabajo.id,
+          horas: hours,
+          descripcion: description,
+          fecha: new Date().toISOString().split('T')[0],
+        });
+        setShowSuccess(true);
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+      } catch (error) {
+        console.error('Error al registrar horas:', error);
+        alert('Error al registrar horas. Intenta de nuevo.');
+      }
     }
   };
   
@@ -51,7 +77,7 @@ export function HoursModal() {
     setHours(prev => Math.min(prev + amount, 24));
   };
   
-  const activeTrabajos = trabajos.filter(t => t.estado !== 'terminado');
+  const activeTrabajos = trabajos.filter(t => t.estado !== 'Terminado');
   const lastTrabajo = lastTrabajoId 
     ? trabajos.find(t => t.id === lastTrabajoId) 
     : activeTrabajos[0];
@@ -79,10 +105,10 @@ export function HoursModal() {
           {showSuccess ? (
             <SuccessView 
               hours={hours} 
-              valor={hours * valorHora}
+              valor={hours * VALOR_HORA_DEFAULT}
               trabajo={selectedTrabajo!}
               totalAcumulado={selectedTrabajo!.horasRegistradas + hours}
-              totalEstimado={selectedTrabajo!.horasEstimadas}
+              totalEstimado={selectedTrabajo!.horasEstimadas || 0}
             />
           ) : step === 'select' ? (
             <SelectTrabajoView 
@@ -96,7 +122,8 @@ export function HoursModal() {
               trabajo={selectedTrabajo!}
               hours={hours}
               description={description}
-              valorHora={valorHora}
+              valorHora={VALOR_HORA_DEFAULT}
+              isSubmitting={agregarHorasMutation.isPending}
               onHoursChange={setHours}
               onDescriptionChange={setDescription}
               onQuickAdd={handleQuickAdd}
@@ -176,6 +203,12 @@ function SelectTrabajoView({
             </div>
           </button>
         ))}
+        
+        {filtered.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-sm" style={{ color: 'var(--color-muted)' }}>No hay trabajos activos</p>
+          </div>
+        )}
       </div>
       
       <button
@@ -194,6 +227,7 @@ function HoursInputView({
   hours,
   description,
   valorHora,
+  isSubmitting,
   onHoursChange,
   onDescriptionChange,
   onQuickAdd,
@@ -203,6 +237,7 @@ function HoursInputView({
   hours: number;
   description: string;
   valorHora: number;
+  isSubmitting: boolean;
   onHoursChange: (h: number) => void;
   onDescriptionChange: (d: string) => void;
   onQuickAdd: (a: number) => void;
@@ -266,8 +301,19 @@ function HoursInputView({
         />
       </div>
       
-      <button onClick={onSubmit} className="btn-primary">
-        ✓ Guardar Horas
+      <button 
+        onClick={onSubmit} 
+        className="btn-primary w-full flex items-center justify-center gap-2"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Guardando...
+          </>
+        ) : (
+          '✓ Guardar Horas'
+        )}
       </button>
     </div>
   );
@@ -286,7 +332,7 @@ function SuccessView({
   totalAcumulado: number;
   totalEstimado: number;
 }) {
-  const progress = (totalAcumulado / totalEstimado) * 100;
+  const progress = totalEstimado > 0 ? (totalAcumulado / totalEstimado) * 100 : 0;
   
   return (
     <div className="animate-scale-in text-center py-8">
@@ -309,11 +355,13 @@ function SuccessView({
       <div className="mt-4">
         <div className="flex justify-between text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
           <span>Total acumulado: {totalAcumulado}h</span>
-          <span>{Math.round(progress)}% del estimado</span>
+          {totalEstimado > 0 && <span>{Math.round(progress)}% del estimado</span>}
         </div>
-        <div className="progress-bar h-3">
-          <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%`, backgroundColor: 'var(--color-success)' }} />
-        </div>
+        {totalEstimado > 0 && (
+          <div className="progress-bar h-3">
+            <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%`, backgroundColor: 'var(--color-success)' }} />
+          </div>
+        )}
       </div>
     </div>
   );
