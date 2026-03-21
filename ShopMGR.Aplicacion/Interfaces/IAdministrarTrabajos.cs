@@ -9,6 +9,7 @@ namespace ShopMGR.Aplicacion.Interfaces
     {
         Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente);
         Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado);
+        Task<List<Trabajo>> ListarTodosAsync();
         Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotos);
         Task AgregarHorasAsync(HorasYDescripcionDTO horas);
         public Task TerminarTrabajo(int idTrabajo);

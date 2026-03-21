@@ -17,6 +17,10 @@ namespace ShopMGR.Repositorios
             return nuevoTrabajo;
         }
 
+        public async Task<List<Trabajo>> ListarTodosAsync(){
+          return await _contexto.Trabajos.ToListAsync();
+        }
+
         public async Task AgregarFotosAsync(List<Foto> fotos)
         {
             var trabajo = await ObtenerPorIdAsync(fotos[0].IdTrabajo) 

@@ -12,6 +12,7 @@ namespace ShopMGR.Dominio.Abstracciones
     {
         Task AgregarFotosAsync(List<Foto> fotos);
         Task AgregarHorasAsync(HorasYDescripcion horas);
+        Task<List<Trabajo>> ListarTodosAsync();
         //    Task<List<Foto>> ObtenerFotosAsync(int idTrabajo);
         //    Task EliminarFotoAsync(int idTrabajo, int idFoto);
     }

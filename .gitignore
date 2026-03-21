@@ -368,3 +368,10 @@ FodyWeavers.xsd
 /ShopMGR.Contexto/appsettings.Development.json
 /ShopMGR.Contexto/appsetings.Development.json
 appsetings.Development.json
+
+# Frontend planning (wireframes, specs, etc.)
+Frontend/planning/
+/DESIGN_GUIDELINES.md
+/TECHNICAL_GUIDELINES.md
+
+docker-compose.yaml
