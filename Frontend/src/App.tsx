@@ -9,6 +9,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Clientes } from './pages/Clientes';
 import { ClienteDetalle } from './pages/ClienteDetalle';
 import { Trabajos } from './pages/Trabajos';
+import { TrabajoDetalle } from './pages/TrabajoDetalle';
 import { Presupuestos } from './pages/Presupuestos';
 import { useStore } from './store';
 
@@ -54,7 +55,7 @@ function App() {
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/clientes/:id" element={<ClienteDetalle />} />
             <Route path="/trabajos" element={<Trabajos />} />
-            <Route path="/trabajos/:id" element={<Trabajos />} />
+            <Route path="/trabajos/:id" element={<TrabajoDetalle />} />
             <Route path="/presupuestos" element={<Presupuestos />} />
           </Route>
         </Routes>

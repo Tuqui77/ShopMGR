@@ -11,26 +11,26 @@ export function Presupuestos() {
   const [filter, setFilter] = useState<FilterType>('todos');
   
   const filtered = presupuestos.filter(p => {
-    if (filter === 'pendientes') return p.estado === 'pendiente';
-    if (filter === 'aceptados') return p.estado === 'aceptado';
-    if (filter === 'rechazados') return p.estado === 'rechazado';
+    if (filter === 'pendientes') return p.estado === 'Pendiente';
+    if (filter === 'aceptados') return p.estado === 'Aceptado';
+    if (filter === 'rechazados') return p.estado === 'Rechazado';
     return true;
   });
   
   const counts = {
     todos: presupuestos.length,
-    pendientes: presupuestos.filter(p => p.estado === 'pendiente').length,
-    aceptados: presupuestos.filter(p => p.estado === 'aceptado').length,
-    rechazados: presupuestos.filter(p => p.estado === 'rechazado').length,
+    pendientes: presupuestos.filter(p => p.estado === 'Pendiente').length,
+    aceptados: presupuestos.filter(p => p.estado === 'Aceptado').length,
+    rechazados: presupuestos.filter(p => p.estado === 'Rechazado').length,
   };
   
   const getStatusBadge = (estado: Presupuesto['estado']) => {
     switch (estado) {
-      case 'pendiente':
+      case 'Pendiente':
         return <span className="badge badge-pending">Pendiente</span>;
-      case 'aceptado':
+      case 'Aceptado':
         return <span className="badge badge-success">Aceptado</span>;
-      case 'rechazado':
+      case 'Rechazado':
         return <span className="badge badge-danger">Rechazado</span>;
     }
   };
@@ -81,7 +81,7 @@ export function Presupuestos() {
             
             <div className="mt-3 flex gap-2">
               <button className="btn-secondary flex-1 text-sm">Ver</button>
-              {presupuesto.estado === 'pendiente' && (
+              {presupuesto.estado === 'Pendiente' && (
                 <>
                   <button className="btn-secondary text-sm">Enviar</button>
                   <button className="btn-secondary text-sm">Editar</button>

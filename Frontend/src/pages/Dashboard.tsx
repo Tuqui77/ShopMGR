@@ -7,7 +7,7 @@ import { metricasMock } from '../data/mock';
 export function Dashboard() {
   const { trabajos, setShowHoursModal, setSelectedTrabajo } = useStore();
   
-  const activeTrabajos = trabajos.filter(t => t.estado === 'iniciado' || t.estado === 'pendiente');
+  const activeTrabajos = trabajos.filter(t => t.estado === 'Iniciado' || t.estado === 'Pendiente');
   
   const handleRegisterHours = (trabajo: typeof trabajos[0]) => {
     setSelectedTrabajo(trabajo);
