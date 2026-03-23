@@ -24,6 +24,8 @@ export function useClienteDetalle(id: number) {
     queryKey: ['clientes', id, 'detalle'],
     queryFn: () => clientesService.obtenerDetalle(id),
     enabled: !!id,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }
 

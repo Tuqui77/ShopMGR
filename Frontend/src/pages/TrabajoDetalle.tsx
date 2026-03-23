@@ -113,21 +113,23 @@ export function TrabajoDetalle() {
         <div className="card">
           <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</h2>
           
-          <Link 
-            to={`/clientes/${trabajo.cliente.id}`}
-            className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors"
-            style={{ backgroundColor: 'var(--color-surface)' }}
-          >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-elevated)' }}>
-              <User className="w-5 h-5" style={{ color: 'var(--color-muted)' }} />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.cliente.nombreCompleto}</p>
-              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                {trabajo.cliente.telefono[0] || 'Sin teléfono'}
-              </p>
-            </div>
-          </Link>
+          {trabajo.cliente && (
+            <Link 
+              to={`/clientes/${trabajo.cliente.id}`}
+              className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors"
+              style={{ backgroundColor: 'var(--color-surface)' }}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-elevated)' }}>
+                <User className="w-5 h-5" style={{ color: 'var(--color-muted)' }} />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.cliente.nombreCompleto}</p>
+                <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                  {trabajo.cliente.telefono[0] || 'Sin teléfono'}
+                </p>
+              </div>
+            </Link>
+          )}
           
           {/* Fechas */}
           <div className="grid grid-cols-2 gap-4 text-sm">

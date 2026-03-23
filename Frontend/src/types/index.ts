@@ -12,28 +12,81 @@ export interface Cliente {
   nombreCompleto: string;
   telefono: string[];
   direccion?: string;
+  telefonosCompletos?: TelefonoCompleto[];
+  direccionesCompletas?: DireccionCompleta[];
   cuit?: string;
   balance: number;
   trabajosCount: number;
   presupuestosCount: number;
+  trabajosRecientes?: TrabajoItem[];
+  presupuestosRecientes?: PresupuestoItem[];
 }
 
-// DTOs Backend - Cliente
-interface TelefonoItem {
+// Tipos para items en listas (usados en ClienteDetalle)
+export interface TelefonoCompleto {
   id: number;
   telefono: string;
   descripcion?: string;
 }
 
-interface DireccionItem {
+export interface DireccionCompleta {
   id: number;
   calle: string;
   altura: string;
   piso?: string;
   departamento?: string;
+  descripcion?: string;
+  codigoPostal?: string;
+}
+
+export interface TrabajoItem {
+  id: number;
+  titulo: string;
+  estado: EstadoTrabajo;
+  fechaInicio?: string;
+  fechaFin?: string;
+  totalLabor?: number;
+}
+
+export interface PresupuestoItem {
+  id: number;
+  titulo: string;
+  estado: EstadoPresupuesto;
+  fecha?: string;
+  total?: number;
+}
+
+// DTOs Backend - Cliente
+export interface TelefonoItem {
+  id: number;
+  telefono: string;
+  descripcion?: string;
+}
+
+export interface DireccionItem {
+  id: number;
+  calle: string;
+  altura: string;
+  piso?: string;
+  departamento?: string;
+  descripcion?: string;
+  codigoPostal?: string;
 }
 
 export interface ClienteBackendDTO {
+  id: number;
+  nombreCompleto: string;
+  cuit?: string;
+  balance: number;
+  telefono: { $id: string; $values: TelefonoItem[] };
+  direccion: { $id: string; $values: DireccionItem[] };
+  trabajos: { $id: string; $values: unknown[] };
+  presupuestos: { $id: string; $values: unknown[] };
+  movimientosBalance: { $id: string; $values: unknown[] };
+}
+
+// Full backend DTO for detail view
+export interface ClienteDetalleBackendDTO {
   id: number;
   nombreCompleto: string;
   cuit?: string;
@@ -73,7 +126,7 @@ export interface Trabajo {
   horasEstimadas?: number;
   totalLabor?: number;
   fotosCount: number;
-  cliente: Cliente;
+  cliente: Cliente | null;
   clienteId: number;
   idPresupuesto?: number;
 }
@@ -88,7 +141,7 @@ export interface TrabajoBackendDTO {
   totalLabor?: number;
   idCliente: number;
   idPresupuesto?: number;
-  cliente: ClienteBackendDTO;
+  cliente: ClienteBackendDTO | null;
   presupuesto?: PresupuestoBackendDTO;
   fotos: { $id: string; $values: FotoBackendDTO[] };
   horasDeTrabajo: { $id: string; $values: HorasDeTrabajoBackendDTO[] };

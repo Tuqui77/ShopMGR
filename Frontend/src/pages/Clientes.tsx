@@ -106,9 +106,10 @@ export function Clientes() {
   }
   
   const filtered = (clientes || []).filter(c => {
+    if (!c?.nombreCompleto) return false;
     const matchesSearch = 
       c.nombreCompleto.toLowerCase().includes(search.toLowerCase()) ||
-      c.telefono.some(t => t.includes(search));
+      c.telefono?.some(t => t.includes(search));
     
     if (filter === 'conDeuda') return matchesSearch && c.balance < 0;
     if (filter === 'nuevos') return matchesSearch && c.trabajosCount === 0;

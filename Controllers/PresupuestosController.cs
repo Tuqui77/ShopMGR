@@ -9,7 +9,8 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PresupuestosController(IAdministrarPresupuestos administracionPresupuestos) : ControllerBase
+    public class PresupuestosController(IAdministrarPresupuestos administracionPresupuestos)
+        : ControllerBase
     {
         [HttpPost]
         [Route("CrearPresupuesto")]
@@ -36,8 +37,18 @@ namespace ShopMGR.WebApi.Controllers
         [Route("ObtenerDetallePresupuesto")]
         public async Task<IActionResult> ObtenerDetallePorId(int idPresupuesto)
         {
-            var presupuesto = await administracionPresupuestos.ObtenerDetallePorIdAsync(idPresupuesto);
+            var presupuesto = await administracionPresupuestos.ObtenerDetallePorIdAsync(
+                idPresupuesto
+            );
             return Ok(presupuesto);
+        }
+
+        [HttpGet]
+        [Route("ListarPresupuestos")]
+        public async Task<IActionResult> ListarPresupuestos() {
+            var presupuestos = await administracionPresupuestos.ListarPresupuestos();
+
+            return Ok(presupuestos);
         }
 
         [HttpGet]
@@ -48,7 +59,9 @@ namespace ShopMGR.WebApi.Controllers
 
             if (!presupuestos.Any())
             {
-                return NotFound($"No se encontraron presupuestos para el cliente con ID {idCliente}.");
+                return NotFound(
+                    $"No se encontraron presupuestos para el cliente con ID {idCliente}."
+                );
             }
 
             return Ok(presupuestos);
@@ -70,8 +83,10 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPatch]
         [Route("ActualizarPresupuesto")]
-        public async Task<IActionResult> ActualizarPresupuesto(int idPresupuesto,
-            ModificarPresupuesto presupuestoModificado)
+        public async Task<IActionResult> ActualizarPresupuesto(
+            int idPresupuesto,
+            ModificarPresupuesto presupuestoModificado
+        )
         {
             if (presupuestoModificado == null)
             {
@@ -95,7 +110,9 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ActualizarCostoHora(string nuevoCosto)
         {
             await administracionPresupuestos.ActualizarCostoHoraDeTrabajo(nuevoCosto);
-            return Ok($"Valor de la hora de trabajo actualizado correctamente, nuevo valor: ${nuevoCosto}");
+            return Ok(
+                $"Valor de la hora de trabajo actualizado correctamente, nuevo valor: ${nuevoCosto}"
+            );
         }
 
         [HttpGet]
