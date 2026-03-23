@@ -63,11 +63,7 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Presupuesto>> ListarPresupuestos() {
             var presupuestos = await _contexto.Presupuestos
-              .Include(p => p.Titulo)
               .Include(p => p.Cliente)
-              .Include(p => p.Total)
-              .Include(p => p.HorasEstimadas)
-              .Include(p => p.Estado)
               .ToListAsync();
 
             return presupuestos;
