@@ -263,6 +263,32 @@ export interface Material {
   subtotal: number;
 }
 
+// ============================================================================
+// REQUEST DTOs
+// ============================================================================
+
+export interface CrearPresupuestoRequest {
+  titulo: string;
+  descripcion?: string;
+  horasEstimadas: number;
+  idCliente: number;
+  materiales?: MaterialRequest[];
+}
+
+export interface MaterialRequest {
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+export interface ModificarPresupuestoRequest {
+  titulo?: string;
+  descripcion?: string;
+  horasEstimadas?: number;
+  estado?: EstadoPresupuesto;
+  idCliente?: number;
+}
+
 export interface MovimientoBalance {
   id: number;
   idCliente: number;

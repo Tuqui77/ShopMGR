@@ -1,30 +1,34 @@
 import { useState } from 'react';
-import { useStore } from '../store';
+import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-import type { Presupuesto } from '../types';
-import { Clipboard, Clock } from 'lucide-react';
+import type { EstadoPresupuesto } from '../types';
+import { usePresupuestos, useAceptarPresupuesto, useRechazarPresupuesto } from '../hooks/usePresupuestos';
+import { Clipboard, Clock, Loader2 } from 'lucide-react';
 
 type FilterType = 'todos' | 'pendientes' | 'aceptados' | 'rechazados';
 
 export function Presupuestos() {
-  const { presupuestos } = useStore();
+  const { data: presupuestos, isLoading, error } = usePresupuestos();
   const [filter, setFilter] = useState<FilterType>('todos');
   
-  const filtered = presupuestos.filter(p => {
+  const aceptarMutation = useAceptarPresupuesto();
+  const rechazarMutation = useRechazarPresupuesto();
+  
+  const filtered = presupuestos?.filter(p => {
     if (filter === 'pendientes') return p.estado === 'Pendiente';
     if (filter === 'aceptados') return p.estado === 'Aceptado';
     if (filter === 'rechazados') return p.estado === 'Rechazado';
     return true;
-  });
+  }) || [];
   
   const counts = {
-    todos: presupuestos.length,
-    pendientes: presupuestos.filter(p => p.estado === 'Pendiente').length,
-    aceptados: presupuestos.filter(p => p.estado === 'Aceptado').length,
-    rechazados: presupuestos.filter(p => p.estado === 'Rechazado').length,
+    todos: presupuestos?.length || 0,
+    pendientes: presupuestos?.filter(p => p.estado === 'Pendiente').length || 0,
+    aceptados: presupuestos?.filter(p => p.estado === 'Aceptado').length || 0,
+    rechazados: presupuestos?.filter(p => p.estado === 'Rechazado').length || 0,
   };
   
-  const getStatusBadge = (estado: Presupuesto['estado']) => {
+  const getStatusBadge = (estado: EstadoPresupuesto) => {
     switch (estado) {
       case 'Pendiente':
         return <span className="badge badge-pending">Pendiente</span>;
@@ -34,6 +38,36 @@ export function Presupuestos() {
         return <span className="badge badge-danger">Rechazado</span>;
     }
   };
+
+  const handleAceptar = (id: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    aceptarMutation.mutate(id);
+  };
+
+  const handleRechazar = (id: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    rechazarMutation.mutate(id);
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
+        <div className="text-center">
+          <p style={{ color: 'var(--color-danger)' }}>Error al cargar presupuestos</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
@@ -63,32 +97,50 @@ export function Presupuestos() {
       {/* List */}
       <section className="px-4 space-y-3">
         {filtered.map(presupuesto => (
-          <div key={presupuesto.id} className="card">
-                <div className="flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</h3>
+          <Link 
+            key={presupuesto.id} 
+            to={`/presupuestos/${presupuesto.id}`}
+            className="block"
+          >
+            <div className="card">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</h3>
+                  </div>
+                  <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{presupuesto.cliente?.nombreCompleto || 'Sin cliente'}</p>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{presupuesto.cliente.nombreCompleto}</p>
+                {getStatusBadge(presupuesto.estado)}
               </div>
-              {getStatusBadge(presupuesto.estado)}
+              
+              <div className="mt-3 flex justify-between text-sm">
+                <span className="font-mono" style={{ color: 'var(--color-accent)' }}>${presupuesto.total.toLocaleString()}</span>
+                <span className="flex items-center gap-1" style={{ color: 'var(--color-muted)' }}><Clock className="w-3 h-3" /> {presupuesto.horasEstimadas}h</span>
+              </div>
+              
+              <div className="mt-3 flex gap-2">
+                <button className="btn-secondary flex-1 text-sm">Ver</button>
+                {presupuesto.estado === 'Pendiente' && (
+                  <>
+                    <button 
+                      className="btn-secondary text-sm"
+                      onClick={(e) => handleAceptar(presupuesto.id, e)}
+                      disabled={aceptarMutation.isPending}
+                    >
+                      {aceptarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aceptar'}
+                    </button>
+                    <button 
+                      className="btn-secondary text-sm"
+                      onClick={(e) => handleRechazar(presupuesto.id, e)}
+                      disabled={rechazarMutation.isPending}
+                    >
+                      {rechazarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Rechazar'}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-            
-            <div className="mt-3 flex justify-between text-sm">
-              <span className="font-mono" style={{ color: 'var(--color-accent)' }}>${presupuesto.total.toLocaleString()}</span>
-              <span className="flex items-center gap-1" style={{ color: 'var(--color-muted)' }}><Clock className="w-3 h-3" /> {presupuesto.horasEstimadas}h</span>
-            </div>
-            
-            <div className="mt-3 flex gap-2">
-              <button className="btn-secondary flex-1 text-sm">Ver</button>
-              {presupuesto.estado === 'Pendiente' && (
-                <>
-                  <button className="btn-secondary text-sm">Enviar</button>
-                  <button className="btn-secondary text-sm">Editar</button>
-                </>
-              )}
-            </div>
-          </div>
+          </Link>
         ))}
         
         {filtered.length === 0 && (

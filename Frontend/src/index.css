@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-page: #0c0c10;
-  --color-card: #12121a;
-  --color-elevated: #181824;
-  --color-surface: #1e1e2a;
-  --color-border: #2a2a3c;
+  --color-page: #050508;
+  --color-card: #181824;
+  --color-elevated: #1e1e2c;
+  --color-surface: #262636;
+  --color-border: #363650;
   --color-text: #e8e8f0;
-  --color-muted: #8888a8;
+  --color-muted: #9898b0;
   --color-accent: #ff6b35;
   --color-success: #00d4aa;
   --color-warning: #ffb800;
@@ -25,12 +25,20 @@ html {
   background-color: var(--color-page);
   color: var(--color-text);
   scroll-behavior: smooth;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  image-rendering: auto;
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
   overscroll-behavior: none;
+  background-color: var(--color-page);
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
@@ -82,6 +90,7 @@ input, button, textarea, select {
   display: none;
   flex-direction: column;
   z-index: 30;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4);
 }
 
 .sidebar-logo {
@@ -117,7 +126,7 @@ input, button, textarea, select {
 }
 
 .sidebar-item.active {
-  background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  background-color: rgba(255, 107, 53, 0.15);
   color: var(--color-accent);
 }
 
@@ -134,6 +143,7 @@ input, button, textarea, select {
   left: 0;
   right: 0;
   background-color: var(--color-card);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--color-border);
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
@@ -187,6 +197,7 @@ input, button, textarea, select {
   border-radius: 0.75rem;
   padding: 1rem;
   border: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .quick-action {
@@ -202,6 +213,7 @@ input, button, textarea, select {
   color: inherit;
   width: 100%;
   text-align: left;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .quick-action:hover {
@@ -217,6 +229,7 @@ input, button, textarea, select {
   flex-direction: column;
   gap: 0.25rem;
   flex: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .metric-value {
@@ -308,7 +321,7 @@ input, button, textarea, select {
 }
 
 .input::placeholder {
-  color: color-mix(in srgb, var(--color-muted) 50%, transparent);
+  color: rgba(136, 136, 168, 0.5);
 }
 
 .input:focus {
@@ -328,7 +341,7 @@ input, button, textarea, select {
 }
 
 .search-input::placeholder {
-  color: color-mix(in srgb, var(--color-muted) 50%, transparent);
+  color: rgba(136, 136, 168, 0.5);
 }
 
 .search-input:focus {
@@ -348,22 +361,22 @@ input, button, textarea, select {
 }
 
 .badge-pending {
-  background-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  background-color: rgba(255, 184, 0, 0.2);
   color: var(--color-warning);
 }
 
 .badge-active {
-  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  background-color: rgba(255, 107, 53, 0.2);
   color: var(--color-accent);
 }
 
 .badge-success {
-  background-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+  background-color: rgba(0, 212, 170, 0.2);
   color: var(--color-success);
 }
 
 .badge-danger {
-  background-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  background-color: rgba(255, 71, 87, 0.2);
   color: var(--color-danger);
 }
 
@@ -442,7 +455,7 @@ input, button, textarea, select {
   font-weight: 300;
   border: none;
   cursor: pointer;
-  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  box-shadow: 0 10px 15px -3px rgba(255, 107, 53, 0.3);
   transition: all 0.15s;
   z-index: 40;
 }
@@ -463,6 +476,7 @@ input, button, textarea, select {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   z-index: 50;
   animation: fadeIn 0.2s ease-out;
