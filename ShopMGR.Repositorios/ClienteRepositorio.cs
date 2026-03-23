@@ -23,7 +23,12 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Cliente>> ListarTodosAsync()
         {
-            return await _contexto.Clientes.ToListAsync();
+          var clientes = await _contexto.Clientes
+            .Include(c => c.Trabajos)
+            .Include(c => c. Presupuestos)
+            .ToListAsync();
+
+          return clientes;
         }
 
         public async Task<Cliente> ObtenerPorIdAsync(int id)
