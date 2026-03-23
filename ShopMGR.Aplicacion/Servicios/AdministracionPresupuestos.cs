@@ -47,6 +47,10 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _presupuestoRepositorio.ObtenerPorEstadoAsync(estado);
         }
 
+        public async Task<List<Presupuesto>> ListarPresupuestos(){
+          return await _presupuestoRepositorio.ListarPresupuestos();
+        }
+
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
         {
             var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
