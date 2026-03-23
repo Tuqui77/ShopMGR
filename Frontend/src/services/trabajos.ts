@@ -58,7 +58,8 @@ function mapDireccion(dto: { $id: string; $values: DireccionItem[] } | undefined
   return primera ? `${primera.calle} ${primera.altura}` : undefined;
 }
 
-function mapClienteFull(dto: ClienteBackendDTO): Cliente {
+function mapClienteFull(dto: ClienteBackendDTO | null): Cliente | null {
+  if (!dto) return null;
   return {
     id: dto.id,
     nombreCompleto: dto.nombreCompleto,

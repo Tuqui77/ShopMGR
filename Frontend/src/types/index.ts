@@ -73,7 +73,7 @@ export interface Trabajo {
   horasEstimadas?: number;
   totalLabor?: number;
   fotosCount: number;
-  cliente: Cliente;
+  cliente: Cliente | null;
   clienteId: number;
   idPresupuesto?: number;
 }
@@ -88,7 +88,7 @@ export interface TrabajoBackendDTO {
   totalLabor?: number;
   idCliente: number;
   idPresupuesto?: number;
-  cliente: ClienteBackendDTO;
+  cliente: ClienteBackendDTO | null;
   presupuesto?: PresupuestoBackendDTO;
   fotos: { $id: string; $values: FotoBackendDTO[] };
   horasDeTrabajo: { $id: string; $values: HorasDeTrabajoBackendDTO[] };

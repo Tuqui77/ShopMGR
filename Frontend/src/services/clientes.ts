@@ -61,8 +61,42 @@ function mapBackendToFrontend(dto: ClienteBackendDTO): Cliente {
 }
 
 function extractData(response: unknown): ClienteBackendDTO[] {
-  const data = response as { $values?: ClienteBackendDTO[] };
-  return data.$values || [];
+  const data = response as { $values?: unknown[] };
+  const values = data.$values || [];
+  
+  const seen = new Set<number>();
+  const clientes: ClienteBackendDTO[] = [];
+  
+  const collectClientes = (obj: unknown) => {
+    if (typeof obj !== 'object' || obj === null) return;
+    const item = obj as Record<string, unknown>;
+    
+    // Check if this looks like a Cliente object
+    if ('id' in item && 'nombreCompleto' in item && 'balance' in item) {
+      const id = item.id as number;
+      if (id !== undefined && id !== null && !seen.has(id)) {
+        seen.add(id);
+        clientes.push(item as unknown as ClienteBackendDTO);
+      }
+    }
+    
+    // Recurse into nested objects and arrays
+    for (const value of Object.values(item)) {
+      if (Array.isArray(value)) {
+        value.forEach(collectClientes);
+      } else if (typeof value === 'object') {
+        collectClientes(value);
+      }
+    }
+  };
+  
+  // Process all values
+  for (const item of values) {
+    collectClientes(item);
+  }
+  
+  // Sort by ID
+  return clientes.sort((a, b) => (a.id || 0) - (b.id || 0));
 }
 
 export const clientesService = {

@@ -151,7 +151,7 @@ function SelectTrabajoView({
   
   const filtered = trabajos.filter(t => 
     t.titulo.toLowerCase().includes(search.toLowerCase()) ||
-    t.cliente.nombreCompleto.toLowerCase().includes(search.toLowerCase())
+    t.cliente?.nombreCompleto.toLowerCase().includes(search.toLowerCase())
   );
   
   return (
@@ -177,7 +177,7 @@ function SelectTrabajoView({
             <Star className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
             <div className="flex-1 text-left">
               <p className="font-medium" style={{ color: 'var(--color-text)' }}>{lastTrabajo.titulo}</p>
-              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{lastTrabajo.cliente.nombreCompleto}</p>
+              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{lastTrabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
             </div>
             <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Usado recientemente</span>
           </div>
@@ -197,7 +197,7 @@ function SelectTrabajoView({
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {trabajo.cliente.nombreCompleto} · {trabajo.horasRegistradas}h registradas
+                  {trabajo.cliente?.nombreCompleto || 'Sin cliente'} · {trabajo.horasRegistradas}h registradas
                 </p>
               </div>
             </div>
@@ -247,7 +247,7 @@ function HoursInputView({
     <div className="animate-fade-in">
       <div className="card mb-4" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 5%, transparent)', borderColor: 'var(--color-accent)' }}>
         <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
-        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente.nombreCompleto}</p>
+        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
       </div>
       
       <div className="mb-6">
@@ -346,7 +346,7 @@ function SuccessView({
       
       <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
         <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
-        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente.nombreCompleto}</p>
+        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
         <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
           {new Date().toLocaleDateString('es-AR')}
         </p>

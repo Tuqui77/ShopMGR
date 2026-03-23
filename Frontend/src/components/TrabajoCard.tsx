@@ -16,7 +16,7 @@ export function TrabajoCard({ trabajo, onRegisterHours }: Props) {
         <div className={clsx('status-dot', trabajo.estado)} />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</h3>
-          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente.nombreCompleto}</p>
+          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
         </div>
       </div>
       
