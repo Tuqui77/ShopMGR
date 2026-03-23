@@ -1,16 +1,28 @@
-import { Zap, Clipboard, Settings, ChevronRight } from 'lucide-react';
+import { Zap, Clipboard, Settings, ChevronRight, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { MetricCard } from '../components/MetricCard';
 import { TrabajoCard } from '../components/TrabajoCard';
-import { metricasMock } from '../data/mock';
+import { useTrabajos } from '../hooks/useTrabajos';
+import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 
 export function Dashboard() {
-  const { trabajos, setShowHoursModal, setSelectedTrabajo } = useStore();
+  const navigate = useNavigate();
+  const { setShowHoursModal, setSelectedTrabajo } = useStore();
   
-  const activeTrabajos = trabajos.filter(t => t.estado === 'Iniciado' || t.estado === 'Pendiente');
+  // Obtener trabajos del backend
+  const { data: trabajos, isLoading: isLoadingTrabajos } = useTrabajos();
   
-  const handleRegisterHours = (trabajo: typeof trabajos[0]) => {
-    setSelectedTrabajo(trabajo);
+  // Obtener métricas calculadas
+  const { metricas, isLoading: isLoadingMetricas } = useDashboardMetrics();
+  
+  const isLoading = isLoadingTrabajos || isLoadingMetricas;
+  
+  // Filtrar trabajos activos (Iniciado o Pendiente)
+  const activeTrabajos = trabajos?.filter(t => t.estado === 'Iniciado' || t.estado === 'Pendiente') || [];
+  
+  const handleRegisterHours = (trabajo: { id: number; titulo: string; estado: string }) => {
+    setSelectedTrabajo(trabajo as any);
     setShowHoursModal(true);
   };
   
@@ -51,7 +63,10 @@ export function Dashboard() {
           <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-muted)' }} />
         </button>
         
-        <button className="quick-action w-full">
+        <button 
+          className="quick-action w-full"
+          onClick={() => navigate('/clientes')}
+        >
           <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)' }}>
             <Clipboard className="w-6 h-6" style={{ color: 'var(--color-info)' }} />
           </div>
@@ -66,42 +81,69 @@ export function Dashboard() {
       {/* Metrics */}
       <section className="px-4 mb-6">
         <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--color-muted)' }}>MÉTRICAS DEL MES</h2>
-        <div className="flex gap-3">
-          <MetricCard 
-            value={metricasMock.ingresos} 
-            label="Ingresos" 
-            prefix="$"
-            change={metricasMock.cambiosIngresos}
-          />
-          <MetricCard 
-            value={metricasMock.horasTrabajadas} 
-            label="Trabajadas" 
-            change={metricasMock.cambiosHoras}
-          />
-          <MetricCard 
-            value={metricasMock.trabajosTerminados} 
-            label="Terminados" 
-            change={metricasMock.cambiosTerminados}
-          />
-        </div>
+        
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          </div>
+        ) : metricas ? (
+          <div className="flex gap-3">
+            <MetricCard 
+              value={metricas.ingresos} 
+              label="Ingresos" 
+              prefix="$"
+              change={metricas.cambiosIngresos || undefined}
+            />
+            <MetricCard 
+              value={metricas.horasTrabajadas} 
+              label="Trabajadas" 
+              change={metricas.cambiosHoras || undefined}
+            />
+            <MetricCard 
+              value={metricas.trabajosTerminados} 
+              label="Terminados" 
+              change={metricas.cambiosTerminados || undefined}
+            />
+          </div>
+        ) : (
+          <div className="text-center py-4" style={{ color: 'var(--color-muted)' }}>
+            No hay datos disponibles
+          </div>
+        )}
       </section>
       
       {/* Active Jobs */}
       <section className="px-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>TRABAJOS ACTIVOS</h2>
-          <button className="text-sm" style={{ color: 'var(--color-accent)' }}>Ver todos →</button>
+          <button 
+            className="text-sm" 
+            style={{ color: 'var(--color-accent)' }}
+            onClick={() => navigate('/trabajos')}
+          >
+            Ver todos →
+          </button>
         </div>
         
-        <div className="space-y-3">
-          {activeTrabajos.slice(0, 3).map(trabajo => (
-            <TrabajoCard 
-              key={trabajo.id} 
-              trabajo={trabajo}
-              onRegisterHours={() => handleRegisterHours(trabajo)}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          </div>
+        ) : activeTrabajos.length > 0 ? (
+          <div className="space-y-3">
+            {activeTrabajos.slice(0, 3).map(trabajo => (
+              <TrabajoCard 
+                key={trabajo.id} 
+                trabajo={trabajo}
+                onRegisterHours={() => handleRegisterHours(trabajo)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8" style={{ color: 'var(--color-muted)' }}>
+            No hay trabajos activos
+          </div>
+        )}
       </section>
     </div>
   );
