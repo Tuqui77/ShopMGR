@@ -1,6 +1,7 @@
 import type { Trabajo } from '../types';
 import clsx from 'clsx';
-import { Plus, Camera, Check } from 'lucide-react';
+import { Plus, Camera, Check, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Props {
   trabajo: Trabajo;
@@ -9,15 +10,19 @@ interface Props {
 
 export function TrabajoCard({ trabajo, onRegisterHours }: Props) {
   const progress = (trabajo.horasRegistradas / (trabajo.horasEstimadas || 1)) * 100;
-  
+
   return (
-    <div className="card">
+    <Link 
+      to={`/trabajos/${trabajo.id}`} 
+      className="block card hover:opacity-90 transition-opacity"
+    >
       <div className="flex items-start gap-3">
         <div className={clsx('status-dot', trabajo.estado)} />
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</h3>
           <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
         </div>
+        <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-muted)' }} />
       </div>
       
       {trabajo.estado !== 'Pendiente' && (
@@ -45,7 +50,7 @@ export function TrabajoCard({ trabajo, onRegisterHours }: Props) {
         </div>
       )}
       
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
         {trabajo.estado === 'Iniciado' && (
           <>
             <button 
@@ -72,6 +77,6 @@ export function TrabajoCard({ trabajo, onRegisterHours }: Props) {
           </span>
         )}
       </div>
-    </div>
+    </Link>
   );
 }
