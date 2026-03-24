@@ -28,7 +28,13 @@ namespace ShopMGR.WebApi.Aplicacion
            //inyeccion de dependencias
             builder.Services.AddDbContext<ShopMGRDbContexto>(options =>
             {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"), sqlOptions => {
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: null
+                        );
+                    });
             });
             builder.Services.InyectarServicios();
             builder.Services.AddControllers().AddJsonOptions(options =>
