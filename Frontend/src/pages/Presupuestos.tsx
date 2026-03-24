@@ -1,20 +1,29 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import type { EstadoPresupuesto } from '../types';
 import { usePresupuestos, useAceptarPresupuesto, useRechazarPresupuesto } from '../hooks/usePresupuestos';
-import { Clipboard, Clock, Loader2 } from 'lucide-react';
+import { Clipboard, Clock, Loader2, ArrowLeft } from 'lucide-react';
 
 type FilterType = 'todos' | 'pendientes' | 'aceptados' | 'rechazados';
 
 export function Presupuestos() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const clienteIdParam = searchParams.get('cliente');
+  const clienteId = clienteIdParam ? parseInt(clienteIdParam, 10) : undefined;
+  
   const { data: presupuestos, isLoading, error } = usePresupuestos();
   const [filter, setFilter] = useState<FilterType>('todos');
   
   const aceptarMutation = useAceptarPresupuesto();
   const rechazarMutation = useRechazarPresupuesto();
   
+  // Filter by client if provided
   const filtered = presupuestos?.filter(p => {
+    // Filter by client first
+    if (clienteId !== undefined && p.cliente?.id !== clienteId) return false;
+    
+    // Then apply status filter
     if (filter === 'pendientes') return p.estado === 'Pendiente';
     if (filter === 'aceptados') return p.estado === 'Aceptado';
     if (filter === 'rechazados') return p.estado === 'Rechazado';
@@ -26,6 +35,10 @@ export function Presupuestos() {
     pendientes: presupuestos?.filter(p => p.estado === 'Pendiente').length || 0,
     aceptados: presupuestos?.filter(p => p.estado === 'Aceptado').length || 0,
     rechazados: presupuestos?.filter(p => p.estado === 'Rechazado').length || 0,
+  };
+  
+  const handleClearClientFilter = () => {
+    setSearchParams({});
   };
   
   const getStatusBadge = (estado: EstadoPresupuesto) => {
@@ -73,6 +86,18 @@ export function Presupuestos() {
     <div className="min-h-screen pb-24 lg:pb-8">
       {/* Header */}
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
+        {/* Client filter indicator */}
+        {clienteId !== undefined && (
+          <button
+            onClick={handleClearClientFilter}
+            className="flex items-center gap-1 text-sm mb-3 hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Ver todos los presupuestos
+          </button>
+        )}
+        
         <h1 className="text-xl font-bold font-display mb-4">Presupuestos</h1>
         
         {/* Filters */}
@@ -143,7 +168,14 @@ export function Presupuestos() {
           </Link>
         ))}
         
-        {filtered.length === 0 && (
+        {filtered.length === 0 && clienteId !== undefined && (
+          <div className="text-center py-12">
+            <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
+            <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos para este cliente</p>
+          </div>
+        )}
+        
+        {filtered.length === 0 && clienteId === undefined && (
           <div className="text-center py-12">
             <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
             <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos</p>
