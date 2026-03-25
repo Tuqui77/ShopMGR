@@ -373,5 +373,4 @@ appsetings.Development.json
 Frontend/planning/
 /DESIGN_GUIDELINES.md
 /TECHNICAL_GUIDELINES.md
-
-docker-compose.yaml
+/environment.env

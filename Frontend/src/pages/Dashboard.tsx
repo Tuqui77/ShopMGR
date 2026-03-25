@@ -1,16 +1,26 @@
-import { Zap, Clipboard, Settings, ChevronRight } from 'lucide-react';
+import { Settings, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { MetricCard } from '../components/MetricCard';
-import { TrabajoCard } from '../components/TrabajoCard';
-import { metricasMock } from '../data/mock';
+import { useTrabajos } from '../hooks/useTrabajos';
+import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 
 export function Dashboard() {
-  const { trabajos, setShowHoursModal, setSelectedTrabajo } = useStore();
+  const navigate = useNavigate();
+  const { setShowHoursModal, setSelectedTrabajo } = useStore();
   
-  const activeTrabajos = trabajos.filter(t => t.estado === 'Iniciado' || t.estado === 'Pendiente');
+  // Obtener trabajos del backend
+  const { data: trabajos, isLoading: isLoadingTrabajos } = useTrabajos();
   
-  const handleRegisterHours = (trabajo: typeof trabajos[0]) => {
-    setSelectedTrabajo(trabajo);
+  // Obtener métricas calculadas
+  const { metricas, isLoading: isLoadingMetricas } = useDashboardMetrics();
+  
+  const isLoading = isLoadingTrabajos || isLoadingMetricas;
+  
+  // Filtrar trabajos activos (Iniciado o Pendiente)
+  const activeTrabajos = trabajos?.filter(t => t.estado === 'Iniciado' || t.estado === 'Pendiente') || [];
+  
+  const handleRegisterHours = (trabajo: { id: number; titulo: string; estado: string }) => {
+    setSelectedTrabajo(trabajo as any);
     setShowHoursModal(true);
   };
   
@@ -35,73 +45,97 @@ export function Dashboard() {
         </div>
       </header>
       
-      {/* Quick Actions */}
-      <section className="px-4 mb-6 space-y-3">
-        <button 
-          onClick={() => setShowHoursModal(true)}
-          className="quick-action w-full"
-        >
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 20%, transparent)' }}>
-            <Zap className="w-6 h-6" style={{ color: 'var(--color-accent)' }} />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="font-semibold">Registrar Horas</p>
-            <p className="text-sm">Registro rápido</p>
-          </div>
-          <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-muted)' }} />
-        </button>
+      {/* Metrics - Compact version */}
+      <section className="px-4 mb-4">
+        <h2 className="text-xs font-medium mb-2" style={{ color: 'var(--color-muted)' }}>ESTE MES</h2>
         
-        <button className="quick-action w-full">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'color-mix(in srgb, var(--color-info) 20%, transparent)' }}>
-            <Clipboard className="w-6 h-6" style={{ color: 'var(--color-info)' }} />
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--color-accent)' }} />
           </div>
-          <div className="flex-1 text-left">
-            <p className="font-semibold">Nuevo Trabajo</p>
-            <p className="text-sm">Crear desde cliente</p>
+        ) : metricas ? (
+          <div className="grid grid-cols-3 gap-2">
+            <div className="card !p-3">
+              <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-accent)' }}>
+                ${metricas.ingresos >= 1000 ? metricas.ingresos.toLocaleString() : metricas.ingresos}
+              </span>
+              <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>Ingresos</span>
+            </div>
+            <div className="card !p-3">
+              <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+                {metricas.horasTrabajadas}
+              </span>
+              <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>Horas trabajadas</span>
+            </div>
+            <div className="card !p-3">
+              <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-success)' }}>
+                {metricas.trabajosTerminados}
+              </span>
+              <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>Trabajos terminados</span>
+            </div>
           </div>
-          <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-muted)' }} />
-        </button>
+        ) : (
+          <div className="text-center py-2" style={{ color: 'var(--color-muted)' }}>
+            Sin datos
+          </div>
+        )}
       </section>
       
-      {/* Metrics */}
-      <section className="px-4 mb-6">
-        <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--color-muted)' }}>MÉTRICAS DEL MES</h2>
-        <div className="flex gap-3">
-          <MetricCard 
-            value={metricasMock.ingresos} 
-            label="Ingresos" 
-            prefix="$"
-            change={metricasMock.cambiosIngresos}
-          />
-          <MetricCard 
-            value={metricasMock.horasTrabajadas} 
-            label="Trabajadas" 
-            change={metricasMock.cambiosHoras}
-          />
-          <MetricCard 
-            value={metricasMock.trabajosTerminados} 
-            label="Terminados" 
-            change={metricasMock.cambiosTerminados}
-          />
-        </div>
-      </section>
-      
-      {/* Active Jobs */}
+      {/* Active Jobs - Compact version */}
       <section className="px-4">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>TRABAJOS ACTIVOS</h2>
-          <button className="text-sm" style={{ color: 'var(--color-accent)' }}>Ver todos →</button>
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-xs font-medium" style={{ color: 'var(--color-muted)' }}>TRABAJOS ACTIVOS</h2>
+          <button 
+            className="text-xs" 
+            style={{ color: 'var(--color-accent)' }}
+            onClick={() => navigate('/trabajos')}
+          >
+            Ver todos
+          </button>
         </div>
         
-        <div className="space-y-3">
-          {activeTrabajos.slice(0, 3).map(trabajo => (
-            <TrabajoCard 
-              key={trabajo.id} 
-              trabajo={trabajo}
-              onRegisterHours={() => handleRegisterHours(trabajo)}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-3">
+            <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          </div>
+        ) : activeTrabajos.length > 0 ? (
+          <div className="space-y-2">
+            {activeTrabajos.slice(0, 4).map(trabajo => (
+              <div 
+                key={trabajo.id}
+                className="card !p-3 flex items-center justify-between cursor-pointer"
+                onClick={() => navigate(`/trabajos/${trabajo.id}`)}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate" style={{ color: 'var(--color-text)' }}>
+                    {trabajo.titulo}
+                  </p>
+                  <p className="text-xs truncate" style={{ color: 'var(--color-muted)' }}>
+                    {trabajo.cliente?.nombreCompleto || 'Sin cliente'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`status-dot ${trabajo.estado}`} />
+                  <button 
+                    className="btn-icon !w-8 !h-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRegisterHours(trabajo);
+                    }}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-4" style={{ color: 'var(--color-muted)' }}>
+            No hay trabajos activos
+          </div>
+        )}
       </section>
     </div>
   );

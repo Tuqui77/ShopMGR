@@ -1,19 +1,29 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTrabajos } from '../hooks/useTrabajos';
 import { useStore } from '../store';
 import { TrabajoCard } from '../components/TrabajoCard';
 import clsx from 'clsx';
-import { Wrench, Loader2 } from 'lucide-react';
+import { Wrench, Loader2, ArrowLeft } from 'lucide-react';
 import type { Trabajo } from '../types';
 
 type FilterType = 'todos' | 'activos' | 'pendientes' | 'terminados';
 
 export function Trabajos() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const clienteIdParam = searchParams.get('cliente');
+  const clienteId = clienteIdParam ? parseInt(clienteIdParam, 10) : undefined;
+  
   const { data: trabajos = [], isLoading, error } = useTrabajos();
   const { setShowHoursModal, setSelectedTrabajo } = useStore();
   const [filter, setFilter] = useState<FilterType>('todos');
   
+  // Filter by client if provided
   const filtered = trabajos.filter(t => {
+    // Filter by client first
+    if (clienteId !== undefined && t.clienteId !== clienteId) return false;
+    
+    // Then apply status filter
     if (filter === 'activos') return t.estado === 'Iniciado';
     if (filter === 'pendientes') return t.estado === 'Pendiente';
     if (filter === 'terminados') return t.estado === 'Terminado';
@@ -21,10 +31,25 @@ export function Trabajos() {
   });
   
   const counts = {
-    todos: trabajos.length,
-    activos: trabajos.filter(t => t.estado === 'Iniciado').length,
-    pendientes: trabajos.filter(t => t.estado === 'Pendiente').length,
-    terminados: trabajos.filter(t => t.estado === 'Terminado').length,
+    todos: clienteId !== undefined 
+      ? filtered.length 
+      : trabajos.length,
+    activos: trabajos.filter(t => 
+      (clienteId === undefined || t.clienteId === clienteId) && 
+      t.estado === 'Iniciado'
+    ).length,
+    pendientes: trabajos.filter(t => 
+      (clienteId === undefined || t.clienteId === clienteId) && 
+      t.estado === 'Pendiente'
+    ).length,
+    terminados: trabajos.filter(t => 
+      (clienteId === undefined || t.clienteId === clienteId) && 
+      t.estado === 'Terminado'
+    ).length,
+  };
+  
+  const handleClearClientFilter = () => {
+    setSearchParams({});
   };
   
   const handleRegisterHours = (trabajo: Trabajo) => {
@@ -64,6 +89,18 @@ export function Trabajos() {
     <div className="min-h-screen pb-24 lg:pb-8">
       {/* Header */}
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
+        {/* Client filter indicator */}
+        {clienteId !== undefined && (
+          <button
+            onClick={handleClearClientFilter}
+            className="flex items-center gap-1 text-sm mb-3 hover:opacity-80 transition-opacity"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Ver todos los trabajos
+          </button>
+        )}
+        
         <h1 className="text-xl font-bold font-display mb-4">Trabajos</h1>
         
         {/* Filters */}
@@ -138,6 +175,13 @@ export function Trabajos() {
                   ))}
                 </div>
               </>
+            )}
+            
+            {filtered.length === 0 && clienteId !== undefined && (
+              <div className="text-center py-12">
+                <Wrench className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
+                <p style={{ color: 'var(--color-muted)' }}>No hay trabajos para este cliente</p>
+              </div>
             )}
             
             {trabajos.length === 0 && (

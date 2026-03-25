@@ -11,6 +11,8 @@ import { ClienteDetalle } from './pages/ClienteDetalle';
 import { Trabajos } from './pages/Trabajos';
 import { TrabajoDetalle } from './pages/TrabajoDetalle';
 import { Presupuestos } from './pages/Presupuestos';
+import { PresupuestoDetalle } from './pages/PresupuestoDetalle';
+import { Configuracion } from './pages/Configuracion';
 import { useStore } from './store';
 
 const queryClient = new QueryClient({
@@ -57,6 +59,8 @@ function App() {
             <Route path="/trabajos" element={<Trabajos />} />
             <Route path="/trabajos/:id" element={<TrabajoDetalle />} />
             <Route path="/presupuestos" element={<Presupuestos />} />
+            <Route path="/presupuestos/:id" element={<PresupuestoDetalle />} />
+            <Route path="/configuracion" element={<Configuracion />} />
           </Route>
         </Routes>
       </BrowserRouter>

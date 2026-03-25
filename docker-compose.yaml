@@ -1,0 +1,46 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    env_file:
+      - environment.env
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+  backend:
+    build: .
+    image: shopmgr-backend:latest
+    expose:
+      - "80"
+    env_file:
+      - environment.env
+    depends_on:
+      - db
+
+  seeder:
+    build: .
+    entrypoint: ["dotnet", "DBSeeder.dll"]
+    env_file:
+      - environment.env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - db
+    profiles:
+      - tools
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Frontend/Dockerfile
+    image: localhost/shopmgr_frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+      
+volumes:
+  mssql_data:
