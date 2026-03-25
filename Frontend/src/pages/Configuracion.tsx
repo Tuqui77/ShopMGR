@@ -8,7 +8,6 @@ import {
   Sun, 
   Monitor,
   DollarSign,
-  Check,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 
@@ -89,6 +88,8 @@ export function Configuracion() {
   });
   
   // Costo hora from API
+  const [showCostoHoraSuccess, setShowCostoHoraSuccess] = useState(false);
+  
   const { data: costoHora } = useQuery({
     queryKey: ['costoHora'],
     queryFn: fetchCostoHora,
@@ -136,7 +137,12 @@ export function Configuracion() {
   const handleCostoHoraSave = () => {
     const value = costoHoraInput.trim();
     if (value && !isNaN(parseInt(value, 10))) {
-      updateCostoHoraMutation.mutate(value);
+      updateCostoHoraMutation.mutate(value, {
+        onSuccess: () => {
+          setShowCostoHoraSuccess(true);
+          setTimeout(() => setShowCostoHoraSuccess(false), 3000);
+        }
+      });
     }
   };
   
@@ -219,11 +225,11 @@ export function Configuracion() {
             </div>
             <div className="flex-1">
               <h2 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Valor hora de trabajo</h2>
-              {costoHora !== undefined && costoHora > 0 && (
+              {costoHora !== undefined && costoHora > 0 && !showCostoHoraSuccess && (
                 <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Actual: ${costoHora.toLocaleString()}/hora</p>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <span style={{ color: 'var(--color-muted)' }}>$</span>
               <input
                 type="text"
@@ -239,14 +245,19 @@ export function Configuracion() {
               />
               <button
                 onClick={handleCostoHoraSave}
-                disabled={updateCostoHoraMutation.isPending}
-                className="p-1.5 rounded-lg"
-                style={{ backgroundColor: 'var(--color-accent)' }}
+                disabled={updateCostoHoraMutation.isPending || showCostoHoraSuccess}
+                className="px-3 py-1.5 rounded-lg text-sm"
+                style={{ 
+                  backgroundColor: showCostoHoraSuccess ? 'var(--color-success)' : 'var(--color-accent)', 
+                  color: 'white' 
+                }}
               >
                 {updateCostoHoraMutation.isPending ? (
-                  <Loader2 className="w-3 h-3 animate-spin" style={{ color: 'white' }} />
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : showCostoHoraSuccess ? (
+                  'Guardado'
                 ) : (
-                  <Check className="w-3 h-3" style={{ color: 'white' }} />
+                  'Guardar'
                 )}
               </button>
             </div>
