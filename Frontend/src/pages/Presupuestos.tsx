@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import type { EstadoPresupuesto } from '../types';
 import { usePresupuestos, useAceptarPresupuesto, useRechazarPresupuesto } from '../hooks/usePresupuestos';
-import { Clipboard, Clock, Loader2, ArrowLeft } from 'lucide-react';
+import { Clipboard, Clock, Loader2, ArrowLeft, Check, X, AlertTriangle } from 'lucide-react';
+import { formatCurrency } from '../utils/dateFormat';
 
 type FilterType = 'todos' | 'pendientes' | 'aceptados' | 'rechazados';
 
@@ -15,8 +16,26 @@ export function Presupuestos() {
   const { data: presupuestos, isLoading, error } = usePresupuestos();
   const [filter, setFilter] = useState<FilterType>('todos');
   
-  const aceptarMutation = useAceptarPresupuesto();
-  const rechazarMutation = useRechazarPresupuesto();
+  const aceptarMutation = useAceptarPresupuesto({
+    onError: (error: Error) => {
+      setMutationError(error.message);
+    },
+  });
+  const rechazarMutation = useRechazarPresupuesto({
+    onError: (error: Error) => {
+      setMutationError(error.message);
+    },
+  });
+  
+  // Confirmation dialog state
+  const [confirmAction, setConfirmAction] = useState<{
+    id: number;
+    action: 'aceptar' | 'rechazar';
+    titulo: string;
+  } | null>(null);
+  
+  // Error state
+  const [mutationError, setMutationError] = useState<string | null>(null);
   
   // Filter by client if provided
   const filtered = presupuestos?.filter(p => {
@@ -52,16 +71,36 @@ export function Presupuestos() {
     }
   };
 
-  const handleAceptar = (id: number, e: React.MouseEvent) => {
+  const handleAceptar = (id: number, titulo: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    aceptarMutation.mutate(id);
+    setConfirmAction({ id, action: 'aceptar', titulo });
   };
 
-  const handleRechazar = (id: number, e: React.MouseEvent) => {
+  const handleRechazar = (id: number, titulo: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    rechazarMutation.mutate(id);
+    setConfirmAction({ id, action: 'rechazar', titulo });
+  };
+
+  const handleConfirm = () => {
+    if (!confirmAction) return;
+    
+    const { id, action } = confirmAction;
+    
+    // Close dialog first
+    setConfirmAction(null);
+    
+    // Then execute mutation
+    if (action === 'aceptar') {
+      aceptarMutation.mutate(id);
+    } else {
+      rechazarMutation.mutate(id);
+    }
+  };
+
+  const handleCancelConfirm = () => {
+    setConfirmAction(null);
   };
   
   if (isLoading) {
@@ -84,6 +123,19 @@ export function Presupuestos() {
   
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
+      {/* Mutation Error Banner */}
+      {mutationError && (
+        <div 
+          className="mx-4 mt-4 p-3 rounded-lg flex items-center justify-between"
+          style={{ backgroundColor: 'var(--color-danger)', color: 'white' }}
+        >
+          <span className="text-sm">{mutationError}</span>
+          <button onClick={() => setMutationError(null)} className="ml-2">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
         {/* Client filter indicator */}
@@ -139,27 +191,26 @@ export function Presupuestos() {
               </div>
               
               <div className="mt-3 flex justify-between text-sm">
-                <span className="font-mono" style={{ color: 'var(--color-accent)' }}>${presupuesto.total.toLocaleString()}</span>
+                <span className="font-mono" style={{ color: 'var(--color-accent)' }}>{formatCurrency(presupuesto.total)}</span>
                 <span className="flex items-center gap-1" style={{ color: 'var(--color-muted)' }}><Clock className="w-3 h-3" /> {presupuesto.horasEstimadas}h</span>
               </div>
               
-              <div className="mt-3 flex gap-2">
-                <button className="btn-secondary flex-1 text-sm">Ver</button>
+              <div className="mt-3 flex gap-2" onClick={e => e.stopPropagation()}>
                 {presupuesto.estado === 'Pendiente' && (
                   <>
                     <button 
                       className="btn-secondary text-sm"
-                      onClick={(e) => handleAceptar(presupuesto.id, e)}
+                      onClick={(e) => handleAceptar(presupuesto.id, presupuesto.titulo, e)}
                       disabled={aceptarMutation.isPending}
                     >
-                      {aceptarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aceptar'}
+                      {aceptarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> Aceptado</>}
                     </button>
                     <button 
                       className="btn-secondary text-sm"
-                      onClick={(e) => handleRechazar(presupuesto.id, e)}
+                      onClick={(e) => handleRechazar(presupuesto.id, presupuesto.titulo, e)}
                       disabled={rechazarMutation.isPending}
                     >
-                      {rechazarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Rechazar'}
+                      {rechazarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><X className="w-4 h-4" /> Rechazado</>}
                     </button>
                   </>
                 )}
@@ -182,6 +233,55 @@ export function Presupuestos() {
           </div>
         )}
       </section>
+
+      {/* Confirmation Dialog */}
+      {confirmAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
+          <div className="modal-content max-w-sm w-full">
+            <div className="text-center">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: confirmAction.action === 'aceptar' ? 'var(--color-success)' : 'var(--color-danger)', opacity: 0.1 }}
+              >
+                <AlertTriangle 
+                  className="w-6 h-6" 
+                  style={{ color: confirmAction.action === 'aceptar' ? 'var(--color-success)' : 'var(--color-danger)' }} 
+                />
+              </div>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
+                ¿Confirmar acción?
+              </h3>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
+                ¿Estás seguro de que deseas{' '}
+                <span style={{ color: confirmAction.action === 'aceptar' ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                  {confirmAction.action === 'aceptar' ? 'aceptar' : 'rechazar'}
+                </span>{' '}
+                el presupuesto "<strong>{confirmAction.titulo}</strong>"?
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  className="btn-secondary flex-1"
+                  onClick={handleCancelConfirm}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  className="flex-1"
+                  style={{ 
+                    backgroundColor: confirmAction.action === 'aceptar' ? 'var(--color-success)' : 'var(--color-danger)',
+                    color: 'white',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.625rem 1rem'
+                  }}
+                  onClick={handleConfirm}
+                >
+                  {confirmAction.action === 'aceptar' ? 'Aceptar' : 'Rechazar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

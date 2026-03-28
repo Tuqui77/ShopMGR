@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { useState } from 'react';
+import { formatDate, formatCurrency } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto } from '../types';
 
 function mapMateriales(dto: { $id: string; $values: any[] } | undefined): any[] {
@@ -220,7 +221,7 @@ export function PresupuestoDetalle() {
           {/* Fecha */}
           <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-muted)' }}>
             <Clock className="w-4 h-4" />
-            <span>Fecha: {presupuesto.fecha}</span>
+            <span>Fecha: {formatDate(presupuesto.fecha)}</span>
           </div>
         </div>
 
@@ -242,11 +243,11 @@ export function PresupuestoDetalle() {
                   <div className="flex-1">
                     <p className="text-sm" style={{ color: 'var(--color-text)' }}>{material.descripcion}</p>
                     <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                      {material.cantidad} x ${(material.precioUnitario || 0).toLocaleString()}
+                      {material.cantidad} x {formatCurrency(material.precioUnitario || 0)}
                     </p>
                   </div>
                   <span className="font-mono text-sm" style={{ color: 'var(--color-text)' }}>
-                    ${((material.subtotal) || 0).toLocaleString()}
+                    {formatCurrency((material.subtotal) || 0)}
                   </span>
                 </div>
               ))}
@@ -264,19 +265,19 @@ export function PresupuestoDetalle() {
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Costo materiales</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(presupuesto.costoMateriales || 0).toLocaleString()}
+                {formatCurrency(presupuesto.costoMateriales || 0)}
               </span>
             </div>
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Costo mano de obra</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(presupuesto.costoLabor || 0).toLocaleString()}
+                {formatCurrency(presupuesto.costoLabor || 0)}
               </span>
             </div>
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Insumos</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(presupuesto.costoInsumos || 0).toLocaleString()}
+                {formatCurrency(presupuesto.costoInsumos || 0)}
               </span>
             </div>
             <div 
@@ -285,7 +286,7 @@ export function PresupuestoDetalle() {
             >
               <span className="font-semibold" style={{ color: 'var(--color-text)' }}>TOTAL</span>
               <span className="font-mono font-bold" style={{ color: 'var(--color-accent)' }}>
-                ${((presupuesto.total) || 0).toLocaleString()}
+                {formatCurrency((presupuesto.total) || 0)}
               </span>
             </div>
           </div>
@@ -298,7 +299,7 @@ export function PresupuestoDetalle() {
               <button 
                 onClick={handleAceptar}
                 disabled={aceptarMutation.isPending}
-                className="btn-primary flex-1 flex items-center justify-center gap-2"
+                className="btn-primary flex items-center justify-center gap-2 max-w-[160px]"
               >
                 {aceptarMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -310,7 +311,7 @@ export function PresupuestoDetalle() {
               <button 
                 onClick={handleRechazar}
                 disabled={rechazarMutation.isPending}
-                className="btn-secondary flex-1 flex items-center justify-center gap-2"
+                className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]"
                 style={{ color: 'var(--color-danger)' }}
               >
                 {rechazarMutation.isPending ? (
@@ -324,7 +325,7 @@ export function PresupuestoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex-1 flex items-center justify-center gap-2">
+            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]">
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -350,17 +351,16 @@ export function PresupuestoDetalle() {
               <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
                 Esta acción no se puede deshacer.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 justify-center">
                 <button 
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleEliminar}
                   disabled={eliminarMutation.isPending}
-                  className="flex-1"
                   style={{ 
                     backgroundColor: 'var(--color-danger)',
                     color: 'white',

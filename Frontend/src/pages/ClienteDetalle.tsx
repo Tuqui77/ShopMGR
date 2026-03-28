@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight } from 'lucide-react';
 import { useClienteDetalle } from '../hooks/useClientes';
+import { formatDate, formatCurrency } from '../utils/dateFormat';
 
 export function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -10,9 +11,9 @@ export function ClienteDetalle() {
   const { data: cliente, isLoading, error } = useClienteDetalle(clienteId!);
 
   const formatBalance = (balance: number) => {
-    if (balance > 0) return { text: `$${balance.toLocaleString()}`, class: 'text-[var(--color-success)]' };
-    if (balance < 0) return { text: `$${Math.abs(balance).toLocaleString()}`, class: 'text-[var(--color-danger)]' };
-    return { text: '$0', class: 'text-[var(--color-muted)]' };
+    if (balance > 0) return { text: formatCurrency(balance), class: 'text-[var(--color-success)]' };
+    if (balance < 0) return { text: formatCurrency(balance), class: 'text-[var(--color-danger)]' };
+    return { text: formatCurrency(0), class: 'text-[var(--color-muted)]' };
   };
 
   if (isLoading) {
@@ -176,7 +177,7 @@ export function ClienteDetalle() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
                         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                          {trabajo.estado} · {trabajo.fechaInicio?.substring(0, 10) || 'Sin fecha'}
+                          {trabajo.estado} · {formatDate(trabajo.fechaInicio) || 'Sin fecha'}
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
@@ -201,8 +202,8 @@ export function ClienteDetalle() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</p>
                         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                          {presupuesto.estado} · {presupuesto.fecha?.substring(0, 10) || 'Sin fecha'}
-                          {presupuesto.total && ` · $${presupuesto.total.toLocaleString()}`}
+                          {presupuesto.estado} · {formatDate(presupuesto.fecha) || 'Sin fecha'}
+                          {presupuesto.total && ` · ${formatCurrency(presupuesto.total)}`}
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
@@ -216,7 +217,7 @@ export function ClienteDetalle() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-2">
-          <button className="btn-secondary flex-1 flex items-center justify-center gap-2">
+          <button className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]">
             <Edit className="w-4 h-4" />
             Editar
           </button>

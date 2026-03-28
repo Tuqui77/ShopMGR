@@ -134,42 +134,68 @@ function mapBackendToFrontendDetalle(dto: ClienteBackendDTO): Cliente {
 }
 
 function extractData(response: unknown): ClienteBackendDTO[] {
-  const data = response as { $values?: unknown[] };
-  const values = data.$values || [];
+  const clientesMap = new Map<number, ClienteBackendDTO>();
+  const idToObject = new Map<string, unknown>();
   
-  const seen = new Set<number>();
-  const clientes: ClienteBackendDTO[] = [];
-  
-  const collectClientes = (obj: unknown) => {
+  // First pass: index all objects by their $id
+  const indexObjects = (obj: unknown) => {
     if (typeof obj !== 'object' || obj === null) return;
     const item = obj as Record<string, unknown>;
     
-    // Check if this looks like a Cliente object
-    if ('id' in item && 'nombreCompleto' in item && 'balance' in item) {
-      const id = item.id as number;
-      if (id !== undefined && id !== null && !seen.has(id)) {
-        seen.add(id);
-        clientes.push(item as unknown as ClienteBackendDTO);
-      }
+    if ('$id' in item && typeof item.$id === 'string') {
+      idToObject.set(item.$id, item);
     }
     
-    // Recurse into nested objects and arrays
     for (const value of Object.values(item)) {
       if (Array.isArray(value)) {
-        value.forEach(collectClientes);
-      } else if (typeof value === 'object') {
-        collectClientes(value);
+        value.forEach(indexObjects);
+      } else if (typeof value === 'object' && value !== null) {
+        indexObjects(value);
       }
     }
   };
   
-  // Process all values
-  for (const item of values) {
-    collectClientes(item);
+  // Second pass: extract all unique clients
+  const collectClientes = (obj: unknown) => {
+    if (typeof obj !== 'object' || obj === null) return;
+    const item = obj as Record<string, unknown>;
+    
+    // Handle $ref - resolve to actual object
+    if ('$ref' in item && typeof item.$ref === 'string') {
+      const refObj = idToObject.get(item.$ref);
+      if (refObj) {
+        collectClientes(refObj);
+      }
+      return;
+    }
+    
+    // Check if this looks like a Cliente object
+    if ('id' in item && 'nombreCompleto' in item && 'balance' in item) {
+      const id = item.id as number;
+      if (id !== undefined && id !== null && !clientesMap.has(id)) {
+        clientesMap.set(id, item as unknown as ClienteBackendDTO);
+      }
+    }
+  };
+  
+  // Process response
+  if (typeof response === 'object' && response !== null) {
+    const data = response as { $values?: unknown[] };
+    const values = data.$values || [];
+    
+    // First index all objects by $id
+    for (const item of values) {
+      indexObjects(item);
+    }
+    
+    // Then collect all clients
+    for (const item of values) {
+      collectClientes(item);
+    }
   }
   
-  // Sort by ID
-  return clientes.sort((a, b) => (a.id || 0) - (b.id || 0));
+  // Sort by ID and return
+  return Array.from(clientesMap.values()).sort((a, b) => a.id - b.id);
 }
 
 export const clientesService = {

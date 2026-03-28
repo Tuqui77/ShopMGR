@@ -10,6 +10,47 @@ import type {
   EstadoPresupuesto,
 } from '../types';
 
+// Helper to extract error message from backend response
+async function handleApiError(error: unknown): Promise<never> {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as { response?: { data?: unknown; status?: number } };
+    const responseData = axiosError.response?.data;
+    
+    // Try to extract message from various error formats
+    if (responseData && typeof responseData === 'object') {
+      const data = responseData as Record<string, unknown>;
+      
+      // Format: { "error": "..." } - used by our middleware
+      if (data.error && typeof data.error === 'string') {
+        throw new Error(data.error);
+      }
+      // Format: { "title": "...", "status": ..., "detail": "..." }
+      if (data.detail && typeof data.detail === 'string') {
+        throw new Error(data.detail);
+      }
+      // Format: { "message": "..." }
+      if (data.message && typeof data.message === 'string') {
+        throw new Error(data.message);
+      }
+      // Format: { "errors": { ... } }
+      if (data.errors && typeof data.errors === 'object') {
+        const errors = data.errors as Record<string, unknown>;
+        const firstError = Object.values(errors).flat()[0];
+        if (typeof firstError === 'string') {
+          throw new Error(firstError);
+        }
+      }
+    }
+    
+    // Fallback to status text
+    if (axiosError.response?.status) {
+      throw new Error(`Error ${axiosError.response.status}`);
+    }
+  }
+  
+  throw new Error('Error de conexión');
+}
+
 // ============================================================================
 // Tipos internos para el servicio
 // ============================================================================
@@ -157,18 +198,26 @@ export const presupuestosService = {
    * Acepta un presupuesto (cambia estado a Aceptado)
    */
   async aceptar(id: number): Promise<void> {
-    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-      estado: 'Aceptado',
-    });
+    try {
+      await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
+        estado: 'Aceptado',
+      });
+    } catch (error) {
+      await handleApiError(error);
+    }
   },
 
   /**
    * Rechaza un presupuesto (cambia estado a Rechazado)
    */
   async rechazar(id: number): Promise<void> {
-    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-      estado: 'Rechazado',
-    });
+    try {
+      await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
+        estado: 'Rechazado',
+      });
+    } catch (error) {
+      await handleApiError(error);
+    }
   },
 
   /**

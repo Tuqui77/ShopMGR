@@ -15,6 +15,7 @@ import {
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../hooks/useTrabajos';
 import { useStore } from '../store';
 import { useState } from 'react';
+import { formatDate, formatCurrency } from '../utils/dateFormat';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -134,15 +135,21 @@ export function TrabajoDetalle() {
           {/* Fechas */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             {trabajo.fechaInicio && (
-              <div>
-                <p style={{ color: 'var(--color-muted)' }}>Fecha inicio</p>
-                <p style={{ color: 'var(--color-text)' }}>{trabajo.fechaInicio}</p>
+              <div className="flex items-center gap-2">
+                <Play className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                <p style={{ color: 'var(--color-text)' }}>{formatDate(trabajo.fechaInicio)}</p>
+              </div>
+            )}
+            {trabajo.fechaFin && (
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                <p style={{ color: 'var(--color-text)' }}>{formatDate(trabajo.fechaFin)}</p>
               </div>
             )}
             {trabajo.fechaFin && (
               <div>
                 <p style={{ color: 'var(--color-muted)' }}>Fecha fin</p>
-                <p style={{ color: 'var(--color-text)' }}>{trabajo.fechaFin}</p>
+                <p style={{ color: 'var(--color-text)' }}>{formatDate(trabajo.fechaFin)}</p>
               </div>
             )}
           </div>
@@ -235,7 +242,7 @@ export function TrabajoDetalle() {
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Total mano de obra</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(trabajo.totalLabor || 0).toLocaleString()}
+                {formatCurrency(trabajo.totalLabor || 0)}
               </span>
             </div>
           </div>
@@ -271,7 +278,7 @@ export function TrabajoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex-1 flex items-center justify-center gap-2">
+            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]">
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -297,17 +304,16 @@ export function TrabajoDetalle() {
               <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
                 Esta acción no se puede deshacer.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 justify-center">
                 <button 
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleEliminar}
                   disabled={eliminarTrabajo.isPending}
-                  className="flex-1"
                   style={{ 
                     backgroundColor: 'var(--color-danger)',
                     color: 'white',

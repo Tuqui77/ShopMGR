@@ -5,20 +5,20 @@ import {
   Clock, 
   Calendar, 
   Moon, 
-  Sun, 
-  Monitor,
+  Sun,
   DollarSign,
 } from 'lucide-react';
+import { formatCurrency } from '../utils/dateFormat';
 import { apiClient } from '../services/api';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type Theme = 'claro' | 'oscuro' | 'sistema';
+type Theme = 'claro' | 'oscuro';
 type DateFormat = 'DD/MM/AAAA' | 'MM/DD/AAAA' | 'AAAA-MM-DD';
 type TimeFormat = '12h' | '24h';
-type CurrencyFormat = '($1.000)' | '(1.000$)' | '$1.000' | '1.000$';
+type CurrencySymbol = '$' | 'U$S';
 
 // ============================================================================
 // Local Storage Keys
@@ -35,16 +35,8 @@ const STORAGE_KEYS = {
 // Theme Management
 // ============================================================================
 
-function getSystemTheme(): 'claro' | 'oscuro' {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
-  }
-  return 'oscuro';
-}
-
 function applyTheme(theme: Theme) {
-  const effectiveTheme = theme === 'sistema' ? getSystemTheme() : theme;
-  document.documentElement.setAttribute('data-theme', effectiveTheme);
+  document.documentElement.setAttribute('data-theme', theme);
 }
 
 // ============================================================================
@@ -71,7 +63,7 @@ export function Configuracion() {
   
   // Theme state
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'sistema';
+    return (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'oscuro';
   });
   
   // Format states
@@ -83,8 +75,8 @@ export function Configuracion() {
     return (localStorage.getItem(STORAGE_KEYS.timeFormat) as TimeFormat) || '24h';
   });
   
-  const [currencyFormat, setCurrencyFormat] = useState<CurrencyFormat>(() => {
-    return (localStorage.getItem(STORAGE_KEYS.currencyFormat) as CurrencyFormat) || '($1.000)';
+  const [currencySymbol, setCurrencySymbol] = useState<CurrencySymbol>(() => {
+    return (localStorage.getItem(STORAGE_KEYS.currencyFormat) as CurrencySymbol) || '$';
   });
   
   // Costo hora from API
@@ -129,9 +121,9 @@ export function Configuracion() {
     localStorage.setItem(STORAGE_KEYS.timeFormat, format);
   };
   
-  const handleCurrencyFormatChange = (format: CurrencyFormat) => {
-    setCurrencyFormat(format);
-    localStorage.setItem(STORAGE_KEYS.currencyFormat, format);
+  const handleCurrencySymbolChange = (symbol: CurrencySymbol) => {
+    setCurrencySymbol(symbol);
+    localStorage.setItem(STORAGE_KEYS.currencyFormat, symbol);
   };
   
   const handleCostoHoraSave = () => {
@@ -147,9 +139,8 @@ export function Configuracion() {
   };
   
   const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
-    { value: 'claro', label: 'Claro', icon: Sun },
     { value: 'oscuro', label: 'Oscuro', icon: Moon },
-    { value: 'sistema', label: 'Sistema', icon: Monitor },
+    { value: 'claro', label: 'Claro', icon: Sun },
   ];
   
   const dateFormatOptions: { value: DateFormat; label: string }[] = [
@@ -163,11 +154,9 @@ export function Configuracion() {
     { value: '12h', label: '12 horas (2:30 PM)' },
   ];
   
-  const currencyFormatOptions: { value: CurrencyFormat; label: string }[] = [
-    { value: '($1.000)', label: '($1.000)' },
-    { value: '(1.000$)', label: '(1.000$)' },
-    { value: '$1.000', label: '$1.000' },
-    { value: '1.000$', label: '1.000$' },
+  const currencySymbolOptions: { value: CurrencySymbol; label: string }[] = [
+    { value: '$', label: '$ (Pesos)' },
+    { value: 'U$S', label: 'U$S (Dólares)' },
   ];
   
   return (
@@ -179,41 +168,39 @@ export function Configuracion() {
       <section className="px-4 space-y-6">
         {/* Tema */}
         <div className="card">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
-              {theme === 'oscuro' ? (
-                <Moon className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              ) : theme === 'claro' ? (
-                <Sun className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              ) : (
-                <Monitor className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
+                {theme === 'oscuro' ? (
+                  <Moon className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                ) : (
+                  <Sun className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                )}
+              </div>
+              <div>
+                <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>Tema</h2>
+                <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Apariencia de la aplicación</p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>Tema</h2>
-              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Apariencia de la aplicación</p>
+            
+            <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
+              {themeOptions.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+                    theme === value ? '' : 'hover:opacity-80'
+                  }`}
+                  style={{ 
+                    backgroundColor: theme === value ? 'var(--color-accent)' : 'transparent',
+                    color: theme === value ? 'white' : 'var(--color-muted)'
+                  }}
+                  title={label}
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              ))}
             </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2">
-            {themeOptions.map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                onClick={() => setTheme(value)}
-                className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-colors ${
-                  theme === value ? 'ring-2 ring-[var(--color-accent)]' : ''
-                }`}
-                style={{ 
-                  backgroundColor: theme === value ? 'var(--color-surface)' : 'transparent',
-                  border: `1px solid ${theme === value ? 'var(--color-accent)' : 'var(--color-surface)'}`
-                }}
-              >
-                <Icon className="w-5 h-5" style={{ color: theme === value ? 'var(--color-accent)' : 'var(--color-muted)' }} />
-                <span className="text-sm" style={{ color: theme === value ? 'var(--color-text)' : 'var(--color-muted)' }}>
-                  {label}
-                </span>
-              </button>
-            ))}
           </div>
         </div>
         
@@ -226,7 +213,7 @@ export function Configuracion() {
             <div className="flex-1">
               <h2 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Valor hora de trabajo</h2>
               {costoHora !== undefined && costoHora > 0 && !showCostoHoraSuccess && (
-                <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Actual: ${costoHora.toLocaleString()}/hora</p>
+                <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Actual: {formatCurrency(costoHora)}/hora</p>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -323,11 +310,11 @@ export function Configuracion() {
               <DollarSign className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
             </div>
             <div className="flex-1">
-              <h2 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Formato de moneda</h2>
+              <h2 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Símbolo de moneda</h2>
             </div>
             <select
-              value={currencyFormat}
-              onChange={(e) => handleCurrencyFormatChange(e.target.value as CurrencyFormat)}
+              value={currencySymbol}
+              onChange={(e) => handleCurrencySymbolChange(e.target.value as CurrencySymbol)}
               className="text-sm rounded-lg px-3 py-2"
               style={{ 
                 backgroundColor: 'var(--color-surface)',
@@ -335,7 +322,7 @@ export function Configuracion() {
                 border: '1px solid var(--color-surface)'
               }}
             >
-              {currencyFormatOptions.map(({ value, label }) => (
+              {currencySymbolOptions.map(({ value, label }) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>

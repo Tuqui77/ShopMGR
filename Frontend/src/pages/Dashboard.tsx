@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { useTrabajos } from '../hooks/useTrabajos';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
+import { formatDate, formatCurrency } from '../utils/dateFormat';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export function Dashboard() {
                 weekday: 'long', 
                 day: 'numeric', 
                 month: 'long' 
-              })}
+              })}, {formatDate(new Date())}
             </p>
           </div>
           <button className="btn-icon">
@@ -57,7 +58,7 @@ export function Dashboard() {
           <div className="grid grid-cols-3 gap-2">
             <div className="card !p-3">
               <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-accent)' }}>
-                ${metricas.ingresos >= 1000 ? metricas.ingresos.toLocaleString() : metricas.ingresos}
+                {formatCurrency(metricas.ingresos)}
               </span>
               <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>Ingresos</span>
             </div>

@@ -23,7 +23,7 @@ export function useClienteDetalle(id: number) {
   return useQuery({
     queryKey: ['clientes', id, 'detalle'],
     queryFn: () => clientesService.obtenerDetalle(id),
-    enabled: !!id,
+    enabled: id >= 0,
     staleTime: 0,
     refetchOnWindowFocus: true,
   });

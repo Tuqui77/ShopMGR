@@ -125,7 +125,7 @@ export function useEliminarPresupuesto() {
 /**
  * Acepta un presupuesto (cambia estado a Aceptado)
  */
-export function useAceptarPresupuesto() {
+export function useAceptarPresupuesto(options?: { onError?: (error: Error) => void }) {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -134,13 +134,14 @@ export function useAceptarPresupuesto() {
       queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
       queryClient.invalidateQueries({ queryKey: ['presupuestos', id] });
     },
+    onError: options?.onError,
   });
 }
 
 /**
  * Rechaza un presupuesto (cambia estado a Rechazado)
  */
-export function useRechazarPresupuesto() {
+export function useRechazarPresupuesto(options?: { onError?: (error: Error) => void }) {
   const queryClient = useQueryClient();
   
   return useMutation({
@@ -149,6 +150,7 @@ export function useRechazarPresupuesto() {
       queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
       queryClient.invalidateQueries({ queryKey: ['presupuestos', id] });
     },
+    onError: options?.onError,
   });
 }
 
