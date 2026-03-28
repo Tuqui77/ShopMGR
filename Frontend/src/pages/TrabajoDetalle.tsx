@@ -15,6 +15,7 @@ import {
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../hooks/useTrabajos';
 import { useStore } from '../store';
 import { useState } from 'react';
+import { formatDate } from '../utils/dateFormat';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -134,15 +135,21 @@ export function TrabajoDetalle() {
           {/* Fechas */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             {trabajo.fechaInicio && (
-              <div>
-                <p style={{ color: 'var(--color-muted)' }}>Fecha inicio</p>
-                <p style={{ color: 'var(--color-text)' }}>{trabajo.fechaInicio}</p>
+              <div className="flex items-center gap-2">
+                <Play className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                <p style={{ color: 'var(--color-text)' }}>{formatDate(trabajo.fechaInicio)}</p>
+              </div>
+            )}
+            {trabajo.fechaFin && (
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                <p style={{ color: 'var(--color-text)' }}>{formatDate(trabajo.fechaFin)}</p>
               </div>
             )}
             {trabajo.fechaFin && (
               <div>
                 <p style={{ color: 'var(--color-muted)' }}>Fecha fin</p>
-                <p style={{ color: 'var(--color-text)' }}>{trabajo.fechaFin}</p>
+                <p style={{ color: 'var(--color-text)' }}>{formatDate(trabajo.fechaFin)}</p>
               </div>
             )}
           </div>

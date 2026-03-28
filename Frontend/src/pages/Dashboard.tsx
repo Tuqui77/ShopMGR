@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { useTrabajos } from '../hooks/useTrabajos';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
+import { formatDate } from '../utils/dateFormat';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ export function Dashboard() {
                 weekday: 'long', 
                 day: 'numeric', 
                 month: 'long' 
-              })}
+              })}, {formatDate(new Date())}
             </p>
           </div>
           <button className="btn-icon">

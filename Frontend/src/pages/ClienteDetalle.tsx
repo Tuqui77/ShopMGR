@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight } from 'lucide-react';
 import { useClienteDetalle } from '../hooks/useClientes';
+import { formatDate } from '../utils/dateFormat';
 
 export function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -176,7 +177,7 @@ export function ClienteDetalle() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
                         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                          {trabajo.estado} · {trabajo.fechaInicio?.substring(0, 10) || 'Sin fecha'}
+                          {trabajo.estado} · {formatDate(trabajo.fechaInicio) || 'Sin fecha'}
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
@@ -201,7 +202,7 @@ export function ClienteDetalle() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</p>
                         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                          {presupuesto.estado} · {presupuesto.fecha?.substring(0, 10) || 'Sin fecha'}
+                          {presupuesto.estado} · {formatDate(presupuesto.fecha) || 'Sin fecha'}
                           {presupuesto.total && ` · $${presupuesto.total.toLocaleString()}`}
                         </p>
                       </div>

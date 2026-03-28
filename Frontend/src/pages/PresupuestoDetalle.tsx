@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { useState } from 'react';
+import { formatDate } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto } from '../types';
 
 function mapMateriales(dto: { $id: string; $values: any[] } | undefined): any[] {
@@ -220,7 +221,7 @@ export function PresupuestoDetalle() {
           {/* Fecha */}
           <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--color-muted)' }}>
             <Clock className="w-4 h-4" />
-            <span>Fecha: {presupuesto.fecha}</span>
+            <span>Fecha: {formatDate(presupuesto.fecha)}</span>
           </div>
         </div>
 
