@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { useState } from 'react';
-import { formatDate } from '../utils/dateFormat';
+import { formatDate, formatCurrency } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto } from '../types';
 
 function mapMateriales(dto: { $id: string; $values: any[] } | undefined): any[] {
@@ -243,11 +243,11 @@ export function PresupuestoDetalle() {
                   <div className="flex-1">
                     <p className="text-sm" style={{ color: 'var(--color-text)' }}>{material.descripcion}</p>
                     <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                      {material.cantidad} x ${(material.precioUnitario || 0).toLocaleString()}
+                      {material.cantidad} x {formatCurrency(material.precioUnitario || 0)}
                     </p>
                   </div>
                   <span className="font-mono text-sm" style={{ color: 'var(--color-text)' }}>
-                    ${((material.subtotal) || 0).toLocaleString()}
+                    {formatCurrency((material.subtotal) || 0)}
                   </span>
                 </div>
               ))}
@@ -265,19 +265,19 @@ export function PresupuestoDetalle() {
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Costo materiales</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(presupuesto.costoMateriales || 0).toLocaleString()}
+                {formatCurrency(presupuesto.costoMateriales || 0)}
               </span>
             </div>
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Costo mano de obra</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(presupuesto.costoLabor || 0).toLocaleString()}
+                {formatCurrency(presupuesto.costoLabor || 0)}
               </span>
             </div>
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Insumos</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(presupuesto.costoInsumos || 0).toLocaleString()}
+                {formatCurrency(presupuesto.costoInsumos || 0)}
               </span>
             </div>
             <div 
@@ -286,7 +286,7 @@ export function PresupuestoDetalle() {
             >
               <span className="font-semibold" style={{ color: 'var(--color-text)' }}>TOTAL</span>
               <span className="font-mono font-bold" style={{ color: 'var(--color-accent)' }}>
-                ${((presupuesto.total) || 0).toLocaleString()}
+                {formatCurrency((presupuesto.total) || 0)}
               </span>
             </div>
           </div>

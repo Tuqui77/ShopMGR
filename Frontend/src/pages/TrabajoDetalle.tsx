@@ -15,7 +15,7 @@ import {
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../hooks/useTrabajos';
 import { useStore } from '../store';
 import { useState } from 'react';
-import { formatDate } from '../utils/dateFormat';
+import { formatDate, formatCurrency } from '../utils/dateFormat';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -242,7 +242,7 @@ export function TrabajoDetalle() {
             <div className="flex justify-between">
               <span style={{ color: 'var(--color-muted)' }}>Total mano de obra</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                ${(trabajo.totalLabor || 0).toLocaleString()}
+                {formatCurrency(trabajo.totalLabor || 0)}
               </span>
             </div>
           </div>

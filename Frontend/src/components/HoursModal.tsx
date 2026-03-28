@@ -4,6 +4,7 @@ import { useTrabajos, useAgregarHoras } from '../hooks/useTrabajos';
 import clsx from 'clsx';
 import type { Trabajo } from '../types';
 import { X, ArrowLeft, Search, Star, CheckCircle, Loader2 } from 'lucide-react';
+import { formatCurrency } from '../utils/dateFormat';
 
 // Valor hora por defecto (esto podría venir del backend en el futuro)
 const VALOR_HORA_DEFAULT = 3000;
@@ -287,7 +288,7 @@ function HoursInputView({
         </button>
         
         <p className="text-center font-mono mt-2" style={{ color: 'var(--color-success)' }}>
-          ${(hours * valorHora).toLocaleString()} (≈{hours}h @ ${valorHora}/h)
+          {formatCurrency(hours * valorHora)} (≈{hours}h @ {formatCurrency(valorHora)}/h)
         </p>
       </div>
       
@@ -342,7 +343,7 @@ function SuccessView({
       
       <p className="text-sm mb-1" style={{ color: 'var(--color-muted)' }}>HORAS REGISTRADAS</p>
       <p className="text-4xl font-bold font-mono mb-1" style={{ color: 'var(--color-text)' }}>{hours}h</p>
-      <p className="text-xl font-mono" style={{ color: 'var(--color-success)' }}>${valor.toLocaleString()}</p>
+      <p className="text-xl font-mono" style={{ color: 'var(--color-success)' }}>{formatCurrency(valor)}</p>
       
       <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
         <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>

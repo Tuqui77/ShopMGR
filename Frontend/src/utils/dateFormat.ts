@@ -90,3 +90,24 @@ export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return '';
   return `${formatDate(date)} ${formatTime(date)}`;
 }
+
+// ============================================================================
+// Currency
+// ============================================================================
+
+export type CurrencySymbol = '$' | 'U$S';
+
+export function getCurrencySymbol(): CurrencySymbol {
+  if (typeof window === 'undefined') return '$';
+  return (localStorage.getItem(STORAGE_KEYS.currencyFormat) as CurrencySymbol) || '$';
+}
+
+/**
+ * Formatea un número como moneda usando el símbolo configurado
+ */
+export function formatCurrency(amount: number): string {
+  const symbol = getCurrencySymbol();
+  const formatted = Math.abs(amount).toLocaleString();
+  const sign = amount < 0 ? '-' : '';
+  return `${sign}${symbol}${formatted}`;
+}

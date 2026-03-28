@@ -2,6 +2,7 @@ import type { Trabajo } from '../types';
 import clsx from 'clsx';
 import { Check, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatCurrency } from '../utils/dateFormat';
 
 interface Props {
   trabajo: Trabajo;
@@ -45,7 +46,7 @@ export function TrabajoCard({ trabajo }: Props) {
       {trabajo.estado === 'Pendiente' && (
         <div className="mt-3 flex justify-between text-sm" style={{ color: 'var(--color-muted)' }}>
           <span>Estimado: {trabajo.horasEstimadas}h</span>
-          <span>${(trabajo.totalLabor || 0).toLocaleString()}</span>
+          <span>{formatCurrency(trabajo.totalLabor || 0)}</span>
         </div>
       )}
       

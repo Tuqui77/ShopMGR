@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight } from 'lucide-react';
 import { useClienteDetalle } from '../hooks/useClientes';
-import { formatDate } from '../utils/dateFormat';
+import { formatDate, formatCurrency } from '../utils/dateFormat';
 
 export function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -11,9 +11,9 @@ export function ClienteDetalle() {
   const { data: cliente, isLoading, error } = useClienteDetalle(clienteId!);
 
   const formatBalance = (balance: number) => {
-    if (balance > 0) return { text: `$${balance.toLocaleString()}`, class: 'text-[var(--color-success)]' };
-    if (balance < 0) return { text: `$${Math.abs(balance).toLocaleString()}`, class: 'text-[var(--color-danger)]' };
-    return { text: '$0', class: 'text-[var(--color-muted)]' };
+    if (balance > 0) return { text: formatCurrency(balance), class: 'text-[var(--color-success)]' };
+    if (balance < 0) return { text: formatCurrency(balance), class: 'text-[var(--color-danger)]' };
+    return { text: formatCurrency(0), class: 'text-[var(--color-muted)]' };
   };
 
   if (isLoading) {
@@ -203,7 +203,7 @@ export function ClienteDetalle() {
                         <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</p>
                         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
                           {presupuesto.estado} · {formatDate(presupuesto.fecha) || 'Sin fecha'}
-                          {presupuesto.total && ` · $${presupuesto.total.toLocaleString()}`}
+                          {presupuesto.total && ` · ${formatCurrency(presupuesto.total)}`}
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />

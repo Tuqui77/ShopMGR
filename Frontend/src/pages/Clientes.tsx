@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { Search, User, Phone, MapPin, Wrench, FileText, Loader2 } from 'lucide-react';
 import { useClientes } from '../hooks/useClientes';
+import { formatCurrency } from '../utils/dateFormat';
 
 type FilterType = 'todos' | 'conDeuda' | 'nuevos';
 
@@ -75,9 +76,9 @@ export function Clientes() {
   const [filter, setFilter] = useState<FilterType>('todos');
   
   const formatBalance = (balance: number) => {
-    if (balance > 0) return { text: `$${balance.toLocaleString()}`, class: 'text-[var(--color-success)]' };
-    if (balance < 0) return { text: `$${Math.abs(balance).toLocaleString()}`, class: 'text-[var(--color-danger)]' };
-    return { text: '$0', class: 'text-[var(--color-muted)]' };
+    if (balance > 0) return { text: formatCurrency(balance), class: 'text-[var(--color-success)]' };
+    if (balance < 0) return { text: formatCurrency(balance), class: 'text-[var(--color-danger)]' };
+    return { text: formatCurrency(0), class: 'text-[var(--color-muted)]' };
   };
   
   const getBalanceLabel = (balance: number) => {

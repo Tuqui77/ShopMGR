@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import type { EstadoPresupuesto } from '../types';
 import { usePresupuestos, useAceptarPresupuesto, useRechazarPresupuesto } from '../hooks/usePresupuestos';
 import { Clipboard, Clock, Loader2, ArrowLeft, Check, X, AlertTriangle } from 'lucide-react';
+import { formatCurrency } from '../utils/dateFormat';
 
 type FilterType = 'todos' | 'pendientes' | 'aceptados' | 'rechazados';
 
@@ -190,7 +191,7 @@ export function Presupuestos() {
               </div>
               
               <div className="mt-3 flex justify-between text-sm">
-                <span className="font-mono" style={{ color: 'var(--color-accent)' }}>${presupuesto.total.toLocaleString()}</span>
+                <span className="font-mono" style={{ color: 'var(--color-accent)' }}>{formatCurrency(presupuesto.total)}</span>
                 <span className="flex items-center gap-1" style={{ color: 'var(--color-muted)' }}><Clock className="w-3 h-3" /> {presupuesto.horasEstimadas}h</span>
               </div>
               
