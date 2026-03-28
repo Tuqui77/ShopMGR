@@ -298,7 +298,7 @@ export function PresupuestoDetalle() {
               <button 
                 onClick={handleAceptar}
                 disabled={aceptarMutation.isPending}
-                className="btn-primary flex-1 flex items-center justify-center gap-2"
+                className="btn-primary flex items-center justify-center gap-2 max-w-[160px]"
               >
                 {aceptarMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -310,7 +310,7 @@ export function PresupuestoDetalle() {
               <button 
                 onClick={handleRechazar}
                 disabled={rechazarMutation.isPending}
-                className="btn-secondary flex-1 flex items-center justify-center gap-2"
+                className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]"
                 style={{ color: 'var(--color-danger)' }}
               >
                 {rechazarMutation.isPending ? (
@@ -324,7 +324,7 @@ export function PresupuestoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex-1 flex items-center justify-center gap-2">
+            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]">
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -350,17 +350,16 @@ export function PresupuestoDetalle() {
               <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
                 Esta acción no se puede deshacer.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 justify-center">
                 <button 
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleEliminar}
                   disabled={eliminarMutation.isPending}
-                  className="flex-1"
                   style={{ 
                     backgroundColor: 'var(--color-danger)',
                     color: 'white',

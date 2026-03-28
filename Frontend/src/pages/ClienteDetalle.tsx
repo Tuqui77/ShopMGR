@@ -216,7 +216,7 @@ export function ClienteDetalle() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-2">
-          <button className="btn-secondary flex-1 flex items-center justify-center gap-2">
+          <button className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]">
             <Edit className="w-4 h-4" />
             Editar
           </button>

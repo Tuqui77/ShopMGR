@@ -271,7 +271,7 @@ export function TrabajoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex-1 flex items-center justify-center gap-2">
+            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]">
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -297,17 +297,16 @@ export function TrabajoDetalle() {
               <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
                 Esta acción no se puede deshacer.
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-3 justify-center">
                 <button 
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="btn-secondary flex-1"
+                  className="btn-secondary"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleEliminar}
                   disabled={eliminarTrabajo.isPending}
-                  className="flex-1"
                   style={{ 
                     backgroundColor: 'var(--color-danger)',
                     color: 'white',

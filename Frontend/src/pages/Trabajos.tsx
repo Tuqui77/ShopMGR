@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTrabajos } from '../hooks/useTrabajos';
-import { useStore } from '../store';
 import { TrabajoCard } from '../components/TrabajoCard';
 import clsx from 'clsx';
 import { Wrench, Loader2, ArrowLeft } from 'lucide-react';
-import type { Trabajo } from '../types';
 
 type FilterType = 'todos' | 'activos' | 'pendientes' | 'terminados';
 
@@ -15,7 +13,6 @@ export function Trabajos() {
   const clienteId = clienteIdParam ? parseInt(clienteIdParam, 10) : undefined;
   
   const { data: trabajos = [], isLoading, error } = useTrabajos();
-  const { setShowHoursModal, setSelectedTrabajo } = useStore();
   const [filter, setFilter] = useState<FilterType>('todos');
   
   // Filter by client if provided
@@ -50,11 +47,6 @@ export function Trabajos() {
   
   const handleClearClientFilter = () => {
     setSearchParams({});
-  };
-  
-  const handleRegisterHours = (trabajo: Trabajo) => {
-    setSelectedTrabajo(trabajo);
-    setShowHoursModal(true);
   };
   
   const activeTrabajos = filtered.filter(t => t.estado === 'Iniciado');
@@ -136,7 +128,6 @@ export function Trabajos() {
                     <TrabajoCard 
                       key={trabajo.id} 
                       trabajo={trabajo}
-                      onRegisterHours={() => handleRegisterHours(trabajo)}
                     />
                   ))}
                 </div>
@@ -153,7 +144,6 @@ export function Trabajos() {
                     <TrabajoCard 
                       key={trabajo.id} 
                       trabajo={trabajo}
-                      onRegisterHours={() => handleRegisterHours(trabajo)}
                     />
                   ))}
                 </div>
@@ -170,7 +160,6 @@ export function Trabajos() {
                     <TrabajoCard 
                       key={trabajo.id} 
                       trabajo={trabajo}
-                      onRegisterHours={() => handleRegisterHours(trabajo)}
                     />
                   ))}
                 </div>
@@ -200,7 +189,6 @@ export function Trabajos() {
               <TrabajoCard 
                 key={trabajo.id} 
                 trabajo={trabajo}
-                onRegisterHours={() => handleRegisterHours(trabajo)}
               />
             ))}
             
