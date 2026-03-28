@@ -5,8 +5,7 @@ import {
   Clock, 
   Calendar, 
   Moon, 
-  Sun, 
-  Monitor,
+  Sun,
   DollarSign,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
@@ -15,7 +14,7 @@ import { apiClient } from '../services/api';
 // Types
 // ============================================================================
 
-type Theme = 'claro' | 'oscuro' | 'sistema';
+type Theme = 'claro' | 'oscuro';
 type DateFormat = 'DD/MM/AAAA' | 'MM/DD/AAAA' | 'AAAA-MM-DD';
 type TimeFormat = '12h' | '24h';
 type CurrencyFormat = '($1.000)' | '(1.000$)' | '$1.000' | '1.000$';
@@ -35,16 +34,8 @@ const STORAGE_KEYS = {
 // Theme Management
 // ============================================================================
 
-function getSystemTheme(): 'claro' | 'oscuro' {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
-  }
-  return 'oscuro';
-}
-
 function applyTheme(theme: Theme) {
-  const effectiveTheme = theme === 'sistema' ? getSystemTheme() : theme;
-  document.documentElement.setAttribute('data-theme', effectiveTheme);
+  document.documentElement.setAttribute('data-theme', theme);
 }
 
 // ============================================================================
@@ -71,7 +62,7 @@ export function Configuracion() {
   
   // Theme state
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'sistema';
+    return (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'oscuro';
   });
   
   // Format states
@@ -147,9 +138,8 @@ export function Configuracion() {
   };
   
   const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
-    { value: 'claro', label: 'Claro', icon: Sun },
     { value: 'oscuro', label: 'Oscuro', icon: Moon },
-    { value: 'sistema', label: 'Sistema', icon: Monitor },
+    { value: 'claro', label: 'Claro', icon: Sun },
   ];
   
   const dateFormatOptions: { value: DateFormat; label: string }[] = [
@@ -179,41 +169,39 @@ export function Configuracion() {
       <section className="px-4 space-y-6">
         {/* Tema */}
         <div className="card">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
-              {theme === 'oscuro' ? (
-                <Moon className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              ) : theme === 'claro' ? (
-                <Sun className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              ) : (
-                <Monitor className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
+                {theme === 'oscuro' ? (
+                  <Moon className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                ) : (
+                  <Sun className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                )}
+              </div>
+              <div>
+                <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>Tema</h2>
+                <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Apariencia de la aplicación</p>
+              </div>
             </div>
-            <div>
-              <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>Tema</h2>
-              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Apariencia de la aplicación</p>
+            
+            <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
+              {themeOptions.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+                    theme === value ? '' : 'hover:opacity-80'
+                  }`}
+                  style={{ 
+                    backgroundColor: theme === value ? 'var(--color-accent)' : 'transparent',
+                    color: theme === value ? 'white' : 'var(--color-muted)'
+                  }}
+                  title={label}
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              ))}
             </div>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2">
-            {themeOptions.map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                onClick={() => setTheme(value)}
-                className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-colors ${
-                  theme === value ? 'ring-2 ring-[var(--color-accent)]' : ''
-                }`}
-                style={{ 
-                  backgroundColor: theme === value ? 'var(--color-surface)' : 'transparent',
-                  border: `1px solid ${theme === value ? 'var(--color-accent)' : 'var(--color-surface)'}`
-                }}
-              >
-                <Icon className="w-5 h-5" style={{ color: theme === value ? 'var(--color-accent)' : 'var(--color-muted)' }} />
-                <span className="text-sm" style={{ color: theme === value ? 'var(--color-text)' : 'var(--color-muted)' }}>
-                  {label}
-                </span>
-              </button>
-            ))}
           </div>
         </div>
         

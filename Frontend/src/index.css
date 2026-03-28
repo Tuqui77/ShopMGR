@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* Dark Theme (default) */
 @theme {
   --color-page: #050508;
   --color-card: #181824;
@@ -15,6 +16,22 @@
   --color-info: #4dabf7;
 }
 
+/* Light Theme */
+[data-theme="claro"] {
+  --color-page: #f0f0f4;
+  --color-card: #ffffff;
+  --color-elevated: #fafafa;
+  --color-surface: #e8e8ec;
+  --color-border: #d0d0d8;
+  --color-text: #1a1a24;
+  --color-muted: #6b6b80;
+  --color-accent: #ff6b35;
+  --color-success: #00b894;
+  --color-warning: #fdcb6e;
+  --color-danger: #e84343;
+  --color-info: #0984e3;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
@@ -25,7 +42,7 @@ html {
   background-color: var(--color-page);
   color: var(--color-text);
   scroll-behavior: smooth;
-  color-scheme: dark;
+  color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   image-rendering: auto;
@@ -36,7 +53,7 @@ body {
   min-height: 100dvh;
   overscroll-behavior: none;
   background-color: var(--color-page);
-  color-scheme: dark;
+  color-scheme: light dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
