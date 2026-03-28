@@ -15,8 +15,16 @@ export function Presupuestos() {
   const { data: presupuestos, isLoading, error } = usePresupuestos();
   const [filter, setFilter] = useState<FilterType>('todos');
   
-  const aceptarMutation = useAceptarPresupuesto();
-  const rechazarMutation = useRechazarPresupuesto();
+  const aceptarMutation = useAceptarPresupuesto({
+    onError: (error: Error) => {
+      setMutationError(error.message);
+    },
+  });
+  const rechazarMutation = useRechazarPresupuesto({
+    onError: (error: Error) => {
+      setMutationError(error.message);
+    },
+  });
   
   // Confirmation dialog state
   const [confirmAction, setConfirmAction] = useState<{
@@ -24,6 +32,9 @@ export function Presupuestos() {
     action: 'aceptar' | 'rechazar';
     titulo: string;
   } | null>(null);
+  
+  // Error state
+  const [mutationError, setMutationError] = useState<string | null>(null);
   
   // Filter by client if provided
   const filtered = presupuestos?.filter(p => {
@@ -111,6 +122,19 @@ export function Presupuestos() {
   
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
+      {/* Mutation Error Banner */}
+      {mutationError && (
+        <div 
+          className="mx-4 mt-4 p-3 rounded-lg flex items-center justify-between"
+          style={{ backgroundColor: 'var(--color-danger)', color: 'white' }}
+        >
+          <span className="text-sm">{mutationError}</span>
+          <button onClick={() => setMutationError(null)} className="ml-2">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
         {/* Client filter indicator */}
