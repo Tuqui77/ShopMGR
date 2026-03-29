@@ -375,6 +375,9 @@ appsetings.Development.json
 
 # Frontend planning (wireframes, specs, etc.)
 Frontend/planning/
+
+# Frontend test coverage
+Frontend/coverage/
 /DESIGN_GUIDELINES.md
 /TECHNICAL_GUIDELINES.md
 /environment.env
