@@ -4,8 +4,11 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
-  sync:
+  sync-branches:
     runs-on: ubuntu-latest
 
     steps:
