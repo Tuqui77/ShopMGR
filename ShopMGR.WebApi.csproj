@@ -17,6 +17,7 @@
     <Compile Remove="ShopMGR.Dominio\**" />
     <Compile Remove="ShopMGR.Infraestructura.Drive\**" />
     <Compile Remove="ShopMGR.Repositorios\**" />
+    <Compile Remove="ShopMGR.Tests\**" />
     <Content Remove="DBSeeder\**" />
     <Content Remove="Infraestructura\**" />
     <Content Remove="ShopMGR.Aplicacion\**" />

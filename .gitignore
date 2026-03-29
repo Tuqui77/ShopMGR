@@ -48,6 +48,10 @@ Generated\ Files/
 # NUnit
 *.VisualState.xml
 TestResult.xml
+
+# Test coverage
+coverage.xml
+/coverage-report/
 nunit-*.xml
 
 # Build Results of an ATL Project
@@ -371,6 +375,9 @@ appsetings.Development.json
 
 # Frontend planning (wireframes, specs, etc.)
 Frontend/planning/
+
+# Frontend test coverage
+Frontend/coverage/
 /DESIGN_GUIDELINES.md
 /TECHNICAL_GUIDELINES.md
 /environment.env
