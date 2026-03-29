@@ -1,15 +1,27 @@
+name: Sincronizar Development con Main
+
 on:
   push:
-    branch: [main]
+    branches: [main]
 
 jobs:
   sync:
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout del repositorio
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - run: |
+
+      - name: Configurar Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Merge y Push a Development
+        run: |
           git checkout development
-          git rebase origin/main
-          git push origin development --force-with-lease
+          git pull origin development
+          git merge origin/main -m "Sincronizando cambios de main a development"
+          git push origin development
