@@ -1,0 +1,41 @@
+name: Lint & Typecheck
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+    # Frontend
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm install
+        working-directory: Frontend
+
+      - name: Lint Front
+        run: npm run lint
+        working-directory: Frontend
+
+      - name: Typecheck Front
+        run: npm run typecheck
+        working-directory: Frontend
+
+    # Backend
+      - name: Configurar .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0"
+
+      - name: Formato
+        run: dotnet format --verify-no-changes
