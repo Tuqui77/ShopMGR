@@ -5,7 +5,7 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Mappers;
 
-public class FotoMapper :IMapper<Foto, FotoDTO>
+public class FotoMapper : IMapper<Foto, FotoDTO>
 {
     public FotoDTO Map(Foto foto)
     {

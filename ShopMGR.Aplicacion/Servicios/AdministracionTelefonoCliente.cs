@@ -7,10 +7,12 @@ using ShopMGR.Dominio.Modelo;
 namespace ShopMGR.Aplicacion.Servicios
 {
     public class AdministracionTelefonoCliente(
-        IRepositorioConCliente<TelefonoCliente> telefonoClienteRepositorio, 
-        MapperRegistry mapper) : IAdministrarTelefonoCliente
+        IRepositorioConCliente<TelefonoCliente> telefonoClienteRepositorio,
+        MapperRegistry mapper
+    ) : IAdministrarTelefonoCliente
     {
-        private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoClienteRepositorio;
+        private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio =
+            telefonoClienteRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<TelefonoCliente> CrearAsync(TelefonoClienteDTO nuevoTelefono)
@@ -35,6 +37,7 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             return await _telefonoClienteRepositorio.ObtenerPorIdCliente(idCliente);
         }
+
         public async Task ActualizarAsync(int idTelefono, ModificarTelefono telefonoModificado)
         {
             var telefonoBd = await _telefonoClienteRepositorio.ObtenerPorIdAsync(idTelefono);
@@ -45,6 +48,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             await _telefonoClienteRepositorio.ActualizarAsync(telefonoBd);
         }
+
         public async Task EliminarAsync(int idTelefono)
         {
             await _telefonoClienteRepositorio.EliminarAsync(idTelefono);

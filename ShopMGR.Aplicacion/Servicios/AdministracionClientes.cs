@@ -11,29 +11,32 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioConCliente<Direccion> direccionRepositorio,
         IRepositorioConCliente<TelefonoCliente> telefonoRepositorio,
         IMovimientoBalanceRepositorio movimientoBalanceRepositorio,
-        MapperRegistry mapper) : IAdministrarClientes
-
+        MapperRegistry mapper
+    ) : IAdministrarClientes
     {
         private readonly IRepositorioCliente<Cliente> _clienteRepositorio = clienteRepositorio;
-        private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
-        private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoRepositorio;
-        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio = movimientoBalanceRepositorio;
+        private readonly IRepositorioConCliente<Direccion> _direccionRepositorio =
+            direccionRepositorio;
+        private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio =
+            telefonoRepositorio;
+        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio =
+            movimientoBalanceRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
         {
             var cliente = _mapper.Map<ClienteDTO, Cliente>(nuevoCliente);
-            
+
             foreach (var direccion in cliente.Direccion)
             {
                 await _direccionRepositorio.Validar(direccion);
             }
-            
+
             foreach (var telefono in cliente.Telefono)
             {
                 await _telefonoClienteRepositorio.Validar(telefono);
             }
-            
+
             return await _clienteRepositorio.CrearAsync(cliente);
         }
 
@@ -66,7 +69,8 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var clienteBd = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
 
-            clienteBd.NombreCompleto = clienteActualizado.NombreCompleto ?? clienteBd.NombreCompleto;
+            clienteBd.NombreCompleto =
+                clienteActualizado.NombreCompleto ?? clienteBd.NombreCompleto;
             clienteBd.Cuit = clienteActualizado.Cuit ?? clienteBd.Cuit;
 
             await _clienteRepositorio.ActualizarAsync(clienteBd);

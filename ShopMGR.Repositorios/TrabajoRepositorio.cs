@@ -17,18 +17,20 @@ namespace ShopMGR.Repositorios
             return nuevoTrabajo;
         }
 
-        public async Task<List<Trabajo>> ListarTodosAsync(){
-          var trabajos = await _contexto.Trabajos
-            .Include(t => t.Cliente)
-            .ToListAsync();
+        public async Task<List<Trabajo>> ListarTodosAsync()
+        {
+            var trabajos = await _contexto.Trabajos.Include(t => t.Cliente).ToListAsync();
 
-          return trabajos;
+            return trabajos;
         }
 
         public async Task AgregarFotosAsync(List<Foto> fotos)
         {
-            var trabajo = await ObtenerPorIdAsync(fotos[0].IdTrabajo) 
-                ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {fotos[0].IdTrabajo}");
+            var trabajo =
+                await ObtenerPorIdAsync(fotos[0].IdTrabajo)
+                ?? throw new KeyNotFoundException(
+                    $"No existe un trabajo con el Id {fotos[0].IdTrabajo}"
+                );
 
             _contexto.Fotos.AddRange(fotos);
             await _contexto.SaveChangesAsync();
@@ -41,9 +43,11 @@ namespace ShopMGR.Repositorios
             _contexto.HorasYDescripcion.Add(horas);
             await _contexto.SaveChangesAsync();
         }
+
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
-            var trabajoDB = await _contexto.Trabajos.FindAsync(id)
+            var trabajoDB =
+                await _contexto.Trabajos.FindAsync(id)
                 ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {id}");
 
             return trabajoDB;
@@ -51,13 +55,14 @@ namespace ShopMGR.Repositorios
 
         public async Task<Trabajo> ObtenerDetallePorIdAsync(int id)
         {
-            var trabajoDB = await _contexto.Trabajos
-                .Include(t => t.Cliente)
-                .Include(t => t.Presupuesto)
-                    .ThenInclude(p => p.Materiales)
-                .Include(t => t.Fotos)
-                .Include(t => t.HorasDeTrabajo)
-                .FirstOrDefaultAsync(t => t.Id == id)
+            var trabajoDB =
+                await _contexto
+                    .Trabajos.Include(t => t.Cliente)
+                    .Include(t => t.Presupuesto)
+                        .ThenInclude(p => p.Materiales)
+                    .Include(t => t.Fotos)
+                    .Include(t => t.HorasDeTrabajo)
+                    .FirstOrDefaultAsync(t => t.Id == id)
                 ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {id}");
 
             return trabajoDB;
@@ -65,16 +70,16 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente)
         {
-            var trabajos = await _contexto.Trabajos
-                .Where(t => t.IdCliente == idCliente).ToListAsync();
+            var trabajos = await _contexto
+                .Trabajos.Where(t => t.IdCliente == idCliente)
+                .ToListAsync();
 
             return trabajos;
         }
 
         public async Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
         {
-            var trabajos = await _contexto.Trabajos
-                .Where(t => t.Estado == estado).ToListAsync();
+            var trabajos = await _contexto.Trabajos.Where(t => t.Estado == estado).ToListAsync();
 
             return trabajos;
         }

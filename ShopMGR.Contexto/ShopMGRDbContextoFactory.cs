@@ -16,7 +16,7 @@ public class ShopMGRDbContextoFactory : IDesignTimeDbContextFactory<ShopMGRDbCon
             .AddJsonFile("appsettings.json")
             .AddUserSecrets(Assembly.GetExecutingAssembly(), optional: true)
             .Build();
-        
+
         var connectionString = configuracion.GetConnectionString("ShopMGRDbContexto");
 
         var optionsBuilder = new DbContextOptionsBuilder<ShopMGRDbContexto>();

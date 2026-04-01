@@ -22,7 +22,10 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioConCliente<Direccion>, DireccionRepositorio>();
             services.AddScoped<IAdministrarDireccion, AdministracionDireccion>();
 
-            services.AddScoped<IRepositorioConCliente<TelefonoCliente>, TelefonoClienteRepositorio>();
+            services.AddScoped<
+                IRepositorioConCliente<TelefonoCliente>,
+                TelefonoClienteRepositorio
+            >();
             services.AddScoped<IAdministrarTelefonoCliente, AdministracionTelefonoCliente>();
 
             services.AddScoped<IRepositorioConValorHora, PresupuestoRepositorio>();
@@ -30,9 +33,9 @@ namespace ShopMGR.Aplicacion
 
             services.AddScoped<IRepositorioConFoto, TrabajoRepositorio>();
             services.AddScoped<IAdministrarTrabajos, AdministracionTrabajos>();
-            
+
             services.AddScoped<IMovimientoBalanceRepositorio, MovimientoBalanceRepoositorio>();
-            
+
             services.AddScoped<IAdministrarAuth, AdministrarAuth>();
 
             //Dependencias de almacenamiento en la nube.
@@ -44,7 +47,7 @@ namespace ShopMGR.Aplicacion
             // Mapeadores manuales
             services.AddMappersFromAssembly(typeof(ClienteMapper));
             services.AddScoped<MapperRegistry>();
-            
+
             return services;
         }
     }

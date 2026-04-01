@@ -48,7 +48,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
             builder.HasMany(c => c.Presupuestos)
                 .WithOne(p => p.Cliente)
                 .HasForeignKey("IdCliente");
-            
+
             builder.HasMany(c => c.MovimientosBalance)
                 .WithOne(m => m.Cliente)
                 .HasForeignKey("IdCliente");

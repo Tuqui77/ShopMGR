@@ -1,21 +1,21 @@
+using System;
+using System.Configuration;
+using System.Reflection;
+using System.Text;
+using System.Text.Json.Serialization;
 using AspNetCore.Scalar;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Middleware;
 using Scalar.AspNetCore;
 using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
 using ShopMGR.Infraestructura;
 using ShopMGR.Infraestructura.Drive;
 using Swashbuckle.AspNetCore.Swagger;
-using System;
-using System.Configuration;
-using System.Reflection;
-using System.Text;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Middleware;
 
 namespace ShopMGR.WebApi.Aplicacion
 {
@@ -24,26 +24,37 @@ namespace ShopMGR.WebApi.Aplicacion
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
-           //inyeccion de dependencias
+
+            //inyeccion de dependencias
             builder.Services.AddDbContext<ShopMGRDbContexto>(options =>
             {
-                options.UseSqlServer(builder.Configuration.GetConnectionString("ShopMGRDbContexto"), sqlOptions => {
-                    sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(10),
-                        errorNumbersToAdd: null
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("ShopMGRDbContexto"),
+                    sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(10),
+                            errorNumbersToAdd: null
                         );
-                    });
+                    }
+                );
             });
             builder.Services.InyectarServicios();
-            builder.Services.AddControllers().AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler =
-                    System.Text.Json.Serialization.ReferenceHandler.Preserve;
-            });
+            builder
+                .Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.ReferenceHandler = System
+                        .Text
+                        .Json
+                        .Serialization
+                        .ReferenceHandler
+                        .Preserve;
+                });
             builder.Services.Configure<GoogleDriveSettings>(
-                builder.Configuration.GetSection("GoogleDrive"));
+                builder.Configuration.GetSection("GoogleDrive")
+            );
 
             //servicios del contenedor
             builder.Services.AddControllers();
@@ -52,12 +63,15 @@ namespace ShopMGR.WebApi.Aplicacion
             {
                 var API_NAME = Assembly.GetExecutingAssembly().GetName().Name;
 
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Version = "v1",
-                    Title = API_NAME,
-                    Description = "API ShopMGR"
-                });
+                c.SwaggerDoc(
+                    "v1",
+                    new OpenApiInfo
+                    {
+                        Version = "v1",
+                        Title = API_NAME,
+                        Description = "API ShopMGR",
+                    }
+                );
 
                 //c.OperationFilter<SwaggerFileUploadFilter>();
             });
@@ -66,7 +80,8 @@ namespace ShopMGR.WebApi.Aplicacion
                 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            builder
+                .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(opciones =>
                 {
                     opciones.TokenValidationParameters = new TokenValidationParameters
@@ -78,7 +93,8 @@ namespace ShopMGR.WebApi.Aplicacion
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Token"]!)),
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Token"]!)
+                        ),
                     };
                 });
             var app = builder.Build();

@@ -8,8 +8,9 @@ using ShopMGR.Dominio.Modelo;
 namespace ShopMGR.Aplicacion.Servicios
 {
     public class AdministracionPresupuestos(
-        IRepositorioConValorHora presupuestoRepositorio, 
-        MapperRegistry mapper) : IAdministrarPresupuestos
+        IRepositorioConValorHora presupuestoRepositorio,
+        MapperRegistry mapper
+    ) : IAdministrarPresupuestos
     {
         private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
         private readonly MapperRegistry _mapper = mapper;
@@ -26,7 +27,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             return presupuesto;
         }
-        
+
         public async Task<Presupuesto> ObtenerPorIdAsync(int idPresupuesto)
         {
             return await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
@@ -47,13 +48,16 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _presupuestoRepositorio.ObtenerPorEstadoAsync(estado);
         }
 
-        public async Task<List<Presupuesto>> ListarPresupuestos(){
-          return await _presupuestoRepositorio.ListarPresupuestos();
+        public async Task<List<Presupuesto>> ListarPresupuestos()
+        {
+            return await _presupuestoRepositorio.ListarPresupuestos();
         }
 
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
         {
-            var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
+            var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(
+                idPresupuesto
+            );
 
             presupuestoBd.IdCliente = entidad.IdCliente ?? presupuestoBd.IdCliente;
             presupuestoBd.Titulo = entidad.Titulo ?? presupuestoBd.Titulo;
@@ -84,12 +88,14 @@ namespace ShopMGR.Aplicacion.Servicios
         private async Task<Presupuesto> CalcularCostos(Presupuesto presupuesto)
         {
             var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
-            presupuesto.CostoMateriales = presupuesto.Materiales.Count > 0 
-                ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) 
-                : 0;
+            presupuesto.CostoMateriales =
+                presupuesto.Materiales.Count > 0
+                    ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio)
+                    : 0;
             presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * valorHoraDeTrabajo;
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
-            presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
+            presupuesto.Total =
+                presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
             return presupuesto;
         }
     }

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Contexto.Configuracion_entidades
 {
-    public class ConfiguracionGlobalConfiguracion :IEntityTypeConfiguration<ConfiguracionGlobal>
+    public class ConfiguracionGlobalConfiguracion : IEntityTypeConfiguration<ConfiguracionGlobal>
     {
         public void Configure(EntityTypeBuilder<ConfiguracionGlobal> builder)
         {

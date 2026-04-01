@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ShopMGR.Contexto.Configuracion_entidades
 {
-    public class MaterialConfiguracion :IEntityTypeConfiguration<Material>
+    public class MaterialConfiguracion : IEntityTypeConfiguration<Material>
     {
         public void Configure(EntityTypeBuilder<Material> builder)
         {

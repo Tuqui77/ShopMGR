@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using ShopMGR.Dominio.Modelo;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
+using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Contexto
 {
@@ -19,7 +19,7 @@ namespace ShopMGR.Contexto
         public DbSet<TelefonoCliente> TelefonoCliente { get; set; }
         public DbSet<Foto> Fotos { get; set; }
         public DbSet<HorasYDescripcion> HorasYDescripcion { get; set; }
-        public DbSet<MovimientoBalance>  MovimientoBalance { get; set; }
+        public DbSet<MovimientoBalance> MovimientoBalance { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
 
         //Persistencia de configuraciones de la aplicación.

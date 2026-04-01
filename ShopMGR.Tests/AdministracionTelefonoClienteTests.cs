@@ -1,8 +1,8 @@
+using FluentAssertions;
+using Moq;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
-using FluentAssertions;
-using Moq;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -15,13 +15,10 @@ public class AdministracionTelefonoClienteTests
     public AdministracionTelefonoClienteTests()
     {
         _telefonoRepositorioMock = new Mock<IRepositorioConCliente<TelefonoCliente>>();
-        
+
         // MapperRegistry no puede ser mockeado - pasamos null!
         // Los métodos testados no usan el mapper
-        _servicio = new AdministracionTelefonoCliente(
-            _telefonoRepositorioMock.Object,
-            null!
-        );
+        _servicio = new AdministracionTelefonoCliente(_telefonoRepositorioMock.Object, null!);
     }
 
     #region ObtenerPorIdAsync
@@ -35,12 +32,10 @@ public class AdministracionTelefonoClienteTests
             Id = 1,
             Telefono = "1234567890",
             IdCliente = 5,
-            Descripcion = "Celular"
+            Descripcion = "Celular",
         };
 
-        _telefonoRepositorioMock
-            .Setup(x => x.ObtenerPorIdAsync(1))
-            .ReturnsAsync(telefonoEsperado);
+        _telefonoRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(telefonoEsperado);
 
         // Act
         var resultado = await _servicio.ObtenerPorIdAsync(1);
@@ -79,7 +74,7 @@ public class AdministracionTelefonoClienteTests
             Id = 1,
             Telefono = "9876543210",
             IdCliente = 5,
-            Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente Test" }
+            Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente Test" },
         };
 
         _telefonoRepositorioMock
@@ -105,8 +100,18 @@ public class AdministracionTelefonoClienteTests
         // Arrange
         var telefonosCliente = new List<TelefonoCliente>
         {
-            new() { Id = 1, IdCliente = 5, Telefono = "1111111111" },
-            new() { Id = 2, IdCliente = 5, Telefono = "2222222222" }
+            new()
+            {
+                Id = 1,
+                IdCliente = 5,
+                Telefono = "1111111111",
+            },
+            new()
+            {
+                Id = 2,
+                IdCliente = 5,
+                Telefono = "2222222222",
+            },
         };
 
         _telefonoRepositorioMock
@@ -135,18 +140,16 @@ public class AdministracionTelefonoClienteTests
             Id = 1,
             Telefono = "0000000000",
             IdCliente = 5,
-            Descripcion = "Descripción Original"
+            Descripcion = "Descripción Original",
         };
 
         var telefonoModificado = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarTelefono
         {
             Telefono = "9999999999",
-            Descripcion = "Nueva Descripción"
+            Descripcion = "Nueva Descripción",
         };
 
-        _telefonoRepositorioMock
-            .Setup(x => x.ObtenerPorIdAsync(1))
-            .ReturnsAsync(telefonoExistente);
+        _telefonoRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(telefonoExistente);
 
         _telefonoRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<TelefonoCliente>()))
@@ -157,9 +160,15 @@ public class AdministracionTelefonoClienteTests
 
         // Assert
         _telefonoRepositorioMock.Verify(x => x.ObtenerPorIdAsync(1), Times.Once);
-        _telefonoRepositorioMock.Verify(x => x.ActualizarAsync(It.Is<TelefonoCliente>(t => 
-            t.Telefono == "9999999999" && 
-            t.Descripcion == "Nueva Descripción")), Times.Once);
+        _telefonoRepositorioMock.Verify(
+            x =>
+                x.ActualizarAsync(
+                    It.Is<TelefonoCliente>(t =>
+                        t.Telefono == "9999999999" && t.Descripcion == "Nueva Descripción"
+                    )
+                ),
+            Times.Once
+        );
     }
 
     [Fact]
@@ -171,17 +180,15 @@ public class AdministracionTelefonoClienteTests
             Id = 1,
             Telefono = "1111111111",
             IdCliente = 5,
-            Descripcion = "Descripción Original"
+            Descripcion = "Descripción Original",
         };
 
         var telefonoModificado = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarTelefono
         {
-            Telefono = null // No se proporciona, debe mantener el original
+            Telefono = null, // No se proporciona, debe mantener el original
         };
 
-        _telefonoRepositorioMock
-            .Setup(x => x.ObtenerPorIdAsync(1))
-            .ReturnsAsync(telefonoExistente);
+        _telefonoRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(telefonoExistente);
 
         _telefonoRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<TelefonoCliente>()))
@@ -191,9 +198,15 @@ public class AdministracionTelefonoClienteTests
         await _servicio.ActualizarAsync(1, telefonoModificado);
 
         // Assert
-        _telefonoRepositorioMock.Verify(x => x.ActualizarAsync(It.Is<TelefonoCliente>(t => 
-            t.Telefono == "1111111111" && 
-            t.Descripcion == "Descripción Original")), Times.Once);
+        _telefonoRepositorioMock.Verify(
+            x =>
+                x.ActualizarAsync(
+                    It.Is<TelefonoCliente>(t =>
+                        t.Telefono == "1111111111" && t.Descripcion == "Descripción Original"
+                    )
+                ),
+            Times.Once
+        );
     }
 
     #endregion
@@ -204,9 +217,7 @@ public class AdministracionTelefonoClienteTests
     public async Task EliminarAsync_DeberiaEliminarTelefono()
     {
         // Arrange
-        _telefonoRepositorioMock
-            .Setup(x => x.EliminarAsync(1))
-            .Returns(Task.CompletedTask);
+        _telefonoRepositorioMock.Setup(x => x.EliminarAsync(1)).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.EliminarAsync(1);

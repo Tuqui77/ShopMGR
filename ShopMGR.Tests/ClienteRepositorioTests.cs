@@ -1,8 +1,8 @@
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
-using ShopMGR.Repositorios;
 using ShopMGR.Dominio.Modelo;
-using FluentAssertions;
+using ShopMGR.Repositorios;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -27,11 +27,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var nuevoCliente = new Cliente
-        {
-            NombreCompleto = "Juan Perez",
-            Balance = 0
-        };
+        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 0 };
 
         // Act
         var resultado = await repositorio.CrearAsync(nuevoCliente);
@@ -40,8 +36,10 @@ public class ClienteRepositorioTests
         resultado.Should().NotBeNull();
         resultado.NombreCompleto.Should().Be("Juan Perez");
         resultado.Id.Should().BeGreaterThan(0);
-        
-        var clienteEnDb = await contexto.Clientes.FirstOrDefaultAsync(c => c.NombreCompleto == "Juan Perez");
+
+        var clienteEnDb = await contexto.Clientes.FirstOrDefaultAsync(c =>
+            c.NombreCompleto == "Juan Perez"
+        );
         clienteEnDb.Should().NotBeNull();
     }
 
@@ -52,23 +50,17 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var clienteExistente = new Cliente
-        {
-            NombreCompleto = "Juan Perez",
-            Balance = 0
-        };
+        var clienteExistente = new Cliente { NombreCompleto = "Juan Perez", Balance = 0 };
         await contexto.Clientes.AddAsync(clienteExistente);
         await contexto.SaveChangesAsync();
 
-        var nuevoCliente = new Cliente
-        {
-            NombreCompleto = "Juan Perez",
-            Balance = 100
-        };
+        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 100 };
 
         // Act & Assert
         var accion = () => repositorio.CrearAsync(nuevoCliente);
-        await accion.Should().ThrowAsync<InvalidOperationException>()
+        await accion
+            .Should()
+            .ThrowAsync<InvalidOperationException>()
             .WithMessage("*Ya existe un cliente*");
     }
 
@@ -131,7 +123,9 @@ public class ClienteRepositorioTests
 
         // Act & Assert
         var accion = () => repositorio.ObtenerPorIdAsync(999);
-        await accion.Should().ThrowAsync<KeyNotFoundException>()
+        await accion
+            .Should()
+            .ThrowAsync<KeyNotFoundException>()
             .WithMessage("*No se encontró un cliente con el ID 999*");
     }
 
@@ -146,18 +140,18 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente 
-        { 
-            NombreCompleto = "Juan Perez", 
+        var cliente = new Cliente
+        {
+            NombreCompleto = "Juan Perez",
             Balance = 100,
-            Telefono = new List<TelefonoCliente> 
-            { 
-                new TelefonoCliente { Telefono = "1234567890" } 
+            Telefono = new List<TelefonoCliente>
+            {
+                new TelefonoCliente { Telefono = "1234567890" },
             },
             Direccion = new List<Direccion>
             {
-                new Direccion { Calle = "Calle Falsa", Altura = "123" }
-            }
+                new Direccion { Calle = "Calle Falsa", Altura = "123" },
+            },
         };
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
@@ -204,7 +198,9 @@ public class ClienteRepositorioTests
 
         // Act & Assert
         var accion = () => repositorio.ObtenerPorNombreAsync("NoExiste");
-        await accion.Should().ThrowAsync<KeyNotFoundException>()
+        await accion
+            .Should()
+            .ThrowAsync<KeyNotFoundException>()
             .WithMessage("*No existe un cliente con ese nombre*");
     }
 
@@ -296,7 +292,9 @@ public class ClienteRepositorioTests
 
         // Act & Assert
         var accion = () => repositorio.EliminarAsync(999);
-        await accion.Should().ThrowAsync<KeyNotFoundException>()
+        await accion
+            .Should()
+            .ThrowAsync<KeyNotFoundException>()
             .WithMessage("*No se encontró un cliente con el ID 999*");
     }
 

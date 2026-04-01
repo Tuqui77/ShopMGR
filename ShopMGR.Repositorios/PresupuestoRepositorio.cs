@@ -34,8 +34,8 @@ namespace ShopMGR.Repositorios
         public async Task<Presupuesto> ObtenerDetallePorIdAsync(int id)
         {
             var presupuestoDB =
-                await _contexto.Presupuestos
-                    .Include(p => p.Cliente)
+                await _contexto
+                    .Presupuestos.Include(p => p.Cliente)
                     .Include(p => p.Materiales)
                     .FirstOrDefaultAsync(p => p.Id == id)
                 ?? throw new KeyNotFoundException($"No existe un presupuesto con el Id {id}");
@@ -45,8 +45,8 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente)
         {
-            var presupuestos = await _contexto.Presupuestos
-                .Where(p => p.IdCliente == idCliente)
+            var presupuestos = await _contexto
+                .Presupuestos.Where(p => p.IdCliente == idCliente)
                 .ToListAsync();
 
             return presupuestos;
@@ -54,17 +54,16 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Presupuesto>> ObtenerPorEstadoAsync(EstadoPresupuesto estado)
         {
-            var presupuestos = await _contexto.Presupuestos
-                .Where(p => p.Estado == estado)
+            var presupuestos = await _contexto
+                .Presupuestos.Where(p => p.Estado == estado)
                 .ToListAsync();
 
             return presupuestos;
         }
 
-        public async Task<List<Presupuesto>> ListarPresupuestos() {
-            var presupuestos = await _contexto.Presupuestos
-              .Include(p => p.Cliente)
-              .ToListAsync();
+        public async Task<List<Presupuesto>> ListarPresupuestos()
+        {
+            var presupuestos = await _contexto.Presupuestos.Include(p => p.Cliente).ToListAsync();
 
             return presupuestos;
         }
@@ -85,8 +84,8 @@ namespace ShopMGR.Repositorios
 
         public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
         {
-            var valorHoraDeTrabajo = await _contexto.Configuraciones
-                .Where(c => c.Clave == "ValorHoraDeTrabajo")
+            var valorHoraDeTrabajo = await _contexto
+                .Configuraciones.Where(c => c.Clave == "ValorHoraDeTrabajo")
                 .FirstOrDefaultAsync();
 
             if (valorHoraDeTrabajo != null)
@@ -111,8 +110,8 @@ namespace ShopMGR.Repositorios
         public async Task<decimal> ObtenerCostoHoraDeTrabajo()
         {
             var configuracionValorHoraDeTrabajo =
-                await _contexto.Configuraciones
-                    .Where(c => c.Clave == "ValorHoraDeTrabajo")
+                await _contexto
+                    .Configuraciones.Where(c => c.Clave == "ValorHoraDeTrabajo")
                     .FirstOrDefaultAsync()
                 ?? throw new KeyNotFoundException(
                     "El valor de la hora de trabajo no esta configurado"

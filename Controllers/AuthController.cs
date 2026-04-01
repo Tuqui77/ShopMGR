@@ -8,10 +8,10 @@ namespace ShopMGR.WebApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController(IAdministrarAuth administrarAuth) :ControllerBase
+public class AuthController(IAdministrarAuth administrarAuth) : ControllerBase
 {
     private readonly IAdministrarAuth _administrarAuth = administrarAuth;
-    
+
     [HttpPost]
     [Route("RegistrarUsuario")]
     public async Task<IActionResult> RegistrarUsuario(UsuarioDTO request)
@@ -20,7 +20,7 @@ public class AuthController(IAdministrarAuth administrarAuth) :ControllerBase
 
         if (usuario == null)
             return BadRequest("El nombre de usuiario ya esta en uso");
-        
+
         return Ok("Usuario creado con exito");
     }
 
@@ -34,10 +34,9 @@ public class AuthController(IAdministrarAuth administrarAuth) :ControllerBase
         {
             return BadRequest("Nombre de usuario o contraseña incorrectos");
         }
-        
+
         return Ok(token);
     }
-
 
     [Authorize]
     [HttpGet]

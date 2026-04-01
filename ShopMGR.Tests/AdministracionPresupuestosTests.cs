@@ -1,3 +1,5 @@
+using FluentAssertions;
+using Moq;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
@@ -5,8 +7,6 @@ using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
-using FluentAssertions;
-using Moq;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -22,10 +22,7 @@ public class AdministracionPresupuestosTests
 
         // MapperRegistry no puede ser mockeado - pasamos null!
         // Los métodos testados no usan el mapper
-        _servicio = new AdministracionPresupuestos(
-            _presupuestoRepositorioMock.Object,
-            null!
-        );
+        _servicio = new AdministracionPresupuestos(_presupuestoRepositorioMock.Object, null!);
     }
 
     #region ObtenerPorIdAsync
@@ -38,7 +35,7 @@ public class AdministracionPresupuestosTests
         {
             Id = 1,
             Titulo = "Presupuesto de reparación",
-            Estado = EstadoPresupuesto.Pendiente
+            Estado = EstadoPresupuesto.Pendiente,
         };
 
         _presupuestoRepositorioMock
@@ -67,7 +64,15 @@ public class AdministracionPresupuestosTests
             Id = 1,
             Titulo = "Presupuesto detallado",
             Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente X" },
-            Materiales = [new Material { Descripcion = "Aceite", Cantidad = 2, Precio = 50 }]
+            Materiales =
+            [
+                new Material
+                {
+                    Descripcion = "Aceite",
+                    Cantidad = 2,
+                    Precio = 50,
+                },
+            ],
         };
 
         _presupuestoRepositorioMock
@@ -93,8 +98,18 @@ public class AdministracionPresupuestosTests
         // Arrange
         var presupuestosCliente = new List<Presupuesto>
         {
-            new() { Id = 1, IdCliente = 5, Titulo = "Presupuesto 1 Cliente 5" },
-            new() { Id = 2, IdCliente = 5, Titulo = "Presupuesto 2 Cliente 5" }
+            new()
+            {
+                Id = 1,
+                IdCliente = 5,
+                Titulo = "Presupuesto 1 Cliente 5",
+            },
+            new()
+            {
+                Id = 2,
+                IdCliente = 5,
+                Titulo = "Presupuesto 2 Cliente 5",
+            },
         };
 
         _presupuestoRepositorioMock
@@ -120,8 +135,18 @@ public class AdministracionPresupuestosTests
         // Arrange
         var presupuestosAprobados = new List<Presupuesto>
         {
-            new() { Id = 1, Titulo = "Presupuesto Aprobado 1", Estado = EstadoPresupuesto.Aceptado },
-            new() { Id = 2, Titulo = "Presupuesto Aprobado 2", Estado = EstadoPresupuesto.Aceptado }
+            new()
+            {
+                Id = 1,
+                Titulo = "Presupuesto Aprobado 1",
+                Estado = EstadoPresupuesto.Aceptado,
+            },
+            new()
+            {
+                Id = 2,
+                Titulo = "Presupuesto Aprobado 2",
+                Estado = EstadoPresupuesto.Aceptado,
+            },
         };
 
         _presupuestoRepositorioMock
@@ -149,7 +174,7 @@ public class AdministracionPresupuestosTests
         {
             new() { Id = 1, Titulo = "Presupuesto 1" },
             new() { Id = 2, Titulo = "Presupuesto 2" },
-            new() { Id = 3, Titulo = "Presupuesto 3" }
+            new() { Id = 3, Titulo = "Presupuesto 3" },
         };
 
         _presupuestoRepositorioMock
@@ -179,23 +204,21 @@ public class AdministracionPresupuestosTests
             Estado = EstadoPresupuesto.Pendiente,
             HorasEstimadas = 10,
             IdCliente = 5,
-            Materiales = new List<Material>()
+            Materiales = new List<Material>(),
         };
 
         var presupuestoModificado = new ModificarPresupuesto
         {
             Titulo = "Título Modificado",
             Estado = EstadoPresupuesto.Aceptado,
-            HorasEstimadas = 15
+            HorasEstimadas = 15,
         };
 
         _presupuestoRepositorioMock
             .Setup(x => x.ObtenerDetallePorIdAsync(1))
             .ReturnsAsync(presupuestoExistente);
 
-        _presupuestoRepositorioMock
-            .Setup(x => x.ObtenerCostoHoraDeTrabajo())
-            .ReturnsAsync(100m);
+        _presupuestoRepositorioMock.Setup(x => x.ObtenerCostoHoraDeTrabajo()).ReturnsAsync(100m);
 
         _presupuestoRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Presupuesto>()))
@@ -206,9 +229,15 @@ public class AdministracionPresupuestosTests
 
         // Assert
         _presupuestoRepositorioMock.Verify(x => x.ObtenerDetallePorIdAsync(1), Times.Once);
-        _presupuestoRepositorioMock.Verify(x => x.ActualizarAsync(It.Is<Presupuesto>(p => 
-            p.Titulo == "Título Modificado" && 
-            p.Estado == EstadoPresupuesto.Aceptado)), Times.Once);
+        _presupuestoRepositorioMock.Verify(
+            x =>
+                x.ActualizarAsync(
+                    It.Is<Presupuesto>(p =>
+                        p.Titulo == "Título Modificado" && p.Estado == EstadoPresupuesto.Aceptado
+                    )
+                ),
+            Times.Once
+        );
     }
 
     #endregion
@@ -219,9 +248,7 @@ public class AdministracionPresupuestosTests
     public async Task EliminarAsync_DeberiaEliminarPresupuesto()
     {
         // Arrange
-        _presupuestoRepositorioMock
-            .Setup(x => x.EliminarAsync(1))
-            .Returns(Task.CompletedTask);
+        _presupuestoRepositorioMock.Setup(x => x.EliminarAsync(1)).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.EliminarAsync(1);
@@ -246,7 +273,10 @@ public class AdministracionPresupuestosTests
         await _servicio.ActualizarCostoHoraDeTrabajo("150.50");
 
         // Assert
-        _presupuestoRepositorioMock.Verify(x => x.ActualizarCostoHoraDeTrabajo("150.50"), Times.Once);
+        _presupuestoRepositorioMock.Verify(
+            x => x.ActualizarCostoHoraDeTrabajo("150.50"),
+            Times.Once
+        );
     }
 
     #endregion

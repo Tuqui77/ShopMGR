@@ -10,7 +10,7 @@ namespace ShopMGR.Aplicacion.Mappers;
 public class PresupuestoMapper(MapperRegistry mapper) : IMapper<PresupuestoDTO, Presupuesto>
 {
     private readonly MapperRegistry _mapper = mapper;
-    
+
     public Presupuesto Map(PresupuestoDTO presupuestoDTO)
     {
         return new Presupuesto
@@ -26,7 +26,7 @@ public class PresupuestoMapper(MapperRegistry mapper) : IMapper<PresupuestoDTO, 
 public class PresupuestoDTOMapper(MapperRegistry mapper) : IMapper<Presupuesto, PresupuestoDTO>
 {
     private readonly MapperRegistry _mapper = mapper;
-    
+
     public PresupuestoDTO Map(Presupuesto presupuesto)
     {
         return new PresupuestoDTO

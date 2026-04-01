@@ -1,6 +1,6 @@
-using ShopMGR.Dominio.Modelo;
-using ShopMGR.Dominio.Enums;
 using FluentAssertions;
+using ShopMGR.Dominio.Enums;
+using ShopMGR.Dominio.Modelo;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -17,7 +17,7 @@ public class DominioModelTests
         {
             Id = 1,
             UserName = "admin",
-            PasswordHash = "hash123"
+            PasswordHash = "hash123",
         };
 
         // Assert
@@ -50,7 +50,7 @@ public class DominioModelTests
         {
             Id = 5,
             Clave = "ValorHoraDeTrabajo",
-            Valor = "250"
+            Valor = "250",
         };
 
         // Assert
@@ -83,7 +83,7 @@ public class DominioModelTests
         {
             Id = 1,
             Enlace = "https://drive.google.com/foto1.jpg",
-            IdTrabajo = 10
+            IdTrabajo = 10,
         };
 
         // Assert
@@ -97,14 +97,14 @@ public class DominioModelTests
     {
         // Arrange
         var trabajo = new Trabajo { Id = 1, Titulo = "Reparación" };
-        
+
         // Act
         var foto = new Foto
         {
             Id = 1,
             Enlace = "https://drive.google.com/foto1.jpg",
             IdTrabajo = trabajo.Id,
-            Trabajo = trabajo
+            Trabajo = trabajo,
         };
 
         // Assert
@@ -126,7 +126,7 @@ public class DominioModelTests
             Horas = 5.5f,
             Descripcion = "Cambio de aceite",
             Fecha = new DateOnly(2024, 1, 15),
-            IdTrabajo = 10
+            IdTrabajo = 10,
         };
 
         // Assert
@@ -142,7 +142,7 @@ public class DominioModelTests
     {
         // Arrange
         var trabajo = new Trabajo { Id = 1, Titulo = "Reparación" };
-        
+
         // Act
         var horasDesc = new HorasYDescripcion
         {
@@ -151,7 +151,7 @@ public class DominioModelTests
             Descripcion = "Diagnóstico",
             Fecha = new DateOnly(2024, 1, 15),
             IdTrabajo = trabajo.Id,
-            Trabajo = trabajo
+            Trabajo = trabajo,
         };
 
         // Assert
@@ -173,7 +173,7 @@ public class DominioModelTests
             Descripcion = "Tornillos",
             Precio = 100.50m,
             Cantidad = 5.0,
-            IdPresupuesto = 10
+            IdPresupuesto = 10,
         };
 
         // Assert
@@ -189,7 +189,7 @@ public class DominioModelTests
     {
         // Arrange
         var presupuesto = new Presupuesto { Id = 1, Titulo = "Presupuesto 1" };
-        
+
         // Act
         var material = new Material
         {
@@ -198,7 +198,7 @@ public class DominioModelTests
             Precio = 50m,
             Cantidad = 3.0,
             IdPresupuesto = presupuesto.Id,
-            Presupuesto = presupuesto
+            Presupuesto = presupuesto,
         };
 
         // Assert
