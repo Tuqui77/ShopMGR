@@ -4,6 +4,7 @@ import { useStore } from '../store';
 import { useTrabajos } from '../hooks/useTrabajos';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
+import type { Trabajo } from '../types';
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -20,8 +21,8 @@ export function Dashboard() {
   // Filtrar trabajos activos (Iniciado o Pendiente)
   const activeTrabajos = trabajos?.filter(t => t.estado === 'Iniciado' || t.estado === 'Pendiente') || [];
   
-  const handleRegisterHours = (trabajo: { id: number; titulo: string; estado: string }) => {
-    setSelectedTrabajo(trabajo as any);
+  const handleRegisterHours = (trabajo: Trabajo) => {
+    setSelectedTrabajo(trabajo);
     setShowHoursModal(true);
   };
   

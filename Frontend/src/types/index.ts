@@ -147,9 +147,7 @@ export interface TrabajoBackendDTO {
   horasDeTrabajo: { $id: string; $values: HorasDeTrabajoBackendDTO[] };
 }
 
-export interface TrabajoDetalleDTO extends TrabajoBackendDTO {
-  // Ya incluye todas las relaciones del backend
-}
+export type TrabajoDetalleDTO = TrabajoBackendDTO;
 
 export interface CrearTrabajoRequest {
   titulo: string;

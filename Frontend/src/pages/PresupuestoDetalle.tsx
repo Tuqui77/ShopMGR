@@ -14,25 +14,80 @@ import {
 import { apiClient } from '../services/api';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
-import type { Presupuesto, EstadoPresupuesto } from '../types';
+import type { Presupuesto, EstadoPresupuesto, Cliente } from '../types';
 
-function mapMateriales(dto: { $id: string; $values: any[] } | undefined): any[] {
+// Tipos para DTOs raw del backend
+interface TelefonoRaw {
+  telefono: string;
+}
+
+interface DireccionRaw {
+  calle: string;
+  altura: string;
+}
+
+interface ClienteRaw {
+  id: number;
+  nombreCompleto: string;
+  telefono?: { $id: string; $values: TelefonoRaw[] };
+  direccion?: { $id: string; $values: DireccionRaw[] };
+  balance?: number;
+  trabajos?: { $id: string; $values: unknown[] };
+  presupuestos?: { $id: string; $values: unknown[] };
+}
+
+interface MaterialRaw {
+  id: number;
+  descripcion: string;
+  cantidad: number;
+  precio: number;
+}
+
+interface MaterialesResponse {
+  $id: string;
+  $values: MaterialRaw[];
+}
+
+interface PresupuestoRaw {
+  id: number;
+  titulo: string;
+  descripcion?: string;
+  estado: EstadoPresupuesto;
+  fecha: string;
+  horasEstimadas?: number;
+  costoMateriales?: number;
+  costoLabor?: number;
+  costoInsumos?: number;
+  total?: number;
+  cliente?: ClienteRaw;
+  materiales?: MaterialesResponse;
+}
+
+interface MaterialFrontend {
+  id: number;
+  descripcion: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+}
+
+function mapMateriales(dto: MaterialesResponse | undefined): MaterialFrontend[] {
   const values = dto?.$values || [];
   return values.map(m => ({
     id: m.id,
     descripcion: m.descripcion,
     cantidad: m.cantidad,
-    precioUnitario: m.precio, // Backend devuelve 'precio' no 'precioUnitario'
-    subtotal: m.cantidad * m.precio, // Calcular subtotal si no existe
+    precioUnitario: m.precio,
+    subtotal: m.cantidad * m.precio,
   }));
 }
 
-function mapCliente(dto: any): any {
+function mapCliente(dto: ClienteRaw | null | undefined): Cliente {
   if (!dto) return { id: 0, nombreCompleto: '', telefono: [], balance: 0, trabajosCount: 0, presupuestosCount: 0 };
   return {
     id: dto.id,
     nombreCompleto: dto.nombreCompleto,
-    telefono: dto.telefono?.$values?.map((t: any) => t.telefono) || [],
+    telefono: dto.telefono?.$values?.map(t => t.telefono) || [],
     direccion: dto.direccion?.$values?.[0]
       ? `${dto.direccion.$values[0].calle} ${dto.direccion.$values[0].altura}`
       : undefined,
@@ -42,7 +97,7 @@ function mapCliente(dto: any): any {
   };
 }
 
-function mapPresupuestoBackend(dto: any): Presupuesto {
+function mapPresupuestoBackend(dto: PresupuestoRaw): Presupuesto {
   return {
     id: dto.id,
     titulo: dto.titulo,
