@@ -39,4 +39,4 @@ jobs:
           dotnet-version: "9.0"
 
       - name: Formato
-        run: dotnet format --verify-no-changes
+        run: dotnet format ShopMGR.sln --verify-no-changes
