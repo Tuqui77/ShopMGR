@@ -20,10 +20,10 @@ jobs:
         run: dotnet restore ShopMGR.sln
 
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build ShopMGR.sln --no-restore
 
       - name: Ejecutar tests de backend
-        run: dotnet test --no-build
+        run: dotnet test ShopMGR.sln --no-build
 
   test-frontend:
     runs-on: ubuntu-latest
