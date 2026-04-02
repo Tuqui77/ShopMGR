@@ -15,12 +15,18 @@ interface AppState {
   
   // UI State
   showHoursModal: boolean;
+  showClienteForm: boolean;
+  showPresupuestoForm: boolean;
+  showTrabajoForm: boolean;
   selectedTrabajo: Trabajo | null;
   lastTrabajoId: number | null;
   
   // Actions
   setIsAuthenticated: (authenticated: boolean) => void;
   setShowHoursModal: (show: boolean) => void;
+  setShowClienteForm: (show: boolean) => void;
+  setShowPresupuestoForm: (show: boolean) => void;
+  setShowTrabajoForm: (show: boolean) => void;
   setSelectedTrabajo: (trabajo: Trabajo | null) => void;
   addHoras: (idTrabajo: number, horas: number, descripcion: string) => void;
   updateTrabajoEstado: (idTrabajo: number, estado: Trabajo['estado']) => void;
@@ -36,6 +42,9 @@ export const useStore = create<AppState>((set, get) => ({
   
   // Initial UI state
   showHoursModal: false,
+  showClienteForm: false,
+  showPresupuestoForm: false,
+  showTrabajoForm: false,
   selectedTrabajo: null,
   lastTrabajoId: null,
   
@@ -49,6 +58,12 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   setShowHoursModal: (show) => set({ showHoursModal: show }),
+  
+  setShowClienteForm: (show) => set({ showClienteForm: show }),
+  
+  setShowPresupuestoForm: (show) => set({ showPresupuestoForm: show }),
+  
+  setShowTrabajoForm: (show) => set({ showTrabajoForm: show }),
   
   setSelectedTrabajo: (trabajo) => {
     set({ selectedTrabajo: trabajo });
