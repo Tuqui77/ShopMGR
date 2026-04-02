@@ -10,13 +10,23 @@ interface AppState {
   presupuestos: Presupuesto[];
   valorHora: number;
   
+  // Auth State
+  isAuthenticated: boolean;
+  
   // UI State
   showHoursModal: boolean;
+  showClienteForm: boolean;
+  showPresupuestoForm: boolean;
+  showTrabajoForm: boolean;
   selectedTrabajo: Trabajo | null;
   lastTrabajoId: number | null;
   
   // Actions
+  setIsAuthenticated: (authenticated: boolean) => void;
   setShowHoursModal: (show: boolean) => void;
+  setShowClienteForm: (show: boolean) => void;
+  setShowPresupuestoForm: (show: boolean) => void;
+  setShowTrabajoForm: (show: boolean) => void;
   setSelectedTrabajo: (trabajo: Trabajo | null) => void;
   addHoras: (idTrabajo: number, horas: number, descripcion: string) => void;
   updateTrabajoEstado: (idTrabajo: number, estado: Trabajo['estado']) => void;
@@ -32,11 +42,28 @@ export const useStore = create<AppState>((set, get) => ({
   
   // Initial UI state
   showHoursModal: false,
+  showClienteForm: false,
+  showPresupuestoForm: false,
+  showTrabajoForm: false,
   selectedTrabajo: null,
   lastTrabajoId: null,
   
+  // Initial auth state (check localStorage)
+  isAuthenticated: localStorage.getItem('isAuthenticated') === 'true',
+  
   // Actions
+  setIsAuthenticated: (authenticated) => {
+    localStorage.setItem('isAuthenticated', String(authenticated));
+    set({ isAuthenticated: authenticated });
+  },
+  
   setShowHoursModal: (show) => set({ showHoursModal: show }),
+  
+  setShowClienteForm: (show) => set({ showClienteForm: show }),
+  
+  setShowPresupuestoForm: (show) => set({ showPresupuestoForm: show }),
+  
+  setShowTrabajoForm: (show) => set({ showTrabajoForm: show }),
   
   setSelectedTrabajo: (trabajo) => {
     set({ selectedTrabajo: trabajo });

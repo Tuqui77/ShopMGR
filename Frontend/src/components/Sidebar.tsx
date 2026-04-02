@@ -1,6 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { Home, Users, Wrench, Clipboard, Settings } from 'lucide-react';
+import { Home, Users, Wrench, Clipboard, Settings, LogOut } from 'lucide-react';
+import { useStore } from '../store';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
@@ -11,6 +12,13 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { setIsAuthenticated } = useStore();
+  
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    navigate('/login');
+  };
   
   return (
     <aside className="sidebar">
@@ -32,11 +40,15 @@ export function Sidebar() {
         ))}
       </nav>
       
-      <div className="mt-auto">
+      <div className="mt-auto space-y-1">
         <Link to="/configuracion" className="sidebar-item">
           <Settings className="w-5 h-5" />
           <span>Configuración</span>
         </Link>
+        <button onClick={handleLogout} className="sidebar-item w-full text-left">
+          <LogOut className="w-5 h-5" />
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </aside>
   );
