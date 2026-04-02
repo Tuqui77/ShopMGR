@@ -8,7 +8,7 @@ namespace ShopMGR.Aplicacion.Mappers;
 public class ClienteMapper(MapperRegistry mapper) : IMapper<ClienteDTO, Cliente>
 {
     private readonly MapperRegistry _mapper = mapper;
-    
+
     public Cliente Map(ClienteDTO clienteDTO)
     {
         return new Cliente
@@ -17,14 +17,17 @@ public class ClienteMapper(MapperRegistry mapper) : IMapper<ClienteDTO, Cliente>
             Cuit = clienteDTO.Cuit,
             Balance = clienteDTO.Balance,
             Direccion = _mapper.Map<DireccionDTO, Direccion>(clienteDTO.Direccion).ToList(),
-            Telefono = _mapper.Map<TelefonoClienteDTO, TelefonoCliente>(clienteDTO.Telefono).ToList()
+            Telefono = _mapper
+                .Map<TelefonoClienteDTO, TelefonoCliente>(clienteDTO.Telefono)
+                .ToList(),
         };
     }
 }
 
-public class ClienteDTOMapper(MapperRegistry mapper) :IMapper<Cliente, ClienteDTO>
+public class ClienteDTOMapper(MapperRegistry mapper) : IMapper<Cliente, ClienteDTO>
 {
     private readonly MapperRegistry _mapper = mapper;
+
     public ClienteDTO Map(Cliente cliente)
     {
         return new ClienteDTO

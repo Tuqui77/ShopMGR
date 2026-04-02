@@ -1,11 +1,11 @@
+using FluentAssertions;
+using Moq;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
-using FluentAssertions;
-using Moq;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -43,12 +43,10 @@ public class AdministracionClientesTests
         var clientesEsperados = new List<Cliente>
         {
             new() { Id = 1, NombreCompleto = "Cliente 1" },
-            new() { Id = 2, NombreCompleto = "Cliente 2" }
+            new() { Id = 2, NombreCompleto = "Cliente 2" },
         };
 
-        _clienteRepositorioMock
-            .Setup(x => x.ListarTodosAsync())
-            .ReturnsAsync(clientesEsperados);
+        _clienteRepositorioMock.Setup(x => x.ListarTodosAsync()).ReturnsAsync(clientesEsperados);
 
         // Act
         var resultado = await _servicio.ListarTodosAsync();
@@ -68,12 +66,10 @@ public class AdministracionClientesTests
         {
             Id = 1,
             NombreCompleto = "Juan Perez",
-            Cuit = "20-12345678-9"
+            Cuit = "20-12345678-9",
         };
 
-        _clienteRepositorioMock
-            .Setup(x => x.ObtenerPorIdAsync(1))
-            .ReturnsAsync(clienteEsperado);
+        _clienteRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(clienteEsperado);
 
         // Act
         var resultado = await _servicio.ObtenerPorIdAsync(1);
@@ -95,7 +91,7 @@ public class AdministracionClientesTests
             NombreCompleto = "Juan Perez",
             Cuit = "20-12345678-9",
             Direccion = new List<Direccion>(),
-            Telefono = new List<TelefonoCliente>()
+            Telefono = new List<TelefonoCliente>(),
         };
 
         _clienteRepositorioMock
@@ -136,7 +132,12 @@ public class AdministracionClientesTests
         // Arrange
         var clientesNegativos = new List<Cliente>
         {
-            new() { Id = 1, NombreCompleto = "Cliente Deudor", Balance = -100m }
+            new()
+            {
+                Id = 1,
+                NombreCompleto = "Cliente Deudor",
+                Balance = -100m,
+            },
         };
 
         _clienteRepositorioMock
@@ -160,18 +161,16 @@ public class AdministracionClientesTests
         {
             Id = 1,
             NombreCompleto = "Nombre Original",
-            Cuit = "20-12345678-9"
+            Cuit = "20-12345678-9",
         };
 
         var clienteActualizado = new ModificarCliente
         {
             NombreCompleto = "Nuevo Nombre",
-            Cuit = "20-98765432-1"
+            Cuit = "20-98765432-1",
         };
 
-        _clienteRepositorioMock
-            .Setup(x => x.ObtenerPorIdAsync(1))
-            .ReturnsAsync(clienteExistente);
+        _clienteRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(clienteExistente);
 
         _clienteRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Cliente>()))
@@ -182,18 +181,22 @@ public class AdministracionClientesTests
 
         // Assert
         _clienteRepositorioMock.Verify(x => x.ObtenerPorIdAsync(1), Times.Once);
-        _clienteRepositorioMock.Verify(x => x.ActualizarAsync(It.Is<Cliente>(c => 
-            c.NombreCompleto == "Nuevo Nombre" && 
-            c.Cuit == "20-98765432-1")), Times.Once);
+        _clienteRepositorioMock.Verify(
+            x =>
+                x.ActualizarAsync(
+                    It.Is<Cliente>(c =>
+                        c.NombreCompleto == "Nuevo Nombre" && c.Cuit == "20-98765432-1"
+                    )
+                ),
+            Times.Once
+        );
     }
 
     [Fact]
     public async Task EliminarAsync_DeberiaEliminarClienteCuandoExiste()
     {
         // Arrange
-        _clienteRepositorioMock
-            .Setup(x => x.EliminarAsync(1))
-            .Returns(Task.CompletedTask);
+        _clienteRepositorioMock.Setup(x => x.EliminarAsync(1)).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.EliminarAsync(1);
@@ -210,19 +213,17 @@ public class AdministracionClientesTests
         {
             Id = 1,
             NombreCompleto = "Juan Perez",
-            Balance = 100m
+            Balance = 100m,
         };
 
         var movimiento = new MovimientoBalance
         {
             IdCliente = 1,
             Monto = 50m,
-            Descripcion = "Pago recibido"
+            Descripcion = "Pago recibido",
         };
 
-        _clienteRepositorioMock
-            .Setup(x => x.ObtenerPorIdAsync(1))
-            .ReturnsAsync(clienteExistente);
+        _clienteRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(clienteExistente);
 
         _clienteRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Cliente>()))
@@ -237,7 +238,13 @@ public class AdministracionClientesTests
 
         // Assert
         _clienteRepositorioMock.Verify(x => x.ObtenerPorIdAsync(1), Times.Once);
-        _clienteRepositorioMock.Verify(x => x.ActualizarAsync(It.Is<Cliente>(c => c.Balance == 150m)), Times.Once);
-        _movimientoBalanceRepositorioMock.Verify(x => x.AgregarAsync(It.Is<MovimientoBalance>(m => m.Monto == 50m)), Times.Once);
+        _clienteRepositorioMock.Verify(
+            x => x.ActualizarAsync(It.Is<Cliente>(c => c.Balance == 150m)),
+            Times.Once
+        );
+        _movimientoBalanceRepositorioMock.Verify(
+            x => x.AgregarAsync(It.Is<MovimientoBalance>(m => m.Monto == 50m)),
+            Times.Once
+        );
     }
 }

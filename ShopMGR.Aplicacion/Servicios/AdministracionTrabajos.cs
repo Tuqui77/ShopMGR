@@ -13,10 +13,12 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioConValorHora repositorioPresupuestos,
         IAdministrarClientes clientes,
         IGoogleDriveServicio drive,
-        MapperRegistry mapper) : IAdministrarTrabajos
+        MapperRegistry mapper
+    ) : IAdministrarTrabajos
     {
         private readonly IRepositorioConFoto _repositorio = repositorio;
-        private readonly IRepositorioConValorHora _repositorioPresupuestos = repositorioPresupuestos;
+        private readonly IRepositorioConValorHora _repositorioPresupuestos =
+            repositorioPresupuestos;
         private readonly IAdministrarClientes _clientes = clientes;
         private readonly IGoogleDriveServicio _drive = drive;
         private readonly MapperRegistry _mapper = mapper;
@@ -24,7 +26,7 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task<Trabajo> CrearAsync(TrabajoDTO nuevoTrabajo)
         {
             var trabajo = _mapper.Map<TrabajoDTO, Trabajo>(nuevoTrabajo);
-            
+
             if (nuevoTrabajo.Estado == EstadoTrabajo.Iniciado)
             {
                 trabajo.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
@@ -32,16 +34,19 @@ namespace ShopMGR.Aplicacion.Servicios
 
             if (nuevoTrabajo.IdPresupuesto != null)
             {
-                var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(nuevoTrabajo.IdPresupuesto.Value);
+                var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(
+                    nuevoTrabajo.IdPresupuesto.Value
+                );
                 trabajo.TotalLabor = presupuesto.CostoLabor;
             }
-            
+
             await _repositorio.CrearAsync(trabajo);
             return trabajo;
         }
 
-        public async Task<List<Trabajo>> ListarTodosAsync() {
-          return await _repositorio.ListarTodosAsync();
+        public async Task<List<Trabajo>> ListarTodosAsync()
+        {
+            return await _repositorio.ListarTodosAsync();
         }
 
         public async Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotosNuevas)
@@ -53,11 +58,7 @@ namespace ShopMGR.Aplicacion.Servicios
             {
                 var enlace = await _drive.SubirArchivoAsync(foto);
 
-                var fotoTmp = new Foto
-                {
-                    IdTrabajo = idTrabajo,
-                    Enlace = enlace
-                };
+                var fotoTmp = new Foto { IdTrabajo = idTrabajo, Enlace = enlace };
                 fotos.Add(fotoTmp);
             }
 
@@ -66,8 +67,9 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task AgregarHorasAsync(HorasYDescripcionDTO horas)
         {
-            horas.Fecha = horas.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horas.Fecha;
-            
+            horas.Fecha =
+                horas.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horas.Fecha;
+
             var horasYDescripcion = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horas);
             await _repositorio.AgregarHorasAsync(horasYDescripcion);
         }
@@ -96,12 +98,12 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var trabajoDb = await _repositorio.ObtenerDetallePorIdAsync(id);
 
-            if (trabajoDb.FechaInicio == null &&
-                trabajoModificado.Estado == EstadoTrabajo.Iniciado)
+            if (trabajoDb.FechaInicio == null && trabajoModificado.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajoDb.FechaInicio = DateOnly.FromDateTime(DateTime.Now);;
+                trabajoDb.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
+                ;
             }
-            
+
             trabajoDb.IdCliente = trabajoModificado.IdCliente ?? trabajoDb.IdCliente;
             trabajoDb.Titulo = trabajoModificado.Titulo ?? trabajoDb.Titulo;
             trabajoDb.Estado = trabajoModificado.Estado ?? trabajoDb.Estado;
@@ -113,7 +115,7 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task TerminarTrabajo(int idTrabajo)
         {
             var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
-            
+
             trabajo.FechaFin = DateOnly.FromDateTime(DateTime.Now);
             trabajo.Estado = EstadoTrabajo.Terminado;
 
@@ -134,7 +136,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 Cliente = trabajo.Cliente,
                 IdCliente = trabajo.IdCliente,
                 Trabajo = trabajo,
-                IdTrabajo = trabajo.Id
+                IdTrabajo = trabajo.Id,
             };
 
             await _clientes.RegistrarMovimientoAsync(trabajo.IdCliente, movimiento);
@@ -144,6 +146,5 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             await _repositorio.EliminarAsync(idTrabajo);
         }
-
     }
 }

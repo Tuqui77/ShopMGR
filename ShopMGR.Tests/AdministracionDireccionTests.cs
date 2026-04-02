@@ -1,8 +1,8 @@
+using FluentAssertions;
+using Moq;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
-using FluentAssertions;
-using Moq;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -15,13 +15,10 @@ public class AdministracionDireccionTests
     public AdministracionDireccionTests()
     {
         _direccionRepositorioMock = new Mock<IRepositorioConCliente<Direccion>>();
-        
+
         // MapperRegistry no puede ser mockeado - pasamos null!
         // Los métodos testados no usan el mapper
-        _servicio = new AdministracionDireccion(
-            _direccionRepositorioMock.Object,
-            null!
-        );
+        _servicio = new AdministracionDireccion(_direccionRepositorioMock.Object, null!);
     }
 
     #region ObtenerPorIdAsync
@@ -35,7 +32,7 @@ public class AdministracionDireccionTests
             Id = 1,
             Calle = "Av. Principal",
             Altura = "123",
-            IdCliente = 5
+            IdCliente = 5,
         };
 
         _direccionRepositorioMock
@@ -80,7 +77,7 @@ public class AdministracionDireccionTests
             Calle = "Calle Falsa",
             Altura = "456",
             IdCliente = 5,
-            Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente Test" }
+            Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente Test" },
         };
 
         _direccionRepositorioMock
@@ -106,8 +103,18 @@ public class AdministracionDireccionTests
         // Arrange
         var direccionesCliente = new List<Direccion>
         {
-            new() { Id = 1, IdCliente = 5, Calle = "Direccion 1" },
-            new() { Id = 2, IdCliente = 5, Calle = "Direccion 2" }
+            new()
+            {
+                Id = 1,
+                IdCliente = 5,
+                Calle = "Direccion 1",
+            },
+            new()
+            {
+                Id = 2,
+                IdCliente = 5,
+                Calle = "Direccion 2",
+            },
         };
 
         _direccionRepositorioMock
@@ -136,13 +143,13 @@ public class AdministracionDireccionTests
             Id = 1,
             Calle = "Calle Original",
             Altura = "100",
-            IdCliente = 5
+            IdCliente = 5,
         };
 
         var direccionModificada = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarDireccion
         {
             Calle = "Calle Modificada",
-            Altura = "200"
+            Altura = "200",
         };
 
         _direccionRepositorioMock
@@ -158,9 +165,13 @@ public class AdministracionDireccionTests
 
         // Assert
         _direccionRepositorioMock.Verify(x => x.ObtenerPorIdAsync(1), Times.Once);
-        _direccionRepositorioMock.Verify(x => x.ActualizarAsync(It.Is<Direccion>(d => 
-            d.Calle == "Calle Modificada" && 
-            d.Altura == "200")), Times.Once);
+        _direccionRepositorioMock.Verify(
+            x =>
+                x.ActualizarAsync(
+                    It.Is<Direccion>(d => d.Calle == "Calle Modificada" && d.Altura == "200")
+                ),
+            Times.Once
+        );
     }
 
     [Fact]
@@ -173,12 +184,12 @@ public class AdministracionDireccionTests
             Calle = "Calle Original",
             Altura = "100",
             CodigoPostal = "1234",
-            IdCliente = 5
+            IdCliente = 5,
         };
 
         var direccionModificada = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarDireccion
         {
-            Calle = null // No se proporciona, debe mantener el original
+            Calle = null, // No se proporciona, debe mantener el original
         };
 
         _direccionRepositorioMock
@@ -193,9 +204,13 @@ public class AdministracionDireccionTests
         await _servicio.ActualizarAsync(1, direccionModificada);
 
         // Assert
-        _direccionRepositorioMock.Verify(x => x.ActualizarAsync(It.Is<Direccion>(d => 
-            d.Calle == "Calle Original" && 
-            d.CodigoPostal == "1234")), Times.Once);
+        _direccionRepositorioMock.Verify(
+            x =>
+                x.ActualizarAsync(
+                    It.Is<Direccion>(d => d.Calle == "Calle Original" && d.CodigoPostal == "1234")
+                ),
+            Times.Once
+        );
     }
 
     #endregion
@@ -206,9 +221,7 @@ public class AdministracionDireccionTests
     public async Task EliminarAsync_DeberiaEliminarDireccion()
     {
         // Arrange
-        _direccionRepositorioMock
-            .Setup(x => x.EliminarAsync(1))
-            .Returns(Task.CompletedTask);
+        _direccionRepositorioMock.Setup(x => x.EliminarAsync(1)).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.EliminarAsync(1);

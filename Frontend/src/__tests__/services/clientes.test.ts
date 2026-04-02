@@ -4,58 +4,6 @@ import {
   type CrearClienteRequest, 
   type ModificarClienteRequest 
 } from '../../services/clientes';
-import type { Cliente } from '../../types';
-
-// Test data that mimics the backend response structure
-const mockBackendDTO = {
-  $id: '1',
-  id: 1,
-  nombreCompleto: 'Juan Pérez',
-  cuit: '20-12345678-9',
-  balance: 5000,
-  telefono: {
-    $id: '2',
-    $values: [
-      { $id: '3', id: 1, telefono: '11-2345-6789', descripcion: 'Celular' },
-      { $id: '4', id: 2, telefono: '11-9876-5432', descripcion: 'Casa' },
-    ],
-  },
-  direccion: {
-    $id: '5',
-    $values: [
-      { $id: '6', id: 1, calle: 'Calle Falsa', altura: '123', piso: '1', departamento: 'A' },
-    ],
-  },
-  trabajos: {
-    $id: '7',
-    $values: [
-      { $id: '8', id: 1, titulo: 'Trabajo 1', estado: 'Pendiente', idCliente: 1 },
-      { $id: '9', id: 2, titulo: 'Trabajo 2', estado: 'Terminado', idCliente: 1 },
-    ],
-  },
-  presupuestos: {
-    $id: '10',
-    $values: [
-      { $id: '11', id: 1, titulo: 'Presupuesto 1', estado: 'Aceptado', idCliente: 1 },
-    ],
-  },
-  movimientosBalance: {
-    $id: '12',
-    $values: [],
-  },
-};
-
-const mockBackendDTOMinimal = {
-  $id: '1',
-  id: 2,
-  nombreCompleto: 'María García',
-  balance: 0,
-  telefono: { $id: '2', $values: [] },
-  direccion: { $id: '3', $values: [] },
-  trabajos: { $id: '4', $values: [] },
-  presupuestos: { $id: '5', $values: [] },
-  movimientosBalance: { $id: '6', $values: [] },
-};
 
 describe('clientesService', () => {
   describe('service structure', () => {
@@ -92,6 +40,7 @@ describe('clientesService', () => {
     it('CrearClienteRequest has required fields', () => {
       const request: CrearClienteRequest = {
         nombreCompleto: 'Test Cliente',
+        telefono: [],
       };
       expect(request.nombreCompleto).toBe('Test Cliente');
     });

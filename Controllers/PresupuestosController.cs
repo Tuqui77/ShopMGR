@@ -45,7 +45,8 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ListarPresupuestos")]
-        public async Task<IActionResult> ListarPresupuestos() {
+        public async Task<IActionResult> ListarPresupuestos()
+        {
             var presupuestos = await administracionPresupuestos.ListarPresupuestos();
 
             return Ok(presupuestos);

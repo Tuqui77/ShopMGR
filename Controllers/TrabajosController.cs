@@ -11,8 +11,10 @@ namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TrabajosController(IAdministrarTrabajos administrarTrabajos, IGoogleDriveServicio servicio)
-        : ControllerBase
+    public class TrabajosController(
+        IAdministrarTrabajos administrarTrabajos,
+        IGoogleDriveServicio servicio
+    ) : ControllerBase
     {
         [HttpPost]
         [Route("CrearTrabajo")]
@@ -29,14 +31,18 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpGet]
         [Route("ObtenerListaTrabajos")]
-        public async Task<IActionResult> ObtenerListaTrabajos() {
-           var trabajos = await administrarTrabajos.ListarTodosAsync();
-           return Ok(trabajos);
+        public async Task<IActionResult> ObtenerListaTrabajos()
+        {
+            var trabajos = await administrarTrabajos.ListarTodosAsync();
+            return Ok(trabajos);
         }
 
         [HttpPost]
         [Route("AgregarFotosTrabajo")]
-        public async Task<IActionResult> AgregarFotosTrabajo(int idTrabajo, [FromForm] IFormFileCollection fotos)
+        public async Task<IActionResult> AgregarFotosTrabajo(
+            int idTrabajo,
+            [FromForm] IFormFileCollection fotos
+        )
         {
             if (fotos.Count == 0)
             {
@@ -56,10 +62,11 @@ namespace ShopMGR.WebApi.Controllers
             {
                 return BadRequest("La petición no puede estar vacía.");
             }
-            
+
             await administrarTrabajos.AgregarHorasAsync(horas);
             return Ok(
-                $"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente.");
+                $"{horas.Horas} horas de trabajo agregadas al trabajo con ID {horas.IdTrabajo} correctamente."
+            );
         }
 
         [HttpGet]
@@ -108,7 +115,10 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPatch]
         [Route("ModificarTrabajo")]
-        public async Task<IActionResult> ModificarTrabajo(int idTrabajo, [FromBody] ModificarTrabajo trabajoModificado)
+        public async Task<IActionResult> ModificarTrabajo(
+            int idTrabajo,
+            [FromBody] ModificarTrabajo trabajoModificado
+        )
         {
             if (trabajoModificado == null)
             {

@@ -7,16 +7,12 @@ import type {
   Trabajo,
   Presupuesto,
   HorasDeTrabajo,
-  Foto,
   Material,
   CrearClienteRequest,
   ModificarClienteRequest,
   CrearTrabajoRequest,
-  ModificarTrabajoRequest,
   RegistrarHorasRequest,
   CrearPresupuestoRequest,
-  ModificarPresupuestoRequest,
-  MovimientoBalance,
   MetricasMes,
 } from '../../types';
 

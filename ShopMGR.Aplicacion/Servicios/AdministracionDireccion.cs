@@ -7,10 +7,12 @@ using ShopMGR.Dominio.Modelo;
 namespace ShopMGR.Aplicacion.Servicios
 {
     public class AdministracionDireccion(
-        IRepositorioConCliente<Direccion> direccionRepositorio, 
-        MapperRegistry mapper) : IAdministrarDireccion
+        IRepositorioConCliente<Direccion> direccionRepositorio,
+        MapperRegistry mapper
+    ) : IAdministrarDireccion
     {
-        private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
+        private readonly IRepositorioConCliente<Direccion> _direccionRepositorio =
+            direccionRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Direccion> CrearAsync(DireccionDTO nuevaDireccion)
@@ -35,7 +37,6 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _direccionRepositorio.ObtenerPorIdCliente(idCliente);
         }
 
-
         public async Task ActualizarAsync(int idDireccion, ModificarDireccion direccionActualizada)
         {
             var direccionBd = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
@@ -44,8 +45,10 @@ namespace ShopMGR.Aplicacion.Servicios
             direccionBd.Calle = direccionActualizada.Calle ?? direccionBd.Calle;
             direccionBd.Altura = direccionActualizada.Altura ?? direccionBd.Altura;
             direccionBd.Piso = direccionActualizada.Piso ?? direccionBd.Piso;
-            direccionBd.Departamento = direccionActualizada.Departamento ?? direccionBd.Departamento;
-            direccionBd.CodigoPostal = direccionActualizada.CodigoPostal ?? direccionBd.CodigoPostal;
+            direccionBd.Departamento =
+                direccionActualizada.Departamento ?? direccionBd.Departamento;
+            direccionBd.CodigoPostal =
+                direccionActualizada.CodigoPostal ?? direccionBd.CodigoPostal;
             direccionBd.Descripcion = direccionActualizada.Descripcion ?? direccionBd.Descripcion;
 
             await _direccionRepositorio.ActualizarAsync(direccionBd);

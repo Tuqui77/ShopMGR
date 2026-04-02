@@ -5,45 +5,51 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Repositorios
 {
-    public class DireccionRepositorio(ShopMGRDbContexto contexto) : IRepositorioConCliente<Direccion>
+    public class DireccionRepositorio(ShopMGRDbContexto contexto)
+        : IRepositorioConCliente<Direccion>
     {
         private readonly ShopMGRDbContexto _contexto = contexto;
 
         public async Task<Direccion> CrearAsync(Direccion direccion)
         {
             if (!await _contexto.Clientes.AnyAsync(x => x.Id == direccion.IdCliente))
-                throw new KeyNotFoundException($"No existe un cliente con el ID {direccion.IdCliente}");
+                throw new KeyNotFoundException(
+                    $"No existe un cliente con el ID {direccion.IdCliente}"
+                );
             await Validar(direccion);
-            
+
             _contexto.Direccion.Add(direccion);
             await _contexto.SaveChangesAsync();
-            
+
             return direccion;
         }
 
         public async Task<Direccion> ObtenerPorIdAsync(int idDireccion)
         {
-            var direccion = await _contexto.Direccion.FindAsync(idDireccion)
-                            ?? throw new KeyNotFoundException($"No existe una dirección con el Id {idDireccion}");
+            var direccion =
+                await _contexto.Direccion.FindAsync(idDireccion)
+                ?? throw new KeyNotFoundException(
+                    $"No existe una dirección con el Id {idDireccion}"
+                );
 
             return direccion;
         }
 
         public async Task<Direccion> ObtenerDetallePorIdAsync(int id)
         {
-            var direccion = await _contexto.Direccion
-                                .Include(d => d.Cliente)
-                                .FirstOrDefaultAsync(x => x.Id == id)
-                            ?? throw new KeyNotFoundException($"No existe una dirección con el Id {id}");
+            var direccion =
+                await _contexto
+                    .Direccion.Include(d => d.Cliente)
+                    .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new KeyNotFoundException($"No existe una dirección con el Id {id}");
 
             return direccion;
         }
 
         public async Task<List<Direccion>> ObtenerPorIdCliente(int idCliente)
         {
-            var direccion = await _contexto.Direccion
-                .Include(d =>
-                    d.Cliente) //Probablemente sea demasiado el cliente completo, tal vez solo el nombre sea suficiente.
+            var direccion = await _contexto
+                .Direccion.Include(d => d.Cliente) //Probablemente sea demasiado el cliente completo, tal vez solo el nombre sea suficiente.
                 .Where(x => x.IdCliente == idCliente)
                 .ToListAsync();
 
@@ -52,8 +58,10 @@ namespace ShopMGR.Repositorios
 
         public async Task<Direccion> ObtenerPorCalleYAlturaAsync(string calle, string altura)
         {
-            var direccion = await _contexto.Direccion.FirstOrDefaultAsync(x => x.Calle == calle && x.Altura == altura)
-                            ?? throw new KeyNotFoundException($"No existe esa direccion en la base de datos");
+            var direccion =
+                await _contexto.Direccion.FirstOrDefaultAsync(x =>
+                    x.Calle == calle && x.Altura == altura
+                ) ?? throw new KeyNotFoundException($"No existe esa direccion en la base de datos");
 
             return direccion;
         }
@@ -74,12 +82,16 @@ namespace ShopMGR.Repositorios
 
         public async Task Validar(Direccion direccion)
         {
-            if (direccion.Piso == null &&
-                await _contexto.Direccion.AnyAsync(d =>
-                    d.Calle == direccion.Calle &&
-                    d.Altura == direccion.Altura))
+            if (
+                direccion.Piso == null
+                && await _contexto.Direccion.AnyAsync(d =>
+                    d.Calle == direccion.Calle && d.Altura == direccion.Altura
+                )
+            )
             {
-                throw new InvalidOperationException("Ya existe una dirección con esa calle y altura");
+                throw new InvalidOperationException(
+                    "Ya existe una dirección con esa calle y altura"
+                );
             }
         }
     }

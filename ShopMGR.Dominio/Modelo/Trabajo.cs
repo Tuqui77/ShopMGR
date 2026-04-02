@@ -17,7 +17,7 @@ namespace ShopMGR.Dominio.Modelo
         public List<Foto> Fotos { get; set; } = [];
         public List<HorasYDescripcion> HorasDeTrabajo { get; set; } = [];
         public Cliente Cliente { get; set; }
-        public int IdCliente { get; set; } 
+        public int IdCliente { get; set; }
         public Presupuesto? Presupuesto { get; set; }
         public int? IdPresupuesto { get; set; }
     }
