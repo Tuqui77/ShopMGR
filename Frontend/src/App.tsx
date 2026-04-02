@@ -5,6 +5,9 @@ import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { FAB } from './components/FAB';
 import { HoursModal } from './components/HoursModal';
+import { ClienteForm } from './components/ClienteForm';
+import { PresupuestoForm } from './components/PresupuestoForm';
+import { TrabajoForm } from './components/TrabajoForm';
 import { Dashboard } from './pages/Dashboard';
 import { Clientes } from './pages/Clientes';
 import { ClienteDetalle } from './pages/ClienteDetalle';
@@ -27,7 +30,7 @@ const queryClient = new QueryClient({
 
 function ProtectedLayout() {
   const [fabOpen, setFabOpen] = useState(false);
-  const { isAuthenticated, setShowHoursModal } = useStore();
+  const { isAuthenticated, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm } = useStore();
   const location = useLocation();
   
   // Redirect to login if not authenticated
@@ -36,8 +39,15 @@ function ProtectedLayout() {
   }
   
   const handleFabAction = (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto') => {
+    setFabOpen(false); // Close FAB first
     if (action === 'hours') {
       setShowHoursModal(true);
+    } else if (action === 'trabajo') {
+      setShowTrabajoForm(true);
+    } else if (action === 'cliente') {
+      setShowClienteForm(true);
+    } else if (action === 'presupuesto') {
+      setShowPresupuestoForm(true);
     }
   };
   
@@ -50,6 +60,9 @@ function ProtectedLayout() {
       <BottomNav />
       <FAB isOpen={fabOpen} onToggle={() => setFabOpen(!fabOpen)} onAction={handleFabAction} />
       <HoursModal />
+      <ClienteForm />
+      <PresupuestoForm />
+      <TrabajoForm />
     </div>
   );
 }
