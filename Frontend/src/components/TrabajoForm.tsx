@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useCrearTrabajo, useModificarTrabajo, useTrabajo } from '../hooks/useTrabajos';
 import type { EstadoTrabajo, Cliente } from '../types';
@@ -7,13 +8,19 @@ import clsx from 'clsx';
 
 interface Props {
   trabajoId?: number;
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   onSuccess?: () => void;
 }
 
-export function TrabajoForm({ trabajoId, isOpen, onClose, onSuccess }: Props) {
+// Si no se pasa isOpen, usa el store
+export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
+  const store = useStore();
   const isEditing = !!trabajoId;
+  
+  // Usar props si se pasan, sino usar store
+  const isOpen = isOpenProp ?? store.showTrabajoForm;
+  const onClose = onCloseProp ?? (() => store.setShowTrabajoForm(false));
   
   // Queries y mutations
   const { data: clientes = [], isLoading: loadingClientes } = useClientes();
