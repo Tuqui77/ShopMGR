@@ -17,6 +17,7 @@ import { formatDate, formatCurrency } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto, Cliente } from '../types';
 import { useStore } from '../store';
 import { PresupuestoForm } from '../components/PresupuestoForm';
+import { useClienteDetalle } from '../hooks/useClientes';
 
 // Tipos para DTOs raw del backend
 interface TelefonoRaw {
@@ -135,6 +136,8 @@ export function PresupuestoDetalle() {
     queryFn: () => fetchPresupuestoDetalle(presupuestoId!),
     enabled: typeof presupuestoId === 'number' && presupuestoId >= 0,
   });
+
+  const { data: clienteCompleto } = useClienteDetalle(presupuesto?.cliente?.id);
 
   const aceptarMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -282,7 +285,7 @@ export function PresupuestoDetalle() {
               <div className="flex-1">
                 <p className="font-medium" style={{ color: 'var(--color-text)' }}>{presupuesto.cliente.nombreCompleto}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {presupuesto.cliente.telefono[0] || 'Sin teléfono'}
+                  {clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
                 </p>
               </div>
             </Link>

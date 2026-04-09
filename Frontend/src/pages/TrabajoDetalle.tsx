@@ -13,6 +13,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../hooks/useTrabajos';
+import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
@@ -23,6 +24,7 @@ export function TrabajoDetalle() {
   const trabajoId = id ? parseInt(id, 10) : undefined;
   
   const { data: trabajo, isLoading, error } = useTrabajoDetalle(trabajoId);
+  const { data: clienteCompleto } = useClienteDetalle(trabajo?.clienteId);
   const terminarTrabajo = useTerminarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
   const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId } = useStore();
@@ -137,7 +139,7 @@ export function TrabajoDetalle() {
               <div className="flex-1">
                 <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.cliente.nombreCompleto}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {trabajo.cliente.telefono[0] || 'Sin teléfono'}
+                  {clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
                 </p>
               </div>
             </Link>
