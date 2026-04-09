@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import clsx from 'clsx';
+import clsx from 'clsx'; 
 import { 
   Loader2, 
   ArrowLeft, 
@@ -16,6 +16,7 @@ import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../ho
 import { useStore } from '../store';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
+import { TrabajoForm } from '../components/TrabajoForm';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ export function TrabajoDetalle() {
   const { data: trabajo, isLoading, error } = useTrabajoDetalle(trabajoId);
   const terminarTrabajo = useTerminarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
-  const { setShowHoursModal, setSelectedTrabajo } = useStore();
+  const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId } = useStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const handleRegisterHours = () => {
@@ -54,6 +55,16 @@ export function TrabajoDetalle() {
         setShowDeleteConfirm(false);
       }
     }
+  };
+
+  const handleEdit = () => {
+    if (trabajo) {
+      setEditingTrabajoId(trabajo.id);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setEditingTrabajoId(null);
   };
   
   const getStatusBadge = () => {
@@ -278,7 +289,10 @@ export function TrabajoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]">
+            <button 
+              onClick={handleEdit}
+              className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]"
+            >
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -327,6 +341,16 @@ export function TrabajoDetalle() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Trabajo Form for editing */}
+      {editingTrabajoId && (
+        <TrabajoForm 
+          trabajoId={editingTrabajoId} 
+          isOpen={true}
+          onClose={() => setEditingTrabajoId(null)}
+          onSuccess={handleEditSuccess}
+        />
       )}
     </div>
   );

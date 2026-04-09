@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
-import { useCrearCliente } from '../hooks/useClientes';
-import { Loader2, X, Check, Plus, Trash2 } from 'lucide-react';
+import { useCrearCliente, useModificarCliente } from '../hooks/useClientes';
+import type { Cliente } from '../types';
+import { Loader2, X, Check, Plus, Trash2, Pencil } from 'lucide-react';
 
-export function ClienteForm() {
-  const { showClienteForm, setShowClienteForm } = useStore();
+interface ClienteFormProps {
+  cliente?: Cliente;  // Si se pasa cliente, es modo edición
+}
+
+export function ClienteForm({ cliente }: ClienteFormProps) {
+  const isEditing = !!cliente;
+  const { showClienteForm, setShowClienteForm, setEditingCliente } = useStore();
   const crearCliente = useCrearCliente();
+  const modificarCliente = useModificarCliente();
+  
+  // El estado del store se usa solo en modo creación
+  // En modo edición, se usa la prop directamente
+  const formVisible = isEditing || showClienteForm;
 
   const [nombre, setNombre] = useState('');
   const [cuit, setCuit] = useState('');
@@ -16,9 +27,14 @@ export function ClienteForm() {
   const [altura, setAltura] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
 
   const handleClose = () => {
-    setShowClienteForm(false);
+    if (isEditing) {
+      setEditingCliente(null);
+    } else {
+      setShowClienteForm(false);
+    }
     setNombre('');
     setCuit('');
     setTelefonoInput('');
@@ -28,19 +44,57 @@ export function ClienteForm() {
     setAltura('');
     setErrors({});
     setShowSuccess(false);
+    setEditingTelefonoIndex(null);
   };
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showClienteForm) {
+      if (e.key === 'Escape' && formVisible) {
         handleClose();
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [showClienteForm]);
+  }, [formVisible]);
 
-  if (!showClienteForm) return null;
+  if (!formVisible) return null;
+
+  // Cargar datos del cliente en modo edición
+  useEffect(() => {
+    if (cliente) {
+      setNombre(cliente.nombreCompleto || '');
+      setCuit(cliente.cuit || '');
+      
+      // Cargar teléfonos desde telefonosCompletos (estructura con descripcion)
+      if (cliente.telefonosCompletos && Array.isArray(cliente.telefonosCompletos)) {
+        setTelefonos(cliente.telefonosCompletos.map(t => ({
+          telefono: t.telefono,
+          descripcion: t.descripcion || 'Principal',
+        })));
+      } else if (cliente.telefono && Array.isArray(cliente.telefono)) {
+        // Fallback: telefono como array de strings
+        const telefonosData = cliente.telefono.map((t: unknown) => {
+          if (typeof t === 'string') return { telefono: t, descripcion: 'Principal' };
+          return t as { telefono: string; descripcion: string };
+        });
+        setTelefonos(telefonosData);
+      }
+      
+      // Cargar dirección desde direccionesCompletas
+      if (cliente.direccionesCompletas && cliente.direccionesCompletas.length > 0) {
+        const dir = cliente.direccionesCompletas[0];
+        setCalle(dir.calle || '');
+        setAltura(dir.altura || '');
+      } else if (cliente.direccion) {
+        // Fallback: direccion como string
+        const parts = cliente.direccion.split(' ');
+        if (parts.length >= 2) {
+          setCalle(parts.slice(0, -1).join(' '));
+          setAltura(parts[parts.length - 1]);
+        }
+      }
+    }
+  }, [cliente]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -59,44 +113,82 @@ export function ClienteForm() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleRemoveTelefono = (index: number) => {
+    setTelefonos(telefonos.filter((_, i) => i !== index));
+  };
+
+  const handleEditTelefono = (index: number) => {
+    const tel = telefonos[index];
+    setTelefonoInput(tel.telefono);
+    setTelefonoDesc(tel.descripcion);
+    setEditingTelefonoIndex(index);
+  };
+
   const handleAddTelefono = () => {
-    if (telefonoInput.trim()) {
+    if (!telefonoInput.trim()) return;
+    
+    if (editingTelefonoIndex !== null) {
+      // Editando teléfono existente
+      const nuevosTelefonos = [...telefonos];
+      nuevosTelefonos[editingTelefonoIndex] = {
+        telefono: telefonoInput.trim(),
+        descripcion: telefonoDesc.trim() || 'Principal'
+      };
+      setTelefonos(nuevosTelefonos);
+      setEditingTelefonoIndex(null);
+    } else {
+      // Agregando nuevo teléfono
       const telefonoObj = { 
         telefono: telefonoInput.trim(), 
         descripcion: telefonoDesc.trim() || 'Principal' 
       };
-      // Evitar duplicados por número
       if (!telefonos.some(t => t.telefono === telefonoObj.telefono)) {
         setTelefonos([...telefonos, telefonoObj]);
       }
-      setTelefonoInput('');
-      setTelefonoDesc('');
     }
+    setTelefonoInput('');
+    setTelefonoDesc('');
   };
 
-  const handleRemoveTelefono = (index: number) => {
-    setTelefonos(telefonos.filter((_, i) => i !== index));
+  const handleCancelEditTelefono = () => {
+    setTelefonoInput('');
+    setTelefonoDesc('');
+    setEditingTelefonoIndex(null);
   };
 
   const handleSubmit = async () => {
     if (!validate()) return;
     
     try {
-      await crearCliente.mutateAsync({
-        nombreCompleto: nombre.trim(),
-        Cuit: cuit || undefined,
-        telefono: telefonos,
-        direccion: calle.trim() && altura.trim() 
-          ? [{ calle: calle.trim(), altura: altura.trim() }] 
-          : undefined,
-      });
+      if (isEditing && cliente) {
+        await modificarCliente.mutateAsync({
+          id: cliente.id,
+          cliente: {
+            nombreCompleto: nombre.trim(),
+            Cuit: cuit || undefined,
+            telefono: telefonos,
+            direccion: calle.trim() && altura.trim() 
+              ? [{ calle: calle.trim(), altura: altura.trim() }] 
+              : undefined,
+          },
+        });
+      } else {
+        await crearCliente.mutateAsync({
+          nombreCompleto: nombre.trim(),
+          Cuit: cuit || undefined,
+          telefono: telefonos,
+          direccion: calle.trim() && altura.trim() 
+            ? [{ calle: calle.trim(), altura: altura.trim() }] 
+            : undefined,
+        });
+      }
       setShowSuccess(true);
       setTimeout(handleClose, 1500);
     } catch (error) {
-      console.error('Error al crear cliente:', error);
+      console.error('Error al guardar cliente:', error);
       
       // Extraer mensaje de error del backend
-      let errorMessage = 'Error al crear el cliente';
+      let errorMessage = isEditing ? 'Error al modificar el cliente' : 'Error al crear el cliente';
       
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
@@ -124,7 +216,7 @@ export function ClienteForm() {
           <div className="flex items-center justify-between mb-6">
             <div className="w-11" />
             <h2 className="font-semibold text-lg">
-              {showSuccess ? '¡Listo!' : 'Nuevo Cliente'}
+              {showSuccess ? '¡Listo!' : isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
             </h2>
             <button onClick={handleClose} className="btn-icon">
               <X className="w-5 h-5" />
@@ -207,8 +299,22 @@ export function ClienteForm() {
                       className="btn-secondary"
                       disabled={!telefonoInput.trim()}
                     >
-                      <Plus className="w-5 h-5" />
+                      {editingTelefonoIndex !== null ? (
+                        <Check className="w-5 h-5" />
+                      ) : (
+                        <Plus className="w-5 h-5" />
+                      )}
                     </button>
+                    {editingTelefonoIndex !== null && (
+                      <button 
+                        type="button"
+                        onClick={handleCancelEditTelefono}
+                        className="btn-secondary"
+                        style={{ color: 'var(--color-danger)' }}
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                   <input
                     type="text"
@@ -238,13 +344,22 @@ export function ClienteForm() {
                               ({tel.descripcion})
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTelefono(index)}
-                            className="btn-icon p-1"
-                          >
-                            <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
-                          </button>
+                          <div className="flex gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleEditTelefono(index)}
+                              className="btn-icon p-1"
+                            >
+                              <Pencil className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTelefono(index)}
+                              className="btn-icon p-1"
+                            >
+                              <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -283,10 +398,10 @@ export function ClienteForm() {
               )}
               <button
                 onClick={handleSubmit}
-                disabled={crearCliente.isPending}
+                disabled={crearCliente.isPending || modificarCliente.isPending}
                 className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
               >
-                {crearCliente.isPending ? (
+                {crearCliente.isPending || modificarCliente.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Guardando...
@@ -294,7 +409,7 @@ export function ClienteForm() {
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    Crear Cliente
+                    {isEditing ? 'Guardar Cambios' : 'Crear Cliente'}
                   </>
                 )}
               </button>

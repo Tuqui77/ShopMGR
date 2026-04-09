@@ -285,6 +285,7 @@ export interface ModificarPresupuestoRequest {
   horasEstimadas?: number;
   estado?: EstadoPresupuesto;
   idCliente?: number;
+  materiales?: MaterialRequest[];
 }
 
 export interface MovimientoBalance {

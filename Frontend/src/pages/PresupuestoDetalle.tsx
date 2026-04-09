@@ -15,6 +15,8 @@ import { apiClient } from '../services/api';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto, Cliente } from '../types';
+import { useStore } from '../store';
+import { PresupuestoForm } from '../components/PresupuestoForm';
 
 // Tipos para DTOs raw del backend
 interface TelefonoRaw {
@@ -126,6 +128,7 @@ export function PresupuestoDetalle() {
   const presupuestoId = id ? parseInt(id, 10) : undefined;
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { editingPresupuestoId, setEditingPresupuestoId } = useStore();
 
   const { data: presupuesto, isLoading, error } = useQuery({
     queryKey: ['presupuesto', presupuestoId],
@@ -208,6 +211,18 @@ export function PresupuestoDetalle() {
         setShowDeleteConfirm(false);
       }
     }
+  };
+
+  const handleEdit = () => {
+    if (presupuesto) {
+      setEditingPresupuestoId(presupuesto.id);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setEditingPresupuestoId(null);
+    // Refetch presupuesto data
+    queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });
   };
 
   if (isLoading) {
@@ -380,7 +395,10 @@ export function PresupuestoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]">
+            <button 
+              onClick={handleEdit}
+              className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]"
+            >
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -429,6 +447,16 @@ export function PresupuestoDetalle() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Presupuesto Form for editing */}
+      {editingPresupuestoId && (
+        <PresupuestoForm 
+          presupuestoId={editingPresupuestoId}
+          isOpen={true}
+          onClose={() => setEditingPresupuestoId(null)}
+          onSuccess={handleEditSuccess}
+        />
       )}
     </div>
   );

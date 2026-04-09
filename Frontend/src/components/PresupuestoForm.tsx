@@ -1,15 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
-import { useCrearPresupuesto } from '../hooks/usePresupuestos';
+import { useCrearPresupuesto, useModificarPresupuesto, usePresupuesto } from '../hooks/usePresupuestos';
 import type { Cliente, MaterialRequest } from '../types';
 import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 
-export function PresupuestoForm() {
-  const { showPresupuestoForm, setShowPresupuestoForm } = useStore();
+interface Props {
+  presupuestoId?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSuccess?: () => void;
+}
+
+// Si no se pasa isOpen, usa el store
+export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
+  const store = useStore();
+  const isEditing = !!presupuestoId;
+  
+  // Usar props si se pasan, sino usar store
+  const isOpen = isOpenProp ?? store.showPresupuestoForm;
+  const onClose = onCloseProp ?? (() => store.setShowPresupuestoForm(false));
+  
+  // Queries y mutations
   const { data: clientes = [] } = useClientes();
+  const { data: presupuestoOriginal } = usePresupuesto(presupuestoId);
   const crearPresupuesto = useCrearPresupuesto();
+  const modificarPresupuesto = useModificarPresupuesto();
 
   const [step, setStep] = useState<'cliente' | 'datos'>('cliente');
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
@@ -28,30 +45,78 @@ export function PresupuestoForm() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleClose = () => {
-    setShowPresupuestoForm(false);
-    setStep('cliente');
-    setClienteSeleccionado(null);
-    setSearch('');
-    setTitulo('');
-    setDescripcion('');
-    setHorasEstimadas(0);
-    setMateriales([]);
-    setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
-    setErrors({});
-    setShowSuccess(false);
+    onClose();
+    // Reset form after close animation
+    setTimeout(() => {
+      if (!isOpenProp) {
+        setStep('cliente');
+        setClienteSeleccionado(null);
+        setSearch('');
+        setTitulo('');
+        setDescripcion('');
+        setHorasEstimadas(0);
+        setMateriales([]);
+        setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
+        setErrors({});
+        setShowSuccess(false);
+      }
+    }, 200);
   };
+
+  // Initialize form data when editing
+  useEffect(() => {
+    if (presupuestoOriginal && isEditing) {
+      // Skip client selection step, go directly to data
+      setStep('datos');
+      setClienteSeleccionado({
+        id: presupuestoOriginal.cliente?.id || 0,
+        nombreCompleto: presupuestoOriginal.cliente?.nombreCompleto || '',
+        telefono: [],
+        balance: 0,
+        trabajosCount: 0,
+        presupuestosCount: 0,
+      });
+      setTitulo(presupuestoOriginal.titulo);
+      setDescripcion(presupuestoOriginal.descripcion || '');
+      setHorasEstimadas(presupuestoOriginal.horasEstimadas);
+      // Map materiales if needed
+      if (presupuestoOriginal.materiales) {
+        setMateriales(presupuestoOriginal.materiales.map(m => ({
+          descripcion: m.descripcion,
+          cantidad: m.cantidad,
+          precioUnitario: m.precioUnitario,
+        })));
+      }
+    }
+  }, [presupuestoOriginal, isEditing]);
+
+  // Reset form when closed via prop (not store)
+  useEffect(() => {
+    if (!isOpen && isOpenProp !== undefined) {
+      setStep('cliente');
+      setClienteSeleccionado(null);
+      setSearch('');
+      setTitulo('');
+      setDescripcion('');
+      setHorasEstimadas(0);
+      setMateriales([]);
+      setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
+      setErrors({});
+      setShowSuccess(false);
+    }
+  }, [isOpen, isOpenProp]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showPresupuestoForm) {
+      if (e.key === 'Escape' && isOpen) {
         handleClose();
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [showPresupuestoForm]);
+  }, [isOpen]);
 
-  if (!showPresupuestoForm) return null;
+  if (!isOpen) return null;
 
   const filteredClientes = clientes.filter(c => 
     c.nombreCompleto.toLowerCase().includes(search.toLowerCase())
@@ -94,24 +159,41 @@ export function PresupuestoForm() {
 
   const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * m.precioUnitario), 0);
 
+  const isSubmitting = crearPresupuesto.isPending || modificarPresupuesto.isPending;
+
   const handleSubmit = async () => {
     if (!validate() || !clienteSeleccionado) return;
     
     try {
-      await crearPresupuesto.mutateAsync({
-        titulo: titulo.trim(),
-        descripcion: descripcion.trim() || undefined,
-        horasEstimadas,
-        idCliente: clienteSeleccionado.id,
-        materiales: materiales.length > 0 ? materiales : undefined,
-      });
+      if (isEditing && presupuestoId) {
+        await modificarPresupuesto.mutateAsync({
+          id: presupuestoId,
+          presupuesto: {
+            titulo: titulo.trim(),
+            descripcion: descripcion.trim() || undefined,
+            horasEstimadas,
+            materiales: materiales.length > 0 ? materiales : undefined,
+          },
+        });
+      } else {
+        await crearPresupuesto.mutateAsync({
+          titulo: titulo.trim(),
+          descripcion: descripcion.trim() || undefined,
+          horasEstimadas,
+          idCliente: clienteSeleccionado.id,
+          materiales: materiales.length > 0 ? materiales : undefined,
+        });
+      }
       setShowSuccess(true);
-      setTimeout(handleClose, 1500);
+      setTimeout(() => {
+        onSuccess?.();
+        handleClose();
+      }, 1500);
     } catch (error) {
-      console.error('Error al crear presupuesto:', error);
+      console.error('Error al guardar presupuesto:', error);
       
       // Extraer mensaje de error del backend
-      let errorMessage = 'Error al crear el presupuesto';
+      let errorMessage = 'Error al guardar el presupuesto';
       
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
@@ -361,10 +443,10 @@ export function PresupuestoForm() {
               )}
               <button
                 onClick={handleSubmit}
-                disabled={crearPresupuesto.isPending}
+                disabled={isSubmitting}
                 className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
               >
-                {crearPresupuesto.isPending ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Guardando...
@@ -372,7 +454,7 @@ export function PresupuestoForm() {
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    Crear Presupuesto
+                    {isEditing ? 'Actualizar' : 'Crear Presupuesto'}
                   </>
                 )}
               </button>
