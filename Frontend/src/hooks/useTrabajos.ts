@@ -80,7 +80,9 @@ export function useCrearTrabajo() {
   return useMutation({
     mutationFn: (trabajo: CrearTrabajoRequest) => trabajosService.crear(trabajo),
     onSuccess: () => {
+      // Invalidar y hacer refetch inmediato para garantizar actualización
       queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.refetchQueries({ queryKey: ['trabajos'] });
     },
   });
 }
