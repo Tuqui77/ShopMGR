@@ -15,6 +15,7 @@ public class PresupuestoMapper(MapperRegistry mapper) : IMapper<PresupuestoDTO, 
     {
         return new Presupuesto
         {
+            IdCliente = presupuestoDTO.IdCliente,
             Titulo = presupuestoDTO.Titulo,
             Descripcion = presupuestoDTO.Descripcion,
             Materiales = _mapper.Map<MaterialDTO, Material>(presupuestoDTO.Materiales).ToList(),
@@ -31,6 +32,7 @@ public class PresupuestoDTOMapper(MapperRegistry mapper) : IMapper<Presupuesto, 
     {
         return new PresupuestoDTO
         {
+            IdCliente = presupuesto.IdCliente,
             Titulo = presupuesto.Titulo,
             Descripcion = presupuesto.Descripcion,
             Materiales = _mapper.Map<Material, MaterialDTO>(presupuesto.Materiales).ToList(),
