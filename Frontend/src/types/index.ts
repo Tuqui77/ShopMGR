@@ -100,16 +100,16 @@ export interface ClienteDetalleBackendDTO {
 
 export interface CrearClienteRequest {
   nombreCompleto: string;
-  CUIT?: string;
-  telefono: string[];
-  direccion?: string;
+  Cuit?: string;
+  telefono: { telefono: string; descripcion: string }[];
+  direccion?: { calle: string; altura: string }[];
 }
 
 export interface ModificarClienteRequest {
   nombreCompleto?: string;
-  CUIT?: string;
-  telefono?: string[];
-  direccion?: string;
+  Cuit?: string;
+  telefono?: { telefono: string; descripcion: string }[];
+  direccion?: { calle: string; altura: string }[];
 }
 
 // ============================================================================

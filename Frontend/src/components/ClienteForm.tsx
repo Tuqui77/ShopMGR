@@ -9,9 +9,11 @@ export function ClienteForm() {
 
   const [nombre, setNombre] = useState('');
   const [cuit, setCuit] = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [telefonos, setTelefonos] = useState<string[]>([]);
-  const [direccion, setDireccion] = useState('');
+  const [telefonoInput, setTelefonoInput] = useState('');
+  const [telefonoDesc, setTelefonoDesc] = useState('');
+  const [telefonos, setTelefonos] = useState<{ telefono: string; descripcion: string }[]>([]);
+  const [calle, setCalle] = useState('');
+  const [altura, setAltura] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -19,9 +21,11 @@ export function ClienteForm() {
     setShowClienteForm(false);
     setNombre('');
     setCuit('');
-    setTelefono('');
+    setTelefonoInput('');
+    setTelefonoDesc('');
     setTelefonos([]);
-    setDireccion('');
+    setCalle('');
+    setAltura('');
     setErrors({});
     setShowSuccess(false);
   };
@@ -56,9 +60,17 @@ export function ClienteForm() {
   };
 
   const handleAddTelefono = () => {
-    if (telefono.trim() && !telefonos.includes(telefono.trim())) {
-      setTelefonos([...telefonos, telefono.trim()]);
-      setTelefono('');
+    if (telefonoInput.trim()) {
+      const telefonoObj = { 
+        telefono: telefonoInput.trim(), 
+        descripcion: telefonoDesc.trim() || 'Principal' 
+      };
+      // Evitar duplicados por número
+      if (!telefonos.some(t => t.telefono === telefonoObj.telefono)) {
+        setTelefonos([...telefonos, telefonoObj]);
+      }
+      setTelefonoInput('');
+      setTelefonoDesc('');
     }
   };
 
@@ -72,15 +84,18 @@ export function ClienteForm() {
     try {
       await crearCliente.mutateAsync({
         nombreCompleto: nombre.trim(),
-        CUIT: cuit || undefined,
+        Cuit: cuit || undefined,
         telefono: telefonos,
-        direccion: direccion.trim() || undefined,
+        direccion: calle.trim() && altura.trim() 
+          ? [{ calle: calle.trim(), altura: altura.trim() }] 
+          : undefined,
       });
       setShowSuccess(true);
       setTimeout(handleClose, 1500);
     } catch (error) {
       console.error('Error al crear cliente:', error);
-      alert('Error al crear el cliente. Intenta de nuevo.');
+      const errorMessage = error instanceof Error ? error.message : 'Error al crear el cliente';
+      setErrors({ submit: errorMessage });
     }
   };
 
@@ -161,13 +176,30 @@ export function ClienteForm() {
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
                   TELÉFONOS
                 </label>
-                <div className="flex gap-2">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="tel"
+                      value={telefonoInput}
+                      onChange={(e) => setTelefonoInput(e.target.value)}
+                      placeholder="Número de teléfono"
+                      className="input flex-1"
+                    />
+                    <button 
+                      type="button"
+                      onClick={handleAddTelefono}
+                      className="btn-secondary"
+                      disabled={!telefonoInput.trim()}
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
                   <input
-                    type="tel"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    placeholder="+54 11 1234-5678"
-                    className="input flex-1"
+                    type="text"
+                    value={telefonoDesc}
+                    onChange={(e) => setTelefonoDesc(e.target.value)}
+                    placeholder="Descripción (ej: Celular, Trabajo)"
+                    className="input"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -175,36 +207,33 @@ export function ClienteForm() {
                       }
                     }}
                   />
-                  <button 
-                    type="button"
-                    onClick={handleAddTelefono}
-                    className="btn-secondary"
-                    disabled={!telefono.trim()}
-                  >
-                    <Plus className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                {telefonos.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                    {telefonos.map((tel, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center justify-between p-2 rounded"
-                        style={{ backgroundColor: 'var(--color-surface)' }}
-                      >
-                        <span className="text-sm">{tel}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTelefono(index)}
-                          className="btn-icon p-1"
+                  
+                  {telefonos.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {telefonos.map((tel, index) => (
+                        <div 
+                          key={index}
+                          className="flex items-center justify-between p-2 rounded"
+                          style={{ backgroundColor: 'var(--color-surface)' }}
                         >
-                          <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                          <div>
+                            <span className="text-sm">{tel.telefono}</span>
+                            <span className="text-xs ml-2" style={{ color: 'var(--color-muted)' }}>
+                              ({tel.descripcion})
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTelefono(index)}
+                            className="btn-icon p-1"
+                          >
+                            <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Dirección */}
@@ -212,20 +241,34 @@ export function ClienteForm() {
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
                   DIRECCIÓN (opcional)
                 </label>
-                <input
-                  type="text"
-                  value={direccion}
-                  onChange={(e) => setDireccion(e.target.value)}
-                  placeholder="Av. Rivadavia 1234"
-                  className="input"
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={calle}
+                    onChange={(e) => setCalle(e.target.value)}
+                    placeholder="Calle"
+                    className="input"
+                  />
+                  <input
+                    type="text"
+                    value={altura}
+                    onChange={(e) => setAltura(e.target.value)}
+                    placeholder="Altura"
+                    className="input"
+                  />
+                </div>
               </div>
               
               {/* Submit */}
+              {errors.submit && (
+                <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
+                  {errors.submit}
+                </p>
+              )}
               <button
                 onClick={handleSubmit}
                 disabled={crearCliente.isPending}
-                className="btn-primary w-full flex items-center justify-center gap-2 mt-6"
+                className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
               >
                 {crearCliente.isPending ? (
                   <>

@@ -178,9 +178,9 @@ describe('Type definitions', () => {
     it('creates valid CrearClienteRequest', () => {
       const request: CrearClienteRequest = {
         nombreCompleto: 'Juan Pérez',
-        CUIT: '20-12345678-9',
-        telefono: ['11-2345-6789'],
-        direccion: 'Calle Falsa 123',
+        Cuit: '20123456789',
+        telefono: [{ telefono: '11-2345-6789', descripcion: 'Celular' }],
+        direccion: [{ calle: 'Calle Falsa', altura: '123' }],
       };
       expect(request.nombreCompleto).toBeDefined();
     });
