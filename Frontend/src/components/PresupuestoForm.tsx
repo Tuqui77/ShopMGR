@@ -109,7 +109,24 @@ export function PresupuestoForm() {
       setTimeout(handleClose, 1500);
     } catch (error) {
       console.error('Error al crear presupuesto:', error);
-      alert('Error al crear el presupuesto. Intenta de nuevo.');
+      
+      // Extraer mensaje de error del backend
+      let errorMessage = 'Error al crear el presupuesto';
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
+        if (axiosError.response?.data?.error) {
+          errorMessage = axiosError.response.data.error;
+        } else if (axiosError.response?.status === 500) {
+          errorMessage = 'Error interno del servidor';
+        } else if (axiosError.response?.status === 404) {
+          errorMessage = 'Recurso no encontrado';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      setErrors({ submit: errorMessage });
     }
   };
 
@@ -337,10 +354,15 @@ export function PresupuestoForm() {
               </div>
               
               {/* Submit */}
+              {errors.submit && (
+                <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
+                  {errors.submit}
+                </p>
+              )}
               <button
                 onClick={handleSubmit}
                 disabled={crearPresupuesto.isPending}
-                className="btn-primary w-full flex items-center justify-center gap-2 mt-6"
+                className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
               >
                 {crearPresupuesto.isPending ? (
                   <>

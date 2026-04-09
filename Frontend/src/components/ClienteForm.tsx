@@ -94,7 +94,23 @@ export function ClienteForm() {
       setTimeout(handleClose, 1500);
     } catch (error) {
       console.error('Error al crear cliente:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al crear el cliente';
+      
+      // Extraer mensaje de error del backend
+      let errorMessage = 'Error al crear el cliente';
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
+        if (axiosError.response?.data?.error) {
+          errorMessage = axiosError.response.data.error;
+        } else if (axiosError.response?.status === 500) {
+          errorMessage = 'Error interno del servidor';
+        } else if (axiosError.response?.status === 404) {
+          errorMessage = 'Recurso no encontrado';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       setErrors({ submit: errorMessage });
     }
   };
