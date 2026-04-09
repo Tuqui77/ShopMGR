@@ -276,7 +276,8 @@ export interface CrearPresupuestoRequest {
 export interface MaterialRequest {
   descripcion: string;
   cantidad: number;
-  precioUnitario: number;
+  Precio: number; // Backend expects "Precio" not "precioUnitario"
+  precioUnitario?: number; // For internal use in form display
 }
 
 export interface ModificarPresupuestoRequest {

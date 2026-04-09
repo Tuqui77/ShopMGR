@@ -79,12 +79,12 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       setTitulo(presupuestoOriginal.titulo);
       setDescripcion(presupuestoOriginal.descripcion || '');
       setHorasEstimadas(presupuestoOriginal.horasEstimadas);
-      // Map materiales if needed
+      // Map materiales if needed (backend uses "Precio" not "precioUnitario")
       if (presupuestoOriginal.materiales) {
         setMateriales(presupuestoOriginal.materiales.map(m => ({
           descripcion: m.descripcion,
           cantidad: m.cantidad,
-          precioUnitario: m.precioUnitario,
+          Precio: m.precioUnitario,
         })));
       }
     }
@@ -148,7 +148,12 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   const handleAddMaterial = () => {
     if (nuevoMaterial.descripcion.trim() && nuevoMaterial.cantidad > 0 && nuevoMaterial.precioUnitario > 0) {
-      setMateriales([...materiales, { ...nuevoMaterial }]);
+      // Map precioUnitario to Precio for backend compatibility
+      setMateriales([...materiales, { 
+        descripcion: nuevoMaterial.descripcion, 
+        cantidad: nuevoMaterial.cantidad, 
+        Precio: nuevoMaterial.precioUnitario 
+      }]);
       setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
     }
   };
@@ -157,7 +162,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     setMateriales(materiales.filter((_, i) => i !== index));
   };
 
-  const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * m.precioUnitario), 0);
+  const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * (m.Precio || m.precioUnitario || 0)), 0);
 
   const isSubmitting = crearPresupuesto.isPending || modificarPresupuesto.isPending;
 
@@ -377,7 +382,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{m.descripcion}</p>
                           <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                            {m.cantidad} x ${m.precioUnitario.toLocaleString()} = ${(m.cantidad * m.precioUnitario).toLocaleString()}
+                            {m.cantidad} x ${(m.Precio || m.precioUnitario || 0).toLocaleString()} = ${(m.cantidad * (m.Precio || m.precioUnitario || 0)).toLocaleString()}
                           </p>
                         </div>
                         <button

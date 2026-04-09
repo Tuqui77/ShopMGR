@@ -216,7 +216,7 @@ describe('Type definitions', () => {
         idCliente: 1,
         descripcion: 'Descripción',
         materiales: [
-          { descripcion: 'Material 1', cantidad: 1, precioUnitario: 1000 },
+          { descripcion: 'Material 1', cantidad: 1, Precio: 1000 },
         ],
       };
       expect(request.materiales).toHaveLength(1);
