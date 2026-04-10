@@ -44,10 +44,8 @@ function applyTheme(theme: Theme) {
 // ============================================================================
 
 async function fetchCostoHora(): Promise<number> {
-  const response = await apiClient.get<string>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
-  // El backend retorna: "El costo de la hora de trabajo es: $1500"
-  const match = response.data.match(/\$(\d+(?:\.\d+)?)/);
-  return match ? parseFloat(match[1]) : 0;
+  const response = await apiClient.get<number>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
+  return response.data;
 }
 
 async function updateCostoHora(nuevoCosto: number): Promise<void> {
