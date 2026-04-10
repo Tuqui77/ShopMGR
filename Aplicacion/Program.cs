@@ -121,6 +121,12 @@ namespace ShopMGR.WebApi.Aplicacion
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.MapControllers();
+
+            using (var scope = app.Services.CreateScope()){
+              var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
+              db.Database.Migrate();
+            }
+
             app.Run();
         }
     }
