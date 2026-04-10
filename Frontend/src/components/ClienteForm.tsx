@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { useCrearCliente, useModificarCliente } from '../hooks/useClientes';
 import type { Cliente } from '../types';
@@ -9,15 +9,13 @@ interface ClienteFormProps {
 }
 
 export function ClienteForm({ cliente }: ClienteFormProps) {
+  // ALL hooks must be called unconditionally - no early returns allowed!
+  // Use conditional rendering in JSX instead
+  
   const isEditing = !!cliente;
   const { showClienteForm, setShowClienteForm, setEditingCliente } = useStore();
   const crearCliente = useCrearCliente();
   const modificarCliente = useModificarCliente();
-  
-  // El estado del store se usa solo en modo creación
-  // En modo edición, se usa la prop directamente
-  const formVisible = isEditing || showClienteForm;
-
   const [nombre, setNombre] = useState('');
   const [cuit, setCuit] = useState('');
   const [telefonoInput, setTelefonoInput] = useState('');
@@ -29,7 +27,10 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
 
-  const handleClose = () => {
+  const formVisible = isEditing || showClienteForm;
+
+  // useCallback needs to be at top level, before any conditionals
+  const handleClose = useCallback(() => {
     if (isEditing) {
       setEditingCliente(null);
     } else {
@@ -45,19 +46,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     setErrors({});
     setShowSuccess(false);
     setEditingTelefonoIndex(null);
-  };
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && formVisible) {
-        handleClose();
-      }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [formVisible]);
-
-  if (!formVisible) return null;
+  }, [isEditing, setEditingCliente, setShowClienteForm]);
 
   // Cargar datos del cliente en modo edición
   useEffect(() => {
@@ -95,6 +84,19 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       }
     }
   }, [cliente]);
+
+  // Cerrar con ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && formVisible) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [formVisible, handleClose]);
+
+  // NO early return here - use conditional rendering in JSX instead
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -207,7 +209,9 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     }
   };
 
-  return (
+  // Use conditional rendering in JSX instead of early return
+  // to satisfy React's Rules of Hooks
+  return formVisible ? (
     <>
       <div className="modal-backdrop" onClick={handleClose} />
       <div className="modal-content">
@@ -418,5 +422,5 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
         </div>
       </div>
     </>
-  );
+  ) : null;
 }
