@@ -258,6 +258,7 @@ export interface Material {
   descripcion: string;
   cantidad: number;
   precioUnitario: number;
+  precio?: number;  // Backend may return "precio" or "Precio"
   subtotal: number;
 }
 

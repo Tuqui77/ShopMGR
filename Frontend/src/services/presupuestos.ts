@@ -59,7 +59,8 @@ interface MaterialItem {
   id: number;
   descripcion: string;
   cantidad: number;
-  precioUnitario: number;
+  precio?: number;  // Backend returns "Precio", not "precioUnitario"
+  Precio?: number;
   subtotal: number;
 }
 
@@ -79,7 +80,7 @@ function mapMateriales(dto: { $id: string; $values: MaterialItem[] } | undefined
     id: m.id,
     descripcion: m.descripcion,
     cantidad: m.cantidad,
-    precioUnitario: m.precioUnitario,
+    precioUnitario: m.precio || m.Precio || 0,
     subtotal: m.subtotal,
   }));
 }

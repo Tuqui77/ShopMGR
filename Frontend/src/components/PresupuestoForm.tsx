@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
-import { useCrearPresupuesto, useModificarPresupuesto, usePresupuesto } from '../hooks/usePresupuestos';
+import { useCrearPresupuesto, useModificarPresupuesto, usePresupuestoDetalle } from '../hooks/usePresupuestos';
 import type { Cliente, MaterialRequest } from '../types';
 import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
@@ -24,7 +24,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   
   // Queries y mutations
   const { data: clientes = [] } = useClientes();
-  const { data: presupuestoOriginal } = usePresupuesto(presupuestoId);
+  const { data: presupuestoOriginal } = usePresupuestoDetalle(presupuestoId);
   const crearPresupuesto = useCrearPresupuesto();
   const modificarPresupuesto = useModificarPresupuesto();
 
@@ -40,6 +40,10 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   // Materiales
   const [materiales, setMateriales] = useState<MaterialRequest[]>([]);
   const [nuevoMaterial, setNuevoMaterial] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
+  
+  // Estado para edición de materiales en línea
+  const [materialEditando, setMaterialEditando] = useState<number | null>(null);
+  const [materialEditandoData, setMaterialEditandoData] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
@@ -79,12 +83,13 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       setTitulo(presupuestoOriginal.titulo);
       setDescripcion(presupuestoOriginal.descripcion || '');
       setHorasEstimadas(presupuestoOriginal.horasEstimadas);
-      // Map materiales if needed (backend uses "Precio" not "precioUnitario")
+      // Map materiales from the service (which maps backend "precio" to "precioUnitario")
       if (presupuestoOriginal.materiales) {
         setMateriales(presupuestoOriginal.materiales.map(m => ({
           descripcion: m.descripcion,
           cantidad: m.cantidad,
-          Precio: m.precioUnitario,
+          Precio: m.precioUnitario || 0,
+          precioUnitario: m.precioUnitario || 0,
         })));
       }
     }
@@ -160,6 +165,31 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   const handleRemoveMaterial = (index: number) => {
     setMateriales(materiales.filter((_, i) => i !== index));
+  };
+
+  const handleEditMaterial = (index: number) => {
+    const m = materiales[index];
+    setMaterialEditando(index);
+    setMaterialEditandoData({
+      descripcion: m.descripcion,
+      cantidad: m.cantidad,
+      precioUnitario: m.Precio || m.precioUnitario || 0,
+    });
+  };
+
+  const handleSaveMaterial = (index: number) => {
+    const nuevosMateriales = [...materiales];
+    nuevosMateriales[index] = {
+      descripcion: materialEditandoData.descripcion,
+      cantidad: materialEditandoData.cantidad,
+      Precio: materialEditandoData.precioUnitario,
+    };
+    setMateriales(nuevosMateriales);
+    setMaterialEditando(null);
+  };
+
+  const handleCancelEditMaterial = () => {
+    setMaterialEditando(null);
   };
 
   const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * (m.Precio || m.precioUnitario || 0)), 0);
@@ -374,25 +404,85 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                 {materiales.length > 0 && (
                   <div className="space-y-2 mb-3">
                     {materiales.map((m, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center justify-between p-2 rounded"
-                        style={{ backgroundColor: 'var(--color-surface)' }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{m.descripcion}</p>
-                          <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                            {m.cantidad} x ${(m.Precio || m.precioUnitario || 0).toLocaleString()} = ${(m.cantidad * (m.Precio || m.precioUnitario || 0)).toLocaleString()}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveMaterial(index)}
-                          className="btn-icon p-1 ml-2"
+                      materialEditando === index ? (
+                        // Modo edición
+                        <div 
+                          key={index}
+                          className="p-2 rounded"
+                          style={{ backgroundColor: 'var(--color-surface)' }}
                         >
-                          <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
-                        </button>
-                      </div>
+                          <div className="grid grid-cols-4 gap-2 mb-2">
+                            <input
+                              type="text"
+                              value={materialEditandoData.descripcion}
+                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, descripcion: e.target.value })}
+                              placeholder="Material"
+                              className="input col-span-2"
+                            />
+                            <input
+                              type="number"
+                              value={materialEditandoData.cantidad || ''}
+                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, cantidad: parseInt(e.target.value) || 0 })}
+                              placeholder="Cant."
+                              min={1}
+                              className="input col-span-1"
+                            />
+                            <input
+                              type="number"
+                              value={materialEditandoData.precioUnitario || ''}
+                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, precioUnitario: parseFloat(e.target.value) || 0 })}
+                              placeholder="Precio"
+                              min={0}
+                              className="input col-span-1"
+                            />
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                              Subtotal: ${(materialEditandoData.cantidad * materialEditandoData.precioUnitario).toLocaleString()}
+                            </p>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleSaveMaterial(index)}
+                                className="btn-icon p-1"
+                              >
+                                <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCancelEditMaterial}
+                                className="btn-icon p-1"
+                              >
+                                <X className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // Modo visualización
+                        <div 
+                          key={index}
+                          className="flex items-center justify-between p-2 rounded"
+                          style={{ backgroundColor: 'var(--color-surface)' }}
+                        >
+                          <div 
+                            className="flex-1 min-w-0 cursor-pointer"
+                            onClick={() => handleEditMaterial(index)}
+                          >
+                            <p className="text-sm font-medium truncate">{m.descripcion}</p>
+                            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                              {m.cantidad} x ${(m.Precio || m.precioUnitario || 0).toLocaleString()} = ${(m.cantidad * (m.Precio || m.precioUnitario || 0)).toLocaleString()}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMaterial(index)}
+                            className="btn-icon p-1 ml-2"
+                          >
+                            <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                          </button>
+                        </div>
+                      )
                     ))}
                   </div>
                 )}
