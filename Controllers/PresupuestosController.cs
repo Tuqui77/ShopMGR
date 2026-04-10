@@ -111,9 +111,7 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ActualizarCostoHora(decimal nuevoCosto)
         {
             await administracionPresupuestos.ActualizarCostoHoraDeTrabajo(nuevoCosto);
-            return Ok(
-                $"Valor de la hora de trabajo actualizado correctamente, nuevo valor: ${nuevoCosto}"
-            );
+            return Ok(nuevoCosto);
         }
 
         [HttpGet]

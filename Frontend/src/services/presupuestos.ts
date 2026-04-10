@@ -225,16 +225,23 @@ export const presupuestosService = {
    */
   async obtenerCostoHora(): Promise<number> {
     const response = await apiClient.get<string>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
-    // El backend retorna: "El costo de la hora de trabajo es: $XXX"
-    const match = response.data.match(/\$(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
+    // El backend retorna: "El costo de la hora de trabajo es: $1500"
+    const match = response.data.match(/\$(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : 0;
   },
 
   /**
    * Actualiza el costo hora de trabajo
    */
-  async actualizarCostoHora(nuevoCosto: string): Promise<void> {
-    await apiClient.patch('/Presupuestos/ActualizarCostoHoraDeTrabajo', nuevoCosto);
+  async actualizarCostoHora(nuevoCosto: number): Promise<void> {
+    // Enviar solo el query parameter, sin body
+    const params = new URLSearchParams();
+    params.append('nuevoCosto', nuevoCosto.toString());
+    await apiClient.request({
+      method: 'PATCH',
+      url: `/Presupuestos/ActualizarCostoHoraDeTrabajo?${params.toString()}`,
+      data: '', // String vacío en lugar de undefined
+    });
   },
 };
 
