@@ -266,15 +266,15 @@ public class AdministracionPresupuestosTests
     {
         // Arrange
         _presupuestoRepositorioMock
-            .Setup(x => x.ActualizarCostoHoraDeTrabajo("150.50"))
+            .Setup(x => x.ActualizarCostoHoraDeTrabajo(150.50m))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _servicio.ActualizarCostoHoraDeTrabajo("150.50");
+        await _servicio.ActualizarCostoHoraDeTrabajo(150.50m);
 
         // Assert
         _presupuestoRepositorioMock.Verify(
-            x => x.ActualizarCostoHoraDeTrabajo("150.50"),
+            x => x.ActualizarCostoHoraDeTrabajo(150.50m),
             Times.Once
         );
     }

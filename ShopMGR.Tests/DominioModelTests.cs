@@ -47,16 +47,16 @@ public class DominioModelTests
     {
         // Arrange & Act
         var config = new ConfiguracionGlobal
-        {
-            Id = 5,
-            Clave = "ValorHoraDeTrabajo",
-            Valor = "250",
-        };
+    {
+        Id = 5,
+        Clave = "ValorHoraDeTrabajo",
+        Valor = 250m,
+    };
 
-        // Assert
-        config.Id.Should().Be(5);
-        config.Clave.Should().Be("ValorHoraDeTrabajo");
-        config.Valor.Should().Be("250");
+    // Assert
+    config.Id.Should().Be(5);
+    config.Clave.Should().Be("ValorHoraDeTrabajo");
+    config.Valor.Should().Be(250m);
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class DominioModelTests
         // Assert
         config.Id.Should().Be(0);
         config.Clave.Should().BeNull();
-        config.Valor.Should().BeNull();
+        config.Valor.Should().Be(0); // decimal defaults to 0, not null
     }
 
     #endregion
