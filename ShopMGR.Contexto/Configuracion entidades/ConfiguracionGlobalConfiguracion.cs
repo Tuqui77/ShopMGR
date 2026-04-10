@@ -24,7 +24,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
 
             builder.Property(c => c.Valor)
                 .IsRequired(true)
-                .HasMaxLength(200);
+                .HasPrecision(18, 2);
         }
     }
 }

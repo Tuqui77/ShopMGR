@@ -10,6 +10,6 @@ namespace ShopMGR.Dominio.Modelo
     {
         public int Id { get; set; }
         public string Clave { get; set; }
-        public string Valor { get; set; }
+        public decimal Valor { get; set; }
     }
 }

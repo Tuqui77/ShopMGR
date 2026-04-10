@@ -74,7 +74,7 @@ namespace ShopMGR.Aplicacion.Servicios
             await _presupuestoRepositorio.EliminarAsync(idPresupuesto);
         }
 
-        public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
+        public async Task ActualizarCostoHoraDeTrabajo(decimal nuevoCosto)
         {
             await _presupuestoRepositorio.ActualizarCostoHoraDeTrabajo(nuevoCosto);
         }

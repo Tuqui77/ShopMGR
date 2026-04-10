@@ -108,7 +108,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPatch]
         [Route("ActualizarCostoHoraDeTrabajo")]
-        public async Task<IActionResult> ActualizarCostoHora(string nuevoCosto)
+        public async Task<IActionResult> ActualizarCostoHora(decimal nuevoCosto)
         {
             await administracionPresupuestos.ActualizarCostoHoraDeTrabajo(nuevoCosto);
             return Ok(
