@@ -18,6 +18,7 @@ import { useStore } from '../store';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { TrabajoForm } from '../components/TrabajoForm';
+import { ImageUpload } from '../components/ImageUpload';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -242,6 +243,9 @@ export function TrabajoDetalle() {
               Sin fotos
             </p>
           )}
+          
+          {/* Upload new photos */}
+          <ImageUpload />
         </div>
 
         {/* Totales */}
