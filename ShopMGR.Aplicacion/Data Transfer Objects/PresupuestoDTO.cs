@@ -1,6 +1,6 @@
 ﻿namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 {
-    public class PresupuestoDTO
+    public class PresupuestoDTOcreacion
     {
         public string Titulo { get; set; }
         public string? Descripcion { get; set; }

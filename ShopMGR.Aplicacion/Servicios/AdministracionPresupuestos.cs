@@ -15,9 +15,9 @@ namespace ShopMGR.Aplicacion.Servicios
         private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
-        public async Task<Presupuesto> CrearAsync(PresupuestoDTO nuevoPresupuesto)
+        public async Task<Presupuesto> CrearAsync(PresupuestoDTOcreacion nuevoPresupuesto)
         {
-            var presupuesto = _mapper.Map<PresupuestoDTO, Presupuesto>(nuevoPresupuesto);
+            var presupuesto = _mapper.Map<PresupuestoDTOcreacion, Presupuesto>(nuevoPresupuesto);
 
             presupuesto.Fecha = DateOnly.FromDateTime(DateTime.Now);
             presupuesto.Estado = EstadoPresupuesto.Pendiente;

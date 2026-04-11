@@ -7,11 +7,11 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Mappers;
 
-public class PresupuestoMapper(MapperRegistry mapper) : IMapper<PresupuestoDTO, Presupuesto>
+public class PresupuestoMapper(MapperRegistry mapper) : IMapper<PresupuestoDTOcreacion, Presupuesto>
 {
     private readonly MapperRegistry _mapper = mapper;
 
-    public Presupuesto Map(PresupuestoDTO presupuestoDTO)
+    public Presupuesto Map(PresupuestoDTOcreacion presupuestoDTO)
     {
         return new Presupuesto
         {
@@ -24,13 +24,13 @@ public class PresupuestoMapper(MapperRegistry mapper) : IMapper<PresupuestoDTO, 
     }
 }
 
-public class PresupuestoDTOMapper(MapperRegistry mapper) : IMapper<Presupuesto, PresupuestoDTO>
+public class PresupuestoDTOMapper(MapperRegistry mapper) : IMapper<Presupuesto, PresupuestoDTOcreacion>
 {
     private readonly MapperRegistry _mapper = mapper;
 
-    public PresupuestoDTO Map(Presupuesto presupuesto)
+    public PresupuestoDTOcreacion Map(Presupuesto presupuesto)
     {
-        return new PresupuestoDTO
+        return new PresupuestoDTOcreacion
         {
             IdCliente = presupuesto.IdCliente,
             Titulo = presupuesto.Titulo,

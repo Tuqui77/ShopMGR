@@ -14,7 +14,7 @@ namespace ShopMGR.WebApi.Controllers
     {
         [HttpPost]
         [Route("CrearPresupuesto")]
-        public async Task<IActionResult> CrearPresupuesto(PresupuestoDTO nuevoPresupuesto)
+        public async Task<IActionResult> CrearPresupuesto(PresupuestoDTOcreacion nuevoPresupuesto)
         {
             if (nuevoPresupuesto == null)
             {
