@@ -10,6 +10,7 @@ import {
   Check,
   X,
   Package,
+  Copy,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { useState } from 'react';
@@ -129,7 +130,7 @@ export function PresupuestoDetalle() {
   const presupuestoId = id ? parseInt(id, 10) : undefined;
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { editingPresupuestoId, setEditingPresupuestoId } = useStore();
+  const { editingPresupuestoId, setEditingPresupuestoId, setDatosDuplicarPresupuesto, setShowPresupuestoForm } = useStore();
 
   const { data: presupuesto, isLoading, error } = useQuery({
     queryKey: ['presupuesto', presupuestoId],
@@ -219,6 +220,25 @@ export function PresupuestoDetalle() {
   const handleEdit = () => {
     if (presupuesto) {
       setEditingPresupuestoId(presupuesto.id);
+    }
+  };
+
+  const handleDuplicar = () => {
+    if (presupuesto && presupuesto.cliente) {
+      setDatosDuplicarPresupuesto({
+        idCliente: presupuesto.cliente.id,
+        nombreCliente: presupuesto.cliente.nombreCompleto,
+        titulo: `Copia de ${presupuesto.titulo}`,
+        descripcion: presupuesto.descripcion || '',
+        horasEstimadas: presupuesto.horasEstimadas,
+        materiales: presupuesto.materiales?.map(m => ({
+          descripcion: m.descripcion,
+          cantidad: m.cantidad,
+          Precio: m.precioUnitario,
+          precioUnitario: m.precioUnitario,
+        })) || [],
+      });
+      setShowPresupuestoForm(true);
     }
   };
 
@@ -399,8 +419,15 @@ export function PresupuestoDetalle() {
           
           <div className="flex gap-3">
             <button 
-              onClick={handleEdit}
+              onClick={handleDuplicar}
               className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]"
+            >
+              <Copy className="w-4 h-4" />
+              Duplicar
+            </button>
+            <button 
+              onClick={handleEdit}
+              className="btn-secondary flex items-center justify-center gap-2 max-w-[120px]"
             >
               <Edit className="w-4 h-4" />
               Editar

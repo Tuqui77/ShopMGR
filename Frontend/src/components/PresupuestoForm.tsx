@@ -47,6 +47,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [esDuplicado, setEsDuplicado] = useState(false);
 
   const handleClose = () => {
     onClose();
@@ -63,6 +64,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
         setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
         setErrors({});
         setShowSuccess(false);
+        setEsDuplicado(false);
       }
     }, 200);
   };
@@ -119,6 +121,33 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen]);
+
+  // Initialize form data when duplicating from store
+  useEffect(() => {
+    if (store.datosDuplicarPresupuesto && isOpen) {
+      setStep('datos');
+      setEsDuplicado(true);
+      setClienteSeleccionado({
+        id: store.datosDuplicarPresupuesto.idCliente,
+        nombreCompleto: store.datosDuplicarPresupuesto.nombreCliente,
+        telefono: [],
+        balance: 0,
+        trabajosCount: 0,
+        presupuestosCount: 0,
+      });
+      setTitulo(store.datosDuplicarPresupuesto.titulo);
+      setDescripcion(store.datosDuplicarPresupuesto.descripcion);
+      setHorasEstimadas(store.datosDuplicarPresupuesto.horasEstimadas);
+      setMateriales(store.datosDuplicarPresupuesto.materiales);
+    }
+  }, [store.datosDuplicarPresupuesto, isOpen]);
+
+  // Clear duplicar data after close
+  useEffect(() => {
+    if (!isOpen && store.datosDuplicarPresupuesto) {
+      store.setDatosDuplicarPresupuesto(null);
+    }
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -265,7 +294,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
               )}
             </button>
             <h2 className="font-semibold text-lg">
-              {showSuccess ? '¡Listo!' : step === 'cliente' ? 'Seleccionar Cliente' : 'Nuevo Presupuesto'}
+              {showSuccess ? '¡Listo!' : step === 'cliente' ? 'Seleccionar Cliente' : esDuplicado ? 'Duplicar Presupuesto' : 'Nuevo Presupuesto'}
             </h2>
             <div className="w-11" />
           </div>
@@ -339,13 +368,25 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
             <div className="animate-fade-in space-y-4">
               {/* Cliente seleccionado */}
               <div 
-                className="p-3 rounded-lg"
+                className="p-3 rounded-lg flex items-center justify-between"
                 style={{ backgroundColor: 'var(--color-surface)' }}
               >
-                <p className="text-xs" style={{ color: 'var(--color-muted)' }}>CLIENTE</p>
-                <p className="font-medium" style={{ color: 'var(--color-text)' }}>
-                  {clienteSeleccionado?.nombreCompleto}
-                </p>
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--color-muted)' }}>CLIENTE</p>
+                  <p className="font-medium" style={{ color: 'var(--color-text)' }}>
+                    {clienteSeleccionado?.nombreCompleto}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('cliente');
+                    setSearch('');
+                  }}
+                  className="btn-secondary text-sm py-1 px-3"
+                >
+                  Cambiar
+                </button>
               </div>
               
               {/* Título */}
@@ -549,7 +590,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    {isEditing ? 'Actualizar' : 'Crear Presupuesto'}
+                    {isEditing ? 'Actualizar' : esDuplicado ? 'Crear Copia' : 'Crear Presupuesto'}
                   </>
                 )}
               </button>

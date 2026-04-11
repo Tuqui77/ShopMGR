@@ -87,6 +87,10 @@ function mapMateriales(dto: { $id: string; $values: MaterialItem[] } | undefined
 
 function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
   if (!dto) return null;
+  
+  // Handle circular reference (e.g., {"$ref":"3"}) or partial reference
+  if (!dto.id && !dto.nombreCompleto) return null;
+  
   return {
     id: dto.id,
     nombreCompleto: dto.nombreCompleto,
@@ -96,7 +100,7 @@ function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
       : undefined,
     balance: dto.balance || 0,
     trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.length || 0,
+    presupuestosCount: dto.presupuestos?.$values?.filter(p => (p as any).id).length || 0,
   };
 }
 
@@ -128,7 +132,9 @@ export const presupuestosService = {
   async listar(): Promise<Presupuesto[]> {
     const response = await apiClient.get<ListResponse<PresupuestoBackendDTO>>('/Presupuestos/ListarPresupuestos');
     const values = response.data.$values || [];
-    return values.map(mapPresupuestoBackend);
+    // Filter out circular references (objects with just $ref)
+    const filtered = values.filter(v => v.id);
+    return filtered.map(mapPresupuestoBackend);
   },
 
   /**

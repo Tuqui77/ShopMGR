@@ -1,6 +1,16 @@
 import { create } from 'zustand';
-import type { Cliente, Trabajo, HorasRegistradas, Presupuesto } from '../types';
+import type { Cliente, Trabajo, HorasRegistradas, Presupuesto, MaterialRequest } from '../types';
 import { clientesMock, trabajosMock, horasMock, valorHoraMock, presupuestosMock } from '../data/mock';
+
+// Type for duplicating a presupuesto
+interface DatosDuplicarPresupuesto {
+  idCliente: number;
+  nombreCliente: string;
+  titulo: string;
+  descripcion: string;
+  horasEstimadas: number;
+  materiales: MaterialRequest[];
+}
 
 interface AppState {
   // Data
@@ -26,6 +36,9 @@ interface AppState {
   editingTrabajoId: number | null;
   editingPresupuestoId: number | null;
   
+  // Duplicar presupuesto state
+  datosDuplicarPresupuesto: DatosDuplicarPresupuesto | null;
+  
   // Actions
   setIsAuthenticated: (authenticated: boolean) => void;
   setShowHoursModal: (show: boolean) => void;
@@ -36,6 +49,7 @@ interface AppState {
   setEditingCliente: (cliente: Cliente | null) => void;
   setEditingTrabajoId: (id: number | null) => void;
   setEditingPresupuestoId: (id: number | null) => void;
+  setDatosDuplicarPresupuesto: (datos: DatosDuplicarPresupuesto | null) => void;
   addHoras: (idTrabajo: number, horas: number, descripcion: string) => void;
   updateTrabajoEstado: (idTrabajo: number, estado: Trabajo['estado']) => void;
 }
@@ -58,6 +72,7 @@ export const useStore = create<AppState>((set, get) => ({
   editingCliente: null,
   editingTrabajoId: null,
   editingPresupuestoId: null,
+  datosDuplicarPresupuesto: null,
   
   // Initial auth state (check localStorage)
   isAuthenticated: localStorage.getItem('isAuthenticated') === 'true',
@@ -88,6 +103,8 @@ export const useStore = create<AppState>((set, get) => ({
   setEditingTrabajoId: (id) => set({ editingTrabajoId: id }),
   
   setEditingPresupuestoId: (id) => set({ editingPresupuestoId: id }),
+  
+  setDatosDuplicarPresupuesto: (datos) => set({ datosDuplicarPresupuesto: datos }),
   
   addHoras: (idTrabajo, horas, descripcion) => {
     const { valorHora, horas: existingHoras, trabajos } = get();
