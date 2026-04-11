@@ -119,7 +119,7 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ObtenerCostoHora()
         {
             var costoHora = await administracionPresupuestos.ObtenerCostoHoraDeTrabajo();
-            return Ok($"El costo de la hora de trabajo es: ${costoHora}");
+            return Ok(costoHora);
         }
     }
 }

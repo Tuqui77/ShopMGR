@@ -4,7 +4,7 @@
     {
 
         public int Id { get; set; }
-        public string NombreCompleto { get; set; }
+        public string NombreCompleto { get; set; } = "";
         public string? Cuit { get; set; }
         public decimal? Balance { get; set; }
 

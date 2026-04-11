@@ -48,9 +48,26 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _presupuestoRepositorio.ObtenerPorEstadoAsync(estado);
         }
 
-        public async Task<List<Presupuesto>> ListarPresupuestos()
+        public async Task<List<PresupuestoDTOlista>> ListarPresupuestos()
         {
-            return await _presupuestoRepositorio.ListarPresupuestos();
+            var presupuestos = await _presupuestoRepositorio.ListarPresupuestos();
+            var listaPresupuestosDto = new List<PresupuestoDTOlista>();
+
+            foreach (var presupuesto in presupuestos)
+            {
+                var presupuestoDto = new PresupuestoDTOlista
+                {
+                    Id = presupuesto.Id,
+                    Titulo = presupuesto.Titulo,
+                    NombreCliente = presupuesto.Cliente.NombreCompleto,
+                    HorasEstimadas = presupuesto.HorasEstimadas,
+                    Total = presupuesto.Total,
+                    Estado = presupuesto.Estado,
+                };
+
+                listaPresupuestosDto.Add(presupuestoDto);
+            }
+            return listaPresupuestosDto;
         }
 
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)

@@ -8,7 +8,7 @@ namespace ShopMGR.Aplicacion.Interfaces
     {
         public Task<List<Presupuesto>> ObtenerPorClienteAsync(int idCliente);
         public Task<List<Presupuesto>> ObtenerPorEstadoAsync(EstadoPresupuesto estado);
-        public Task<List<Presupuesto>> ListarPresupuestos();
+        public Task<List<PresupuestoDTOlista>> ListarPresupuestos();
         public Task ActualizarCostoHoraDeTrabajo(decimal nuevoCosto);
         public Task<decimal> ObtenerCostoHoraDeTrabajo();
     }
