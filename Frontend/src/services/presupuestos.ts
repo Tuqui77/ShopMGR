@@ -101,7 +101,7 @@ function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
       : undefined,
     balance: dto.balance || 0,
     trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.filter(p => (p as any).id).length || 0,
+    presupuestosCount: dto.presupuestos?.$values?.filter(p => 'id' in p && p.id).length || 0,
   };
 }
 
