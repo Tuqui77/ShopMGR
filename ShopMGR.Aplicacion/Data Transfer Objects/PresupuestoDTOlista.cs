@@ -4,7 +4,7 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 {
     public class PresupuestoDTOlista
     {
-        public int Id {get; set; }
+        public int Id { get; set; }
         public string Titulo { get; set; } = "";
         public string NombreCliente { get; set; } = "";
         public double HorasEstimadas { get; set; }

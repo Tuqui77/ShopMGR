@@ -122,9 +122,10 @@ namespace ShopMGR.WebApi.Aplicacion
 
             app.MapControllers();
 
-            using (var scope = app.Services.CreateScope()){
-              var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
-              db.Database.Migrate();
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
+                db.Database.Migrate();
             }
 
             app.Run();
