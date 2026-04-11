@@ -15,9 +15,9 @@ namespace ShopMGR.Aplicacion.Servicios
         private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
-        public async Task<Presupuesto> CrearAsync(PresupuestoDTO nuevoPresupuesto)
+        public async Task<Presupuesto> CrearAsync(PresupuestoDTOcreacion nuevoPresupuesto)
         {
-            var presupuesto = _mapper.Map<PresupuestoDTO, Presupuesto>(nuevoPresupuesto);
+            var presupuesto = _mapper.Map<PresupuestoDTOcreacion, Presupuesto>(nuevoPresupuesto);
 
             presupuesto.Fecha = DateOnly.FromDateTime(DateTime.Now);
             presupuesto.Estado = EstadoPresupuesto.Pendiente;
@@ -48,9 +48,26 @@ namespace ShopMGR.Aplicacion.Servicios
             return await _presupuestoRepositorio.ObtenerPorEstadoAsync(estado);
         }
 
-        public async Task<List<Presupuesto>> ListarPresupuestos()
+        public async Task<List<PresupuestoDTOlista>> ListarPresupuestos()
         {
-            return await _presupuestoRepositorio.ListarPresupuestos();
+            var presupuestos = await _presupuestoRepositorio.ListarPresupuestos();
+            var listaPresupuestosDto = new List<PresupuestoDTOlista>();
+
+            foreach (var presupuesto in presupuestos)
+            {
+                var presupuestoDto = new PresupuestoDTOlista
+                {
+                    Id = presupuesto.Id,
+                    Titulo = presupuesto.Titulo,
+                    NombreCliente = presupuesto.Cliente.NombreCompleto,
+                    HorasEstimadas = presupuesto.HorasEstimadas,
+                    Total = presupuesto.Total,
+                    Estado = presupuesto.Estado,
+                };
+
+                listaPresupuestosDto.Add(presupuestoDto);
+            }
+            return listaPresupuestosDto;
         }
 
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
@@ -74,7 +91,7 @@ namespace ShopMGR.Aplicacion.Servicios
             await _presupuestoRepositorio.EliminarAsync(idPresupuesto);
         }
 
-        public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
+        public async Task ActualizarCostoHoraDeTrabajo(decimal nuevoCosto)
         {
             await _presupuestoRepositorio.ActualizarCostoHoraDeTrabajo(nuevoCosto);
         }

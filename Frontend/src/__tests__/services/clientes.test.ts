@@ -48,13 +48,13 @@ describe('clientesService', () => {
     it('CrearClienteRequest has optional fields', () => {
       const request: CrearClienteRequest = {
         nombreCompleto: 'Test Cliente',
-        CUIT: '20-12345678-9',
-        telefono: ['11-2345-6789'],
-        direccion: 'Calle Falsa 123',
+        Cuit: '20123456789',
+        telefono: [{ telefono: '11-2345-6789', descripcion: 'Celular' }],
+        direccion: [{ calle: 'Calle Falsa', altura: '123' }],
       };
-      expect(request.CUIT).toBe('20-12345678-9');
+      expect(request.Cuit).toBe('20123456789');
       expect(request.telefono).toHaveLength(1);
-      expect(request.direccion).toBe('Calle Falsa 123');
+      expect(request.direccion).toHaveLength(1);
     });
 
     it('ModificarClienteRequest allows partial updates', () => {

@@ -356,18 +356,18 @@ public class PresupuestoRepositorioTests
         var configuracion = new ConfiguracionGlobal
         {
             Clave = "ValorHoraDeTrabajo",
-            Valor = "100"
+            Valor = 100m
         };
         await contexto.Configuraciones.AddAsync(configuracion);
         await contexto.SaveChangesAsync();
 
         // Act
-        await repositorio.ActualizarCostoHoraDeTrabajo("150");
+        await repositorio.ActualizarCostoHoraDeTrabajo(150m);
 
         // Assert
         var configEnDb = await contexto.Configuraciones.FirstOrDefaultAsync(c => c.Clave == "ValorHoraDeTrabajo");
         configEnDb.Should().NotBeNull();
-        configEnDb.Valor.Should().Be("150");
+        configEnDb.Valor.Should().Be(150m);
     }
 
     [Fact]
@@ -378,12 +378,12 @@ public class PresupuestoRepositorioTests
         var repositorio = new PresupuestoRepositorio(contexto);
 
         // Act
-        await repositorio.ActualizarCostoHoraDeTrabajo("200");
+        await repositorio.ActualizarCostoHoraDeTrabajo(200m);
 
         // Assert
         var configEnDb = await contexto.Configuraciones.FirstOrDefaultAsync(c => c.Clave == "ValorHoraDeTrabajo");
         configEnDb.Should().NotBeNull();
-        configEnDb.Valor.Should().Be("200");
+        configEnDb.Valor.Should().Be(200m);
     }
 
     #endregion
@@ -400,7 +400,7 @@ public class PresupuestoRepositorioTests
         var configuracion = new ConfiguracionGlobal
         {
             Clave = "ValorHoraDeTrabajo",
-            Valor = "250"
+            Valor = 250m
         };
         await contexto.Configuraciones.AddAsync(configuracion);
         await contexto.SaveChangesAsync();

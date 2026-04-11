@@ -1,15 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
-import { useCrearPresupuesto } from '../hooks/usePresupuestos';
+import { useCrearPresupuesto, useModificarPresupuesto, usePresupuestoDetalle } from '../hooks/usePresupuestos';
 import type { Cliente, MaterialRequest } from '../types';
 import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft } from 'lucide-react';
 import clsx from 'clsx';
 
-export function PresupuestoForm() {
-  const { showPresupuestoForm, setShowPresupuestoForm } = useStore();
+interface Props {
+  presupuestoId?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSuccess?: () => void;
+}
+
+// Si no se pasa isOpen, usa el store
+export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
+  const store = useStore();
+  const isEditing = !!presupuestoId;
+  
+  // Usar props si se pasan, sino usar store
+  const isOpen = isOpenProp ?? store.showPresupuestoForm;
+  const onClose = onCloseProp ?? (() => store.setShowPresupuestoForm(false));
+  
+  // Queries y mutations
   const { data: clientes = [] } = useClientes();
+  const { data: presupuestoOriginal } = usePresupuestoDetalle(presupuestoId);
   const crearPresupuesto = useCrearPresupuesto();
+  const modificarPresupuesto = useModificarPresupuesto();
 
   const [step, setStep] = useState<'cliente' | 'datos'>('cliente');
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
@@ -24,34 +41,116 @@ export function PresupuestoForm() {
   const [materiales, setMateriales] = useState<MaterialRequest[]>([]);
   const [nuevoMaterial, setNuevoMaterial] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
   
+  // Estado para edición de materiales en línea
+  const [materialEditando, setMaterialEditando] = useState<number | null>(null);
+  const [materialEditandoData, setMaterialEditandoData] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
+  const [esDuplicado, setEsDuplicado] = useState(false);
 
   const handleClose = () => {
-    setShowPresupuestoForm(false);
-    setStep('cliente');
-    setClienteSeleccionado(null);
-    setSearch('');
-    setTitulo('');
-    setDescripcion('');
-    setHorasEstimadas(0);
-    setMateriales([]);
-    setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
-    setErrors({});
-    setShowSuccess(false);
+    onClose();
+    // Reset form after close animation
+    setTimeout(() => {
+      if (!isOpenProp) {
+        setStep('cliente');
+        setClienteSeleccionado(null);
+        setSearch('');
+        setTitulo('');
+        setDescripcion('');
+        setHorasEstimadas(0);
+        setMateriales([]);
+        setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
+        setErrors({});
+        setShowSuccess(false);
+        setEsDuplicado(false);
+      }
+    }, 200);
   };
+
+  // Initialize form data when editing
+  useEffect(() => {
+    if (presupuestoOriginal && isEditing) {
+      // Skip client selection step, go directly to data
+      setStep('datos');
+      setClienteSeleccionado({
+        id: presupuestoOriginal.cliente?.id || 0,
+        nombreCompleto: presupuestoOriginal.cliente?.nombreCompleto || '',
+        telefono: [],
+        balance: 0,
+        trabajosCount: 0,
+        presupuestosCount: 0,
+      });
+      setTitulo(presupuestoOriginal.titulo);
+      setDescripcion(presupuestoOriginal.descripcion || '');
+      setHorasEstimadas(presupuestoOriginal.horasEstimadas);
+      // Map materiales from the service (which maps backend "precio" to "precioUnitario")
+      if (presupuestoOriginal.materiales) {
+        setMateriales(presupuestoOriginal.materiales.map(m => ({
+          descripcion: m.descripcion,
+          cantidad: m.cantidad,
+          Precio: m.precioUnitario || 0,
+          precioUnitario: m.precioUnitario || 0,
+        })));
+      }
+    }
+  }, [presupuestoOriginal, isEditing]);
+
+  // Reset form when closed via prop (not store)
+  useEffect(() => {
+    if (!isOpen && isOpenProp !== undefined) {
+      setStep('cliente');
+      setClienteSeleccionado(null);
+      setSearch('');
+      setTitulo('');
+      setDescripcion('');
+      setHorasEstimadas(0);
+      setMateriales([]);
+      setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
+      setErrors({});
+      setShowSuccess(false);
+    }
+  }, [isOpen, isOpenProp]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showPresupuestoForm) {
+      if (e.key === 'Escape' && isOpen) {
         handleClose();
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [showPresupuestoForm]);
+  }, [isOpen]);
 
-  if (!showPresupuestoForm) return null;
+  // Initialize form data when duplicating from store
+  useEffect(() => {
+    if (store.datosDuplicarPresupuesto && isOpen) {
+      setStep('datos');
+      setEsDuplicado(true);
+      setClienteSeleccionado({
+        id: store.datosDuplicarPresupuesto.idCliente,
+        nombreCompleto: store.datosDuplicarPresupuesto.nombreCliente,
+        telefono: [],
+        balance: 0,
+        trabajosCount: 0,
+        presupuestosCount: 0,
+      });
+      setTitulo(store.datosDuplicarPresupuesto.titulo);
+      setDescripcion(store.datosDuplicarPresupuesto.descripcion);
+      setHorasEstimadas(store.datosDuplicarPresupuesto.horasEstimadas);
+      setMateriales(store.datosDuplicarPresupuesto.materiales);
+    }
+  }, [store.datosDuplicarPresupuesto, isOpen]);
+
+  // Clear duplicar data after close
+  useEffect(() => {
+    if (!isOpen && store.datosDuplicarPresupuesto) {
+      store.setDatosDuplicarPresupuesto(null);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const filteredClientes = clientes.filter(c => 
     c.nombreCompleto.toLowerCase().includes(search.toLowerCase())
@@ -83,7 +182,12 @@ export function PresupuestoForm() {
 
   const handleAddMaterial = () => {
     if (nuevoMaterial.descripcion.trim() && nuevoMaterial.cantidad > 0 && nuevoMaterial.precioUnitario > 0) {
-      setMateriales([...materiales, { ...nuevoMaterial }]);
+      // Map precioUnitario to Precio for backend compatibility
+      setMateriales([...materiales, { 
+        descripcion: nuevoMaterial.descripcion, 
+        cantidad: nuevoMaterial.cantidad, 
+        Precio: nuevoMaterial.precioUnitario 
+      }]);
       setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
     }
   };
@@ -92,24 +196,83 @@ export function PresupuestoForm() {
     setMateriales(materiales.filter((_, i) => i !== index));
   };
 
-  const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * m.precioUnitario), 0);
+  const handleEditMaterial = (index: number) => {
+    const m = materiales[index];
+    setMaterialEditando(index);
+    setMaterialEditandoData({
+      descripcion: m.descripcion,
+      cantidad: m.cantidad,
+      precioUnitario: m.Precio || m.precioUnitario || 0,
+    });
+  };
+
+  const handleSaveMaterial = (index: number) => {
+    const nuevosMateriales = [...materiales];
+    nuevosMateriales[index] = {
+      descripcion: materialEditandoData.descripcion,
+      cantidad: materialEditandoData.cantidad,
+      Precio: materialEditandoData.precioUnitario,
+    };
+    setMateriales(nuevosMateriales);
+    setMaterialEditando(null);
+  };
+
+  const handleCancelEditMaterial = () => {
+    setMaterialEditando(null);
+  };
+
+  const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * (m.Precio || m.precioUnitario || 0)), 0);
+
+  const isSubmitting = crearPresupuesto.isPending || modificarPresupuesto.isPending;
 
   const handleSubmit = async () => {
     if (!validate() || !clienteSeleccionado) return;
     
     try {
-      await crearPresupuesto.mutateAsync({
-        titulo: titulo.trim(),
-        descripcion: descripcion.trim() || undefined,
-        horasEstimadas,
-        idCliente: clienteSeleccionado.id,
-        materiales: materiales.length > 0 ? materiales : undefined,
-      });
+      if (isEditing && presupuestoId) {
+        await modificarPresupuesto.mutateAsync({
+          id: presupuestoId,
+          presupuesto: {
+            titulo: titulo.trim(),
+            descripcion: descripcion.trim() || undefined,
+            horasEstimadas,
+            materiales: materiales.length > 0 ? materiales : undefined,
+          },
+        });
+      } else {
+        await crearPresupuesto.mutateAsync({
+          titulo: titulo.trim(),
+          descripcion: descripcion.trim() || undefined,
+          horasEstimadas,
+          idCliente: clienteSeleccionado.id,
+          materiales: materiales.length > 0 ? materiales : undefined,
+        });
+      }
       setShowSuccess(true);
-      setTimeout(handleClose, 1500);
+      setTimeout(() => {
+        onSuccess?.();
+        handleClose();
+      }, 1500);
     } catch (error) {
-      console.error('Error al crear presupuesto:', error);
-      alert('Error al crear el presupuesto. Intenta de nuevo.');
+      console.error('Error al guardar presupuesto:', error);
+      
+      // Extraer mensaje de error del backend
+      let errorMessage = 'Error al guardar el presupuesto';
+      
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
+        if (axiosError.response?.data?.error) {
+          errorMessage = axiosError.response.data.error;
+        } else if (axiosError.response?.status === 500) {
+          errorMessage = 'Error interno del servidor';
+        } else if (axiosError.response?.status === 404) {
+          errorMessage = 'Recurso no encontrado';
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      setErrors({ submit: errorMessage });
     }
   };
 
@@ -131,7 +294,7 @@ export function PresupuestoForm() {
               )}
             </button>
             <h2 className="font-semibold text-lg">
-              {showSuccess ? '¡Listo!' : step === 'cliente' ? 'Seleccionar Cliente' : 'Nuevo Presupuesto'}
+              {showSuccess ? '¡Listo!' : step === 'cliente' ? 'Seleccionar Cliente' : esDuplicado ? 'Duplicar Presupuesto' : 'Nuevo Presupuesto'}
             </h2>
             <div className="w-11" />
           </div>
@@ -205,13 +368,25 @@ export function PresupuestoForm() {
             <div className="animate-fade-in space-y-4">
               {/* Cliente seleccionado */}
               <div 
-                className="p-3 rounded-lg"
+                className="p-3 rounded-lg flex items-center justify-between"
                 style={{ backgroundColor: 'var(--color-surface)' }}
               >
-                <p className="text-xs" style={{ color: 'var(--color-muted)' }}>CLIENTE</p>
-                <p className="font-medium" style={{ color: 'var(--color-text)' }}>
-                  {clienteSeleccionado?.nombreCompleto}
-                </p>
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--color-muted)' }}>CLIENTE</p>
+                  <p className="font-medium" style={{ color: 'var(--color-text)' }}>
+                    {clienteSeleccionado?.nombreCompleto}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('cliente');
+                    setSearch('');
+                  }}
+                  className="btn-secondary text-sm py-1 px-3"
+                >
+                  Cambiar
+                </button>
               </div>
               
               {/* Título */}
@@ -270,25 +445,85 @@ export function PresupuestoForm() {
                 {materiales.length > 0 && (
                   <div className="space-y-2 mb-3">
                     {materiales.map((m, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center justify-between p-2 rounded"
-                        style={{ backgroundColor: 'var(--color-surface)' }}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{m.descripcion}</p>
-                          <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                            {m.cantidad} x ${m.precioUnitario.toLocaleString()} = ${(m.cantidad * m.precioUnitario).toLocaleString()}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveMaterial(index)}
-                          className="btn-icon p-1 ml-2"
+                      materialEditando === index ? (
+                        // Modo edición
+                        <div 
+                          key={index}
+                          className="p-2 rounded"
+                          style={{ backgroundColor: 'var(--color-surface)' }}
                         >
-                          <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
-                        </button>
-                      </div>
+                          <div className="grid grid-cols-4 gap-2 mb-2">
+                            <input
+                              type="text"
+                              value={materialEditandoData.descripcion}
+                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, descripcion: e.target.value })}
+                              placeholder="Material"
+                              className="input col-span-2"
+                            />
+                            <input
+                              type="number"
+                              value={materialEditandoData.cantidad || ''}
+                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, cantidad: parseInt(e.target.value) || 0 })}
+                              placeholder="Cant."
+                              min={1}
+                              className="input col-span-1"
+                            />
+                            <input
+                              type="number"
+                              value={materialEditandoData.precioUnitario || ''}
+                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, precioUnitario: parseFloat(e.target.value) || 0 })}
+                              placeholder="Precio"
+                              min={0}
+                              className="input col-span-1"
+                            />
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                              Subtotal: ${(materialEditandoData.cantidad * materialEditandoData.precioUnitario).toLocaleString()}
+                            </p>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleSaveMaterial(index)}
+                                className="btn-icon p-1"
+                              >
+                                <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCancelEditMaterial}
+                                className="btn-icon p-1"
+                              >
+                                <X className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // Modo visualización
+                        <div 
+                          key={index}
+                          className="flex items-center justify-between p-2 rounded"
+                          style={{ backgroundColor: 'var(--color-surface)' }}
+                        >
+                          <div 
+                            className="flex-1 min-w-0 cursor-pointer"
+                            onClick={() => handleEditMaterial(index)}
+                          >
+                            <p className="text-sm font-medium truncate">{m.descripcion}</p>
+                            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                              {m.cantidad} x ${(m.Precio || m.precioUnitario || 0).toLocaleString()} = ${(m.cantidad * (m.Precio || m.precioUnitario || 0)).toLocaleString()}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMaterial(index)}
+                            className="btn-icon p-1 ml-2"
+                          >
+                            <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                          </button>
+                        </div>
+                      )
                     ))}
                   </div>
                 )}
@@ -337,12 +572,17 @@ export function PresupuestoForm() {
               </div>
               
               {/* Submit */}
+              {errors.submit && (
+                <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
+                  {errors.submit}
+                </p>
+              )}
               <button
                 onClick={handleSubmit}
-                disabled={crearPresupuesto.isPending}
-                className="btn-primary w-full flex items-center justify-center gap-2 mt-6"
+                disabled={isSubmitting}
+                className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
               >
-                {crearPresupuesto.isPending ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Guardando...
@@ -350,7 +590,7 @@ export function PresupuestoForm() {
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    Crear Presupuesto
+                    {isEditing ? 'Actualizar' : esDuplicado ? 'Crear Copia' : 'Crear Presupuesto'}
                   </>
                 )}
               </button>

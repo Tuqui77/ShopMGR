@@ -63,7 +63,8 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Presupuesto>> ListarPresupuestos()
         {
-            var presupuestos = await _contexto.Presupuestos.Include(p => p.Cliente).ToListAsync();
+            var presupuestos = await _contexto.Presupuestos
+              .Include(p => p.Cliente).ToListAsync();
 
             return presupuestos;
         }
@@ -82,7 +83,7 @@ namespace ShopMGR.Repositorios
             await _contexto.SaveChangesAsync();
         }
 
-        public async Task ActualizarCostoHoraDeTrabajo(string nuevoCosto)
+        public async Task ActualizarCostoHoraDeTrabajo(decimal nuevoCosto)
         {
             var valorHoraDeTrabajo = await _contexto
                 .Configuraciones.Where(c => c.Clave == "ValorHoraDeTrabajo")
@@ -117,7 +118,7 @@ namespace ShopMGR.Repositorios
                     "El valor de la hora de trabajo no esta configurado"
                 );
 
-            return decimal.Parse(configuracionValorHoraDeTrabajo.Valor);
+            return configuracionValorHoraDeTrabajo.Valor;
         }
     }
 }

@@ -172,9 +172,9 @@ public class AdministracionPresupuestosTests
         // Arrange
         var todosPresupuestos = new List<Presupuesto>
         {
-            new() { Id = 1, Titulo = "Presupuesto 1" },
-            new() { Id = 2, Titulo = "Presupuesto 2" },
-            new() { Id = 3, Titulo = "Presupuesto 3" },
+            new() { Id = 1, Titulo = "Presupuesto 1", Cliente = new Cliente { Id = 1, NombreCompleto = "Cliente 1" } },
+            new() { Id = 2, Titulo = "Presupuesto 2", Cliente = new Cliente { Id = 2, NombreCompleto = "Cliente 2" } },
+            new() { Id = 3, Titulo = "Presupuesto 3", Cliente = new Cliente { Id = 3, NombreCompleto = "Cliente 3" } },
         };
 
         _presupuestoRepositorioMock
@@ -266,15 +266,15 @@ public class AdministracionPresupuestosTests
     {
         // Arrange
         _presupuestoRepositorioMock
-            .Setup(x => x.ActualizarCostoHoraDeTrabajo("150.50"))
+            .Setup(x => x.ActualizarCostoHoraDeTrabajo(150.50m))
             .Returns(Task.CompletedTask);
 
         // Act
-        await _servicio.ActualizarCostoHoraDeTrabajo("150.50");
+        await _servicio.ActualizarCostoHoraDeTrabajo(150.50m);
 
         // Assert
         _presupuestoRepositorioMock.Verify(
-            x => x.ActualizarCostoHoraDeTrabajo("150.50"),
+            x => x.ActualizarCostoHoraDeTrabajo(150.50m),
             Times.Once
         );
     }

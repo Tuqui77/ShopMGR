@@ -14,7 +14,7 @@ namespace ShopMGR.WebApi.Controllers
     {
         [HttpPost]
         [Route("CrearPresupuesto")]
-        public async Task<IActionResult> CrearPresupuesto(PresupuestoDTO nuevoPresupuesto)
+        public async Task<IActionResult> CrearPresupuesto(PresupuestoDTOcreacion nuevoPresupuesto)
         {
             if (nuevoPresupuesto == null)
             {
@@ -108,12 +108,10 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPatch]
         [Route("ActualizarCostoHoraDeTrabajo")]
-        public async Task<IActionResult> ActualizarCostoHora(string nuevoCosto)
+        public async Task<IActionResult> ActualizarCostoHora(decimal nuevoCosto)
         {
             await administracionPresupuestos.ActualizarCostoHoraDeTrabajo(nuevoCosto);
-            return Ok(
-                $"Valor de la hora de trabajo actualizado correctamente, nuevo valor: ${nuevoCosto}"
-            );
+            return Ok(nuevoCosto);
         }
 
         [HttpGet]
@@ -121,7 +119,7 @@ namespace ShopMGR.WebApi.Controllers
         public async Task<IActionResult> ObtenerCostoHora()
         {
             var costoHora = await administracionPresupuestos.ObtenerCostoHoraDeTrabajo();
-            return Ok($"El costo de la hora de trabajo es: ${costoHora}");
+            return Ok(costoHora);
         }
     }
 }

@@ -102,8 +102,51 @@ export const trabajosService = {
    */
   async listar(): Promise<Trabajo[]> {
     const response = await apiClient.get<ListResponse<TrabajoBackendDTO>>('/Trabajos/ObtenerListaTrabajos');
-    const values = response.data.$values || [];
-    return values.map(mapTrabajoBackend);
+    const rawValues = response.data.$values || [];
+    
+    // Type guard para validar que un objeto tiene las propiedades mínimas de TrabajoBackendDTO
+    const isTrabajoBackendDTO = (obj: unknown): obj is TrabajoBackendDTO => {
+      return typeof obj === 'object' && obj !== null && 
+        'id' in obj && 'titulo' in obj && 'estado' in obj && 'idCliente' in obj;
+    };
+    
+    // Recolectar todos los trabajos: raíz + anidados en cliente.trabajos
+    const allTrabajos: TrabajoBackendDTO[] = [];
+    const seenIds = new Set<number>();
+    
+    for (const item of rawValues) {
+      // Skip null/undefined o referencias $ref
+      if (!item || typeof item !== 'object') continue;
+      if (!isTrabajoBackendDTO(item)) continue;
+      
+      // Agregar el trabajo de raíz si no está duplicado
+      if (!seenIds.has(item.id)) {
+        seenIds.add(item.id);
+        allTrabajos.push(item);
+      }
+      
+      // También extraer trabajos anidados en cliente.trabajos
+      if (item.cliente && typeof item.cliente === 'object' && 'trabajos' in item.cliente) {
+        const clienteObj = item.cliente as ClienteBackendDTO;
+        const clienteTrabajos = clienteObj.trabajos;
+        
+        if (clienteTrabajos && typeof clienteTrabajos === 'object' && '$values' in clienteTrabajos) {
+          for (const trab of clienteTrabajos.$values) {
+            if (isTrabajoBackendDTO(trab) && !seenIds.has(trab.id)) {
+              seenIds.add(trab.id);
+              // Crear una copia del trabajo anidado con el cliente completo del padre
+              const trabajoConCliente: TrabajoBackendDTO = {
+                ...trab,
+                cliente: clienteObj, // Asignar el cliente del trabajo raíz
+              };
+              allTrabajos.push(trabajoConCliente);
+            }
+          }
+        }
+      }
+    }
+    
+    return allTrabajos.map(mapTrabajoBackend);
   },
 
   /**

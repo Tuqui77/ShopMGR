@@ -12,7 +12,7 @@ namespace ShopMGR.Dominio.Abstracciones
         : IRepositorioConEstado<Presupuesto, EstadoPresupuesto>
     {
         public Task<List<Presupuesto>> ListarPresupuestos();
-        public Task ActualizarCostoHoraDeTrabajo(string nuevoCosto);
+        public Task ActualizarCostoHoraDeTrabajo(decimal nuevoCosto);
         public Task<decimal> ObtenerCostoHoraDeTrabajo();
     }
 }

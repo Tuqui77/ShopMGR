@@ -1,14 +1,58 @@
 import { Link, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight } from 'lucide-react';
-import { useClienteDetalle } from '../hooks/useClientes';
+import { useClienteDetalle, useEliminarCliente } from '../hooks/useClientes';
+import { useStore } from '../store';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
+import { ClienteForm } from '../components/ClienteForm';
 
 export function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
   const clienteId = id ? parseInt(id, 10) : undefined;
   
   const { data: cliente, isLoading, error } = useClienteDetalle(clienteId!);
+  const eliminarCliente = useEliminarCliente();
+  const { editingCliente, setEditingCliente } = useStore();
+  
+  // Handle edit button
+  const handleEdit = () => {
+    if (cliente) {
+      // Build telefono as string[] (required by Cliente interface)
+      const telefonosStrings = (cliente.telefonosCompletos || []).map(t => t.telefono);
+      
+      setEditingCliente({
+        id: cliente.id,
+        nombreCompleto: cliente.nombreCompleto,
+        // Use telefonos for the string[] field (required by interface)
+        telefono: telefonosStrings,
+        direccion: cliente.direccion || '',
+        balance: cliente.balance,
+        trabajosCount: cliente.trabajosCount,
+        presupuestosCount: cliente.presupuestosCount,
+        // Include optional fields
+        telefonosCompletos: cliente.telefonosCompletos,
+        direccionesCompletas: cliente.direccionesCompletas,
+        trabajosRecientes: cliente.trabajosRecientes,
+        presupuestosRecientes: cliente.presupuestosRecientes,
+        // Include CUIT
+        cuit: cliente.cuit,
+      });
+    }
+  };
+  
+  // Handle delete button
+  const handleDelete = async () => {
+    if (cliente && window.confirm(`¿Estás seguro de eliminar el cliente "${cliente.nombreCompleto}"?`)) {
+      try {
+        await eliminarCliente.mutateAsync(cliente.id);
+        // Navigate back after delete
+        window.location.href = '/clientes';
+      } catch (err) {
+        console.error('Error al eliminar cliente:', err);
+        alert('Error al eliminar el cliente');
+      }
+    }
+  };
 
   const formatBalance = (balance: number) => {
     if (balance > 0) return { text: formatCurrency(balance), class: 'text-[var(--color-success)]' };
@@ -217,15 +261,30 @@ export function ClienteDetalle() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-2">
-          <button className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]">
+          <button 
+            onClick={handleEdit}
+            className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]"
+          >
             <Edit className="w-4 h-4" />
             Editar
           </button>
-          <button className="btn-secondary flex items-center justify-center gap-2 px-4" style={{ color: 'var(--color-danger)' }}>
-            <Trash2 className="w-4 h-4" />
+          <button 
+            onClick={handleDelete}
+            disabled={eliminarCliente.isPending}
+            className="btn-secondary flex items-center justify-center gap-2 px-4"
+            style={{ color: 'var(--color-danger)' }}
+          >
+            {eliminarCliente.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
           </button>
         </div>
       </section>
+      
+      {/* Cliente Form for editing */}
+      {editingCliente && <ClienteForm cliente={editingCliente} />}
     </div>
   );
 }

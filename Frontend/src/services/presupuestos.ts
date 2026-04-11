@@ -2,6 +2,7 @@ import { apiClient } from './api';
 import type {
   Presupuesto,
   PresupuestoBackendDTO,
+  PresupuestoListaDTO,
   Material,
   Cliente,
   ClienteBackendDTO,
@@ -59,7 +60,8 @@ interface MaterialItem {
   id: number;
   descripcion: string;
   cantidad: number;
-  precioUnitario: number;
+  precio?: number;  // Backend returns "Precio", not "precioUnitario"
+  Precio?: number;
   subtotal: number;
 }
 
@@ -79,13 +81,17 @@ function mapMateriales(dto: { $id: string; $values: MaterialItem[] } | undefined
     id: m.id,
     descripcion: m.descripcion,
     cantidad: m.cantidad,
-    precioUnitario: m.precioUnitario,
+    precioUnitario: m.precio || m.Precio || 0,
     subtotal: m.subtotal,
   }));
 }
 
 function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
   if (!dto) return null;
+  
+  // Handle circular reference (e.g., {"$ref":"3"}) or partial reference
+  if (!dto.id && !dto.nombreCompleto) return null;
+  
   return {
     id: dto.id,
     nombreCompleto: dto.nombreCompleto,
@@ -95,7 +101,32 @@ function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
       : undefined,
     balance: dto.balance || 0,
     trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.length || 0,
+    presupuestosCount: dto.presupuestos?.$values?.filter(p => 'id' in p && p.id).length || 0,
+  };
+}
+
+// Mapper for list view (simplified DTO)
+function mapPresupuestoLista(dto: PresupuestoListaDTO): Presupuesto {
+  return {
+    id: dto.id,
+    titulo: dto.titulo || '',
+    descripcion: '',
+    estado: dto.estado || 'Pendiente',
+    fecha: '',
+    cliente: {
+      id: 0,
+      nombreCompleto: dto.nombreCliente || '',
+      telefono: [],
+      balance: 0,
+      trabajosCount: 0,
+      presupuestosCount: 0,
+    },
+    horasEstimadas: dto.horasEstimadas || 0,
+    costoMateriales: 0,
+    costoLabor: 0,
+    costoInsumos: 0,
+    total: dto.total || 0,
+    materiales: [],
   };
 }
 
@@ -122,12 +153,12 @@ function mapPresupuestoBackend(dto: PresupuestoBackendDTO): Presupuesto {
 
 export const presupuestosService = {
   /**
-   * Obtiene todos los presupuestos
+   * Obtiene todos los presupuestos (list view)
    */
   async listar(): Promise<Presupuesto[]> {
-    const response = await apiClient.get<ListResponse<PresupuestoBackendDTO>>('/Presupuestos/ListarPresupuestos');
+    const response = await apiClient.get<ListResponse<PresupuestoListaDTO>>('/Presupuestos/ListarPresupuestos');
     const values = response.data.$values || [];
-    return values.map(mapPresupuestoBackend);
+    return values.map(mapPresupuestoLista);
   },
 
   /**
@@ -224,17 +255,22 @@ export const presupuestosService = {
    * Obtiene el costo hora de trabajo
    */
   async obtenerCostoHora(): Promise<number> {
-    const response = await apiClient.get<string>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
-    // El backend retorna: "El costo de la hora de trabajo es: $XXX"
-    const match = response.data.match(/\$(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
+    const response = await apiClient.get<number>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
+    return response.data;
   },
 
   /**
    * Actualiza el costo hora de trabajo
    */
-  async actualizarCostoHora(nuevoCosto: string): Promise<void> {
-    await apiClient.patch('/Presupuestos/ActualizarCostoHoraDeTrabajo', nuevoCosto);
+  async actualizarCostoHora(nuevoCosto: number): Promise<void> {
+    // Enviar solo el query parameter, sin body
+    const params = new URLSearchParams();
+    params.append('nuevoCosto', nuevoCosto.toString());
+    await apiClient.request({
+      method: 'PATCH',
+      url: `/Presupuestos/ActualizarCostoHoraDeTrabajo?${params.toString()}`,
+      data: '', // String vacío en lugar de undefined
+    });
   },
 };
 

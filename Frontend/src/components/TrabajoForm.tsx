@@ -56,6 +56,17 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  // Cerrar con ESC
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
   
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};

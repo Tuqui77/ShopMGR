@@ -100,16 +100,16 @@ export interface ClienteDetalleBackendDTO {
 
 export interface CrearClienteRequest {
   nombreCompleto: string;
-  CUIT?: string;
-  telefono: string[];
-  direccion?: string;
+  Cuit?: string;
+  telefono: { telefono: string; descripcion: string }[];
+  direccion?: { calle: string; altura: string }[];
 }
 
 export interface ModificarClienteRequest {
   nombreCompleto?: string;
-  CUIT?: string;
-  telefono?: string[];
-  direccion?: string;
+  Cuit?: string;
+  telefono?: { telefono: string; descripcion: string }[];
+  direccion?: { calle: string; altura: string }[];
 }
 
 // ============================================================================
@@ -221,6 +221,16 @@ export interface MaterialBackendDTO {
   subtotal: number;
 }
 
+// DTO for list view - simplified response from ListarPresupuestos
+export interface PresupuestoListaDTO {
+  id: number;
+  titulo: string;
+  nombreCliente: string;
+  horasEstimadas: number;
+  total: number;
+  estado: EstadoPresupuesto;
+}
+
 export interface PresupuestoBackendDTO {
   id: number;
   titulo: string;
@@ -258,6 +268,7 @@ export interface Material {
   descripcion: string;
   cantidad: number;
   precioUnitario: number;
+  precio?: number;  // Backend may return "precio" or "Precio"
   subtotal: number;
 }
 
@@ -276,7 +287,8 @@ export interface CrearPresupuestoRequest {
 export interface MaterialRequest {
   descripcion: string;
   cantidad: number;
-  precioUnitario: number;
+  Precio: number; // Backend expects "Precio" not "precioUnitario"
+  precioUnitario?: number; // For internal use in form display
 }
 
 export interface ModificarPresupuestoRequest {
@@ -285,6 +297,7 @@ export interface ModificarPresupuestoRequest {
   horasEstimadas?: number;
   estado?: EstadoPresupuesto;
   idCliente?: number;
+  materiales?: MaterialRequest[];
 }
 
 export interface MovimientoBalance {

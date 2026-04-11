@@ -42,12 +42,12 @@ export function FAB({ isOpen, onToggle, onAction }: Props) {
           onClick={() => onAction('hours')}
         />
         <MenuButton 
-          label="Nuevo Trabajo" 
+          label="Trabajo" 
           icon={Wrench} 
           onClick={() => onAction('trabajo')}
         />
         <MenuButton 
-          label="Nuevo Cliente" 
+          label="Cliente" 
           icon={User} 
           onClick={() => onAction('cliente')}
         />

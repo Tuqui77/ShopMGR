@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import clsx from 'clsx';
+import clsx from 'clsx'; 
 import { 
   Loader2, 
   ArrowLeft, 
@@ -13,18 +13,22 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../hooks/useTrabajos';
+import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
+import { TrabajoForm } from '../components/TrabajoForm';
+import { ImageUpload } from '../components/ImageUpload';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
   const trabajoId = id ? parseInt(id, 10) : undefined;
   
   const { data: trabajo, isLoading, error } = useTrabajoDetalle(trabajoId);
+  const { data: clienteCompleto } = useClienteDetalle(trabajo?.clienteId);
   const terminarTrabajo = useTerminarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
-  const { setShowHoursModal, setSelectedTrabajo } = useStore();
+  const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId } = useStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const handleRegisterHours = () => {
@@ -54,6 +58,16 @@ export function TrabajoDetalle() {
         setShowDeleteConfirm(false);
       }
     }
+  };
+
+  const handleEdit = () => {
+    if (trabajo) {
+      setEditingTrabajoId(trabajo.id);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setEditingTrabajoId(null);
   };
   
   const getStatusBadge = () => {
@@ -126,7 +140,7 @@ export function TrabajoDetalle() {
               <div className="flex-1">
                 <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.cliente.nombreCompleto}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {trabajo.cliente.telefono[0] || 'Sin teléfono'}
+                  {clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
                 </p>
               </div>
             </Link>
@@ -229,6 +243,9 @@ export function TrabajoDetalle() {
               Sin fotos
             </p>
           )}
+          
+          {/* Upload new photos */}
+          <ImageUpload />
         </div>
 
         {/* Totales */}
@@ -278,7 +295,10 @@ export function TrabajoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]">
+            <button 
+              onClick={handleEdit}
+              className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]"
+            >
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -327,6 +347,16 @@ export function TrabajoDetalle() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Trabajo Form for editing */}
+      {editingTrabajoId && (
+        <TrabajoForm 
+          trabajoId={editingTrabajoId} 
+          isOpen={true}
+          onClose={() => setEditingTrabajoId(null)}
+          onSuccess={handleEditSuccess}
+        />
       )}
     </div>
   );

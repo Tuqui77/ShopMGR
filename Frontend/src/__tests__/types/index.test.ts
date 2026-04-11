@@ -178,9 +178,9 @@ describe('Type definitions', () => {
     it('creates valid CrearClienteRequest', () => {
       const request: CrearClienteRequest = {
         nombreCompleto: 'Juan Pérez',
-        CUIT: '20-12345678-9',
-        telefono: ['11-2345-6789'],
-        direccion: 'Calle Falsa 123',
+        Cuit: '20123456789',
+        telefono: [{ telefono: '11-2345-6789', descripcion: 'Celular' }],
+        direccion: [{ calle: 'Calle Falsa', altura: '123' }],
       };
       expect(request.nombreCompleto).toBeDefined();
     });
@@ -216,7 +216,7 @@ describe('Type definitions', () => {
         idCliente: 1,
         descripcion: 'Descripción',
         materiales: [
-          { descripcion: 'Material 1', cantidad: 1, precioUnitario: 1000 },
+          { descripcion: 'Material 1', cantidad: 1, Precio: 1000 },
         ],
       };
       expect(request.materiales).toHaveLength(1);

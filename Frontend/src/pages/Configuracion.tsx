@@ -44,14 +44,20 @@ function applyTheme(theme: Theme) {
 // ============================================================================
 
 async function fetchCostoHora(): Promise<number> {
-  const response = await apiClient.get<string>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
-  const match = response.data.match(/\$(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+  const response = await apiClient.get<number>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
+  return response.data;
 }
 
-async function updateCostoHora(nuevoCosto: string): Promise<void> {
-  // Enviar como query parameter (sin el símbolo $)
-  await apiClient.patch(`/Presupuestos/ActualizarCostoHoraDeTrabajo?nuevoCosto=${nuevoCosto}`, {});
+async function updateCostoHora(nuevoCosto: number): Promise<void> {
+  // Enviar solo el query parameter, sin body
+  // Usar URLSearchParams para construir la URL correctamente
+  const params = new URLSearchParams();
+  params.append('nuevoCosto', nuevoCosto.toString());
+  await apiClient.request({
+    method: 'PATCH',
+    url: `/Presupuestos/ActualizarCostoHoraDeTrabajo?${params.toString()}`,
+    data: '', // String vacío en lugar de undefined
+  });
 }
 
 // ============================================================================
@@ -128,8 +134,8 @@ export function Configuracion() {
   
   const handleCostoHoraSave = () => {
     const value = costoHoraInput.trim();
-    if (value && !isNaN(parseInt(value, 10))) {
-      updateCostoHoraMutation.mutate(value, {
+    if (value && !isNaN(parseFloat(value))) {
+      updateCostoHoraMutation.mutate(parseFloat(value), {
         onSuccess: () => {
           setShowCostoHoraSuccess(true);
           setTimeout(() => setShowCostoHoraSuccess(false), 3000);

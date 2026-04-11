@@ -19,11 +19,13 @@ export function useCliente(id: number | undefined) {
   });
 }
 
-export function useClienteDetalle(id: number) {
+export function useClienteDetalle(id: number | undefined) {
+  const idValido = typeof id === 'number' && id >= 0;
+  
   return useQuery({
     queryKey: ['clientes', id, 'detalle'],
-    queryFn: () => clientesService.obtenerDetalle(id),
-    enabled: id >= 0,
+    queryFn: () => clientesService.obtenerDetalle(id!),
+    enabled: idValido,
     staleTime: 0,
     refetchOnWindowFocus: true,
   });

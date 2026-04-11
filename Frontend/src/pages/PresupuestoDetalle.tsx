@@ -10,11 +10,15 @@ import {
   Check,
   X,
   Package,
+  Copy,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto, Cliente } from '../types';
+import { useStore } from '../store';
+import { PresupuestoForm } from '../components/PresupuestoForm';
+import { useClienteDetalle } from '../hooks/useClientes';
 
 // Tipos para DTOs raw del backend
 interface TelefonoRaw {
@@ -126,12 +130,15 @@ export function PresupuestoDetalle() {
   const presupuestoId = id ? parseInt(id, 10) : undefined;
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { editingPresupuestoId, setEditingPresupuestoId, setDatosDuplicarPresupuesto, setShowPresupuestoForm } = useStore();
 
   const { data: presupuesto, isLoading, error } = useQuery({
     queryKey: ['presupuesto', presupuestoId],
     queryFn: () => fetchPresupuestoDetalle(presupuestoId!),
     enabled: typeof presupuestoId === 'number' && presupuestoId >= 0,
   });
+
+  const { data: clienteCompleto } = useClienteDetalle(presupuesto?.cliente?.id);
 
   const aceptarMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -210,6 +217,37 @@ export function PresupuestoDetalle() {
     }
   };
 
+  const handleEdit = () => {
+    if (presupuesto) {
+      setEditingPresupuestoId(presupuesto.id);
+    }
+  };
+
+  const handleDuplicar = () => {
+    if (presupuesto && presupuesto.cliente) {
+      setDatosDuplicarPresupuesto({
+        idCliente: presupuesto.cliente.id,
+        nombreCliente: presupuesto.cliente.nombreCompleto,
+        titulo: `Copia de ${presupuesto.titulo}`,
+        descripcion: presupuesto.descripcion || '',
+        horasEstimadas: presupuesto.horasEstimadas,
+        materiales: presupuesto.materiales?.map(m => ({
+          descripcion: m.descripcion,
+          cantidad: m.cantidad,
+          Precio: m.precioUnitario,
+          precioUnitario: m.precioUnitario,
+        })) || [],
+      });
+      setShowPresupuestoForm(true);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setEditingPresupuestoId(null);
+    // Refetch presupuesto data
+    queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
@@ -267,7 +305,7 @@ export function PresupuestoDetalle() {
               <div className="flex-1">
                 <p className="font-medium" style={{ color: 'var(--color-text)' }}>{presupuesto.cliente.nombreCompleto}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {presupuesto.cliente.telefono[0] || 'Sin teléfono'}
+                  {clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
                 </p>
               </div>
             </Link>
@@ -380,7 +418,17 @@ export function PresupuestoDetalle() {
           )}
           
           <div className="flex gap-3">
-            <button className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]">
+            <button 
+              onClick={handleDuplicar}
+              className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]"
+            >
+              <Copy className="w-4 h-4" />
+              Duplicar
+            </button>
+            <button 
+              onClick={handleEdit}
+              className="btn-secondary flex items-center justify-center gap-2 max-w-[120px]"
+            >
               <Edit className="w-4 h-4" />
               Editar
             </button>
@@ -429,6 +477,16 @@ export function PresupuestoDetalle() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Presupuesto Form for editing */}
+      {editingPresupuestoId && (
+        <PresupuestoForm 
+          presupuestoId={editingPresupuestoId}
+          isOpen={true}
+          onClose={() => setEditingPresupuestoId(null)}
+          onSuccess={handleEditSuccess}
+        />
       )}
     </div>
   );

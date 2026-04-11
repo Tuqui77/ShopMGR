@@ -161,7 +161,7 @@ export function useActualizarCostoHora() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (nuevoCosto: string) => presupuestosService.actualizarCostoHora(nuevoCosto),
+    mutationFn: (nuevoCosto: number) => presupuestosService.actualizarCostoHora(nuevoCosto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['costo-hora'] });
     },
