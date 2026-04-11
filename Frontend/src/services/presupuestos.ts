@@ -2,6 +2,7 @@ import { apiClient } from './api';
 import type {
   Presupuesto,
   PresupuestoBackendDTO,
+  PresupuestoListaDTO,
   Material,
   Cliente,
   ClienteBackendDTO,
@@ -104,6 +105,31 @@ function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
   };
 }
 
+// Mapper for list view (simplified DTO)
+function mapPresupuestoLista(dto: PresupuestoListaDTO): Presupuesto {
+  return {
+    id: dto.id,
+    titulo: dto.titulo || '',
+    descripcion: '',
+    estado: dto.estado || 'Pendiente',
+    fecha: '',
+    cliente: {
+      id: 0,
+      nombreCompleto: dto.nombreCliente || '',
+      telefono: [],
+      balance: 0,
+      trabajosCount: 0,
+      presupuestosCount: 0,
+    },
+    horasEstimadas: dto.horasEstimadas || 0,
+    costoMateriales: 0,
+    costoLabor: 0,
+    costoInsumos: 0,
+    total: dto.total || 0,
+    materiales: [],
+  };
+}
+
 function mapPresupuestoBackend(dto: PresupuestoBackendDTO): Presupuesto {
   return {
     id: dto.id,
@@ -127,14 +153,12 @@ function mapPresupuestoBackend(dto: PresupuestoBackendDTO): Presupuesto {
 
 export const presupuestosService = {
   /**
-   * Obtiene todos los presupuestos
+   * Obtiene todos los presupuestos (list view)
    */
   async listar(): Promise<Presupuesto[]> {
-    const response = await apiClient.get<ListResponse<PresupuestoBackendDTO>>('/Presupuestos/ListarPresupuestos');
+    const response = await apiClient.get<ListResponse<PresupuestoListaDTO>>('/Presupuestos/ListarPresupuestos');
     const values = response.data.$values || [];
-    // Filter out circular references (objects with just $ref)
-    const filtered = values.filter(v => v.id);
-    return filtered.map(mapPresupuestoBackend);
+    return values.map(mapPresupuestoLista);
   },
 
   /**

@@ -221,6 +221,16 @@ export interface MaterialBackendDTO {
   subtotal: number;
 }
 
+// DTO for list view - simplified response from ListarPresupuestos
+export interface PresupuestoListaDTO {
+  id: number;
+  titulo: string;
+  nombreCliente: string;
+  horasEstimadas: number;
+  total: number;
+  estado: EstadoPresupuesto;
+}
+
 export interface PresupuestoBackendDTO {
   id: number;
   titulo: string;
