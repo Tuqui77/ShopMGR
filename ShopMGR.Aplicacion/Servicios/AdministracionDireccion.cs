@@ -41,15 +41,13 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var direccionBd = await _direccionRepositorio.ObtenerPorIdAsync(idDireccion);
 
-            direccionBd.IdCliente = direccionActualizada.IdCliente ?? direccionBd.IdCliente;
-            direccionBd.Calle = direccionActualizada.Calle ?? direccionBd.Calle;
-            direccionBd.Altura = direccionActualizada.Altura ?? direccionBd.Altura;
-            direccionBd.Piso = direccionActualizada.Piso ?? direccionBd.Piso;
-            direccionBd.Departamento =
-                direccionActualizada.Departamento ?? direccionBd.Departamento;
-            direccionBd.CodigoPostal =
-                direccionActualizada.CodigoPostal ?? direccionBd.CodigoPostal;
-            direccionBd.Descripcion = direccionActualizada.Descripcion ?? direccionBd.Descripcion;
+            direccionBd.Calle = direccionActualizada.Calle;
+            direccionBd.Altura = direccionActualizada.Altura;
+            direccionBd.Piso = direccionActualizada.Piso;
+            direccionBd.Departamento = direccionActualizada.Departamento;
+            direccionBd.CodigoPostal = direccionActualizada.CodigoPostal;
+            direccionBd.Ciudad = direccionActualizada.Ciudad;
+            direccionBd.Descripcion = direccionActualizada.Descripcion;
 
             await _direccionRepositorio.ActualizarAsync(direccionBd);
         }
