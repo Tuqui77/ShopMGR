@@ -37,6 +37,7 @@ export interface DireccionCompleta {
   departamento?: string;
   descripcion?: string;
   codigoPostal?: string;
+  ciudad?: string;
 }
 
 export interface TrabajoItem {
@@ -71,6 +72,7 @@ export interface DireccionItem {
   departamento?: string;
   descripcion?: string;
   codigoPostal?: string;
+  ciudad?: string;
 }
 
 export interface ClienteBackendDTO {
@@ -255,6 +257,7 @@ export interface Presupuesto {
   estado: EstadoPresupuesto;
   fecha: string;
   cliente: Cliente;
+  idCliente?: number;
   horasEstimadas: number;
   costoMateriales: number;
   costoLabor: number;
@@ -285,6 +288,7 @@ export interface CrearPresupuestoRequest {
 }
 
 export interface MaterialRequest {
+  id?: number;
   descripcion: string;
   cantidad: number;
   Precio: number; // Backend expects "Precio" not "precioUnitario"

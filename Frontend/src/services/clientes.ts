@@ -57,7 +57,7 @@ export interface CrearClienteRequest {
 
 export interface ModificarClienteRequest {
   nombreCompleto?: string;
-  Cuit?: string;
+  Cuit?: string | null;
   telefono?: { telefono: string; descripcion: string }[];
   direccion?: { calle: string; altura: string }[];
 }
@@ -223,8 +223,8 @@ export const clientesService = {
     return mapBackendToFrontend(response.data);
   },
 
-  async modificar(id: number, cliente: ModificarClienteRequest): Promise<void> {
-    await apiClient.patch(`/Cliente/ModificarCliente?idCliente=${id}`, cliente);
+  async modificar(id: number, data: ModificarClienteRequest): Promise<void> {
+    await apiClient.patch(`/Cliente/ModificarCliente?idCliente=${id}`, data);
   },
 
   async eliminar(id: number): Promise<void> {

@@ -5,10 +5,17 @@ import type {
   Cliente,
   ClienteBackendDTO,
   CrearTrabajoRequest,
-  ModificarTrabajoRequest,
   RegistrarHorasRequest,
   EstadoTrabajo,
 } from '../types';
+
+export interface ModificarTrabajoRequest {
+  titulo?: string;
+  estado?: EstadoTrabajo;
+  idCliente?: number;
+  idPresupuesto?: number;
+  totalLabor?: number;
+}
 
 // ============================================================================
 // Tipos internos para el servicio
@@ -202,8 +209,8 @@ export const trabajosService = {
   /**
    * Modifica los datos de un trabajo existente
    */
-  async modificar(id: number, trabajo: ModificarTrabajoRequest): Promise<void> {
-    await apiClient.patch(`/Trabajos/ModificarTrabajo?idTrabajo=${id}`, trabajo);
+  async modificar(id: number, data: ModificarTrabajoRequest): Promise<void> {
+    await apiClient.patch(`/Trabajos/ModificarTrabajo?idTrabajo=${id}`, data);
   },
 
   /**
@@ -232,4 +239,4 @@ export const trabajosService = {
 // Exports de tipos para uso en hooks
 // ============================================================================
 
-export type { CrearTrabajoRequest, ModificarTrabajoRequest, RegistrarHorasRequest };
+export type { CrearTrabajoRequest, RegistrarHorasRequest };
