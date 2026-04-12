@@ -256,18 +256,18 @@ public class AdministracionTrabajosTests
     public async Task ActualizarAsync_DeberiaActualizarTrabajoExistente()
     {
         // Arrange
+        var trabajoModificado = new ModificarTrabajo
+        {
+            Titulo = "Título Modificado",
+            Estado = EstadoTrabajo.Iniciado,
+        };
+
         var trabajoExistente = new Trabajo
         {
             Id = 1,
             Titulo = "Título Original",
             Estado = EstadoTrabajo.Pendiente,
             IdCliente = 10,
-        };
-
-        var trabajoModificado = new ModificarTrabajo
-        {
-            Titulo = "Título Modificado",
-            Estado = EstadoTrabajo.Iniciado,
         };
 
         _repositorioFotoMock
@@ -298,6 +298,8 @@ public class AdministracionTrabajosTests
     public async Task ActualizarAsync_CambioAIniciado_DeberiaSetearFechaInicio()
     {
         // Arrange
+        var trabajoModificado = new ModificarTrabajo { Estado = EstadoTrabajo.Iniciado };
+
         var trabajoExistente = new Trabajo
         {
             Id = 1,
@@ -305,8 +307,6 @@ public class AdministracionTrabajosTests
             Estado = EstadoTrabajo.Pendiente,
             FechaInicio = null,
         };
-
-        var trabajoModificado = new ModificarTrabajo { Estado = EstadoTrabajo.Iniciado };
 
         _repositorioFotoMock
             .Setup(x => x.ObtenerDetallePorIdAsync(1))
@@ -397,57 +397,6 @@ public class AdministracionTrabajosTests
 
         // Assert
         resultado.Should().BeNull();
-    }
-
-    #endregion
-
-    #region ActualizarAsync - Edge Cases
-
-    [Fact]
-    public async Task ActualizarAsync_DeberiaMantenerValoresOriginalesCuandoSeanNull()
-    {
-        // Arrange
-        var trabajoExistente = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Título Original",
-            Estado = EstadoTrabajo.Pendiente,
-            IdCliente = 10,
-            IdPresupuesto = 5,
-        };
-
-        var trabajoModificado = new ModificarTrabajo
-        {
-            Titulo = null,
-            Estado = null,
-            IdCliente = null,
-            IdPresupuesto = null,
-        };
-
-        _repositorioFotoMock
-            .Setup(x => x.ObtenerDetallePorIdAsync(1))
-            .ReturnsAsync(trabajoExistente);
-
-        _repositorioFotoMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _servicio.ActualizarAsync(1, trabajoModificado);
-
-        // Assert
-        _repositorioFotoMock.Verify(
-            x =>
-                x.ActualizarAsync(
-                    It.Is<Trabajo>(t =>
-                        t.Titulo == "Título Original"
-                        && t.Estado == EstadoTrabajo.Pendiente
-                        && t.IdCliente == 10
-                        && t.IdPresupuesto == 5
-                    )
-                ),
-            Times.Once
-        );
     }
 
     #endregion

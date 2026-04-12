@@ -157,6 +157,12 @@ public class AdministracionClientesTests
     public async Task ActualizarAsync_DeberiaActualizarClienteCuandoExiste()
     {
         // Arrange
+        var clienteActualizado = new ModificarCliente
+        {
+            NombreCompleto = "Nuevo Nombre",
+            Cuit = "20-98765432-1",
+        };
+
         var clienteExistente = new Cliente
         {
             Id = 1,
@@ -164,13 +170,9 @@ public class AdministracionClientesTests
             Cuit = "20-12345678-9",
         };
 
-        var clienteActualizado = new ModificarCliente
-        {
-            NombreCompleto = "Nuevo Nombre",
-            Cuit = "20-98765432-1",
-        };
-
-        _clienteRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(clienteExistente);
+        _clienteRepositorioMock
+            .Setup(x => x.ObtenerPorIdAsync(1))
+            .ReturnsAsync(clienteExistente);
 
         _clienteRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Cliente>()))
