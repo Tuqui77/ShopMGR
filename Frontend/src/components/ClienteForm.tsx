@@ -20,7 +20,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const [cuit, setCuit] = useState('');
   const [telefonoInput, setTelefonoInput] = useState('');
   const [telefonoDesc, setTelefonoDesc] = useState('');
-  const [telefonos, setTelefonos] = useState<{ telefono: string; descripcion: string }[]>([]);
+  const [telefonos, setTelefonos] = useState<{ id: number; telefono: string; descripcion: string }[]>([]);
   const [calle, setCalle] = useState('');
   const [altura, setAltura] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -57,14 +57,15 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       // Cargar teléfonos desde telefonosCompletos (estructura con descripcion)
       if (cliente.telefonosCompletos && Array.isArray(cliente.telefonosCompletos)) {
         setTelefonos(cliente.telefonosCompletos.map(t => ({
+          id: t.id || 0,
           telefono: t.telefono,
           descripcion: t.descripcion || 'Principal',
         })));
       } else if (cliente.telefono && Array.isArray(cliente.telefono)) {
         // Fallback: telefono como array de strings
-        const telefonosData = cliente.telefono.map((t: unknown) => {
-          if (typeof t === 'string') return { telefono: t, descripcion: 'Principal' };
-          return t as { telefono: string; descripcion: string };
+        const telefonosData = cliente.telefono.map((t: unknown, idx: number) => {
+          if (typeof t === 'string') return { id: idx, telefono: t, descripcion: 'Principal' };
+          return { id: idx, telefono: t as string, descripcion: 'Principal' };
         });
         setTelefonos(telefonosData);
       }
@@ -133,6 +134,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       // Editando teléfono existente
       const nuevosTelefonos = [...telefonos];
       nuevosTelefonos[editingTelefonoIndex] = {
+        id: telefonos[editingTelefonoIndex].id,
         telefono: telefonoInput.trim(),
         descripcion: telefonoDesc.trim() || 'Principal'
       };
@@ -141,6 +143,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     } else {
       // Agregando nuevo teléfono
       const telefonoObj = { 
+        id: 0, // ID 0 indica que es nuevo
         telefono: telefonoInput.trim(), 
         descripcion: telefonoDesc.trim() || 'Principal' 
       };
@@ -163,15 +166,12 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     
     try {
       if (isEditing && cliente) {
+        // Enviar solo los campos que se modificaron
         await modificarCliente.mutateAsync({
           id: cliente.id,
           cliente: {
             nombreCompleto: nombre.trim(),
-            Cuit: cuit || undefined,
-            telefono: telefonos,
-            direccion: calle.trim() && altura.trim() 
-              ? [{ calle: calle.trim(), altura: altura.trim() }] 
-              : undefined,
+            Cuit: cuit || null,
           },
         });
       } else {

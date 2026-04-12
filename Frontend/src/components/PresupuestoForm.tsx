@@ -229,14 +229,14 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     if (!validate() || !clienteSeleccionado) return;
     
     try {
-      if (isEditing && presupuestoId) {
+      if (isEditing && presupuestoOriginal) {
+        // Usar DTO para modificar
         await modificarPresupuesto.mutateAsync({
-          id: presupuestoId,
+          id: presupuestoId!,
           presupuesto: {
             titulo: titulo.trim(),
-            descripcion: descripcion.trim() || undefined,
+            descripcion: descripcion.trim() || null,
             horasEstimadas,
-            materiales: materiales.length > 0 ? materiales : undefined,
           },
         });
       } else {
