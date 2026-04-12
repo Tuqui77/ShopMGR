@@ -1,10 +1,14 @@
 import { Link, useParams } from 'react-router-dom';
 import clsx from 'clsx';
-import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight, Plus } from 'lucide-react';
 import { useClienteDetalle, useEliminarCliente } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { ClienteForm } from '../components/ClienteForm';
+import { DireccionModal } from '../components/DireccionModal';
+import { TelefonoModal } from '../components/TelefonoModal';
+import type { DireccionItem, TelefonoCompleto } from '../types';
 
 export function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +17,15 @@ export function ClienteDetalle() {
   const { data: cliente, isLoading, error } = useClienteDetalle(clienteId!);
   const eliminarCliente = useEliminarCliente();
   const { editingCliente, setEditingCliente } = useStore();
+  
+  // Estado para modal de dirección
+  const [selectedDireccion, setSelectedDireccion] = useState<DireccionItem | null>(null);
+  // Estado para modal de teléfono
+  const [selectedTelefono, setSelectedTelefono] = useState<TelefonoCompleto | null>(null);
+  // Estado para crear nuevo teléfono
+  const [showNewTelefono, setShowNewTelefono] = useState(false);
+  // Estado para crear nueva dirección
+  const [showNewDireccion, setShowNewDireccion] = useState(false);
   
   // Handle edit button
   const handleEdit = () => {
@@ -118,24 +131,38 @@ export function ClienteDetalle() {
           </div>
         </div>
 
-        {/* Contact Info - Two Column Grid */}
+        {/* Contact Info - Side by side with independent heights */}
         {(hasTelefonos || hasDireccion) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {hasTelefonos && (
-              <div className="card py-3">
-                <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                  Teléfonos
-                </h3>
+              <div className="card py-3 self-start">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                    Teléfonos
+                  </h3>
+                  <button 
+                    onClick={() => setShowNewTelefono(true)}
+                    className="p-1 rounded-lg hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
+                    title="Agregar teléfono"
+                  >
+                    <Plus className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
+                  </button>
+                </div>
                 <div className="space-y-1.5">
                   {cliente.telefonosCompletos!.map((tel) => (
-                    <div key={tel.id} className="flex items-center gap-2">
+                    <div 
+                      key={tel.id} 
+                      className="flex items-center gap-2 p-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] cursor-pointer transition-colors group"
+                      onClick={() => setSelectedTelefono(tel)}
+                    >
                       <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <span className="text-sm truncate block" style={{ color: 'var(--color-text)' }}>{tel.telefono}</span>
                         {tel.descripcion && (
                           <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>{tel.descripcion}</span>
                         )}
                       </div>
+                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
                     </div>
                   ))}
                 </div>
@@ -143,26 +170,38 @@ export function ClienteDetalle() {
             )}
 
             {hasDireccion && (
-              <div className="card py-3">
-                <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                  Dirección
-                </h3>
+              <div className="card py-3 self-start">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                    Dirección
+                  </h3>
+                  <button 
+                    onClick={() => setShowNewDireccion(true)}
+                    className="p-1 rounded-lg hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
+                    title="Agregar dirección"
+                  >
+                    <Plus className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
+                  </button>
+                </div>
                 <div className="space-y-1.5">
                   {cliente.direccionesCompletas!.map((dir) => (
-                    <div key={dir.id} className="flex items-start gap-2">
+                    <div 
+                      key={dir.id} 
+                      className="flex items-start gap-2 p-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] cursor-pointer transition-colors group"
+                      onClick={() => setSelectedDireccion(dir)}
+                    >
                       <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <span className="text-sm block" style={{ color: 'var(--color-text)' }}>
                           {dir.calle} {dir.altura}
                           {dir.piso ? `, P${dir.piso}` : ''}
                           {dir.departamento ? `, D${dir.departamento}` : ''}
+                          {dir.ciudad ? `, ${dir.ciudad}` : ''}
                         </span>
-                        {dir.codigoPostal && (
-                          <span className="text-xs" style={{ color: 'var(--color-muted)' }}>CP: {dir.codigoPostal}</span>
-                        )}
                         {dir.descripcion && (
                           <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>{dir.descripcion}</span>
                         )}
+                        <ChevronRight className="w-3.5 h-3.5 float-right opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
                       </div>
                     </div>
                   ))}
@@ -285,6 +324,47 @@ export function ClienteDetalle() {
       
       {/* Cliente Form for editing */}
       {editingCliente && <ClienteForm cliente={editingCliente} />}
+      
+      {/* Direccion Modal */}
+      {selectedDireccion && clienteId && (
+        <DireccionModal 
+          direccion={selectedDireccion} 
+          clienteId={clienteId} 
+          isOpen={!!selectedDireccion} 
+          onClose={() => setSelectedDireccion(null)} 
+        />
+      )}
+
+      {/* Telefono Modal - Ver/Editar existente */}
+      {selectedTelefono && clienteId && (
+        <TelefonoModal 
+          telefono={selectedTelefono} 
+          clienteId={clienteId} 
+          isOpen={!!selectedTelefono} 
+          onClose={() => setSelectedTelefono(null)} 
+        />
+      )}
+
+      {/* Telefono Modal - Crear nuevo */}
+      {showNewTelefono && clienteId && (
+        <TelefonoModal 
+          clienteId={clienteId} 
+          isOpen={showNewTelefono} 
+          onClose={() => setShowNewTelefono(false)}
+          isNew={true}
+        />
+      )}
+
+      {/* Direccion Modal - Crear nuevo (usando el modal existente con datos vacíos) */}
+      {showNewDireccion && clienteId && (
+        <DireccionModal 
+          direccion={{ id: 0, calle: '', altura: '', ciudad: '' }} 
+          clienteId={clienteId} 
+          isOpen={showNewDireccion} 
+          onClose={() => setShowNewDireccion(false)}
+          isNew={true}
+        />
+      )}
     </div>
   );
 }
