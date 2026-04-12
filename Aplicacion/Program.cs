@@ -125,7 +125,21 @@ namespace ShopMGR.WebApi.Aplicacion
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
-                db.Database.Migrate();
+
+                var retries = 10;
+                while (retries > 0)
+                {
+                    try
+                    {
+                        db.Database.Migrate();
+                        break;
+                    }
+                    catch (Exception)
+                    {
+                        retries--;
+                        Thread.Sleep(5000);
+                    }
+                }
             }
 
             app.Run();
