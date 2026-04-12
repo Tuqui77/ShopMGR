@@ -18,14 +18,17 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const modificarCliente = useModificarCliente();
   const [nombre, setNombre] = useState('');
   const [cuit, setCuit] = useState('');
+  
+  // Only needed for create mode
   const [telefonoInput, setTelefonoInput] = useState('');
   const [telefonoDesc, setTelefonoDesc] = useState('');
   const [telefonos, setTelefonos] = useState<{ id: number; telefono: string; descripcion: string }[]>([]);
   const [calle, setCalle] = useState('');
   const [altura, setAltura] = useState('');
+  const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
-  const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
 
   const formVisible = isEditing || showClienteForm;
 
@@ -50,20 +53,24 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
 
   // Cargar datos del cliente en modo edición
   useEffect(() => {
-    if (cliente) {
-      setNombre(cliente.nombreCompleto || '');
-      setCuit(cliente.cuit || '');
-      
+    const c = cliente;
+    if (!c) return;
+    
+    setNombre(c.nombreCompleto || '');
+    setCuit(c.cuit || '');
+    
+    // Only load phones/directions for create mode
+    if (!isEditing) {
       // Cargar teléfonos desde telefonosCompletos (estructura con descripcion)
-      if (cliente.telefonosCompletos && Array.isArray(cliente.telefonosCompletos)) {
-        setTelefonos(cliente.telefonosCompletos.map(t => ({
+      if (c.telefonosCompletos && Array.isArray(c.telefonosCompletos)) {
+        setTelefonos(c.telefonosCompletos.map(t => ({
           id: t.id || 0,
           telefono: t.telefono,
           descripcion: t.descripcion || 'Principal',
         })));
-      } else if (cliente.telefono && Array.isArray(cliente.telefono)) {
+      } else if (c.telefono && Array.isArray(c.telefono)) {
         // Fallback: telefono como array de strings
-        const telefonosData = cliente.telefono.map((t: unknown, idx: number) => {
+        const telefonosData = c.telefono.map((t: unknown, idx: number) => {
           if (typeof t === 'string') return { id: idx, telefono: t, descripcion: 'Principal' };
           return { id: idx, telefono: t as string, descripcion: 'Principal' };
         });
@@ -71,20 +78,20 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       }
       
       // Cargar dirección desde direccionesCompletas
-      if (cliente.direccionesCompletas && cliente.direccionesCompletas.length > 0) {
-        const dir = cliente.direccionesCompletas[0];
+      if (c.direccionesCompletas && c.direccionesCompletas.length > 0) {
+        const dir = c.direccionesCompletas[0];
         setCalle(dir.calle || '');
         setAltura(dir.altura || '');
-      } else if (cliente.direccion) {
+      } else if (c.direccion) {
         // Fallback: direccion como string
-        const parts = cliente.direccion.split(' ');
+        const parts = c.direccion.split(' ');
         if (parts.length >= 2) {
           setCalle(parts.slice(0, -1).join(' '));
           setAltura(parts[parts.length - 1]);
         }
       }
     }
-  }, [cliente]);
+  }, [cliente, isEditing]);
 
   // Cerrar con ESC
   useEffect(() => {
@@ -283,116 +290,127 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                 )}
               </div>
               
-              {/* Teléfonos */}
-              <div>
-                <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  TELÉFONOS
-                </label>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="tel"
-                      value={telefonoInput}
-                      onChange={(e) => setTelefonoInput(e.target.value)}
-                      placeholder="Número de teléfono"
-                      className="input flex-1"
-                    />
-                    <button 
-                      type="button"
-                      onClick={handleAddTelefono}
-                      className="btn-secondary"
-                      disabled={!telefonoInput.trim()}
-                    >
-                      {editingTelefonoIndex !== null ? (
-                        <Check className="w-5 h-5" />
-                      ) : (
-                        <Plus className="w-5 h-5" />
-                      )}
-                    </button>
-                    {editingTelefonoIndex !== null && (
-                      <button 
-                        type="button"
-                        onClick={handleCancelEditTelefono}
-                        className="btn-secondary"
-                        style={{ color: 'var(--color-danger)' }}
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={telefonoDesc}
-                    onChange={(e) => setTelefonoDesc(e.target.value)}
-                    placeholder="Descripción (ej: Celular, Trabajo)"
-                    className="input"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTelefono();
-                      }
-                    }}
-                  />
-                  
-                  {telefonos.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {telefonos.map((tel, index) => (
-                        <div 
-                          key={index}
-                          className="flex items-center justify-between p-2 rounded"
-                          style={{ backgroundColor: 'var(--color-surface)' }}
+              {/* Edit mode: show note about phones/addresses | Create mode: show phone/address fields */}
+              {isEditing ? (
+                <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
+                  <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                    Los teléfonos y direcciones del cliente se editan desde su ficha de detalle.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Teléfonos (create mode only) */}
+                  <div>
+                    <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                      TELÉFONOS
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="tel"
+                          value={telefonoInput}
+                          onChange={(e) => setTelefonoInput(e.target.value)}
+                          placeholder="Número de teléfono"
+                          className="input flex-1"
+                        />
+                        <button 
+                          type="button"
+                          onClick={handleAddTelefono}
+                          className="btn-secondary"
+                          disabled={!telefonoInput.trim()}
                         >
-                          <div>
-                            <span className="text-sm">{tel.telefono}</span>
-                            <span className="text-xs ml-2" style={{ color: 'var(--color-muted)' }}>
-                              ({tel.descripcion})
-                            </span>
-                          </div>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleEditTelefono(index)}
-                              className="btn-icon p-1"
+                          {editingTelefonoIndex !== null ? (
+                            <Check className="w-5 h-5" />
+                          ) : (
+                            <Plus className="w-5 h-5" />
+                          )}
+                        </button>
+                        {editingTelefonoIndex !== null && (
+                          <button 
+                            type="button"
+                            onClick={handleCancelEditTelefono}
+                            className="btn-secondary"
+                            style={{ color: 'var(--color-danger)' }}
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={telefonoDesc}
+                        onChange={(e) => setTelefonoDesc(e.target.value)}
+                        placeholder="Descripción (ej: Celular, Trabajo)"
+                        className="input"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddTelefono();
+                          }
+                        }}
+                      />
+                      
+                      {telefonos.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {telefonos.map((tel, index) => (
+                            <div 
+                              key={index}
+                              className="flex items-center justify-between p-2 rounded"
+                              style={{ backgroundColor: 'var(--color-surface)' }}
                             >
-                              <Pencil className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveTelefono(index)}
-                              className="btn-icon p-1"
-                            >
-                              <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
-                            </button>
-                          </div>
+                              <div>
+                                <span className="text-sm">{tel.telefono}</span>
+                                <span className="text-xs ml-2" style={{ color: 'var(--color-muted)' }}>
+                                  ({tel.descripcion})
+                                </span>
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditTelefono(index)}
+                                  className="btn-icon p-1"
+                                >
+                                  <Pencil className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTelefono(index)}
+                                  className="btn-icon p-1"
+                                >
+                                  <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Dirección */}
-              <div>
-                <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  DIRECCIÓN (opcional)
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={calle}
-                    onChange={(e) => setCalle(e.target.value)}
-                    placeholder="Calle"
-                    className="input"
-                  />
-                  <input
-                    type="text"
-                    value={altura}
-                    onChange={(e) => setAltura(e.target.value)}
-                    placeholder="Altura"
-                    className="input"
-                  />
-                </div>
-              </div>
+                  </div>
+                  
+                  {/* Dirección (create mode only) */}
+                  <div>
+                    <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                      DIRECCIÓN (opcional)
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={calle}
+                        onChange={(e) => setCalle(e.target.value)}
+                        placeholder="Calle"
+                        className="input"
+                      />
+                      <input
+                        type="text"
+                        value={altura}
+                        onChange={(e) => setAltura(e.target.value)}
+                        placeholder="Altura"
+                        className="input"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
               
               {/* Submit */}
               {errors.submit && (
