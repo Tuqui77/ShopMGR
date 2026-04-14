@@ -9,7 +9,7 @@ export function useClientes() {
 }
 
 export function useCliente(id: number | undefined) {
-  const idValido = typeof id === 'number' && id >= 0;
+  const idValido = typeof id === 'number' && id > 0;
   
   return useQuery({
     queryKey: ['clientes', id],
@@ -20,7 +20,7 @@ export function useCliente(id: number | undefined) {
 }
 
 export function useClienteDetalle(id: number | undefined) {
-  const idValido = typeof id === 'number' && id >= 0;
+  const idValido = typeof id === 'number' && id > 0;
   
   return useQuery({
     queryKey: ['clientes', id, 'detalle'],

@@ -28,7 +28,7 @@ export function useTrabajo(id: number | undefined) {
   return useQuery({
     queryKey: ['trabajos', id],
     queryFn: () => trabajosService.obtenerPorId(id!),
-    enabled: typeof id === 'number' && id >= 0,
+    enabled: typeof id === 'number' && id > 0,
     staleTime: 1000 * 30, // 30 segundos
   });
 }
@@ -40,7 +40,7 @@ export function useTrabajoDetalle(id: number | undefined) {
   return useQuery({
     queryKey: ['trabajos', id, 'detalle'],
     queryFn: () => trabajosService.obtenerDetalle(id!),
-    enabled: typeof id === 'number' && id >= 0,
+    enabled: typeof id === 'number' && id > 0,
     staleTime: 1000 * 30,
   });
 }
@@ -52,7 +52,7 @@ export function useTrabajosPorCliente(idCliente: number | undefined) {
   return useQuery({
     queryKey: ['trabajos', 'cliente', idCliente],
     queryFn: () => trabajosService.obtenerPorCliente(idCliente!),
-    enabled: typeof idCliente === 'number' && idCliente >= 0,
+    enabled: typeof idCliente === 'number' && idCliente > 0,
   });
 }
 
@@ -144,6 +144,23 @@ export function useAgregarHoras() {
   
   return useMutation({
     mutationFn: (horas: RegistrarHorasRequest) => trabajosService.agregarHoras(horas),
+    onSuccess: (_, { idTrabajo }) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo, 'detalle'] });
+    },
+  });
+}
+
+/**
+ * Sube fotos a un trabajo
+ */
+export function useSubirFotos() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ idTrabajo, fotos }: { idTrabajo: number; fotos: FileList | File[] }) =>
+      trabajosService.subirFotos(idTrabajo, fotos),
     onSuccess: (_, { idTrabajo }) => {
       queryClient.invalidateQueries({ queryKey: ['trabajos'] });
       queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo] });
