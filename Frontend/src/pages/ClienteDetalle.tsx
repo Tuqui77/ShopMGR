@@ -96,8 +96,8 @@ export function ClienteDetalle() {
   }
 
   const balance = formatBalance(cliente.balance);
-  const hasTelefonos = cliente.telefonosCompletos && cliente.telefonosCompletos.length > 0;
-  const hasDireccion = cliente.direccionesCompletas && cliente.direccionesCompletas.length > 0;
+  const telefonos = cliente.telefonosCompletos || [];
+  const direcciones = cliente.direccionesCompletas || [];
   const hasTrabajos = cliente.trabajosRecientes && cliente.trabajosRecientes.length > 0;
   const hasPresupuestos = cliente.presupuestosRecientes && cliente.presupuestosRecientes.length > 0;
 
@@ -132,84 +132,92 @@ export function ClienteDetalle() {
         </div>
 
         {/* Contact Info - Side by side with independent heights */}
-        {(hasTelefonos || hasDireccion) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {hasTelefonos && (
-              <div className="card py-3 self-start">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                    Teléfonos
-                  </h3>
-                  <button 
-                    onClick={() => setShowNewTelefono(true)}
-                    className="p-1 rounded-lg hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
-                    title="Agregar teléfono"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Teléfonos Card - Always show, even if empty */}
+          <div className="card py-3 self-start">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                Teléfonos
+              </h3>
+              <button 
+                onClick={() => setShowNewTelefono(true)}
+                className="p-1 rounded-lg hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
+                title="Agregar teléfono"
+              >
+                <Plus className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
+              </button>
+            </div>
+            {telefonos.length > 0 ? (
+              <div className="space-y-1.5">
+                {telefonos.map((tel) => (
+                  <div 
+                    key={tel.id} 
+                    className="flex items-center gap-2 p-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] cursor-pointer transition-colors group"
+                    onClick={() => setSelectedTelefono(tel)}
                   >
-                    <Plus className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
-                  </button>
-                </div>
-                <div className="space-y-1.5">
-                  {cliente.telefonosCompletos!.map((tel) => (
-                    <div 
-                      key={tel.id} 
-                      className="flex items-center gap-2 p-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] cursor-pointer transition-colors group"
-                      onClick={() => setSelectedTelefono(tel)}
-                    >
-                      <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-sm truncate block" style={{ color: 'var(--color-text)' }}>{tel.telefono}</span>
-                        {tel.descripcion && (
-                          <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>{tel.descripcion}</span>
-                        )}
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
+                    <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm truncate block" style={{ color: 'var(--color-text)' }}>{tel.telefono}</span>
+                      {tel.descripcion && (
+                        <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>{tel.descripcion}</span>
+                      )}
                     </div>
-                  ))}
-                </div>
+                    <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
+                  </div>
+                ))}
               </div>
-            )}
-
-            {hasDireccion && (
-              <div className="card py-3 self-start">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                    Dirección
-                  </h3>
-                  <button 
-                    onClick={() => setShowNewDireccion(true)}
-                    className="p-1 rounded-lg hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
-                    title="Agregar dirección"
-                  >
-                    <Plus className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
-                  </button>
-                </div>
-                <div className="space-y-1.5">
-                  {cliente.direccionesCompletas!.map((dir) => (
-                    <div 
-                      key={dir.id} 
-                      className="flex items-start gap-2 p-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] cursor-pointer transition-colors group"
-                      onClick={() => setSelectedDireccion(dir)}
-                    >
-                      <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-sm block" style={{ color: 'var(--color-text)' }}>
-                          {dir.calle} {dir.altura}
-                          {dir.piso ? `, P${dir.piso}` : ''}
-                          {dir.departamento ? `, D${dir.departamento}` : ''}
-                          {dir.ciudad ? `, ${dir.ciudad}` : ''}
-                        </span>
-                        {dir.descripcion && (
-                          <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>{dir.descripcion}</span>
-                        )}
-                        <ChevronRight className="w-3.5 h-3.5 float-right opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            ) : (
+              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                Sin teléfonos. Haz clic en + para agregar.
+              </p>
             )}
           </div>
-        )}
+
+          {/* Dirección Card - Always show, even if empty */}
+          <div className="card py-3 self-start">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                Dirección
+              </h3>
+              <button 
+                onClick={() => setShowNewDireccion(true)}
+                className="p-1 rounded-lg hover:bg-[var(--color-surface)] transition-colors cursor-pointer"
+                title="Agregar dirección"
+              >
+                <Plus className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
+              </button>
+            </div>
+            {direcciones.length > 0 ? (
+              <div className="space-y-1.5">
+                {direcciones.map((dir) => (
+                  <div 
+                    key={dir.id} 
+                    className="flex items-start gap-2 p-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] cursor-pointer transition-colors group"
+                    onClick={() => setSelectedDireccion(dir)}
+                  >
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }} />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-sm block" style={{ color: 'var(--color-text)' }}>
+                        {dir.calle} {dir.altura}
+                        {dir.piso ? `, P${dir.piso}` : ''}
+                        {dir.departamento ? `, D${dir.departamento}` : ''}
+                        {dir.ciudad ? `, ${dir.ciudad}` : ''}
+                      </span>
+                      {dir.descripcion && (
+                        <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>{dir.descripcion}</span>
+                      )}
+                      <ChevronRight className="w-3.5 h-3.5 float-right opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                Sin dirección. Haz clic en + para agregar.
+              </p>
+            )}
+          </div>
+        </div>
 
         {/* Counters - Two Column Grid */}
         <div className="grid grid-cols-2 gap-3">
