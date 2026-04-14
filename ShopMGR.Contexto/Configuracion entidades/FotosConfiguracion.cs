@@ -13,7 +13,7 @@ public class FotosConfiguracion : IEntityTypeConfiguration<Foto>
         builder.HasIndex(f => f.Id)
           .IsUnique(true);
 
-        builder.Property(f => f.Enlace)
+        builder.Property(f => f.RutaCompleta)
           .IsRequired(true)
           .HasMaxLength(100);
 

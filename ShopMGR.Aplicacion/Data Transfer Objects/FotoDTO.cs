@@ -10,6 +10,6 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
     public class FotoDTO
     {
         public int IdTrabajo { get; set; }
-        public string Enlace { get; set; }
+        public string RutaCompleta { get; set; }
     }
 }

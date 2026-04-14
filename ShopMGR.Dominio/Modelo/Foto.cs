@@ -9,10 +9,23 @@ namespace ShopMGR.Dominio.Modelo
     public class Foto
     {
         public int Id { get; set; }
-        public string Enlace { get; set; }
+        public string RutaCompleta { get; set; }
 
         //Relaciones
         public int IdTrabajo { get; set; }
-        public Trabajo Trabajo { get; set; }
+        public Trabajo? Trabajo { get; set; }
+
+        private Foto() {} //constructor para EF
+
+        public Foto(int idTrabajo, string rutaCompleta)
+        {
+            if (string.IsNullOrWhiteSpace(rutaCompleta))
+                throw new ArgumentException("Ruta Inválida");
+            if (idTrabajo <= 0)
+                throw new ArgumentException("Trabajo Inválido");
+
+            IdTrabajo = idTrabajo;
+            RutaCompleta = rutaCompleta;
+        }
     }
 }

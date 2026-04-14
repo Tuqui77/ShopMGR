@@ -12,7 +12,7 @@ public class FotoMapper : IMapper<Foto, FotoDTO>
         return new FotoDTO
         {
             IdTrabajo = foto.IdTrabajo,
-            Enlace = foto.Enlace,
+            RutaCompleta = foto.RutaCompleta,
         };
     }
 }
@@ -21,10 +21,6 @@ public class FotoDTOMapper : IMapper<FotoDTO, Foto>
 {
     public Foto Map(FotoDTO fotoDTO)
     {
-        return new Foto
-        {
-            IdTrabajo = fotoDTO.IdTrabajo,
-            Enlace = fotoDTO.Enlace
-        };
+        return new Foto(fotoDTO.IdTrabajo, fotoDTO.RutaCompleta);
     }
 }

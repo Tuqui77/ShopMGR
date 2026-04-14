@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShopMGR.Contexto;
 
@@ -11,9 +12,11 @@ using ShopMGR.Contexto;
 namespace ShopMGR.Contexto.Migrations
 {
     [DbContext(typeof(ShopMGRDbContexto))]
-    partial class ShopMGRDbContextoModelSnapshot : ModelSnapshot
+    [Migration("20260413033201_Cambia Foto.Enlace por Foto.RutaCompleta")]
+    partial class CambiaFotoEnlaceporFotoRutaCompleta
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,7 +51,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.ToTable("Clientes", (string)null);
+                    b.ToTable("Clientes");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.ConfiguracionGlobal", b =>
@@ -73,7 +76,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.ToTable("Configuraciones", (string)null);
+                    b.ToTable("Configuraciones");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Direccion", b =>
@@ -129,7 +132,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("Direccion", (string)null);
+                    b.ToTable("Direccion");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Foto", b =>
@@ -155,7 +158,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdTrabajo");
 
-                    b.ToTable("Fotos", (string)null);
+                    b.ToTable("Fotos");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.HorasYDescripcion", b =>
@@ -187,7 +190,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdTrabajo");
 
-                    b.ToTable("HorasYDescripcion", (string)null);
+                    b.ToTable("HorasYDescripcion");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Material", b =>
@@ -220,7 +223,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdPresupuesto");
 
-                    b.ToTable("Materiales", (string)null);
+                    b.ToTable("Materiales");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.MovimientoBalance", b =>
@@ -261,7 +264,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdTrabajo");
 
-                    b.ToTable("MovimientoBalance", (string)null);
+                    b.ToTable("MovimientoBalance");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Presupuesto", b =>
@@ -318,7 +321,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("Presupuestos", (string)null);
+                    b.ToTable("Presupuestos");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.TelefonoCliente", b =>
@@ -348,7 +351,7 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasIndex("IdCliente");
 
-                    b.ToTable("TelefonoCliente", (string)null);
+                    b.ToTable("TelefonoCliente");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Trabajo", b =>
@@ -395,7 +398,7 @@ namespace ShopMGR.Contexto.Migrations
                         .IsUnique()
                         .HasFilter("[IdPresupuesto] IS NOT NULL");
 
-                    b.ToTable("Trabajos", (string)null);
+                    b.ToTable("Trabajos");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Usuario", b =>
@@ -420,7 +423,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
-                    b.ToTable("Usuarios", (string)null);
+                    b.ToTable("Usuarios");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Direccion", b =>
