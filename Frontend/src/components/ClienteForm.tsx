@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import clsx from 'clsx';
 import { useStore } from '../store';
 import { useCrearCliente, useModificarCliente } from '../hooks/useClientes';
 import type { Cliente } from '../types';
@@ -25,6 +26,11 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const [telefonos, setTelefonos] = useState<{ id: number; telefono: string; descripcion: string }[]>([]);
   const [calle, setCalle] = useState('');
   const [altura, setAltura] = useState('');
+  const [ciudad, setCiudad] = useState('');
+  const [piso, setPiso] = useState('');
+  const [departamento, setDepartamento] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [codigoPostal, setCodigoPostal] = useState('');
   const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -46,6 +52,11 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     setTelefonos([]);
     setCalle('');
     setAltura('');
+    setCiudad('');
+    setPiso('');
+    setDepartamento('');
+    setDescripcion('');
+    setCodigoPostal('');
     setErrors({});
     setShowSuccess(false);
     setEditingTelefonoIndex(null);
@@ -119,9 +130,37 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       newErrors.cuit = 'CUIT debe tener 11 dígitos';
     }
     
+    // Validar dirección (si se ingresa algo)
+    const tieneCalle = calle.trim().length > 0;
+    const tieneAltura = altura.trim().length > 0;
+    const tieneCiudad = ciudad.trim().length > 0;
+    
+    if (tieneCalle || tieneAltura || tieneCiudad || tienePiso || tieneDepartamento || tieneDescripcion || tieneCodigoPostal) {
+      // Si se ingresa cualquier campo de dirección, los obligatorios deben estar presentes
+      if (!tieneCalle) {
+        newErrors.calle = 'La calle es requerida';
+      }
+      if (!tieneAltura) {
+        newErrors.altura = 'La altura es requerida';
+      }
+      if (!tieneCiudad) {
+        newErrors.ciudad = 'La ciudad es requerida';
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
+  // Helper para validar individualmente (para validación en tiempo real)
+  const tieneCalle = calle.trim().length > 0;
+  const tieneAltura = altura.trim().length > 0;
+  const tieneCiudad = ciudad.trim().length > 0;
+  const tienePiso = piso.trim().length > 0;
+  const tieneDepartamento = departamento.trim().length > 0;
+  const tieneDescripcion = descripcion.trim().length > 0;
+  const tieneCodigoPostal = codigoPostal.trim().length > 0;
+  const tieneDireccion = tieneCalle || tieneAltura || tieneCiudad || tienePiso || tieneDepartamento || tieneDescripcion || tieneCodigoPostal;
 
   const handleRemoveTelefono = (index: number) => {
     setTelefonos(telefonos.filter((_, i) => i !== index));
@@ -182,13 +221,23 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
           },
         });
       } else {
+        const direccionData = tieneDireccion 
+          ? [{ 
+              calle: calle.trim(), 
+              altura: altura.trim(),
+              ciudad: ciudad.trim() || null,
+              codigoPostal: codigoPostal.trim() || null,
+              descripcion: descripcion.trim() || null,
+              piso: piso.trim() || null,
+              departamento: departamento.trim() || null,
+              mapsID: null
+            }] 
+          : undefined;
+          
         await crearCliente.mutateAsync({
           nombreCompleto: nombre.trim(),
-          Cuit: cuit || undefined,
           telefono: telefonos,
-          direccion: calle.trim() && altura.trim() 
-            ? [{ calle: calle.trim(), altura: altura.trim() }] 
-            : undefined,
+          direccion: direccionData,
         });
       }
       setShowSuccess(true);
@@ -392,19 +441,88 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                     <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
                       DIRECCIÓN (opcional)
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      {/* Calle y Altura - Obligatorios */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <input
+                            type="text"
+                            value={calle}
+                            onChange={(e) => setCalle(e.target.value)}
+                            placeholder="Calle *"
+                            className={clsx('input', errors.calle && 'input-error')}
+                          />
+                          {errors.calle && (
+                            <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                              {errors.calle}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            value={altura}
+                            onChange={(e) => setAltura(e.target.value)}
+                            placeholder="Altura *"
+                            className={clsx('input', errors.altura && 'input-error')}
+                          />
+                          {errors.altura && (
+                            <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                              {errors.altura}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Ciudad - Obligatorio */}
+                      <div>
+                        <input
+                          type="text"
+                          value={ciudad}
+                          onChange={(e) => setCiudad(e.target.value)}
+                          placeholder="Ciudad *"
+                          className={clsx('input', errors.ciudad && 'input-error')}
+                        />
+                        {errors.ciudad && (
+                          <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                            {errors.ciudad}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Piso y Departamento - Opcionales */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={piso}
+                          onChange={(e) => setPiso(e.target.value)}
+                          placeholder="Piso"
+                          className="input"
+                        />
+                        <input
+                          type="text"
+                          value={departamento}
+                          onChange={(e) => setDepartamento(e.target.value)}
+                          placeholder="Dpto"
+                          className="input"
+                        />
+                      </div>
+                      
+                      {/* Código Postal - Opcional */}
                       <input
                         type="text"
-                        value={calle}
-                        onChange={(e) => setCalle(e.target.value)}
-                        placeholder="Calle"
+                        value={codigoPostal}
+                        onChange={(e) => setCodigoPostal(e.target.value)}
+                        placeholder="Código Postal"
                         className="input"
                       />
+                      
+                      {/* Descripción - Opcional */}
                       <input
                         type="text"
-                        value={altura}
-                        onChange={(e) => setAltura(e.target.value)}
-                        placeholder="Altura"
+                        value={descripcion}
+                        onChange={(e) => setDescripcion(e.target.value)}
+                        placeholder="Descripción (ej: Casa, Frente, etc.)"
                         className="input"
                       />
                     </div>

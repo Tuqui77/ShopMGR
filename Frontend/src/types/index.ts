@@ -103,15 +103,34 @@ export interface ClienteDetalleBackendDTO {
 export interface CrearClienteRequest {
   nombreCompleto: string;
   Cuit?: string;
+  balance?: number;
   telefono: { telefono: string; descripcion: string }[];
-  direccion?: { calle: string; altura: string }[];
+  direccion?: { 
+    calle: string; 
+    altura: string;
+    ciudad?: string;
+    codigoPostal?: string | null;
+    descripcion?: string | null;
+    piso?: string | null;
+    departamento?: string | null;
+    mapsID?: string | null;
+  }[];
 }
 
 export interface ModificarClienteRequest {
   nombreCompleto?: string;
   Cuit?: string;
   telefono?: { telefono: string; descripcion: string }[];
-  direccion?: { calle: string; altura: string }[];
+  direccion?: { 
+    calle: string; 
+    altura: string;
+    ciudad?: string;
+    codigoPostal?: string | null;
+    descripcion?: string | null;
+    piso?: string | null;
+    departamento?: string | null;
+    mapsID?: string | null;
+  }[];
 }
 
 // ============================================================================
