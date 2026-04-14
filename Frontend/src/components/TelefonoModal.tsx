@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import clsx from 'clsx';
 import { Loader2, X, Edit, Trash2, Save } from 'lucide-react';
 import type { TelefonoCompleto } from '../types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -161,9 +162,6 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
           )}
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-              Teléfono *
-            </label>
             <input
               type="tel"
               value={formData.telefono}
@@ -172,13 +170,8 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
                 if (errors.telefono) setErrors({ ...errors, telefono: '' });
               }}
               disabled={!isEditing && !isNew}
-              className="w-full px-3 py-2 rounded-lg border transition-colors"
-              style={{ 
-                backgroundColor: 'var(--color-surface)',
-                borderColor: errors.telefono ? 'var(--color-danger)' : 'var(--color-surface)',
-                color: 'var(--color-text)',
-              }}
-              placeholder="11 1234 5678"
+              className={clsx('input', errors.telefono && 'input-error')}
+              placeholder="Número de teléfono *"
             />
             {errors.telefono && (
               <span className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
@@ -188,21 +181,13 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-              Descripción
-            </label>
             <input
               type="text"
               value={formData.descripcion}
               onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
               disabled={!isEditing && !isNew}
-              className="w-full px-3 py-2 rounded-lg border transition-colors"
-              style={{ 
-                backgroundColor: 'var(--color-surface)',
-                borderColor: 'var(--color-surface)',
-                color: 'var(--color-text)',
-              }}
-              placeholder="Celular, Trabajo, etc."
+              className="input"
+              placeholder="Descripción (ej: Celular, Trabajo)"
             />
           </div>
         </div>
@@ -232,7 +217,7 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
               </button>
               <button 
                 onClick={handleSave}
-                disabled={isPending || !formData.telefono.trim()}
+                disabled={isPending}
                 className="btn-primary flex items-center justify-center gap-2 flex-1"
               >
                 {isPending ? (

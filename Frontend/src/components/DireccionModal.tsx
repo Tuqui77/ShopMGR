@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import clsx from 'clsx';
 import { Loader2, X, Edit, Trash2, Save } from 'lucide-react';
 import type { DireccionItem } from '../types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -172,122 +173,50 @@ export function DireccionModal({ direccion, clienteId, isOpen, onClose, isNew = 
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-                Calle *
-              </label>
-              <input
-                type="text"
-                value={formData.calle}
-                onChange={(e) => {
-                  setFormData({ ...formData, calle: e.target.value });
-                  if (errors.calle) setErrors({ ...errors, calle: '' });
-                }}
-                disabled={!isEditing}
-                className="w-full px-3 py-2 rounded-lg border transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: errors.calle ? 'var(--color-danger)' : 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-                placeholder="Av. Rivadavia"
-              />
-              {errors.calle && (
-                <span className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
-                  {errors.calle}
-                </span>
-              )}
+          <div className="space-y-3">
+            {/* Calle y Altura - Obligatorios */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <input
+                  type="text"
+                  value={formData.calle}
+                  onChange={(e) => {
+                    setFormData({ ...formData, calle: e.target.value });
+                    if (errors.calle) setErrors({ ...errors, calle: '' });
+                  }}
+                  disabled={!isEditing}
+                  className={clsx('input', errors.calle && 'input-error')}
+                  placeholder="Calle *"
+                />
+                {errors.calle && (
+                  <span className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                    {errors.calle}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={formData.altura}
+                  onChange={(e) => {
+                    setFormData({ ...formData, altura: e.target.value });
+                    if (errors.altura) setErrors({ ...errors, altura: '' });
+                  }}
+                  disabled={!isEditing}
+                  className={clsx('input', errors.altura && 'input-error')}
+                  placeholder="Altura *"
+                />
+                {errors.altura && (
+                  <span className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                    {errors.altura}
+                  </span>
+                )}
+              </div>
             </div>
 
+            {/* Ciudad - Obligatorio */}
             <div>
-              <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-                Altura *
-              </label>
-              <input
-                type="text"
-                value={formData.altura}
-                onChange={(e) => {
-                  setFormData({ ...formData, altura: e.target.value });
-                  if (errors.altura) setErrors({ ...errors, altura: '' });
-                }}
-                disabled={!isEditing}
-                className="w-full px-3 py-2 rounded-lg border transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: errors.altura ? 'var(--color-danger)' : 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-                placeholder="1234"
-              />
-              {errors.altura && (
-                <span className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
-                  {errors.altura}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-                Piso
-              </label>
-              <input
-                type="text"
-                value={formData.piso}
-                onChange={(e) => setFormData({ ...formData, piso: e.target.value })}
-                disabled={!isEditing}
-                className="w-full px-3 py-2 rounded-lg border transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-                placeholder="1"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-                Depto
-              </label>
-              <input
-                type="text"
-                value={formData.departamento}
-                onChange={(e) => setFormData({ ...formData, departamento: e.target.value })}
-                disabled={!isEditing}
-                className="w-full px-3 py-2 rounded-lg border transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-                placeholder="A"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-                Código Postal
-              </label>
-              <input
-                type="text"
-                value={formData.codigoPostal}
-                onChange={(e) => setFormData({ ...formData, codigoPostal: e.target.value })}
-                disabled={!isEditing}
-                className="w-full px-3 py-2 rounded-lg border transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-                placeholder="C1428"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-                Ciudad <span style={{ color: 'var(--color-danger)' }}>*</span>
-              </label>
               <input
                 type="text"
                 value={formData.ciudad}
@@ -296,13 +225,8 @@ export function DireccionModal({ direccion, clienteId, isOpen, onClose, isNew = 
                   if (errors.ciudad) setErrors({ ...errors, ciudad: '' });
                 }}
                 disabled={!isEditing}
-                className="w-full px-3 py-2 rounded-lg border transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: errors.ciudad ? 'var(--color-danger)' : 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-                placeholder="Buenos Aires"
+                className={clsx('input', errors.ciudad && 'input-error')}
+                placeholder="Ciudad *"
               />
               {errors.ciudad && (
                 <span className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
@@ -311,24 +235,46 @@ export function DireccionModal({ direccion, clienteId, isOpen, onClose, isNew = 
               )}
             </div>
 
-            <div className="col-span-2">
-              <label className="block text-sm mb-1" style={{ color: 'var(--color-muted)' }}>
-                Descripción
-              </label>
+            {/* Piso y Departamento - Opcionales */}
+            <div className="grid grid-cols-2 gap-3">
               <input
                 type="text"
-                value={formData.descripcion}
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                value={formData.piso}
+                onChange={(e) => setFormData({ ...formData, piso: e.target.value })}
                 disabled={!isEditing}
-                className="w-full px-3 py-2 rounded-lg border transition-colors"
-                style={{ 
-                  backgroundColor: 'var(--color-surface)',
-                  borderColor: 'var(--color-surface)',
-                  color: 'var(--color-text)',
-                }}
-                placeholder="Casa, Local, etc."
+                className="input"
+                placeholder="Piso"
+              />
+
+              <input
+                type="text"
+                value={formData.departamento}
+                onChange={(e) => setFormData({ ...formData, departamento: e.target.value })}
+                disabled={!isEditing}
+                className="input"
+                placeholder="Dpto"
               />
             </div>
+
+            {/* Código Postal - Opcional */}
+            <input
+              type="text"
+              value={formData.codigoPostal}
+              onChange={(e) => setFormData({ ...formData, codigoPostal: e.target.value })}
+              disabled={!isEditing}
+              className="input"
+              placeholder="Código Postal"
+            />
+
+            {/* Descripción - Opcional */}
+            <input
+              type="text"
+              value={formData.descripcion}
+              onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+              disabled={!isEditing}
+              className="input"
+              placeholder="Descripción (ej: Casa, Local)"
+            />
           </div>
         </div>
 
@@ -350,7 +296,7 @@ export function DireccionModal({ direccion, clienteId, isOpen, onClose, isNew = 
               </button>
               <button 
                 onClick={handleSave}
-                disabled={isPending || !formData.calle || !formData.altura}
+                disabled={isPending}
                 className="btn-primary flex items-center justify-center gap-2 flex-1"
               >
                 {isPending ? (
