@@ -346,6 +346,14 @@ input, button, textarea, select {
   border-color: var(--color-accent);
 }
 
+.input-error {
+  border-color: var(--color-danger);
+}
+
+.input-error:focus {
+  border-color: var(--color-danger);
+}
+
 .search-input {
   width: 100%;
   background-color: var(--color-surface);
