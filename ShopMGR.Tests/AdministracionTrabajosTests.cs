@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
@@ -18,6 +19,7 @@ public class AdministracionTrabajosTests
     private readonly Mock<IRepositorioConValorHora> _repositorioPresupuestoMock;
     private readonly Mock<IAdministrarClientes> _clientesMock;
     private readonly Mock<IGoogleDriveServicio> _driveMock;
+    private readonly Mock<IAlmacenamientoServicio> _almacenamientoMock;
     private readonly AdministracionTrabajos _servicio;
 
     public AdministracionTrabajosTests()
@@ -26,14 +28,19 @@ public class AdministracionTrabajosTests
         _repositorioPresupuestoMock = new Mock<IRepositorioConValorHora>();
         _clientesMock = new Mock<IAdministrarClientes>();
         _driveMock = new Mock<IGoogleDriveServicio>();
+        _almacenamientoMock = new Mock<IAlmacenamientoServicio>();
+        
+        // Create MapperRegistry with IServiceProvider
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var mapperRegistry = new MapperRegistry(serviceProvider);
 
-        // MapperRegistry no puede ser mockeado - pasamos null!
         _servicio = new AdministracionTrabajos(
             _repositorioFotoMock.Object,
             _repositorioPresupuestoMock.Object,
             _clientesMock.Object,
+            _almacenamientoMock.Object,
             _driveMock.Object,
-            null!
+            mapperRegistry
         );
     }
 
@@ -241,7 +248,7 @@ public class AdministracionTrabajosTests
                     It.Is<List<Foto>>(fotos =>
                         fotos.Count == 1
                         && fotos[0].IdTrabajo == idTrabajo
-                        && fotos[0].Enlace == "https://drive.google.com/uc?id=test123"
+                        && fotos[0].RutaCompleta == "https://drive.google.com/uc?id=test123"
                     )
                 ),
             Times.Once
