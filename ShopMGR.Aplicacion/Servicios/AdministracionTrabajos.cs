@@ -113,10 +113,31 @@ namespace ShopMGR.Aplicacion.Servicios
                 trabajoDb.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
             }
 
-            trabajoDb.IdCliente = trabajoModificado.IdCliente ?? trabajoDb.IdCliente;
-            trabajoDb.Titulo = trabajoModificado.Titulo ?? trabajoDb.Titulo;
-            trabajoDb.Estado = trabajoModificado.Estado ?? trabajoDb.Estado;
-            trabajoDb.IdPresupuesto = trabajoModificado.IdPresupuesto ?? trabajoDb.IdPresupuesto; //TODO: cambiar como se calcula TotalLabor en base a si se agrega o elimina el IdPresupuesto
+            trabajoDb.IdCliente = trabajoModificado.IdCliente;
+            trabajoDb.Titulo = trabajoModificado.Titulo;
+            trabajoDb.Estado = trabajoModificado.Estado;
+
+            var presupuestoAnterior = trabajoDb.IdPresupuesto;
+            var presupuestoNuevo = trabajoModificado.IdPresupuesto;
+            var cambioPresupuesto = presupuestoAnterior != presupuestoNuevo;
+
+            if (cambioPresupuesto)
+            {
+                if (presupuestoNuevo == null) //Se eliminó el presupuesto
+                {
+                    var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
+                    trabajoDb.TotalLabor =
+                        costoHora * (decimal)trabajoDb.HorasDeTrabajo.Sum(h => h.Horas);
+                }
+                else //Se agregó o cambió el presupuesto
+                {
+                    var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(
+                        (int)trabajoModificado.IdPresupuesto!
+                    );
+                    trabajoDb.TotalLabor = presupuesto.CostoLabor;
+                }
+            }
+            trabajoDb.IdPresupuesto = trabajoModificado.IdPresupuesto;
 
             await _repositorio.ActualizarAsync(trabajoDb);
         }
