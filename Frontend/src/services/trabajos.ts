@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient, uploadClient } from './api';
 import type {
   Trabajo,
   TrabajoBackendDTO,
@@ -42,7 +42,7 @@ interface HorasItem {
 
 interface FotoItem {
   id: number;
-  enlace: string;
+  rutaCompleta: string;
   idTrabajo: number;
 }
 
@@ -83,6 +83,12 @@ function mapTrabajoBackend(dto: TrabajoBackendDTO): Trabajo {
   const fotosValues = (dto.fotos?.$values || []) as FotoItem[];
   const totalHoras = horasValues.reduce((sum, h) => sum + h.horas, 0);
   
+  const fotos: Trabajo['fotos'] = fotosValues.map(f => ({
+    id: f.id,
+    enlace: `/app/imagenes/${f.rutaCompleta}`,
+    idTrabajo: f.idTrabajo,
+  }));
+  
   return {
     id: dto.id,
     titulo: dto.titulo,
@@ -93,6 +99,7 @@ function mapTrabajoBackend(dto: TrabajoBackendDTO): Trabajo {
     horasRegistradas: totalHoras,
     horasEstimadas: dto.presupuesto?.horasEstimadas,
     fotosCount: fotosValues.length,
+    fotos,
     cliente: mapClienteFull(dto.cliente),
     clienteId: dto.idCliente,
     idPresupuesto: dto.idPresupuesto,
@@ -232,6 +239,26 @@ export const trabajosService = {
    */
   async agregarHoras(horas: RegistrarHorasRequest): Promise<void> {
     await apiClient.post('/Trabajos/AgregarHorasDeTrabajo', horas);
+  },
+
+  /**
+   * Sube fotos a un trabajo
+   */
+  async subirFotos(idTrabajo: number, fotos: FileList | File[]): Promise<string> {
+    const formData = new FormData();
+    
+    // Convert FileList to array if needed
+    const files = fotos instanceof FileList ? Array.from(fotos) : fotos;
+    
+    files.forEach((file) => {
+      formData.append('fotos', file);
+    });
+
+    const response = await uploadClient.post(
+      `/Trabajos/AgregarFotosTrabajo?idTrabajo=${idTrabajo}`,
+      formData
+    );
+    return response.data;
   },
 };
 

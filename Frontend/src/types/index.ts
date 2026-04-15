@@ -147,6 +147,7 @@ export interface Trabajo {
   horasEstimadas?: number;
   totalLabor?: number;
   fotosCount: number;
+  fotos?: Foto[];
   cliente: Cliente | null;
   clienteId: number;
   idPresupuesto?: number;
@@ -226,7 +227,7 @@ export interface Foto {
 
 export interface FotoBackendDTO {
   id: number;
-  enlace: string;
+  rutaCompleta: string;
   idTrabajo: number;
 }
 
