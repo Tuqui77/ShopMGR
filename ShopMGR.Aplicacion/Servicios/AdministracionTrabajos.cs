@@ -12,6 +12,7 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioConFoto repositorio,
         IRepositorioConValorHora repositorioPresupuestos,
         IAdministrarClientes clientes,
+        IAlmacenamientoServicio almacenamiento,
         IGoogleDriveServicio drive,
         MapperRegistry mapper
     ) : IAdministrarTrabajos
@@ -20,6 +21,7 @@ namespace ShopMGR.Aplicacion.Servicios
         private readonly IRepositorioConValorHora _repositorioPresupuestos =
             repositorioPresupuestos;
         private readonly IAdministrarClientes _clientes = clientes;
+        private readonly IAlmacenamientoServicio _almacenamiento = almacenamiento;
         private readonly IGoogleDriveServicio _drive = drive;
         private readonly MapperRegistry _mapper = mapper;
 
@@ -51,14 +53,13 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotosNuevas)
         {
-            await _drive.ConectarConGoogleDrive();
             var fotos = new List<Foto>();
 
             foreach (var foto in fotosNuevas)
             {
-                var enlace = await _drive.SubirArchivoAsync(foto);
+                var rutaCompleta = await _almacenamiento.SubirFotoAsync(idTrabajo, foto);
 
-                var fotoTmp = new Foto { IdTrabajo = idTrabajo, Enlace = enlace };
+                var fotoTmp = new Foto(idTrabajo, rutaCompleta);
                 fotos.Add(fotoTmp);
             }
 

@@ -7,6 +7,7 @@ using AspNetCore.Scalar;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Middleware;
@@ -98,6 +99,16 @@ namespace ShopMGR.WebApi.Aplicacion
                     };
                 });
             var app = builder.Build();
+
+            var rutaImagenes = "/app/imagenes";
+
+            app.UseStaticFiles(
+                new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(rutaImagenes),
+                    RequestPath = "/imagenes",
+                }
+            );
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
