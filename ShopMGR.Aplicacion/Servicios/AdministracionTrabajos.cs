@@ -66,13 +66,22 @@ namespace ShopMGR.Aplicacion.Servicios
             await _repositorio.AgregarFotosAsync(fotos);
         }
 
-        public async Task AgregarHorasAsync(HorasYDescripcionDTO horas)
+        public async Task AgregarHorasAsync(HorasYDescripcionDTO horasDTO)
         {
-            horas.Fecha =
-                horas.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horas.Fecha;
+            horasDTO.Fecha =
+                horasDTO.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horasDTO.Fecha;
 
-            var horasYDescripcion = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horas);
-            await _repositorio.AgregarHorasAsync(horasYDescripcion);
+            var horas = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horasDTO);
+
+            var trabajo = await _repositorio.ObtenerPorIdAsync(horasDTO.IdTrabajo);
+            trabajo.HorasDeTrabajo.Add(horas);
+
+            if (trabajo.IdPresupuesto == null)
+            {
+                var valorHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
+                trabajo.TotalLabor = valorHora * (decimal)trabajo.TotalHoras;
+            }
+            await _repositorio.ActualizarAsync(trabajo);
         }
 
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
@@ -102,13 +111,12 @@ namespace ShopMGR.Aplicacion.Servicios
             if (trabajoDb.FechaInicio == null && trabajoModificado.Estado == EstadoTrabajo.Iniciado)
             {
                 trabajoDb.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
-                ;
             }
 
             trabajoDb.IdCliente = trabajoModificado.IdCliente ?? trabajoDb.IdCliente;
             trabajoDb.Titulo = trabajoModificado.Titulo ?? trabajoDb.Titulo;
             trabajoDb.Estado = trabajoModificado.Estado ?? trabajoDb.Estado;
-            trabajoDb.IdPresupuesto = trabajoModificado.IdPresupuesto ?? trabajoDb.IdPresupuesto;
+            trabajoDb.IdPresupuesto = trabajoModificado.IdPresupuesto ?? trabajoDb.IdPresupuesto; //TODO: cambiar como se calcula TotalLabor en base a si se agrega o elimina el IdPresupuesto
 
             await _repositorio.ActualizarAsync(trabajoDb);
         }
@@ -119,12 +127,6 @@ namespace ShopMGR.Aplicacion.Servicios
 
             trabajo.FechaFin = DateOnly.FromDateTime(DateTime.Now);
             trabajo.Estado = EstadoTrabajo.Terminado;
-
-            if (trabajo.TotalLabor == null)
-            {
-                var valorHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                trabajo.TotalLabor = valorHora * (decimal)trabajo.TotalHoras;
-            }
 
             await _repositorio.ActualizarAsync(trabajo);
 
