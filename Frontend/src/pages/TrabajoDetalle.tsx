@@ -11,8 +11,10 @@ import {
   CheckCircle,
   Play,
   DollarSign,
+  X,
+  ZoomIn,
 } from 'lucide-react';
-import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../hooks/useTrabajos';
+import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { useState } from 'react';
@@ -28,8 +30,17 @@ export function TrabajoDetalle() {
   const { data: clienteCompleto } = useClienteDetalle(trabajo?.clienteId);
   const terminarTrabajo = useTerminarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
+  const subirFotos = useSubirFotos();
   const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId } = useStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+  
+  // Handler for uploading photos
+  const handleUploadPhotos = async (files: File[]) => {
+    if (!trabajoId) return;
+    await subirFotos.mutateAsync({ idTrabajo: trabajoId, fotos: files });
+  };
   
   const handleRegisterHours = () => {
     if (trabajo) {
@@ -216,16 +227,26 @@ export function TrabajoDetalle() {
             </span>
           </div>
           
-          {trabajo.fotosCount > 0 ? (
+          {trabajo.fotosCount > 0 && trabajo.fotos ? (
             <div className="grid grid-cols-4 gap-2">
-              {Array.from({ length: Math.min(trabajo.fotosCount, 4) }).map((_, i) => (
-                <div 
-                  key={i}
-                  className="aspect-square rounded-lg flex items-center justify-center"
+              {trabajo.fotos.slice(0, 4).map((foto) => (
+                <button
+                  key={foto.id}
+                  onClick={() => setSelectedImage(foto.enlace)}
+                  className="aspect-square rounded-lg overflow-hidden cursor-pointer"
                   style={{ backgroundColor: 'var(--color-surface)' }}
                 >
-                  <Camera className="w-6 h-6" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                </div>
+                  <img
+                    src={foto.enlace}
+                    alt={`Foto ${foto.id}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = '<Camera class="w-6 h-6" style="color: var(--color-muted); opacity: 0.5;" />';
+                    }}
+                  />
+                </button>
               ))}
               {trabajo.fotosCount > 4 && (
                 <div 
@@ -245,8 +266,51 @@ export function TrabajoDetalle() {
           )}
           
           {/* Upload new photos */}
-          <ImageUpload />
+          <ImageUpload onUpload={handleUploadPhotos} />
         </div>
+
+        {/* Image modal - imagen grande con zoom */}
+        {selectedImage && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+            onClick={() => { setSelectedImage(null); setIsZoomed(false); }}
+          >
+            {/* Controls - positioned at corners */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setSelectedImage(null); setIsZoomed(false); }}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Cerrar"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Zoom toggle button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsZoomed(!isZoomed); }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer text-white/80 text-sm flex items-center gap-2"
+            >
+              <ZoomIn className="w-4 h-4" />
+              {isZoomed ? 'Salir del zoom' : 'Hacer zoom'}
+            </button>
+            
+            {/* Imagen - transitions smoothly between zoom states */}
+            <img 
+              src={selectedImage} 
+              alt="Foto ampliada" 
+              className={clsx(
+                'object-contain transition-all duration-300 cursor-zoom-in',
+                isZoomed 
+                  ? 'max-w-none max-h-none w-auto h-auto scale-150' 
+                  : 'max-h-[90vh] max-w-[90vw]'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isZoomed) setIsZoomed(true);
+              }}
+              style={isZoomed ? { cursor: 'zoom-out' } : undefined}
+            />
+          </div>
+        )}
 
         {/* Totales */}
         <div className="card">
