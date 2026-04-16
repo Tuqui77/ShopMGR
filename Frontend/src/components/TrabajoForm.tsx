@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
+import { usePresupuestosPorCliente } from '../hooks/usePresupuestos';
 import { useCrearTrabajo, useModificarTrabajo, useTrabajo } from '../hooks/useTrabajos';
-import type { EstadoTrabajo, Cliente } from '../types';
+import type { EstadoTrabajo, Cliente, Presupuesto } from '../types';
 import { Loader2, X, Check } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -31,17 +32,29 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   // Estado del formulario - inicializar con datos del trabajo si estamos editando
   const [titulo, setTitulo] = useState(() => trabajoOriginal?.titulo ?? '');
   const [clienteId, setClienteId] = useState<number | null>(() => trabajoOriginal?.clienteId ?? null);
+  const [presupuestoId, setPresupuestoId] = useState<number | null>(() => trabajoOriginal?.idPresupuesto ?? null);
   const [estado, setEstado] = useState<EstadoTrabajo>(() => trabajoOriginal?.estado ?? 'Pendiente');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Query de presupuestos del cliente (solo cuando hay cliente seleccionado)
+  const { data: presupuestosDelCliente = [] } = usePresupuestosPorCliente(clienteId ?? undefined);
   
   // Sincronizar estado cuando cambian los datos del trabajo
   useEffect(() => {
     if (trabajoOriginal && isEditing) {
       setTitulo(trabajoOriginal.titulo);
       setClienteId(trabajoOriginal.clienteId);
+      setPresupuestoId(trabajoOriginal.idPresupuesto ?? null);
       setEstado(trabajoOriginal.estado);
     }
   }, [trabajoOriginal, isEditing]);
+
+  // Resetear presupuesto cuando cambia el cliente (los presupuestos son por cliente)
+  useEffect(() => {
+    if (!isEditing) {
+      setPresupuestoId(null);
+    }
+  }, [clienteId, isEditing]);
   
   // Resetear formulario al cerrar
   useEffect(() => {
@@ -50,6 +63,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       const timer = setTimeout(() => {
         setTitulo('');
         setClienteId(null);
+        setPresupuestoId(null);
         setEstado('Pendiente');
         setErrors({});
       }, 200);
@@ -97,6 +111,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
           trabajo: {
             titulo: titulo.trim(),
             idCliente: clienteId!,
+            idPresupuesto: presupuestoId ?? undefined,
             estado,
           },
         });
@@ -104,6 +119,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
         await crearTrabajo.mutateAsync({
           titulo: titulo.trim(),
           idCliente: clienteId!,
+          idPresupuesto: presupuestoId ?? undefined,
           estado,
         });
       }
@@ -186,6 +202,29 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   </p>
                 )}
               </div>
+
+              {/* Presupuesto (solo si hay cliente seleccionado) */}
+              {clienteId && (
+                <div>
+                  <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                    Presupuesto asociado (opcional)
+                  </label>
+                  <select
+                    value={presupuestoId ?? ''}
+                    onChange={(e) => setPresupuestoId(e.target.value ? Number(e.target.value) : null)}
+                    className="input"
+                  >
+                    <option value="">Sin presupuesto</option>
+                    {presupuestosDelCliente
+                      .filter((p: Presupuesto) => p.estado === 'Aceptado')
+                      .map((presupuesto: Presupuesto) => (
+                        <option key={presupuesto.id} value={presupuesto.id}>
+                          {presupuesto.titulo} - ${presupuesto.total?.toLocaleString('es-AR')}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
               
               {/* Estado */}
               <div>
