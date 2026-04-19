@@ -76,14 +76,19 @@ namespace ShopMGR.Aplicacion.Servicios
             await _clienteRepositorio.ActualizarAsync(clienteBd);
         }
 
-        public async Task RegistrarMovimientoAsync(int idCliente, MovimientoBalance movimiento)
+        public async Task RegistrarMovimientoAsync(MovimientoBalanceDTO movimientoDTO)
         {
-            var cliente = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
+            var cliente = await _clienteRepositorio.ObtenerPorIdAsync(movimientoDTO.IdCliente);
 
-            cliente.Balance += movimiento.Monto;
+            var movimiento = new MovimientoBalance{
+                Monto = movimientoDTO.Monto,
+                Descripcion = movimientoDTO.Descripcion,
+                Fecha = movimientoDTO.Fecha,
+                Tipo = movimientoDTO.Tipo,
+            };
+
+            cliente.MovimientosBalance.Add(movimiento);
             await _clienteRepositorio.ActualizarAsync(cliente);
-
-            await _movimientoBalanceRepositorio.AgregarAsync(movimiento);
         }
 
         public async Task EliminarAsync(int idCliente)

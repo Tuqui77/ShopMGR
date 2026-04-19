@@ -1,12 +1,12 @@
-﻿namespace ShopMGR.Dominio.Modelo
+namespace ShopMGR.Dominio.Modelo
 {
     public class Cliente
     {
 
         public int Id { get; set; }
-        public string NombreCompleto { get; set; } = "";
+        public string NombreCompleto { get; set; }
         public string? Cuit { get; set; }
-        public decimal? Balance { get; set; }
+        public decimal Balance => MovimientosBalance?.Sum(m => m.Monto) ?? 0;
 
         //Relaciones
         public List<MovimientoBalance> MovimientosBalance { get; set; } = [];

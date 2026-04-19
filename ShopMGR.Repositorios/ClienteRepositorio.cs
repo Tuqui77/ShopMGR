@@ -36,7 +36,7 @@ namespace ShopMGR.Repositorios
         public async Task<Cliente> ObtenerPorIdAsync(int id)
         {
             var cliente =
-                await _contexto.Clientes.FindAsync(id)
+                await _contexto.Clientes.Include(c => c.MovimientosBalance).FirstOrDefaultAsync(c => c.Id == id)
                 ?? throw new KeyNotFoundException($"No se encontró un cliente con el ID {id}.");
 
             return cliente;
