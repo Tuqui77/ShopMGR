@@ -34,6 +34,7 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             IdCliente = cliente.Id
         };
@@ -60,6 +61,7 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             IdCliente = 999
         };
@@ -87,6 +89,7 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             IdCliente = cliente.Id
         };
@@ -131,6 +134,7 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             IdCliente = cliente.Id
         };
@@ -163,9 +167,9 @@ public class DireccionRepositorioTests
         await contexto.SaveChangesAsync();
 
         await contexto.Direccion.AddRangeAsync(
-            new Direccion { Calle = "Calle 1", Altura = "10", IdCliente = cliente1.Id },
-            new Direccion { Calle = "Calle 2", Altura = "20", IdCliente = cliente1.Id },
-            new Direccion { Calle = "Calle 3", Altura = "30", IdCliente = cliente2.Id }
+            new Direccion { Calle = "Calle 1", Altura = "10", Ciudad = "Buenos Aires", IdCliente = cliente1.Id },
+            new Direccion { Calle = "Calle 2", Altura = "20", Ciudad = "Buenos Aires", IdCliente = cliente1.Id },
+            new Direccion { Calle = "Calle 3", Altura = "30", Ciudad = "Buenos Aires", IdCliente = cliente2.Id }
         );
         await contexto.SaveChangesAsync();
 
@@ -194,6 +198,7 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             IdCliente = cliente.Id
         };
@@ -239,6 +244,7 @@ public class DireccionRepositorioTests
         {
             Calle = "Calle Original",
             Altura = "100",
+            Ciudad = "Buenos Aires",
             IdCliente = cliente.Id
         };
         await contexto.Direccion.AddAsync(direccion);
@@ -276,6 +282,7 @@ public class DireccionRepositorioTests
         {
             Calle = "Para Eliminar",
             Altura = "999",
+            Ciudad = "Buenos Aires",
             IdCliente = cliente.Id
         };
         await contexto.Direccion.AddAsync(direccion);
@@ -319,6 +326,7 @@ public class DireccionRepositorioTests
         var direccion1 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             Piso = null,
             IdCliente = cliente.Id
@@ -329,6 +337,7 @@ public class DireccionRepositorioTests
         var direccion2 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             Piso = null,
             IdCliente = cliente.Id
@@ -353,6 +362,7 @@ public class DireccionRepositorioTests
         var direccion1 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             Piso = null,
             IdCliente = cliente.Id
@@ -360,11 +370,12 @@ public class DireccionRepositorioTests
         await contexto.Direccion.AddAsync(direccion1);
         await contexto.SaveChangesAsync();
 
-        var direccion2 = new Direccion
+var direccion2 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
-            Piso = "A",
+            Piso = "1",
             IdCliente = cliente.Id
         };
 
