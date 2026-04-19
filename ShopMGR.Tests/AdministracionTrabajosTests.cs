@@ -232,6 +232,10 @@ public class AdministracionTrabajosTests
             .Setup(x => x.SubirArchivoAsync(It.IsAny<IFormFile>()))
             .ReturnsAsync("https://drive.google.com/uc?id=test123");
 
+        _almacenamientoMock
+            .Setup(x => x.SubirFotoAsync(It.IsAny<int>(), It.IsAny<IFormFile>()))
+            .ReturnsAsync("https://drive.google.com/uc?id=test123");
+
         _repositorioFotoMock
             .Setup(x => x.AgregarFotosAsync(It.IsAny<List<Foto>>()))
             .Returns(Task.CompletedTask);
@@ -240,8 +244,7 @@ public class AdministracionTrabajosTests
         await _servicio.AgregarFotosAsync(idTrabajo, mockFiles.Object);
 
         // Assert
-        _driveMock.Verify(x => x.ConectarConGoogleDrive(), Times.Once);
-        _driveMock.Verify(x => x.SubirArchivoAsync(It.IsAny<IFormFile>()), Times.Once);
+        _almacenamientoMock.Verify(x => x.SubirFotoAsync(It.IsAny<int>(), It.IsAny<IFormFile>()), Times.Once);
         _repositorioFotoMock.Verify(
             x =>
                 x.AgregarFotosAsync(
@@ -362,7 +365,7 @@ public class AdministracionTrabajosTests
             .Returns(Task.CompletedTask);
 
         _clientesMock
-            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<int>(), It.IsAny<MovimientoBalance>()))
+            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<MovimientoBalanceDTO>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -382,8 +385,7 @@ public class AdministracionTrabajosTests
         _clientesMock.Verify(
             x =>
                 x.RegistrarMovimientoAsync(
-                    5,
-                    It.Is<MovimientoBalance>(m => m.Tipo == TipoMovimiento.Cargo)
+                    It.Is<MovimientoBalanceDTO>(m => m.Tipo == TipoMovimiento.Cargo)
                 ),
             Times.Once
         );
@@ -435,7 +437,7 @@ public class AdministracionTrabajosTests
             .Returns(Task.CompletedTask);
 
         _clientesMock
-            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<int>(), It.IsAny<MovimientoBalance>()))
+            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<MovimientoBalanceDTO>()))
             .Returns(Task.CompletedTask);
 
         // Act

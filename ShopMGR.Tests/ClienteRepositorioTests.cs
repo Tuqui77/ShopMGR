@@ -27,7 +27,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 0 };
+        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez" };
 
         // Act
         var resultado = await repositorio.CrearAsync(nuevoCliente);
@@ -150,7 +150,7 @@ public class ClienteRepositorioTests
             },
             Direccion = new List<Direccion>
             {
-                new Direccion { Calle = "Calle Falsa", Altura = "123" },
+                new Direccion { Calle = "Calle Falsa", Altura = "123", Ciudad = "Buenos Aires" },
             },
         };
         await contexto.Clientes.AddAsync(cliente);
