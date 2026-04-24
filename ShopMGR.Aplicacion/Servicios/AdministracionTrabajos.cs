@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
@@ -18,8 +18,7 @@ namespace ShopMGR.Aplicacion.Servicios
     ) : IAdministrarTrabajos
     {
         private readonly IRepositorioConFoto _repositorio = repositorio;
-        private readonly IRepositorioConValorHora _repositorioPresupuestos =
-            repositorioPresupuestos;
+        private readonly IRepositorioConValorHora _repositorioPresupuestos = repositorioPresupuestos;
         private readonly IAdministrarClientes _clientes = clientes;
         private readonly IAlmacenamientoServicio _almacenamiento = almacenamiento;
         private readonly IGoogleDriveServicio _drive = drive;
@@ -36,9 +35,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             if (nuevoTrabajo.IdPresupuesto != null)
             {
-                var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(
-                    nuevoTrabajo.IdPresupuesto.Value
-                );
+                var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(nuevoTrabajo.IdPresupuesto.Value);
                 trabajo.TotalLabor = presupuesto.CostoLabor;
             }
 
@@ -66,10 +63,22 @@ namespace ShopMGR.Aplicacion.Servicios
             await _repositorio.AgregarFotosAsync(fotos);
         }
 
+        public async Task EliminarFotoAsync(int idTrabajo, int idImagen)
+        {
+            var trabajoConFoto = await _repositorio.ObtenerPorIdConFotoAsync(idTrabajo);
+            var foto = trabajoConFoto.Fotos.FirstOrDefault(f => f.Id == idImagen)
+                ?? throw new KeyNotFoundException("No existe una foto con ese id");
+            var rutaRelativa = foto.RutaCompleta;
+
+            trabajoConFoto.Fotos.Remove(foto);
+            await _repositorio.ActualizarAsync(trabajoConFoto);
+
+            _ = Task.Run(() => _almacenamiento.EliminarFotoAsync(rutaRelativa));
+        }
+
         public async Task AgregarHorasAsync(HorasYDescripcionDTO horasDTO)
         {
-            horasDTO.Fecha =
-                horasDTO.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horasDTO.Fecha;
+            horasDTO.Fecha = horasDTO.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horasDTO.Fecha;
 
             var horas = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horasDTO);
 
@@ -126,8 +135,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 if (presupuestoNuevo == null) //Se eliminó el presupuesto
                 {
                     var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                    trabajoDb.TotalLabor =
-                        costoHora * (decimal)trabajoDb.HorasDeTrabajo.Sum(h => h.Horas);
+                    trabajoDb.TotalLabor = costoHora * (decimal)trabajoDb.HorasDeTrabajo.Sum(h => h.Horas);
                 }
                 else //Se agregó o cambió el presupuesto
                 {
@@ -146,24 +154,29 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
 
+            // Calcular total si no existe
+            if (!trabajo.TotalLabor.HasValue)
+            {
+                var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
+                trabajo.TotalLabor = (decimal)(trabajo.HorasDeTrabajo.Sum(h => h.Horas) * (float)costoHora);
+            }
+
             trabajo.FechaFin = DateOnly.FromDateTime(DateTime.Now);
             trabajo.Estado = EstadoTrabajo.Terminado;
 
             await _repositorio.ActualizarAsync(trabajo);
 
-            var movimiento = new MovimientoBalance
+            var movimiento = new MovimientoBalanceDTO
             {
                 Tipo = TipoMovimiento.Cargo,
-                Monto = -(decimal)trabajo.TotalLabor,
+                Monto = -trabajo.TotalLabor.Value,
                 Descripcion = $"Trabajo #{idTrabajo} - {trabajo.Titulo}",
                 Fecha = DateOnly.FromDateTime(DateTime.Now),
-                Cliente = trabajo.Cliente,
                 IdCliente = trabajo.IdCliente,
-                Trabajo = trabajo,
                 IdTrabajo = trabajo.Id,
             };
 
-            await _clientes.RegistrarMovimientoAsync(trabajo.IdCliente, movimiento);
+            await _clientes.RegistrarMovimientoAsync(movimiento);
         }
 
         public async Task EliminarAsync(int idTrabajo)
