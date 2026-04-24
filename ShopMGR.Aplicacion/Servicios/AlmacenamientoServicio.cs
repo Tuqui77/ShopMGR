@@ -24,16 +24,11 @@ namespace ShopMGR.Aplicacion.Servicios
             return Path.Combine(dirId, nombreArchivo);
         }
 
-
         public Task EliminarFotoAsync(string rutaRelativaFoto)
         {
-            var ruta = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "imagenes",
-                    rutaRelativaFoto
-                    );
+            var ruta = Path.Combine(Directory.GetCurrentDirectory(), "imagenes", rutaRelativaFoto);
 
-            if(File.Exists(ruta))
+            if (File.Exists(ruta))
             {
                 File.Delete(ruta);
             }

@@ -137,7 +137,6 @@ public class AdministracionClientesTests
             {
                 Id = 1,
                 NombreCompleto = "Cliente Deudor",
-                Balance = -100m,
             },
         };
 

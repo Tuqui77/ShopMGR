@@ -15,7 +15,7 @@ namespace ShopMGR.Dominio.Modelo
         public int IdTrabajo { get; set; }
         public Trabajo? Trabajo { get; set; }
 
-        private Foto() {} //constructor para EF
+        private Foto() { } //constructor para EF
 
         public Foto(int idTrabajo, string rutaRelativa)
         {

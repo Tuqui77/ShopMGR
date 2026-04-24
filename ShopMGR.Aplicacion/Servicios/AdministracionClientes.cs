@@ -15,12 +15,9 @@ namespace ShopMGR.Aplicacion.Servicios
     ) : IAdministrarClientes
     {
         private readonly IRepositorioCliente<Cliente> _clienteRepositorio = clienteRepositorio;
-        private readonly IRepositorioConCliente<Direccion> _direccionRepositorio =
-            direccionRepositorio;
-        private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio =
-            telefonoRepositorio;
-        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio =
-            movimientoBalanceRepositorio;
+        private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
+        private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoRepositorio;
+        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio = movimientoBalanceRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
@@ -69,8 +66,7 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var clienteBd = await _clienteRepositorio.ObtenerPorIdAsync(idCliente);
 
-            clienteBd.NombreCompleto =
-                clienteActualizado.NombreCompleto ?? clienteBd.NombreCompleto;
+            clienteBd.NombreCompleto = clienteActualizado.NombreCompleto ?? clienteBd.NombreCompleto;
             clienteBd.Cuit = clienteActualizado.Cuit ?? clienteBd.Cuit;
 
             await _clienteRepositorio.ActualizarAsync(clienteBd);
@@ -80,7 +76,8 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var cliente = await _clienteRepositorio.ObtenerPorIdAsync(movimientoDTO.IdCliente);
 
-            var movimiento = new MovimientoBalance{
+            var movimiento = new MovimientoBalance
+            {
                 Monto = movimientoDTO.Monto,
                 Descripcion = movimientoDTO.Descripcion,
                 Fecha = movimientoDTO.Fecha,
