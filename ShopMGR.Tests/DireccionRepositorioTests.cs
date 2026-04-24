@@ -1,8 +1,8 @@
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
-using ShopMGR.Repositorios;
 using ShopMGR.Dominio.Modelo;
-using FluentAssertions;
+using ShopMGR.Repositorios;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -34,8 +34,9 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
-            IdCliente = cliente.Id
+            IdCliente = cliente.Id,
         };
 
         // Act
@@ -60,13 +61,13 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
-            IdCliente = 999
+            IdCliente = 999,
         };
 
         // Act & Assert
-        await repositorio.Invoking(r => r.CrearAsync(direccion))
-            .Should().ThrowAsync<KeyNotFoundException>();
+        await repositorio.Invoking(r => r.CrearAsync(direccion)).Should().ThrowAsync<KeyNotFoundException>();
     }
 
     #endregion
@@ -87,8 +88,9 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
-            IdCliente = cliente.Id
+            IdCliente = cliente.Id,
         };
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
@@ -109,8 +111,7 @@ public class DireccionRepositorioTests
         var repositorio = new DireccionRepositorio(contexto);
 
         // Act & Assert
-        await repositorio.Invoking(r => r.ObtenerPorIdAsync(999))
-            .Should().ThrowAsync<KeyNotFoundException>();
+        await repositorio.Invoking(r => r.ObtenerPorIdAsync(999)).Should().ThrowAsync<KeyNotFoundException>();
     }
 
     #endregion
@@ -131,8 +132,9 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
-            IdCliente = cliente.Id
+            IdCliente = cliente.Id,
         };
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
@@ -163,9 +165,27 @@ public class DireccionRepositorioTests
         await contexto.SaveChangesAsync();
 
         await contexto.Direccion.AddRangeAsync(
-            new Direccion { Calle = "Calle 1", Altura = "10", IdCliente = cliente1.Id },
-            new Direccion { Calle = "Calle 2", Altura = "20", IdCliente = cliente1.Id },
-            new Direccion { Calle = "Calle 3", Altura = "30", IdCliente = cliente2.Id }
+            new Direccion
+            {
+                Calle = "Calle 1",
+                Altura = "10",
+                Ciudad = "Buenos Aires",
+                IdCliente = cliente1.Id,
+            },
+            new Direccion
+            {
+                Calle = "Calle 2",
+                Altura = "20",
+                Ciudad = "Buenos Aires",
+                IdCliente = cliente1.Id,
+            },
+            new Direccion
+            {
+                Calle = "Calle 3",
+                Altura = "30",
+                Ciudad = "Buenos Aires",
+                IdCliente = cliente2.Id,
+            }
         );
         await contexto.SaveChangesAsync();
 
@@ -194,8 +214,9 @@ public class DireccionRepositorioTests
         var direccion = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
-            IdCliente = cliente.Id
+            IdCliente = cliente.Id,
         };
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
@@ -216,8 +237,10 @@ public class DireccionRepositorioTests
         var repositorio = new DireccionRepositorio(contexto);
 
         // Act & Assert
-        await repositorio.Invoking(r => r.ObtenerPorCalleYAlturaAsync("Calle Falsa", "999"))
-            .Should().ThrowAsync<KeyNotFoundException>();
+        await repositorio
+            .Invoking(r => r.ObtenerPorCalleYAlturaAsync("Calle Falsa", "999"))
+            .Should()
+            .ThrowAsync<KeyNotFoundException>();
     }
 
     #endregion
@@ -239,7 +262,8 @@ public class DireccionRepositorioTests
         {
             Calle = "Calle Original",
             Altura = "100",
-            IdCliente = cliente.Id
+            Ciudad = "Buenos Aires",
+            IdCliente = cliente.Id,
         };
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
@@ -276,7 +300,8 @@ public class DireccionRepositorioTests
         {
             Calle = "Para Eliminar",
             Altura = "999",
-            IdCliente = cliente.Id
+            Ciudad = "Buenos Aires",
+            IdCliente = cliente.Id,
         };
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
@@ -297,8 +322,7 @@ public class DireccionRepositorioTests
         var repositorio = new DireccionRepositorio(contexto);
 
         // Act & Assert
-        await repositorio.Invoking(r => r.EliminarAsync(999))
-            .Should().ThrowAsync<KeyNotFoundException>();
+        await repositorio.Invoking(r => r.EliminarAsync(999)).Should().ThrowAsync<KeyNotFoundException>();
     }
 
     #endregion
@@ -319,9 +343,10 @@ public class DireccionRepositorioTests
         var direccion1 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             Piso = null,
-            IdCliente = cliente.Id
+            IdCliente = cliente.Id,
         };
         await contexto.Direccion.AddAsync(direccion1);
         await contexto.SaveChangesAsync();
@@ -329,14 +354,14 @@ public class DireccionRepositorioTests
         var direccion2 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             Piso = null,
-            IdCliente = cliente.Id
+            IdCliente = cliente.Id,
         };
 
         // Act & Assert
-        await repositorio.Invoking(r => r.Validar(direccion2))
-            .Should().ThrowAsync<InvalidOperationException>();
+        await repositorio.Invoking(r => r.Validar(direccion2)).Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
@@ -353,9 +378,10 @@ public class DireccionRepositorioTests
         var direccion1 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
             Piso = null,
-            IdCliente = cliente.Id
+            IdCliente = cliente.Id,
         };
         await contexto.Direccion.AddAsync(direccion1);
         await contexto.SaveChangesAsync();
@@ -363,14 +389,14 @@ public class DireccionRepositorioTests
         var direccion2 = new Direccion
         {
             Calle = "Av. Principal",
+            Ciudad = "Buenos Aires",
             Altura = "123",
-            Piso = "A",
-            IdCliente = cliente.Id
+            Piso = "1",
+            IdCliente = cliente.Id,
         };
 
         // Act & Assert
-        await repositorio.Invoking(r => r.Validar(direccion2))
-            .Should().NotThrowAsync<InvalidOperationException>();
+        await repositorio.Invoking(r => r.Validar(direccion2)).Should().NotThrowAsync<InvalidOperationException>();
     }
 
     #endregion

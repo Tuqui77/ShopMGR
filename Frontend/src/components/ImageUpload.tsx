@@ -9,25 +9,28 @@ interface ImageFile {
 
 interface Props {
   onUploadComplete?: (files: File[]) => void;
+  onUpload?: (files: File[]) => Promise<void>;  // Actual upload function
   accept?: string;
   maxFiles?: number;
 }
 
 export function ImageUpload({
   onUploadComplete,
+  onUpload,
   accept = 'image/jpeg,image/png',
   maxFiles,
 }: Props = {}) {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleClick = () => {
     inputRef.current?.click();
   };
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
     if (files.length === 0) return;
@@ -47,10 +50,6 @@ export function ImageUpload({
       console.warn(`Limitado a ${filesToAdd.length} archivos (maximo: ${maxFiles})`);
     }
 
-    // Start mock upload
-    setIsUploading(true);
-    setUploadProgress(0);
-
     // Create preview URLs
     const newImages: ImageFile[] = filesToAdd.map(file => ({
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -58,33 +57,51 @@ export function ImageUpload({
       preview: URL.createObjectURL(file),
     }));
 
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
-        }
-        // Random increment for realism
-        return Math.min(prev + Math.random() * 15 + 5, 100);
-      });
-    }, 200);
+    setIsUploading(true);
+    setUploadProgress(0);
+    setError(null);
 
-    // Complete after "upload" duration
-    setTimeout(() => {
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      setIsUploading(false);
+    try {
+      if (onUpload) {
+        // Use actual upload function
+        await onUpload(filesToAdd);
+        setUploadProgress(100);
+      } else {
+        // Mock upload for development
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 100) {
+              clearInterval(progressInterval);
+              return 100;
+            }
+            return Math.min(prev + Math.random() * 15 + 5, 100);
+          });
+        }, 200);
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+      }
+      
+      // Success - add images to state
       setImages(prev => [...prev, ...newImages]);
       onUploadComplete?.(filesToAdd);
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError('Error al subir las imágenes');
+      
+      // Clean up preview URLs on error
+      newImages.forEach(img => URL.revokeObjectURL(img.preview));
+    } finally {
+      setIsUploading(false);
       setUploadProgress(0);
       
       // Reset input
       if (inputRef.current) {
         inputRef.current.value = '';
       }
-    }, 2000);
-  }, [accept, maxFiles, images.length, onUploadComplete]);
+    }
+  }, [accept, maxFiles, images.length, onUploadComplete, onUpload]);
 
   const handleRemove = useCallback((id: string) => {
     setImages(prev => {
@@ -113,6 +130,13 @@ export function ImageUpload({
         onChange={handleFileChange}
         className="hidden"
       />
+
+      {/* Error message */}
+      {error && (
+        <div className="mb-3 p-2 rounded-lg text-sm" style={{ backgroundColor: 'var(--color-danger)', color: 'white' }}>
+          {error}
+        </div>
+      )}
 
       {/* Upload button or progress bar */}
       {isUploading ? (

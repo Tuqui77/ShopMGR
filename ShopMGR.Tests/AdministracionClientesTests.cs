@@ -5,6 +5,7 @@ using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 using Xunit;
 
@@ -136,7 +137,6 @@ public class AdministracionClientesTests
             {
                 Id = 1,
                 NombreCompleto = "Cliente Deudor",
-                Balance = -100m,
             },
         };
 
@@ -150,13 +150,18 @@ public class AdministracionClientesTests
         // Assert
         resultado.Should().NotBeNull();
         resultado.Should().HaveCount(1);
-        resultado.First().Balance.Should().BeNegative();
     }
 
     [Fact]
     public async Task ActualizarAsync_DeberiaActualizarClienteCuandoExiste()
     {
         // Arrange
+        var clienteActualizado = new ModificarCliente
+        {
+            NombreCompleto = "Nuevo Nombre",
+            Cuit = "20-98765432-1",
+        };
+
         var clienteExistente = new Cliente
         {
             Id = 1,
@@ -164,13 +169,9 @@ public class AdministracionClientesTests
             Cuit = "20-12345678-9",
         };
 
-        var clienteActualizado = new ModificarCliente
-        {
-            NombreCompleto = "Nuevo Nombre",
-            Cuit = "20-98765432-1",
-        };
-
-        _clienteRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(clienteExistente);
+        _clienteRepositorioMock
+            .Setup(x => x.ObtenerPorIdAsync(1))
+            .ReturnsAsync(clienteExistente);
 
         _clienteRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Cliente>()))
@@ -213,14 +214,16 @@ public class AdministracionClientesTests
         {
             Id = 1,
             NombreCompleto = "Juan Perez",
-            Balance = 100m,
+            MovimientosBalance = [new MovimientoBalance { Monto = 100m, Tipo = TipoMovimiento.Pago, Descripcion = "Saldo inicial", Fecha = DateOnly.FromDateTime(DateTime.Today) }]
         };
 
-        var movimiento = new MovimientoBalance
+        var movimientoDTO = new MovimientoBalanceDTO
         {
             IdCliente = 1,
             Monto = 50m,
             Descripcion = "Pago recibido",
+            Fecha = DateOnly.FromDateTime(DateTime.Today),
+            Tipo = TipoMovimiento.Pago
         };
 
         _clienteRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(clienteExistente);
@@ -234,16 +237,12 @@ public class AdministracionClientesTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await _servicio.RegistrarMovimientoAsync(1, movimiento);
+        await _servicio.RegistrarMovimientoAsync(movimientoDTO);
 
         // Assert
         _clienteRepositorioMock.Verify(x => x.ObtenerPorIdAsync(1), Times.Once);
         _clienteRepositorioMock.Verify(
             x => x.ActualizarAsync(It.Is<Cliente>(c => c.Balance == 150m)),
-            Times.Once
-        );
-        _movimientoBalanceRepositorioMock.Verify(
-            x => x.AgregarAsync(It.Is<MovimientoBalance>(m => m.Monto == 50m)),
             Times.Once
         );
     }

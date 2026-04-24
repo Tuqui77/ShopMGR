@@ -139,7 +139,7 @@ public class TrabajoRepositorioTests
             Titulo = "Reparación Completa",
             IdCliente = cliente.Id,
             Estado = EstadoTrabajo.Pendiente,
-            Fotos = new List<Foto> { new Foto { Enlace = "foto1.jpg" } }
+            Fotos = new List<Foto> { new Foto(cliente.Id, "/fotos/foto1.jpg") }
         };
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
@@ -238,8 +238,8 @@ public class TrabajoRepositorioTests
 
         var fotos = new List<Foto>
         {
-            new Foto { Enlace = "foto1.jpg", IdTrabajo = trabajo.Id },
-            new Foto { Enlace = "foto2.jpg", IdTrabajo = trabajo.Id }
+            new Foto(trabajo.Id, "/fotos/foto1.jpg"),
+            new Foto(trabajo.Id, "/fotos/foto2.jpg")
         };
 
         // Act
@@ -261,7 +261,7 @@ public class TrabajoRepositorioTests
 
         var fotos = new List<Foto>
         {
-            new Foto { Enlace = "foto1.jpg", IdTrabajo = 999 }
+            new Foto(999, "/fotos/foto1.jpg")
         };
 
         // Act & Assert

@@ -30,10 +30,6 @@ namespace ShopMGR.Contexto.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal?>("Balance")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Cuit")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -94,6 +90,11 @@ namespace ShopMGR.Contexto.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
+                    b.Property<string>("Ciudad")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("CodigoPostal")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
@@ -135,13 +136,13 @@ namespace ShopMGR.Contexto.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Enlace")
+                    b.Property<int>("IdTrabajo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RutaRelativa")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("IdTrabajo")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -353,6 +354,10 @@ namespace ShopMGR.Contexto.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Estado")
                         .IsRequired()

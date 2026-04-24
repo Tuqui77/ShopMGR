@@ -79,16 +79,14 @@ public class DominioModelTests
     public void Foto_DeberiaPoderSetearYLeerPropiedades()
     {
         // Arrange & Act
-        var foto = new Foto
+        var foto = new Foto(10, "/fotos/trabajo1/foto1.jpg")
         {
             Id = 1,
-            Enlace = "https://drive.google.com/foto1.jpg",
-            IdTrabajo = 10,
         };
 
         // Assert
         foto.Id.Should().Be(1);
-        foto.Enlace.Should().Be("https://drive.google.com/foto1.jpg");
+        foto.RutaRelativa.Should().Be("/fotos/trabajo1/foto1.jpg");
         foto.IdTrabajo.Should().Be(10);
     }
 
@@ -99,11 +97,9 @@ public class DominioModelTests
         var trabajo = new Trabajo { Id = 1, Titulo = "Reparación" };
 
         // Act
-        var foto = new Foto
+        var foto = new Foto(trabajo.Id, "/fotos/trabajo1/foto1.jpg")
         {
             Id = 1,
-            Enlace = "https://drive.google.com/foto1.jpg",
-            IdTrabajo = trabajo.Id,
             Trabajo = trabajo,
         };
 

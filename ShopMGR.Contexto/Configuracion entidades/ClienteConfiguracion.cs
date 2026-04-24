@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ShopMGR.Dominio.Modelo;
 using System;
@@ -27,10 +27,6 @@ namespace ShopMGR.Contexto.Configuracion_entidades
             builder.Property(c => c.Cuit)
                 .IsRequired(false)
                 .HasMaxLength(20);
-
-            builder.Property(c => c.Balance)
-                .IsRequired(false)
-                .HasPrecision(18, 2);
 
             //Relaciones
             builder.HasMany(c => c.Direccion)

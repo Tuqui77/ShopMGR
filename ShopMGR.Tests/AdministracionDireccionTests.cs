@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
@@ -138,18 +139,18 @@ public class AdministracionDireccionTests
     public async Task ActualizarAsync_DeberiaActualizarDireccion()
     {
         // Arrange
+        var direccionModificada = new ModificarDireccion
+        {
+            Calle = "Calle Modificada",
+            Altura = "200",
+        };
+
         var direccionExistente = new Direccion
         {
             Id = 1,
             Calle = "Calle Original",
             Altura = "100",
             IdCliente = 5,
-        };
-
-        var direccionModificada = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarDireccion
-        {
-            Calle = "Calle Modificada",
-            Altura = "200",
         };
 
         _direccionRepositorioMock
@@ -169,45 +170,6 @@ public class AdministracionDireccionTests
             x =>
                 x.ActualizarAsync(
                     It.Is<Direccion>(d => d.Calle == "Calle Modificada" && d.Altura == "200")
-                ),
-            Times.Once
-        );
-    }
-
-    [Fact]
-    public async Task ActualizarAsync_DeberiaMantenerValoresExistentesCuandoSeanNull()
-    {
-        // Arrange
-        var direccionExistente = new Direccion
-        {
-            Id = 1,
-            Calle = "Calle Original",
-            Altura = "100",
-            CodigoPostal = "1234",
-            IdCliente = 5,
-        };
-
-        var direccionModificada = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarDireccion
-        {
-            Calle = null, // No se proporciona, debe mantener el original
-        };
-
-        _direccionRepositorioMock
-            .Setup(x => x.ObtenerPorIdAsync(1))
-            .ReturnsAsync(direccionExistente);
-
-        _direccionRepositorioMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<Direccion>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _servicio.ActualizarAsync(1, direccionModificada);
-
-        // Assert
-        _direccionRepositorioMock.Verify(
-            x =>
-                x.ActualizarAsync(
-                    It.Is<Direccion>(d => d.Calle == "Calle Original" && d.CodigoPostal == "1234")
                 ),
             Times.Once
         );

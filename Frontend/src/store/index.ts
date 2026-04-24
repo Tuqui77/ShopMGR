@@ -28,6 +28,8 @@ interface AppState {
   showClienteForm: boolean;
   showPresupuestoForm: boolean;
   showTrabajoForm: boolean;
+  showMovimientoModal: boolean;
+  imageFullscreenOpen: boolean;
   selectedTrabajo: Trabajo | null;
   lastTrabajoId: number | null;
   
@@ -45,6 +47,8 @@ interface AppState {
   setShowClienteForm: (show: boolean) => void;
   setShowPresupuestoForm: (show: boolean) => void;
   setShowTrabajoForm: (show: boolean) => void;
+  setShowMovimientoModal: (show: boolean) => void;
+  setImageFullscreenOpen: (open: boolean) => void;
   setSelectedTrabajo: (trabajo: Trabajo | null) => void;
   setEditingCliente: (cliente: Cliente | null) => void;
   setEditingTrabajoId: (id: number | null) => void;
@@ -67,6 +71,8 @@ export const useStore = create<AppState>((set, get) => ({
   showClienteForm: false,
   showPresupuestoForm: false,
   showTrabajoForm: false,
+  showMovimientoModal: false,
+  imageFullscreenOpen: false,
   selectedTrabajo: null,
   lastTrabajoId: null,
   editingCliente: null,
@@ -90,6 +96,10 @@ export const useStore = create<AppState>((set, get) => ({
   setShowPresupuestoForm: (show) => set({ showPresupuestoForm: show }),
   
   setShowTrabajoForm: (show) => set({ showTrabajoForm: show }),
+  
+  setShowMovimientoModal: (show) => set({ showMovimientoModal: show }),
+  
+  setImageFullscreenOpen: (open) => set({ imageFullscreenOpen: open }),
   
   setSelectedTrabajo: (trabajo) => {
     set({ selectedTrabajo: trabajo });
