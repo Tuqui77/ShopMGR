@@ -17,6 +17,8 @@ services:
       - "80"
     env_file:
       - environment.env
+    volumes:
+      - imagenes:/app/imagenes
     depends_on:
       - db
 
@@ -41,6 +43,7 @@ services:
       - "3000:80"
     depends_on:
       - backend
-      
+
 volumes:
   mssql_data:
+  imagenes:

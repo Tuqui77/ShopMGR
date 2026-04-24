@@ -11,11 +11,13 @@ import {
   CheckCircle,
   Play,
   DollarSign,
+  X,
+  ZoomIn,
 } from 'lucide-react';
-import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo } from '../hooks/useTrabajos';
+import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { TrabajoForm } from '../components/TrabajoForm';
 import { ImageUpload } from '../components/ImageUpload';
@@ -28,8 +30,39 @@ export function TrabajoDetalle() {
   const { data: clienteCompleto } = useClienteDetalle(trabajo?.clienteId);
   const terminarTrabajo = useTerminarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
-  const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId } = useStore();
+  const subirFotos = useSubirFotos();
+  const eliminarFoto = useEliminarFoto();
+  const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId, setImageFullscreenOpen } = useStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
+  const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  // Handle close image modal
+  const handleCloseImage = useCallback(() => {
+    setSelectedImage(null);
+    setSelectedImageId(null);
+    setIsZoomed(false);
+    setImageFullscreenOpen(false);
+  }, [setImageFullscreenOpen]);
+
+  // Handle ESC to close image modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedImage) {
+        handleCloseImage();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, handleCloseImage]);
+  
+  // Handler for uploading photos
+  const handleUploadPhotos = async (files: File[]) => {
+    if (!trabajoId) return;
+    await subirFotos.mutateAsync({ idTrabajo: trabajoId, fotos: files });
+  };
   
   const handleRegisterHours = () => {
     if (trabajo) {
@@ -68,6 +101,24 @@ export function TrabajoDetalle() {
 
   const handleEditSuccess = () => {
     setEditingTrabajoId(null);
+  };
+
+  const handleSelectImage = (enlace: string, id: number) => {
+    setSelectedImage(enlace);
+    setSelectedImageId(id);
+    setIsZoomed(false);
+    setImageFullscreenOpen(true);
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!trabajoId || selectedImageId === null) return;
+    try {
+      await eliminarFoto.mutateAsync({ idTrabajo: trabajoId, idImagen: selectedImageId });
+      handleCloseImage();
+    } catch (err) {
+      console.error('Error al eliminar foto:', err);
+      setShowDeletePhotoConfirm(false);
+    }
   };
   
   const getStatusBadge = () => {
@@ -127,6 +178,12 @@ export function TrabajoDetalle() {
         {/* Card principal */}
         <div className="card">
           <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</h2>
+          
+          {trabajo.descripcion && (
+            <p className="text-sm mb-4" style={{ color: 'var(--color-muted)' }}>
+              {trabajo.descripcion}
+            </p>
+          )}
           
           {trabajo.cliente && (
             <Link 
@@ -216,16 +273,26 @@ export function TrabajoDetalle() {
             </span>
           </div>
           
-          {trabajo.fotosCount > 0 ? (
+          {trabajo.fotosCount > 0 && trabajo.fotos ? (
             <div className="grid grid-cols-4 gap-2">
-              {Array.from({ length: Math.min(trabajo.fotosCount, 4) }).map((_, i) => (
-                <div 
-                  key={i}
-                  className="aspect-square rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: 'var(--color-surface)' }}
-                >
-                  <Camera className="w-6 h-6" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                </div>
+{trabajo.fotos.slice(0, 4).map((foto) => (
+                  <button
+                    key={foto.id}
+                    onClick={() => handleSelectImage(foto.enlace, foto.id)}
+                    className="aspect-square rounded-lg overflow-hidden cursor-pointer"
+                    style={{ backgroundColor: 'var(--color-surface)' }}
+                  >
+                  <img
+                    src={foto.enlace}
+                    alt={`Foto ${foto.id}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = '<Camera class="w-6 h-6" style="color: var(--color-muted); opacity: 0.5;" />';
+                    }}
+                  />
+                </button>
               ))}
               {trabajo.fotosCount > 4 && (
                 <div 
@@ -245,8 +312,61 @@ export function TrabajoDetalle() {
           )}
           
           {/* Upload new photos */}
-          <ImageUpload />
+          <ImageUpload onUpload={handleUploadPhotos} />
         </div>
+
+        {/* Image modal - imagen grande con zoom */}
+        {selectedImage && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
+            onClick={handleCloseImage}
+          >
+            {/* Controls - positioned at corners */}
+            {/* Delete button - top right, left of close button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDeletePhotoConfirm(true); }}
+              className="absolute top-4 right-16 z-10 p-2 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors cursor-pointer"
+              aria-label="Eliminar foto"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Close button - top right */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCloseImage(); }}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Cerrar"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Zoom toggle button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsZoomed(!isZoomed); }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer text-white/80 text-sm flex items-center gap-2"
+            >
+              <ZoomIn className="w-4 h-4" />
+              {isZoomed ? 'Salir del zoom' : 'Hacer zoom'}
+            </button>
+            
+            {/* Imagen - transitions smoothly between zoom states */}
+            <img 
+              src={selectedImage} 
+              alt="Foto ampliada" 
+              className={clsx(
+                'object-contain transition-all duration-300 cursor-zoom-in',
+                isZoomed 
+                  ? 'max-w-none max-h-none w-auto h-auto scale-150' 
+                  : 'max-h-[90vh] max-w-[90vw]'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isZoomed) setIsZoomed(true);
+              }}
+              style={isZoomed ? { cursor: 'zoom-out' } : undefined}
+            />
+          </div>
+        )}
 
         {/* Totales */}
         <div className="card">
@@ -264,6 +384,41 @@ export function TrabajoDetalle() {
             </div>
           </div>
         </div>
+
+        {/* Delete photo confirmation modal */}
+        {showDeletePhotoConfirm && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setShowDeletePhotoConfirm(false)}
+          >
+            <div 
+              className="modal-content max-w-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+                Eliminar foto
+              </h3>
+              <p className="mb-6" style={{ color: 'var(--color-muted)' }}>
+                ¿Estás seguro de que deseas eliminar esta foto? Esta acción no se puede deshacer.
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowDeletePhotoConfirm(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleDeletePhoto}
+                  disabled={eliminarFoto.isPending}
+                  className="btn-primary flex-1 !bg-red-500 hover:!bg-red-600"
+                >
+                  {eliminarFoto.isPending ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Acciones */}
         <div className="space-y-3">

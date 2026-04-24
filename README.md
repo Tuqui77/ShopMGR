@@ -5,7 +5,7 @@
 Este proyecto nació como una forma de poner en práctica los conocimientos que estaba adquiriendo como programador autodidacta. 
 Mi objetivo principal fue, usando una lógica de negocio que me es familiar, desarrollar una aplicación real que me permitiera experimentar con conceptos de arquitectura de software, bases de datos, diseño de APIs y demás.
 
-### **Disclaimer: Todo el backend del proyecto está escrito por mí, pero TODO el frontend está hecho usando IA. <ins>Yo no toqué una sola línea de código del frontend</ins>**
+### **Disclaimer: Todo el backend del proyecto está escrito por mí, pero el frontend COMPLETO está hecho usando IA. <ins>Yo no toqué una sola línea de código del frontend</ins>**
 Creo que vale la pena dejar esto muy en claro, tanto para no tomar crédito por algo que no hice como por los motivos que me llevaron a hacerlo de esta manera. No me gusta para nada el desarrollo frontend, no solo es algo que me aburre, sino que además me quita trabajar en lo que sí me gusta y disfruto, el desarrollo backend. Esto generó que por varios meses abandone el proyecto. La semana pasada volví a ver la necesidad de terminarlo para poder empezar a usarlo, y en lugar de ver el desarrollo del frontend nuevamente como una limitante, decidí verlo como la posibilidad de aprender sobre el uso de la inteligencia artificial como herramienta de desarrollo, incorporando contexto, skills y aprendiendo a explicar qué es lo que quiero y cómo quiero que se haga.
 
 ## Tecnologías y herramientas utilizadas

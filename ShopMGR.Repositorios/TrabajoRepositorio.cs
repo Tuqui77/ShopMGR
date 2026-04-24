@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
@@ -38,7 +38,11 @@ namespace ShopMGR.Repositorios
 
         public async Task AgregarHorasAsync(HorasYDescripcion horas)
         {
-            var trabajo = await ObtenerPorIdAsync(horas.IdTrabajo);
+            var trabajo =
+                await ObtenerPorIdAsync(horas.IdTrabajo)
+                ?? throw new KeyNotFoundException(
+                    $"No existe un trabajo con el Id {horas.IdTrabajo}"
+                );
 
             _contexto.HorasYDescripcion.Add(horas);
             await _contexto.SaveChangesAsync();
@@ -47,10 +51,19 @@ namespace ShopMGR.Repositorios
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
             var trabajoDB =
-                await _contexto.Trabajos.FindAsync(id)
+                await _contexto.Trabajos.Include(t => t.HorasDeTrabajo).FirstOrDefaultAsync(t => t.Id == id)
                 ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {id}");
 
             return trabajoDB;
+        }
+
+        public async Task<Trabajo> ObtenerPorIdConFotoAsync(int id)
+        {
+            var trabajoConFoto =
+                await _contexto.Trabajos.Include(t => t.Fotos).FirstOrDefaultAsync(t => t.Id == id)
+                ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {id}");
+
+            return trabajoConFoto;
         }
 
         public async Task<Trabajo> ObtenerDetallePorIdAsync(int id)

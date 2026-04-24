@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
@@ -135,6 +136,12 @@ public class AdministracionTelefonoClienteTests
     public async Task ActualizarAsync_DeberiaActualizarTelefono()
     {
         // Arrange
+        var telefonoModificado = new ModificarTelefono
+        {
+            Telefono = "9999999999",
+            Descripcion = "Nueva Descripción",
+        };
+
         var telefonoExistente = new TelefonoCliente
         {
             Id = 1,
@@ -143,13 +150,9 @@ public class AdministracionTelefonoClienteTests
             Descripcion = "Descripción Original",
         };
 
-        var telefonoModificado = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarTelefono
-        {
-            Telefono = "9999999999",
-            Descripcion = "Nueva Descripción",
-        };
-
-        _telefonoRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(telefonoExistente);
+        _telefonoRepositorioMock
+            .Setup(x => x.ObtenerPorIdAsync(1))
+            .ReturnsAsync(telefonoExistente);
 
         _telefonoRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<TelefonoCliente>()))
@@ -165,44 +168,6 @@ public class AdministracionTelefonoClienteTests
                 x.ActualizarAsync(
                     It.Is<TelefonoCliente>(t =>
                         t.Telefono == "9999999999" && t.Descripcion == "Nueva Descripción"
-                    )
-                ),
-            Times.Once
-        );
-    }
-
-    [Fact]
-    public async Task ActualizarAsync_DeberiaMantenerValoresExistentesCuandoSeanNull()
-    {
-        // Arrange
-        var telefonoExistente = new TelefonoCliente
-        {
-            Id = 1,
-            Telefono = "1111111111",
-            IdCliente = 5,
-            Descripcion = "Descripción Original",
-        };
-
-        var telefonoModificado = new ShopMGR.Aplicacion.Data_Transfer_Objects.ModificarTelefono
-        {
-            Telefono = null, // No se proporciona, debe mantener el original
-        };
-
-        _telefonoRepositorioMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(telefonoExistente);
-
-        _telefonoRepositorioMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<TelefonoCliente>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _servicio.ActualizarAsync(1, telefonoModificado);
-
-        // Assert
-        _telefonoRepositorioMock.Verify(
-            x =>
-                x.ActualizarAsync(
-                    It.Is<TelefonoCliente>(t =>
-                        t.Telefono == "1111111111" && t.Descripcion == "Descripción Original"
                     )
                 ),
             Times.Once

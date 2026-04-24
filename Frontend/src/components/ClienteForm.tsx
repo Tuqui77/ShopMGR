@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import clsx from 'clsx';
 import { useStore } from '../store';
 import { useCrearCliente, useModificarCliente } from '../hooks/useClientes';
 import type { Cliente } from '../types';
@@ -18,14 +19,22 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const modificarCliente = useModificarCliente();
   const [nombre, setNombre] = useState('');
   const [cuit, setCuit] = useState('');
+  
+  // Only needed for create mode
   const [telefonoInput, setTelefonoInput] = useState('');
   const [telefonoDesc, setTelefonoDesc] = useState('');
-  const [telefonos, setTelefonos] = useState<{ telefono: string; descripcion: string }[]>([]);
+  const [telefonos, setTelefonos] = useState<{ id: number; telefono: string; descripcion: string }[]>([]);
   const [calle, setCalle] = useState('');
   const [altura, setAltura] = useState('');
+  const [ciudad, setCiudad] = useState('');
+  const [piso, setPiso] = useState('');
+  const [departamento, setDepartamento] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [codigoPostal, setCodigoPostal] = useState('');
+  const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
+  
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
-  const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
 
   const formVisible = isEditing || showClienteForm;
 
@@ -43,6 +52,11 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     setTelefonos([]);
     setCalle('');
     setAltura('');
+    setCiudad('');
+    setPiso('');
+    setDepartamento('');
+    setDescripcion('');
+    setCodigoPostal('');
     setErrors({});
     setShowSuccess(false);
     setEditingTelefonoIndex(null);
@@ -50,40 +64,45 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
 
   // Cargar datos del cliente en modo edición
   useEffect(() => {
-    if (cliente) {
-      setNombre(cliente.nombreCompleto || '');
-      setCuit(cliente.cuit || '');
-      
+    const c = cliente;
+    if (!c) return;
+    
+    setNombre(c.nombreCompleto || '');
+    setCuit(c.cuit || '');
+    
+    // Only load phones/directions for create mode
+    if (!isEditing) {
       // Cargar teléfonos desde telefonosCompletos (estructura con descripcion)
-      if (cliente.telefonosCompletos && Array.isArray(cliente.telefonosCompletos)) {
-        setTelefonos(cliente.telefonosCompletos.map(t => ({
+      if (c.telefonosCompletos && Array.isArray(c.telefonosCompletos)) {
+        setTelefonos(c.telefonosCompletos.map(t => ({
+          id: t.id || 0,
           telefono: t.telefono,
           descripcion: t.descripcion || 'Principal',
         })));
-      } else if (cliente.telefono && Array.isArray(cliente.telefono)) {
+      } else if (c.telefono && Array.isArray(c.telefono)) {
         // Fallback: telefono como array de strings
-        const telefonosData = cliente.telefono.map((t: unknown) => {
-          if (typeof t === 'string') return { telefono: t, descripcion: 'Principal' };
-          return t as { telefono: string; descripcion: string };
+        const telefonosData = c.telefono.map((t: unknown, idx: number) => {
+          if (typeof t === 'string') return { id: idx, telefono: t, descripcion: 'Principal' };
+          return { id: idx, telefono: t as string, descripcion: 'Principal' };
         });
         setTelefonos(telefonosData);
       }
       
       // Cargar dirección desde direccionesCompletas
-      if (cliente.direccionesCompletas && cliente.direccionesCompletas.length > 0) {
-        const dir = cliente.direccionesCompletas[0];
+      if (c.direccionesCompletas && c.direccionesCompletas.length > 0) {
+        const dir = c.direccionesCompletas[0];
         setCalle(dir.calle || '');
         setAltura(dir.altura || '');
-      } else if (cliente.direccion) {
+      } else if (c.direccion) {
         // Fallback: direccion como string
-        const parts = cliente.direccion.split(' ');
+        const parts = c.direccion.split(' ');
         if (parts.length >= 2) {
           setCalle(parts.slice(0, -1).join(' '));
           setAltura(parts[parts.length - 1]);
         }
       }
     }
-  }, [cliente]);
+  }, [cliente, isEditing]);
 
   // Cerrar con ESC
   useEffect(() => {
@@ -111,9 +130,37 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       newErrors.cuit = 'CUIT debe tener 11 dígitos';
     }
     
+    // Validar dirección (si se ingresa algo)
+    const tieneCalle = calle.trim().length > 0;
+    const tieneAltura = altura.trim().length > 0;
+    const tieneCiudad = ciudad.trim().length > 0;
+    
+    if (tieneCalle || tieneAltura || tieneCiudad || tienePiso || tieneDepartamento || tieneDescripcion || tieneCodigoPostal) {
+      // Si se ingresa cualquier campo de dirección, los obligatorios deben estar presentes
+      if (!tieneCalle) {
+        newErrors.calle = 'La calle es requerida';
+      }
+      if (!tieneAltura) {
+        newErrors.altura = 'La altura es requerida';
+      }
+      if (!tieneCiudad) {
+        newErrors.ciudad = 'La ciudad es requerida';
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
+  // Helper para validar individualmente (para validación en tiempo real)
+  const tieneCalle = calle.trim().length > 0;
+  const tieneAltura = altura.trim().length > 0;
+  const tieneCiudad = ciudad.trim().length > 0;
+  const tienePiso = piso.trim().length > 0;
+  const tieneDepartamento = departamento.trim().length > 0;
+  const tieneDescripcion = descripcion.trim().length > 0;
+  const tieneCodigoPostal = codigoPostal.trim().length > 0;
+  const tieneDireccion = tieneCalle || tieneAltura || tieneCiudad || tienePiso || tieneDepartamento || tieneDescripcion || tieneCodigoPostal;
 
   const handleRemoveTelefono = (index: number) => {
     setTelefonos(telefonos.filter((_, i) => i !== index));
@@ -133,6 +180,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       // Editando teléfono existente
       const nuevosTelefonos = [...telefonos];
       nuevosTelefonos[editingTelefonoIndex] = {
+        id: telefonos[editingTelefonoIndex].id,
         telefono: telefonoInput.trim(),
         descripcion: telefonoDesc.trim() || 'Principal'
       };
@@ -141,6 +189,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     } else {
       // Agregando nuevo teléfono
       const telefonoObj = { 
+        id: 0, // ID 0 indica que es nuevo
         telefono: telefonoInput.trim(), 
         descripcion: telefonoDesc.trim() || 'Principal' 
       };
@@ -163,25 +212,32 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     
     try {
       if (isEditing && cliente) {
+        // Enviar solo los campos que se modificaron
         await modificarCliente.mutateAsync({
           id: cliente.id,
           cliente: {
             nombreCompleto: nombre.trim(),
-            Cuit: cuit || undefined,
-            telefono: telefonos,
-            direccion: calle.trim() && altura.trim() 
-              ? [{ calle: calle.trim(), altura: altura.trim() }] 
-              : undefined,
+            Cuit: cuit || null,
           },
         });
       } else {
+        const direccionData = tieneDireccion 
+          ? [{ 
+              calle: calle.trim(), 
+              altura: altura.trim(),
+              ciudad: ciudad.trim() || null,
+              codigoPostal: codigoPostal.trim() || null,
+              descripcion: descripcion.trim() || null,
+              piso: piso.trim() || null,
+              departamento: departamento.trim() || null,
+              mapsID: null
+            }] 
+          : undefined;
+          
         await crearCliente.mutateAsync({
           nombreCompleto: nombre.trim(),
-          Cuit: cuit || undefined,
           telefono: telefonos,
-          direccion: calle.trim() && altura.trim() 
-            ? [{ calle: calle.trim(), altura: altura.trim() }] 
-            : undefined,
+          direccion: direccionData,
         });
       }
       setShowSuccess(true);
@@ -283,116 +339,196 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                 )}
               </div>
               
-              {/* Teléfonos */}
-              <div>
-                <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  TELÉFONOS
-                </label>
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <input
-                      type="tel"
-                      value={telefonoInput}
-                      onChange={(e) => setTelefonoInput(e.target.value)}
-                      placeholder="Número de teléfono"
-                      className="input flex-1"
-                    />
-                    <button 
-                      type="button"
-                      onClick={handleAddTelefono}
-                      className="btn-secondary"
-                      disabled={!telefonoInput.trim()}
-                    >
-                      {editingTelefonoIndex !== null ? (
-                        <Check className="w-5 h-5" />
-                      ) : (
-                        <Plus className="w-5 h-5" />
-                      )}
-                    </button>
-                    {editingTelefonoIndex !== null && (
-                      <button 
-                        type="button"
-                        onClick={handleCancelEditTelefono}
-                        className="btn-secondary"
-                        style={{ color: 'var(--color-danger)' }}
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    value={telefonoDesc}
-                    onChange={(e) => setTelefonoDesc(e.target.value)}
-                    placeholder="Descripción (ej: Celular, Trabajo)"
-                    className="input"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddTelefono();
-                      }
-                    }}
-                  />
-                  
-                  {telefonos.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      {telefonos.map((tel, index) => (
-                        <div 
-                          key={index}
-                          className="flex items-center justify-between p-2 rounded"
-                          style={{ backgroundColor: 'var(--color-surface)' }}
+              {/* Edit mode: show note about phones/addresses | Create mode: show phone/address fields */}
+              {isEditing ? (
+                <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
+                  <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                    Los teléfonos y direcciones del cliente se editan desde su ficha de detalle.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Teléfonos (create mode only) */}
+                  <div>
+                    <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                      TELÉFONOS
+                    </label>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="tel"
+                          value={telefonoInput}
+                          onChange={(e) => setTelefonoInput(e.target.value)}
+                          placeholder="Número de teléfono"
+                          className="input flex-1"
+                        />
+                        <button 
+                          type="button"
+                          onClick={handleAddTelefono}
+                          className="btn-secondary"
+                          disabled={!telefonoInput.trim()}
                         >
-                          <div>
-                            <span className="text-sm">{tel.telefono}</span>
-                            <span className="text-xs ml-2" style={{ color: 'var(--color-muted)' }}>
-                              ({tel.descripcion})
-                            </span>
-                          </div>
-                          <div className="flex gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleEditTelefono(index)}
-                              className="btn-icon p-1"
+                          {editingTelefonoIndex !== null ? (
+                            <Check className="w-5 h-5" />
+                          ) : (
+                            <Plus className="w-5 h-5" />
+                          )}
+                        </button>
+                        {editingTelefonoIndex !== null && (
+                          <button 
+                            type="button"
+                            onClick={handleCancelEditTelefono}
+                            className="btn-secondary"
+                            style={{ color: 'var(--color-danger)' }}
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={telefonoDesc}
+                        onChange={(e) => setTelefonoDesc(e.target.value)}
+                        placeholder="Descripción (ej: Celular, Trabajo)"
+                        className="input"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddTelefono();
+                          }
+                        }}
+                      />
+                      
+                      {telefonos.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {telefonos.map((tel, index) => (
+                            <div 
+                              key={index}
+                              className="flex items-center justify-between p-2 rounded"
+                              style={{ backgroundColor: 'var(--color-surface)' }}
                             >
-                              <Pencil className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveTelefono(index)}
-                              className="btn-icon p-1"
-                            >
-                              <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
-                            </button>
-                          </div>
+                              <div>
+                                <span className="text-sm">{tel.telefono}</span>
+                                <span className="text-xs ml-2" style={{ color: 'var(--color-muted)' }}>
+                                  ({tel.descripcion})
+                                </span>
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditTelefono(index)}
+                                  className="btn-icon p-1"
+                                >
+                                  <Pencil className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTelefono(index)}
+                                  className="btn-icon p-1"
+                                >
+                                  <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Dirección */}
-              <div>
-                <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  DIRECCIÓN (opcional)
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    value={calle}
-                    onChange={(e) => setCalle(e.target.value)}
-                    placeholder="Calle"
-                    className="input"
-                  />
-                  <input
-                    type="text"
-                    value={altura}
-                    onChange={(e) => setAltura(e.target.value)}
-                    placeholder="Altura"
-                    className="input"
-                  />
-                </div>
-              </div>
+                  </div>
+                  
+                  {/* Dirección (create mode only) */}
+                  <div>
+                    <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                      DIRECCIÓN (opcional)
+                    </label>
+                    <div className="space-y-2">
+                      {/* Calle y Altura - Obligatorios */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <input
+                            type="text"
+                            value={calle}
+                            onChange={(e) => setCalle(e.target.value)}
+                            placeholder="Calle *"
+                            className={clsx('input', errors.calle && 'input-error')}
+                          />
+                          {errors.calle && (
+                            <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                              {errors.calle}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            value={altura}
+                            onChange={(e) => setAltura(e.target.value)}
+                            placeholder="Altura *"
+                            className={clsx('input', errors.altura && 'input-error')}
+                          />
+                          {errors.altura && (
+                            <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                              {errors.altura}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Ciudad - Obligatorio */}
+                      <div>
+                        <input
+                          type="text"
+                          value={ciudad}
+                          onChange={(e) => setCiudad(e.target.value)}
+                          placeholder="Ciudad *"
+                          className={clsx('input', errors.ciudad && 'input-error')}
+                        />
+                        {errors.ciudad && (
+                          <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                            {errors.ciudad}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Piso y Departamento - Opcionales */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={piso}
+                          onChange={(e) => setPiso(e.target.value)}
+                          placeholder="Piso"
+                          className="input"
+                        />
+                        <input
+                          type="text"
+                          value={departamento}
+                          onChange={(e) => setDepartamento(e.target.value)}
+                          placeholder="Dpto"
+                          className="input"
+                        />
+                      </div>
+                      
+                      {/* Código Postal - Opcional */}
+                      <input
+                        type="text"
+                        value={codigoPostal}
+                        onChange={(e) => setCodigoPostal(e.target.value)}
+                        placeholder="Código Postal"
+                        className="input"
+                      />
+                      
+                      {/* Descripción - Opcional */}
+                      <input
+                        type="text"
+                        value={descripcion}
+                        onChange={(e) => setDescripcion(e.target.value)}
+                        placeholder="Descripción (ej: Casa, Frente, etc.)"
+                        className="input"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
               
               {/* Submit */}
               {errors.submit && (

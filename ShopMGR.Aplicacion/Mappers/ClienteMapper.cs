@@ -15,7 +15,6 @@ public class ClienteMapper(MapperRegistry mapper) : IMapper<ClienteDTO, Cliente>
         {
             NombreCompleto = clienteDTO.NombreCompleto,
             Cuit = clienteDTO.Cuit,
-            Balance = clienteDTO.Balance,
             Direccion = _mapper.Map<DireccionDTO, Direccion>(clienteDTO.Direccion).ToList(),
             Telefono = _mapper
                 .Map<TelefonoClienteDTO, TelefonoCliente>(clienteDTO.Telefono)
@@ -34,7 +33,6 @@ public class ClienteDTOMapper(MapperRegistry mapper) : IMapper<Cliente, ClienteD
         {
             NombreCompleto = cliente.NombreCompleto,
             Cuit = cliente.Cuit,
-            Balance = cliente.Balance,
             Direccion = _mapper.Map<Direccion, DireccionDTO>(cliente.Direccion).ToList(),
             Telefono = _mapper.Map<TelefonoCliente, TelefonoClienteDTO>(cliente.Telefono).ToList(),
         };

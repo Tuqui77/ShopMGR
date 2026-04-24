@@ -23,7 +23,7 @@ export function usePresupuesto(id: number | undefined) {
   return useQuery({
     queryKey: ['presupuestos', id],
     queryFn: () => presupuestosService.obtenerPorId(id!),
-    enabled: typeof id === 'number' && id >= 0,
+    enabled: typeof id === 'number' && id > 0,
     staleTime: 1000 * 30, // 30 segundos
   });
 }
@@ -35,7 +35,7 @@ export function usePresupuestoDetalle(id: number | undefined) {
   return useQuery({
     queryKey: ['presupuestos', id, 'detalle'],
     queryFn: () => presupuestosService.obtenerDetalle(id!),
-    enabled: typeof id === 'number' && id >= 0,
+    enabled: typeof id === 'number' && id > 0,
     staleTime: 1000 * 30,
   });
 }
@@ -47,7 +47,7 @@ export function usePresupuestosPorCliente(idCliente: number | undefined) {
   return useQuery({
     queryKey: ['presupuestos', 'cliente', idCliente],
     queryFn: () => presupuestosService.obtenerPorCliente(idCliente!),
-    enabled: typeof idCliente === 'number' && idCliente >= 0,
+    enabled: typeof idCliente === 'number' && idCliente > 0,
   });
 }
 

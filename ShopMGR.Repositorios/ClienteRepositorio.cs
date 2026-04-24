@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Enums;
@@ -36,7 +36,7 @@ namespace ShopMGR.Repositorios
         public async Task<Cliente> ObtenerPorIdAsync(int id)
         {
             var cliente =
-                await _contexto.Clientes.FindAsync(id)
+                await _contexto.Clientes.Include(c => c.MovimientosBalance).FirstOrDefaultAsync(c => c.Id == id)
                 ?? throw new KeyNotFoundException($"No se encontró un cliente con el ID {id}.");
 
             return cliente;
@@ -69,9 +69,16 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Cliente>> BuscarSaldosNegativosAsync()
         {
+            // Filtrar por clientes que tienen movimientos con suma negativa
+            var clientesConSaldoNegativo = await _contexto
+                .MovimientoBalance
+                .GroupBy(m => m.IdCliente)
+                .Where(g => g.Sum(m => m.Monto) < 0)
+                .Select(g => g.Key)
+                .ToListAsync();
+
             return await _contexto
-                .Clientes.Where(c => c.Balance < 0)
-                .Include(c => c.Trabajos.Where(t => t.Estado == EstadoTrabajo.Terminado))
+                .Clientes.Where(c => clientesConSaldoNegativo.Contains(c.Id))
                 .ToListAsync();
         }
 
