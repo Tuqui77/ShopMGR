@@ -13,6 +13,7 @@ public class TrabajoMApper : IMapper<Trabajo, TrabajoDTO>
         return new TrabajoDTO()
         {
             Titulo = trabajo.Titulo,
+            Descripcion = trabajo.Descripcion,
             IdCliente = trabajo.IdCliente,
             IdPresupuesto = trabajo.IdPresupuesto,
             Estado = trabajo.Estado,
@@ -27,6 +28,7 @@ public class TrabajoDTOMapper : IMapper<TrabajoDTO, Trabajo>
         return new Trabajo
         {
             Titulo = trabajoDTO.Titulo,
+            Descripcion = trabajoDTO.Descripcion,
             IdCliente = trabajoDTO.IdCliente,
             IdPresupuesto = trabajoDTO.IdPresupuesto,
             Estado = trabajoDTO.Estado ?? EstadoTrabajo.Pendiente
