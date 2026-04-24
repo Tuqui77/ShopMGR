@@ -68,7 +68,7 @@ namespace ShopMGR.Aplicacion.Servicios
             var trabajoConFoto = await _repositorio.ObtenerPorIdConFotoAsync(idTrabajo);
             var foto = trabajoConFoto.Fotos.FirstOrDefault(f => f.Id == idImagen)
                 ?? throw new KeyNotFoundException("No existe una foto con ese id");
-            var rutaRelativa = foto.RutaCompleta;
+            var rutaRelativa = foto.RutaRelativa;
 
             trabajoConFoto.Fotos.Remove(foto);
             await _repositorio.ActualizarAsync(trabajoConFoto);

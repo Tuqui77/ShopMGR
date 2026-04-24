@@ -251,7 +251,7 @@ public class AdministracionTrabajosTests
                     It.Is<List<Foto>>(fotos =>
                         fotos.Count == 1
                         && fotos[0].IdTrabajo == idTrabajo
-                        && fotos[0].RutaCompleta == "https://drive.google.com/uc?id=test123"
+                        && fotos[0].RutaRelativa == "https://drive.google.com/uc?id=test123"
                     )
                 ),
             Times.Once

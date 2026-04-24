@@ -86,7 +86,7 @@ public class DominioModelTests
 
         // Assert
         foto.Id.Should().Be(1);
-        foto.RutaCompleta.Should().Be("/fotos/trabajo1/foto1.jpg");
+        foto.RutaRelativa.Should().Be("/fotos/trabajo1/foto1.jpg");
         foto.IdTrabajo.Should().Be(10);
     }
 
