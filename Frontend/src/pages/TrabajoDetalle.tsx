@@ -319,7 +319,7 @@ export function TrabajoDetalle() {
         {selectedImage && (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
-            onClick={() => { setSelectedImage(null); setIsZoomed(false); }}
+            onClick={handleCloseImage}
           >
             {/* Controls - positioned at corners */}
             {/* Delete button - top right, left of close button */}
