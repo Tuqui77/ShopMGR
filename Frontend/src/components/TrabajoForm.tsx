@@ -3,8 +3,9 @@ import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { usePresupuestosPorCliente } from '../hooks/usePresupuestos';
 import { useCrearTrabajo, useModificarTrabajo, useTrabajo } from '../hooks/useTrabajos';
+import { movimientosService, type TipoMovimiento } from '../services/movimientos';
 import type { EstadoTrabajo, Cliente, Presupuesto } from '../types';
-import { Loader2, X, Check } from 'lucide-react';
+import { Loader2, X, Check, Banknote } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Props {
@@ -35,6 +36,11 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   const [presupuestoId, setPresupuestoId] = useState<number | null>(() => trabajoOriginal?.idPresupuesto ?? null);
   const [estado, setEstado] = useState<EstadoTrabajo>(() => trabajoOriginal?.estado ?? 'Pendiente');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Anticipo
+  const [registrarAnticipo, setRegistrarAnticipo] = useState(false);
+  const [montoAnticipo, setMontoAnticipo] = useState('');
+  const [creandoAnticipo, setCreandoAnticipo] = useState(false);
 
   // Query de presupuestos del cliente (solo cuando hay cliente seleccionado)
   const { data: presupuestosDelCliente = [] } = usePresupuestosPorCliente(clienteId ?? undefined);
@@ -66,6 +72,8 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
         setPresupuestoId(null);
         setEstado('Pendiente');
         setErrors({});
+        setRegistrarAnticipo(false);
+        setMontoAnticipo('');
       }, 200);
       return () => clearTimeout(timer);
     }
@@ -95,6 +103,10 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       newErrors.clienteId = 'Selecciona un cliente';
     }
     
+    if (registrarAnticipo && !montoAnticipo) {
+      newErrors.montoAnticipo = 'Ingresa el monto del anticipo';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -103,6 +115,25 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
     e.preventDefault();
     
     if (!validate()) return;
+    
+    // Crear anticipo primero si está habilitado (solo en modo creación)
+    if (registrarAnticipo && montoAnticipo && !errors.montoAnticipo && clienteId && !isEditing) {
+      setCreandoAnticipo(true);
+      try {
+        await movimientosService.crear({
+          idCliente: clienteId,
+          tipo: 'Anticipo' as TipoMovimiento,
+          monto: parseFloat(montoAnticipo),
+          descripcion: 'Entrega para la compra de materiales e insumos',
+        });
+      } catch (error) {
+        console.error('Error al registrar anticipo:', error);
+        setErrors({ submit: 'Error al registrar anticipo. Intenta de nuevo.' });
+        setCreandoAnticipo(false);
+        return;
+      }
+      setCreandoAnticipo(false);
+    }
     
     try {
       if (isEditing && trabajoId) {
@@ -135,7 +166,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   if (!isOpen) return null;
   
   const isLoading = loadingClientes || (isEditing && loadingTrabajo);
-  const isSubmitting = crearTrabajo.isPending || modificarTrabajo.isPending;
+  const isSubmitting = crearTrabajo.isPending || modificarTrabajo.isPending || creandoAnticipo;
 
   return (
     <>
@@ -257,6 +288,44 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   ))}
                 </div>
               </div>
+              
+              {/* Anticipo - solo en modo creación */}
+              {!isEditing && clienteId && (
+                <div className="border rounded-lg p-3" style={{ borderColor: 'var(--color-border)' }}>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={registrarAnticipo}
+                      onChange={(e) => setRegistrarAnticipo(e.target.checked)}
+                      className="w-4 h-4 accent-[var(--color-accent)]"
+                    />
+                    <Banknote className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
+                    <span className="text-sm font-medium">Registrar anticipo para materiales</span>
+                  </label>
+                  
+                  {registrarAnticipo && (
+                    <div className="mt-3">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={montoAnticipo}
+                        onChange={(e) => setMontoAnticipo(e.target.value)}
+                        placeholder="Monto del anticipo"
+                        className={clsx('input', errors.montoAnticipo && 'border-[var(--color-danger)]')}
+                      />
+                      {errors.montoAnticipo && (
+                        <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                          {errors.montoAnticipo}
+                        </p>
+                      )}
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>
+                        Descripción: "Entrega para la compra de materiales e insumos"
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* Error de submit */}
               {errors.submit && (

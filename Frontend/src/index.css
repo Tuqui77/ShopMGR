@@ -669,6 +669,7 @@ input, button, textarea, select {
 .fab-menu-item {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.75rem;
   animation: scaleInMenu 0.2s ease-out;
   cursor: pointer !important;
@@ -695,11 +696,13 @@ input, button, textarea, select {
   font-weight: 500;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   cursor: pointer;
+  min-width: 100px;
+  text-align: center;
 }
 
 .fab-menu-icon {
-  width: 3rem;
-  height: 3rem;
+  width: 2.75rem;
+  height: 2.75rem;
   background-color: var(--color-elevated);
   border-radius: 9999px;
   display: flex;
@@ -707,4 +710,10 @@ input, button, textarea, select {
   justify-content: center;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
   color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.fab-menu-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }
