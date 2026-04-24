@@ -8,6 +8,7 @@ import { HoursModal } from './components/HoursModal';
 import { ClienteForm } from './components/ClienteForm';
 import { PresupuestoForm } from './components/PresupuestoForm';
 import { TrabajoForm } from './components/TrabajoForm';
+import { MovimientoModal } from './components/MovimientoModal';
 import { Dashboard } from './pages/Dashboard';
 import { Clientes } from './pages/Clientes';
 import { ClienteDetalle } from './pages/ClienteDetalle';
@@ -30,15 +31,15 @@ const queryClient = new QueryClient({
 
 function ProtectedLayout() {
   const [fabOpen, setFabOpen] = useState(false);
-  const { isAuthenticated, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm } = useStore();
+  const { isAuthenticated, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen } = useStore();
   const location = useLocation();
   
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
   
-  const handleFabAction = (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto') => {
+  const handleFabAction = (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto' | 'movimiento') => {
     setFabOpen(false); // Close FAB first
     if (action === 'hours') {
       setShowHoursModal(true);
@@ -48,6 +49,8 @@ function ProtectedLayout() {
       setShowClienteForm(true);
     } else if (action === 'presupuesto') {
       setShowPresupuestoForm(true);
+    } else if (action === 'movimiento') {
+      setShowMovimientoModal(true);
     }
   };
   
@@ -58,11 +61,14 @@ function ProtectedLayout() {
         <Outlet />
       </div>
       <BottomNav />
-      <FAB isOpen={fabOpen} onToggle={() => setFabOpen(!fabOpen)} onAction={handleFabAction} />
+      {!imageFullscreenOpen && (
+        <FAB isOpen={fabOpen} onToggle={() => setFabOpen(!fabOpen)} onAction={handleFabAction} />
+      )}
       <HoursModal />
       <ClienteForm />
       <PresupuestoForm />
       <TrabajoForm />
+      <MovimientoModal />
     </div>
   );
 }
@@ -74,10 +80,10 @@ function LoginPage() {
   
   // If already authenticated, redirect to dashboard
   if (isAuthenticated) {
-    return <Navigate to={from} replace />;
+    return <Navigate to={from} replace />
   }
   
-  return <Login />;
+  return <Login />
 }
 
 function App() {

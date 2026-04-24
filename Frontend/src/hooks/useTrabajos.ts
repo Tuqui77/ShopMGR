@@ -168,3 +168,20 @@ export function useSubirFotos() {
     },
   });
 }
+
+/**
+ * Elimina una foto de un trabajo
+ */
+export function useEliminarFoto() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ idTrabajo, idImagen }: { idTrabajo: number; idImagen: number }) =>
+      trabajosService.eliminarFoto(idTrabajo, idImagen),
+    onSuccess: (_, { idTrabajo }) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo, 'detalle'] });
+    },
+  });
+}

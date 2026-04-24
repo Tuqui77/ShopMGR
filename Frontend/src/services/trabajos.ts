@@ -260,6 +260,15 @@ export const trabajosService = {
     );
     return response.data;
   },
+
+  /**
+   * Elimina una foto de un trabajo
+   */
+  async eliminarFoto(idTrabajo: number, idImagen: number): Promise<void> {
+    await apiClient.delete(
+      `/Trabajos/EliminarFotoTrabajo?idTrabajo=${idTrabajo}&idImagen=${idImagen}`
+    );
+  },
 };
 
 // ============================================================================

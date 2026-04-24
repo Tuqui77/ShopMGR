@@ -14,10 +14,10 @@ import {
   X,
   ZoomIn,
 } from 'lucide-react';
-import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos } from '../hooks/useTrabajos';
+import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { TrabajoForm } from '../components/TrabajoForm';
 import { ImageUpload } from '../components/ImageUpload';
@@ -31,10 +31,32 @@ export function TrabajoDetalle() {
   const terminarTrabajo = useTerminarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
   const subirFotos = useSubirFotos();
-  const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId } = useStore();
+  const eliminarFoto = useEliminarFoto();
+  const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId, setImageFullscreenOpen } = useStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
+  const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+
+  // Handle close image modal
+  const handleCloseImage = useCallback(() => {
+    setSelectedImage(null);
+    setSelectedImageId(null);
+    setIsZoomed(false);
+    setImageFullscreenOpen(false);
+  }, [setImageFullscreenOpen]);
+
+  // Handle ESC to close image modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedImage) {
+        handleCloseImage();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, handleCloseImage]);
   
   // Handler for uploading photos
   const handleUploadPhotos = async (files: File[]) => {
@@ -79,6 +101,24 @@ export function TrabajoDetalle() {
 
   const handleEditSuccess = () => {
     setEditingTrabajoId(null);
+  };
+
+  const handleSelectImage = (enlace: string, id: number) => {
+    setSelectedImage(enlace);
+    setSelectedImageId(id);
+    setIsZoomed(false);
+    setImageFullscreenOpen(true);
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!trabajoId || selectedImageId === null) return;
+    try {
+      await eliminarFoto.mutateAsync({ idTrabajo: trabajoId, idImagen: selectedImageId });
+      handleCloseImage();
+    } catch (err) {
+      console.error('Error al eliminar foto:', err);
+      setShowDeletePhotoConfirm(false);
+    }
   };
   
   const getStatusBadge = () => {
@@ -229,13 +269,13 @@ export function TrabajoDetalle() {
           
           {trabajo.fotosCount > 0 && trabajo.fotos ? (
             <div className="grid grid-cols-4 gap-2">
-              {trabajo.fotos.slice(0, 4).map((foto) => (
-                <button
-                  key={foto.id}
-                  onClick={() => setSelectedImage(foto.enlace)}
-                  className="aspect-square rounded-lg overflow-hidden cursor-pointer"
-                  style={{ backgroundColor: 'var(--color-surface)' }}
-                >
+{trabajo.fotos.slice(0, 4).map((foto) => (
+                  <button
+                    key={foto.id}
+                    onClick={() => handleSelectImage(foto.enlace, foto.id)}
+                    className="aspect-square rounded-lg overflow-hidden cursor-pointer"
+                    style={{ backgroundColor: 'var(--color-surface)' }}
+                  >
                   <img
                     src={foto.enlace}
                     alt={`Foto ${foto.id}`}
@@ -276,8 +316,18 @@ export function TrabajoDetalle() {
             onClick={() => { setSelectedImage(null); setIsZoomed(false); }}
           >
             {/* Controls - positioned at corners */}
+            {/* Delete button - top right, left of close button */}
             <button
-              onClick={(e) => { e.stopPropagation(); setSelectedImage(null); setIsZoomed(false); }}
+              onClick={(e) => { e.stopPropagation(); setShowDeletePhotoConfirm(true); }}
+              className="absolute top-4 right-16 z-10 p-2 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors cursor-pointer"
+              aria-label="Eliminar foto"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Close button - top right */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleCloseImage(); }}
               className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
               aria-label="Cerrar"
             >
@@ -328,6 +378,41 @@ export function TrabajoDetalle() {
             </div>
           </div>
         </div>
+
+        {/* Delete photo confirmation modal */}
+        {showDeletePhotoConfirm && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setShowDeletePhotoConfirm(false)}
+          >
+            <div 
+              className="modal-content max-w-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+                Eliminar foto
+              </h3>
+              <p className="mb-6" style={{ color: 'var(--color-muted)' }}>
+                ¿Estás seguro de que deseas eliminar esta foto? Esta acción no se puede deshacer.
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowDeletePhotoConfirm(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleDeletePhoto}
+                  disabled={eliminarFoto.isPending}
+                  className="btn-primary flex-1 !bg-red-500 hover:!bg-red-600"
+                >
+                  {eliminarFoto.isPending ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Acciones */}
         <div className="space-y-3">
