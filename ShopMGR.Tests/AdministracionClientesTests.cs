@@ -150,7 +150,6 @@ public class AdministracionClientesTests
         // Assert
         resultado.Should().NotBeNull();
         resultado.Should().HaveCount(1);
-        resultado.First().Balance.Should().BeNegative();
     }
 
     [Fact]

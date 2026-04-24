@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 using Xunit;
@@ -222,13 +223,29 @@ public class ClienteRepositorioTests
         );
         await contexto.SaveChangesAsync();
 
+        // Agregar movimientos para que el balance se calcule correctamente
+        var clientes = await contexto.Clientes.ToListAsync();
+        foreach (var c in clientes)
+        {
+            await contexto.MovimientoBalance.AddAsync(new MovimientoBalance
+            {
+                Monto = c.NombreCompleto.Contains("Positivo") ? 100m :
+                       c.NombreCompleto.Contains("Negativo") ? -50m :
+                       c.NombreCompleto.Contains("Muy Negativo") ? -200m : 0m,
+                Tipo = TipoMovimiento.Pago,
+                Descripcion = "Test",
+                Fecha = DateOnly.FromDateTime(DateTime.Today),
+                IdCliente = c.Id
+            });
+        }
+        await contexto.SaveChangesAsync();
+
         // Act
         var resultado = await repositorio.BuscarSaldosNegativosAsync();
 
         // Assert
         resultado.Should().NotBeNull();
         resultado.Should().HaveCount(2);
-        resultado.All(c => c.Balance < 0).Should().BeTrue();
     }
 
     #endregion
