@@ -10,6 +10,7 @@ namespace ShopMGR.Dominio.Modelo
         public DateOnly? FechaInicio { get; set; }
         public DateOnly? FechaFin { get; set; }
         public string Titulo { get; set; }
+        public string? Descripcion { get; set; }
         public decimal? TotalLabor { get; set; }
         public float TotalHoras => HorasDeTrabajo.Sum(h => h.Horas);
 
