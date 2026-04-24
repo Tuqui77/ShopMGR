@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import clsx from 'clsx';
-import { Plus, Clock, Wrench, User, Clipboard } from 'lucide-react';
+import { Plus, Clock, Wrench, User, Clipboard, DollarSign } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
   onToggle: () => void;
-  onAction: (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto') => void;
+  onAction: (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto' | 'movimiento') => void;
 }
 
 export function FAB({ isOpen, onToggle, onAction }: Props) {
@@ -55,6 +55,11 @@ export function FAB({ isOpen, onToggle, onAction }: Props) {
           label="Presupuesto" 
           icon={Clipboard} 
           onClick={() => onAction('presupuesto')}
+        />
+        <MenuButton 
+          label="Movimiento" 
+          icon={DollarSign} 
+          onClick={() => onAction('movimiento')}
         />
       </div>
       

@@ -54,6 +54,15 @@ namespace ShopMGR.WebApi.Controllers
             return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
         }
 
+        [HttpDelete]
+        [Route("EliminarFotoTrabajo")]
+        public async Task<IActionResult> EliminarFotoTrabajo(int idTrabajo, int idImagen)
+        {
+            await administrarTrabajos.EliminarFotoAsync(idTrabajo, idImagen);
+
+            return Ok("Imagen eliminada");
+        }
+
         [HttpPost]
         [Route("AgregarHorasDeTrabajo")]
         public async Task<IActionResult> AgregarHorasDeTrabajo(HorasYDescripcionDTO horas)

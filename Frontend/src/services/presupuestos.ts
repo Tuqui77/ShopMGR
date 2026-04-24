@@ -7,9 +7,18 @@ import type {
   Cliente,
   ClienteBackendDTO,
   CrearPresupuestoRequest,
-  ModificarPresupuestoRequest,
   EstadoPresupuesto,
 } from '../types';
+
+export interface ModificarPresupuestoRequest {
+  titulo?: string;
+  descripcion?: string | null;
+  horasEstimadas?: number;
+  estado?: EstadoPresupuesto;
+  valorHoraDeTrabajo?: number;
+  idCliente?: number;
+  idTrabajo?: number;
+}
 
 // Helper to extract error message from backend response
 async function handleApiError(error: unknown): Promise<never> {
@@ -101,7 +110,7 @@ function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
       : undefined,
     balance: dto.balance || 0,
     trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.filter(p => 'id' in p && p.id).length || 0,
+    presupuestosCount: dto.presupuestos?.$values?.filter((p: unknown) => p && typeof p === 'object' && 'id' in p).length || 0,
   };
 }
 
@@ -214,8 +223,8 @@ export const presupuestosService = {
   /**
    * Modifica los datos de un presupuesto existente
    */
-  async modificar(id: number, presupuesto: ModificarPresupuestoRequest): Promise<void> {
-    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, presupuesto);
+  async modificar(id: number, data: ModificarPresupuestoRequest): Promise<void> {
+    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, data);
   },
 
   /**
@@ -225,31 +234,31 @@ export const presupuestosService = {
     await apiClient.delete(`/Presupuestos/EliminarPresupuesto?idPresupuesto=${id}`);
   },
 
-  /**
-   * Acepta un presupuesto (cambia estado a Aceptado)
-   */
-  async aceptar(id: number): Promise<void> {
-    try {
-      await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-        estado: 'Aceptado',
-      });
-    } catch (error) {
-      await handleApiError(error);
-    }
-  },
+/**
+ * Acepta un presupuesto (cambia estado a Aceptado)
+ */
+async aceptar(id: number): Promise<void> {
+  try {
+    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
+      estado: 'Aceptado',
+    });
+  } catch (error) {
+    await handleApiError(error);
+  }
+},
 
-  /**
-   * Rechaza un presupuesto (cambia estado a Rechazado)
-   */
-  async rechazar(id: number): Promise<void> {
-    try {
-      await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-        estado: 'Rechazado',
-      });
-    } catch (error) {
-      await handleApiError(error);
-    }
-  },
+/**
+ * Rechaza un presupuesto (cambia estado a Rechazado)
+ */
+async rechazar(id: number): Promise<void> {
+  try {
+    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
+      estado: 'Rechazado',
+    });
+  } catch (error) {
+    await handleApiError(error);
+  }
+},
 
   /**
    * Obtiene el costo hora de trabajo
@@ -278,4 +287,4 @@ export const presupuestosService = {
 // Exports de tipos para uso en hooks
 // ============================================================================
 
-export type { CrearPresupuestoRequest, ModificarPresupuestoRequest };
+export type { CrearPresupuestoRequest };

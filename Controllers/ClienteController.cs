@@ -75,6 +75,15 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(cliente);
         }
 
+        [HttpPost]
+        [Route("CrearMovimiento")]
+        public async Task<IActionResult> CrearMovimiento(MovimientoBalanceDTO movimiento)
+        {
+            await administracionClientes.RegistrarMovimientoAsync(movimiento);
+
+            return Ok(movimiento);
+        }
+
         [HttpPatch]
         [Route("ModificarCliente")]
         public async Task<IActionResult> ActualizarCliente(int idCliente,

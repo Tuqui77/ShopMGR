@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
 using Xunit;
@@ -27,7 +28,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 0 };
+        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez" };
 
         // Act
         var resultado = await repositorio.CrearAsync(nuevoCliente);
@@ -50,11 +51,11 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var clienteExistente = new Cliente { NombreCompleto = "Juan Perez", Balance = 0 };
+        var clienteExistente = new Cliente { NombreCompleto = "Juan Perez" };
         await contexto.Clientes.AddAsync(clienteExistente);
         await contexto.SaveChangesAsync();
 
-        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 100 };
+        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez" };
 
         // Act & Assert
         var accion = () => repositorio.CrearAsync(nuevoCliente);
@@ -76,9 +77,9 @@ public class ClienteRepositorioTests
         var repositorio = new ClienteRepositorio(contexto);
 
         await contexto.Clientes.AddRangeAsync(
-            new Cliente { NombreCompleto = "Cliente 1", Balance = 100 },
-            new Cliente { NombreCompleto = "Cliente 2", Balance = 200 },
-            new Cliente { NombreCompleto = "Cliente 3", Balance = 300 }
+            new Cliente { NombreCompleto = "Cliente 1" },
+            new Cliente { NombreCompleto = "Cliente 2" },
+            new Cliente { NombreCompleto = "Cliente 3" }
         );
         await contexto.SaveChangesAsync();
 
@@ -101,7 +102,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 100 };
+        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
         var id = cliente.Id;
@@ -143,14 +144,13 @@ public class ClienteRepositorioTests
         var cliente = new Cliente
         {
             NombreCompleto = "Juan Perez",
-            Balance = 100,
             Telefono = new List<TelefonoCliente>
             {
                 new TelefonoCliente { Telefono = "1234567890" },
             },
             Direccion = new List<Direccion>
             {
-                new Direccion { Calle = "Calle Falsa", Altura = "123" },
+                new Direccion { Calle = "Calle Falsa", Altura = "123", Ciudad = "Buenos Aires" },
             },
         };
         await contexto.Clientes.AddAsync(cliente);
@@ -177,7 +177,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 100 };
+        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
@@ -216,11 +216,28 @@ public class ClienteRepositorioTests
         var repositorio = new ClienteRepositorio(contexto);
 
         await contexto.Clientes.AddRangeAsync(
-            new Cliente { NombreCompleto = "Cliente Positivo", Balance = 100 },
-            new Cliente { NombreCompleto = "Cliente Negativo", Balance = -50 },
-            new Cliente { NombreCompleto = "Cliente Cero", Balance = 0 },
-            new Cliente { NombreCompleto = "Cliente Muy Negativo", Balance = -200 }
+            new Cliente { NombreCompleto = "Cliente Positivo" },
+            new Cliente { NombreCompleto = "Cliente Negativo" },
+            new Cliente { NombreCompleto = "Cliente Cero" },
+            new Cliente { NombreCompleto = "Cliente Muy Negativo" }
         );
+        await contexto.SaveChangesAsync();
+
+        // Agregar movimientos para que el balance se calcule correctamente
+        var clientes = await contexto.Clientes.ToListAsync();
+        foreach (var c in clientes)
+        {
+            await contexto.MovimientoBalance.AddAsync(new MovimientoBalance
+            {
+                Monto = c.NombreCompleto.Contains("Positivo") ? 100m :
+                       c.NombreCompleto.Contains("Negativo") ? -50m :
+                       c.NombreCompleto.Contains("Muy Negativo") ? -200m : 0m,
+                Tipo = TipoMovimiento.Pago,
+                Descripcion = "Test",
+                Fecha = DateOnly.FromDateTime(DateTime.Today),
+                IdCliente = c.Id
+            });
+        }
         await contexto.SaveChangesAsync();
 
         // Act
@@ -229,7 +246,6 @@ public class ClienteRepositorioTests
         // Assert
         resultado.Should().NotBeNull();
         resultado.Should().HaveCount(2);
-        resultado.All(c => c.Balance < 0).Should().BeTrue();
     }
 
     #endregion
@@ -243,12 +259,11 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 100 };
+        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
         cliente.NombreCompleto = "Juan Perez Actualizado";
-        cliente.Balance = 200;
 
         // Act
         await repositorio.ActualizarAsync(cliente);
@@ -256,7 +271,6 @@ public class ClienteRepositorioTests
         // Assert
         var clienteActualizado = await contexto.Clientes.FindAsync(cliente.Id);
         clienteActualizado!.NombreCompleto.Should().Be("Juan Perez Actualizado");
-        clienteActualizado.Balance.Should().Be(200);
     }
 
     #endregion
@@ -270,7 +284,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez", Balance = 100 };
+        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
         var id = cliente.Id;

@@ -9,6 +9,14 @@ export const apiClient = axios.create({
   },
 });
 
+// Separate client for file uploads (multipart/form-data)
+export const uploadClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
+
 apiClient.interceptors.response.use(
   response => response,
   error => {

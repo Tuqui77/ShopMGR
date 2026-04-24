@@ -37,6 +37,7 @@ export interface DireccionCompleta {
   departamento?: string;
   descripcion?: string;
   codigoPostal?: string;
+  ciudad?: string;
 }
 
 export interface TrabajoItem {
@@ -71,6 +72,7 @@ export interface DireccionItem {
   departamento?: string;
   descripcion?: string;
   codigoPostal?: string;
+  ciudad?: string;
 }
 
 export interface ClienteBackendDTO {
@@ -101,15 +103,34 @@ export interface ClienteDetalleBackendDTO {
 export interface CrearClienteRequest {
   nombreCompleto: string;
   Cuit?: string;
+  balance?: number;
   telefono: { telefono: string; descripcion: string }[];
-  direccion?: { calle: string; altura: string }[];
+  direccion?: { 
+    calle: string; 
+    altura: string;
+    ciudad?: string;
+    codigoPostal?: string | null;
+    descripcion?: string | null;
+    piso?: string | null;
+    departamento?: string | null;
+    mapsID?: string | null;
+  }[];
 }
 
 export interface ModificarClienteRequest {
   nombreCompleto?: string;
   Cuit?: string;
   telefono?: { telefono: string; descripcion: string }[];
-  direccion?: { calle: string; altura: string }[];
+  direccion?: { 
+    calle: string; 
+    altura: string;
+    ciudad?: string;
+    codigoPostal?: string | null;
+    descripcion?: string | null;
+    piso?: string | null;
+    departamento?: string | null;
+    mapsID?: string | null;
+  }[];
 }
 
 // ============================================================================
@@ -119,6 +140,7 @@ export interface ModificarClienteRequest {
 export interface Trabajo {
   id: number;
   titulo: string;
+  descripcion?: string;
   estado: EstadoTrabajo;
   fechaInicio?: string;
   fechaFin?: string;
@@ -126,6 +148,7 @@ export interface Trabajo {
   horasEstimadas?: number;
   totalLabor?: number;
   fotosCount: number;
+  fotos?: Foto[];
   cliente: Cliente | null;
   clienteId: number;
   idPresupuesto?: number;
@@ -135,6 +158,7 @@ export interface Trabajo {
 export interface TrabajoBackendDTO {
   id: number;
   titulo: string;
+  descripcion?: string;
   estado: EstadoTrabajo;
   fechaInicio?: string;
   fechaFin?: string;
@@ -151,6 +175,7 @@ export type TrabajoDetalleDTO = TrabajoBackendDTO;
 
 export interface CrearTrabajoRequest {
   titulo: string;
+  descripcion?: string;
   idCliente: number;
   idPresupuesto?: number;
   estado?: EstadoTrabajo;
@@ -205,7 +230,7 @@ export interface Foto {
 
 export interface FotoBackendDTO {
   id: number;
-  enlace: string;
+  rutaRelativa: string;
   idTrabajo: number;
 }
 
@@ -255,6 +280,7 @@ export interface Presupuesto {
   estado: EstadoPresupuesto;
   fecha: string;
   cliente: Cliente;
+  idCliente?: number;
   horasEstimadas: number;
   costoMateriales: number;
   costoLabor: number;
@@ -285,6 +311,7 @@ export interface CrearPresupuestoRequest {
 }
 
 export interface MaterialRequest {
+  id?: number;
   descripcion: string;
   cantidad: number;
   Precio: number; // Backend expects "Precio" not "precioUnitario"

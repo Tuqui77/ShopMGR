@@ -38,6 +38,10 @@ namespace ShopMGR.Contexto.Configuracion_entidades
                 .IsRequired(false)
                 .HasMaxLength(100);
 
+            builder.Property(d => d.Ciudad)
+                .IsRequired(true)
+                .HasMaxLength(50);
+
             builder.Property(d => d.CodigoPostal)
                 .IsRequired(false)
                 .HasMaxLength(10);

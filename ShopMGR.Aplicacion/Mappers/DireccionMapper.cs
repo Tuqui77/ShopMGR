@@ -17,6 +17,7 @@ public class DireccionMapper : IMapper<Direccion, DireccionDTO>
             Piso = direccion.Piso,
             Departamento = direccion.Departamento,
             Descripcion = direccion.Descripcion,
+            Ciudad = direccion.Ciudad,
             CodigoPostal = direccion.CodigoPostal,
             MapsID = direccion.MapsID
         };
@@ -35,6 +36,7 @@ public class DireccionDTOMapper : IMapper<DireccionDTO, Direccion>
             Piso = direccionDTO.Piso,
             Departamento = direccionDTO.Departamento,
             Descripcion = direccionDTO.Descripcion,
+            Ciudad = direccionDTO.Ciudad,
             CodigoPostal = direccionDTO.CodigoPostal,
             MapsID = direccionDTO.MapsID
         };

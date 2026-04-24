@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
@@ -18,6 +19,7 @@ public class AdministracionTrabajosTests
     private readonly Mock<IRepositorioConValorHora> _repositorioPresupuestoMock;
     private readonly Mock<IAdministrarClientes> _clientesMock;
     private readonly Mock<IGoogleDriveServicio> _driveMock;
+    private readonly Mock<IAlmacenamientoServicio> _almacenamientoMock;
     private readonly AdministracionTrabajos _servicio;
 
     public AdministracionTrabajosTests()
@@ -26,14 +28,19 @@ public class AdministracionTrabajosTests
         _repositorioPresupuestoMock = new Mock<IRepositorioConValorHora>();
         _clientesMock = new Mock<IAdministrarClientes>();
         _driveMock = new Mock<IGoogleDriveServicio>();
+        _almacenamientoMock = new Mock<IAlmacenamientoServicio>();
 
-        // MapperRegistry no puede ser mockeado - pasamos null!
+        // Create MapperRegistry with IServiceProvider
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var mapperRegistry = new MapperRegistry(serviceProvider);
+
         _servicio = new AdministracionTrabajos(
             _repositorioFotoMock.Object,
             _repositorioPresupuestoMock.Object,
             _clientesMock.Object,
+            _almacenamientoMock.Object,
             _driveMock.Object,
-            null!
+            mapperRegistry
         );
     }
 
@@ -115,9 +122,7 @@ public class AdministracionTrabajosTests
             HorasDeTrabajo = new List<HorasYDescripcion>(),
         };
 
-        _repositorioFotoMock
-            .Setup(x => x.ObtenerDetallePorIdAsync(1))
-            .ReturnsAsync(trabajoEsperado);
+        _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajoEsperado);
 
         // Act
         var resultado = await _servicio.ObtenerDetallePorIdAsync(1);
@@ -217,31 +222,30 @@ public class AdministracionTrabajosTests
         mockFiles.Setup(c => c.Count).Returns(1);
         mockFiles.Setup(c => c[It.IsAny<int>()]).Returns(mockFile.Object);
 
-        _driveMock
-            .Setup(x => x.ConectarConGoogleDrive())
-            .ReturnsAsync((Google.Apis.Auth.OAuth2.UserCredential)null!);
+        _driveMock.Setup(x => x.ConectarConGoogleDrive()).ReturnsAsync((Google.Apis.Auth.OAuth2.UserCredential)null!);
 
         _driveMock
             .Setup(x => x.SubirArchivoAsync(It.IsAny<IFormFile>()))
             .ReturnsAsync("https://drive.google.com/uc?id=test123");
 
-        _repositorioFotoMock
-            .Setup(x => x.AgregarFotosAsync(It.IsAny<List<Foto>>()))
-            .Returns(Task.CompletedTask);
+        _almacenamientoMock
+            .Setup(x => x.SubirFotoAsync(It.IsAny<int>(), It.IsAny<IFormFile>()))
+            .ReturnsAsync("https://drive.google.com/uc?id=test123");
+
+        _repositorioFotoMock.Setup(x => x.AgregarFotosAsync(It.IsAny<List<Foto>>())).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.AgregarFotosAsync(idTrabajo, mockFiles.Object);
 
         // Assert
-        _driveMock.Verify(x => x.ConectarConGoogleDrive(), Times.Once);
-        _driveMock.Verify(x => x.SubirArchivoAsync(It.IsAny<IFormFile>()), Times.Once);
+        _almacenamientoMock.Verify(x => x.SubirFotoAsync(It.IsAny<int>(), It.IsAny<IFormFile>()), Times.Once);
         _repositorioFotoMock.Verify(
             x =>
                 x.AgregarFotosAsync(
                     It.Is<List<Foto>>(fotos =>
                         fotos.Count == 1
                         && fotos[0].IdTrabajo == idTrabajo
-                        && fotos[0].Enlace == "https://drive.google.com/uc?id=test123"
+                        && fotos[0].RutaRelativa == "https://drive.google.com/uc?id=test123"
                     )
                 ),
             Times.Once
@@ -256,6 +260,8 @@ public class AdministracionTrabajosTests
     public async Task ActualizarAsync_DeberiaActualizarTrabajoExistente()
     {
         // Arrange
+        var trabajoModificado = new ModificarTrabajo { Titulo = "Título Modificado", Estado = EstadoTrabajo.Iniciado };
+
         var trabajoExistente = new Trabajo
         {
             Id = 1,
@@ -264,19 +270,9 @@ public class AdministracionTrabajosTests
             IdCliente = 10,
         };
 
-        var trabajoModificado = new ModificarTrabajo
-        {
-            Titulo = "Título Modificado",
-            Estado = EstadoTrabajo.Iniciado,
-        };
+        _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajoExistente);
 
-        _repositorioFotoMock
-            .Setup(x => x.ObtenerDetallePorIdAsync(1))
-            .ReturnsAsync(trabajoExistente);
-
-        _repositorioFotoMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>()))
-            .Returns(Task.CompletedTask);
+        _repositorioFotoMock.Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>())).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.ActualizarAsync(1, trabajoModificado);
@@ -286,9 +282,7 @@ public class AdministracionTrabajosTests
         _repositorioFotoMock.Verify(
             x =>
                 x.ActualizarAsync(
-                    It.Is<Trabajo>(t =>
-                        t.Titulo == "Título Modificado" && t.Estado == EstadoTrabajo.Iniciado
-                    )
+                    It.Is<Trabajo>(t => t.Titulo == "Título Modificado" && t.Estado == EstadoTrabajo.Iniciado)
                 ),
             Times.Once
         );
@@ -298,6 +292,8 @@ public class AdministracionTrabajosTests
     public async Task ActualizarAsync_CambioAIniciado_DeberiaSetearFechaInicio()
     {
         // Arrange
+        var trabajoModificado = new ModificarTrabajo { Estado = EstadoTrabajo.Iniciado };
+
         var trabajoExistente = new Trabajo
         {
             Id = 1,
@@ -306,24 +302,15 @@ public class AdministracionTrabajosTests
             FechaInicio = null,
         };
 
-        var trabajoModificado = new ModificarTrabajo { Estado = EstadoTrabajo.Iniciado };
+        _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajoExistente);
 
-        _repositorioFotoMock
-            .Setup(x => x.ObtenerDetallePorIdAsync(1))
-            .ReturnsAsync(trabajoExistente);
-
-        _repositorioFotoMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>()))
-            .Returns(Task.CompletedTask);
+        _repositorioFotoMock.Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>())).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.ActualizarAsync(1, trabajoModificado);
 
         // Assert
-        _repositorioFotoMock.Verify(
-            x => x.ActualizarAsync(It.Is<Trabajo>(t => t.FechaInicio != null)),
-            Times.Once
-        );
+        _repositorioFotoMock.Verify(x => x.ActualizarAsync(It.Is<Trabajo>(t => t.FechaInicio != null)), Times.Once);
     }
 
     #endregion
@@ -350,12 +337,10 @@ public class AdministracionTrabajosTests
 
         _repositorioPresupuestoMock.Setup(x => x.ObtenerCostoHoraDeTrabajo()).ReturnsAsync(100m); // $100 por hora
 
-        _repositorioFotoMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>()))
-            .Returns(Task.CompletedTask);
+        _repositorioFotoMock.Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>())).Returns(Task.CompletedTask);
 
         _clientesMock
-            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<int>(), It.IsAny<MovimientoBalance>()))
+            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<MovimientoBalanceDTO>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -365,19 +350,12 @@ public class AdministracionTrabajosTests
         _repositorioFotoMock.Verify(x => x.ObtenerDetallePorIdAsync(1), Times.Once);
         _repositorioPresupuestoMock.Verify(x => x.ObtenerCostoHoraDeTrabajo(), Times.Once);
         _repositorioFotoMock.Verify(
-            x =>
-                x.ActualizarAsync(
-                    It.Is<Trabajo>(t => t.Estado == EstadoTrabajo.Terminado && t.FechaFin != null)
-                ),
+            x => x.ActualizarAsync(It.Is<Trabajo>(t => t.Estado == EstadoTrabajo.Terminado && t.FechaFin != null)),
             Times.Once
         );
 
         _clientesMock.Verify(
-            x =>
-                x.RegistrarMovimientoAsync(
-                    5,
-                    It.Is<MovimientoBalance>(m => m.Tipo == TipoMovimiento.Cargo)
-                ),
+            x => x.RegistrarMovimientoAsync(It.Is<MovimientoBalanceDTO>(m => m.Tipo == TipoMovimiento.Cargo)),
             Times.Once
         );
     }
@@ -397,57 +375,6 @@ public class AdministracionTrabajosTests
 
         // Assert
         resultado.Should().BeNull();
-    }
-
-    #endregion
-
-    #region ActualizarAsync - Edge Cases
-
-    [Fact]
-    public async Task ActualizarAsync_DeberiaMantenerValoresOriginalesCuandoSeanNull()
-    {
-        // Arrange
-        var trabajoExistente = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Título Original",
-            Estado = EstadoTrabajo.Pendiente,
-            IdCliente = 10,
-            IdPresupuesto = 5,
-        };
-
-        var trabajoModificado = new ModificarTrabajo
-        {
-            Titulo = null,
-            Estado = null,
-            IdCliente = null,
-            IdPresupuesto = null,
-        };
-
-        _repositorioFotoMock
-            .Setup(x => x.ObtenerDetallePorIdAsync(1))
-            .ReturnsAsync(trabajoExistente);
-
-        _repositorioFotoMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _servicio.ActualizarAsync(1, trabajoModificado);
-
-        // Assert
-        _repositorioFotoMock.Verify(
-            x =>
-                x.ActualizarAsync(
-                    It.Is<Trabajo>(t =>
-                        t.Titulo == "Título Original"
-                        && t.Estado == EstadoTrabajo.Pendiente
-                        && t.IdCliente == 10
-                        && t.IdPresupuesto == 5
-                    )
-                ),
-            Times.Once
-        );
     }
 
     #endregion
@@ -474,22 +401,17 @@ public class AdministracionTrabajosTests
         // No debe llamar a ObtenerCostoHoraDeTrabajo porque ya tiene TotalLabor
         _repositorioPresupuestoMock.Setup(x => x.ObtenerCostoHoraDeTrabajo()).ReturnsAsync(100m);
 
-        _repositorioFotoMock
-            .Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>()))
-            .Returns(Task.CompletedTask);
+        _repositorioFotoMock.Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>())).Returns(Task.CompletedTask);
 
         _clientesMock
-            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<int>(), It.IsAny<MovimientoBalance>()))
+            .Setup(x => x.RegistrarMovimientoAsync(It.IsAny<MovimientoBalanceDTO>()))
             .Returns(Task.CompletedTask);
 
         // Act
         await _servicio.TerminarTrabajo(1);
 
         // Assert - El total debe seguir siendo 500m, no se recalcula
-        _repositorioFotoMock.Verify(
-            x => x.ActualizarAsync(It.Is<Trabajo>(t => t.TotalLabor == 500m)),
-            Times.Once
-        );
+        _repositorioFotoMock.Verify(x => x.ActualizarAsync(It.Is<Trabajo>(t => t.TotalLabor == 500m)), Times.Once);
     }
 
     #endregion

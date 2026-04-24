@@ -197,6 +197,13 @@ public class AdministracionPresupuestosTests
     public async Task ActualizarAsync_DeberiaActualizarPresupuesto()
     {
         // Arrange
+        var presupuestoModificado = new ModificarPresupuesto
+        {
+            Titulo = "Título Modificado",
+            Estado = EstadoPresupuesto.Aceptado,
+            HorasEstimadas = 15,
+        };
+
         var presupuestoExistente = new Presupuesto
         {
             Id = 1,
@@ -207,18 +214,9 @@ public class AdministracionPresupuestosTests
             Materiales = new List<Material>(),
         };
 
-        var presupuestoModificado = new ModificarPresupuesto
-        {
-            Titulo = "Título Modificado",
-            Estado = EstadoPresupuesto.Aceptado,
-            HorasEstimadas = 15,
-        };
-
         _presupuestoRepositorioMock
             .Setup(x => x.ObtenerDetallePorIdAsync(1))
             .ReturnsAsync(presupuestoExistente);
-
-        _presupuestoRepositorioMock.Setup(x => x.ObtenerCostoHoraDeTrabajo()).ReturnsAsync(100m);
 
         _presupuestoRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Presupuesto>()))

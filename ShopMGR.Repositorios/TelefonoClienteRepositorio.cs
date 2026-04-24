@@ -70,7 +70,7 @@ namespace ShopMGR.Repositorios
 
         public async Task Validar(TelefonoCliente telefono)
         {
-            if (telefono.Telefono.Length != 10)
+            if (telefono.Telefono.Length < 10)
                 throw new InvalidOperationException("El número de teléfono debe contener 10 caracteres");
             if (await _contexto.TelefonoCliente.AnyAsync(t => t.Telefono == telefono.Telefono))
                 throw new InvalidOperationException($"Ya existe un teléfono con el número {telefono.Telefono}");
