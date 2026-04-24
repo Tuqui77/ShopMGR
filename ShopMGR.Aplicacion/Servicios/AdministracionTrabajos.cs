@@ -124,6 +124,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             trabajoDb.IdCliente = trabajoModificado.IdCliente;
             trabajoDb.Titulo = trabajoModificado.Titulo;
+            trabajoDb.Descripcion = trabajoModificado.Descripcion;
             trabajoDb.Estado = trabajoModificado.Estado;
 
             var presupuestoAnterior = trabajoDb.IdPresupuesto;
