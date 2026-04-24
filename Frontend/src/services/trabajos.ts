@@ -11,6 +11,7 @@ import type {
 
 export interface ModificarTrabajoRequest {
   titulo?: string;
+  descripcion?: string;
   estado?: EstadoTrabajo;
   idCliente?: number;
   idPresupuesto?: number;
@@ -42,7 +43,7 @@ interface HorasItem {
 
 interface FotoItem {
   id: number;
-  rutaCompleta: string;
+  rutaRelativa: string;
   idTrabajo: number;
 }
 
@@ -85,13 +86,14 @@ function mapTrabajoBackend(dto: TrabajoBackendDTO): Trabajo {
   
   const fotos: Trabajo['fotos'] = fotosValues.map(f => ({
     id: f.id,
-    enlace: `/app/imagenes/${f.rutaCompleta}`,
+    enlace: `/app/imagenes/${f.rutaRelativa}`,
     idTrabajo: f.idTrabajo,
   }));
   
   return {
     id: dto.id,
     titulo: dto.titulo,
+    descripcion: dto.descripcion,
     estado: dto.estado,
     fechaInicio: dto.fechaInicio,
     fechaFin: dto.fechaFin,

@@ -140,6 +140,7 @@ export interface ModificarClienteRequest {
 export interface Trabajo {
   id: number;
   titulo: string;
+  descripcion?: string;
   estado: EstadoTrabajo;
   fechaInicio?: string;
   fechaFin?: string;
@@ -157,6 +158,7 @@ export interface Trabajo {
 export interface TrabajoBackendDTO {
   id: number;
   titulo: string;
+  descripcion?: string;
   estado: EstadoTrabajo;
   fechaInicio?: string;
   fechaFin?: string;
@@ -173,6 +175,7 @@ export type TrabajoDetalleDTO = TrabajoBackendDTO;
 
 export interface CrearTrabajoRequest {
   titulo: string;
+  descripcion?: string;
   idCliente: number;
   idPresupuesto?: number;
   estado?: EstadoTrabajo;
@@ -227,7 +230,7 @@ export interface Foto {
 
 export interface FotoBackendDTO {
   id: number;
-  rutaCompleta: string;
+  rutaRelativa: string;
   idTrabajo: number;
 }
 

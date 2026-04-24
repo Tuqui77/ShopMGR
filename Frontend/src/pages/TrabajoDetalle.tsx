@@ -179,6 +179,12 @@ export function TrabajoDetalle() {
         <div className="card">
           <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</h2>
           
+          {trabajo.descripcion && (
+            <p className="text-sm mb-4" style={{ color: 'var(--color-muted)' }}>
+              {trabajo.descripcion}
+            </p>
+          )}
+          
           {trabajo.cliente && (
             <Link 
               to={`/clientes/${trabajo.cliente.id}`}

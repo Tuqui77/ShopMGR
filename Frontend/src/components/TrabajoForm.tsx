@@ -32,6 +32,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   
   // Estado del formulario - inicializar con datos del trabajo si estamos editando
   const [titulo, setTitulo] = useState(() => trabajoOriginal?.titulo ?? '');
+  const [descripcion, setDescripcion] = useState(() => trabajoOriginal?.descripcion ?? '');
   const [clienteId, setClienteId] = useState<number | null>(() => trabajoOriginal?.clienteId ?? null);
   const [presupuestoId, setPresupuestoId] = useState<number | null>(() => trabajoOriginal?.idPresupuesto ?? null);
   const [estado, setEstado] = useState<EstadoTrabajo>(() => trabajoOriginal?.estado ?? 'Pendiente');
@@ -49,6 +50,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   useEffect(() => {
     if (trabajoOriginal && isEditing) {
       setTitulo(trabajoOriginal.titulo);
+      setDescripcion(trabajoOriginal.descripcion ?? '');
       setClienteId(trabajoOriginal.clienteId);
       setPresupuestoId(trabajoOriginal.idPresupuesto ?? null);
       setEstado(trabajoOriginal.estado);
@@ -68,6 +70,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       // Resetear después de que la animación del modal termine
       const timer = setTimeout(() => {
         setTitulo('');
+        setDescripcion('');
         setClienteId(null);
         setPresupuestoId(null);
         setEstado('Pendiente');
@@ -141,6 +144,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
           id: trabajoId,
           trabajo: {
             titulo: titulo.trim(),
+            descripcion: descripcion.trim() || undefined,
             idCliente: clienteId!,
             idPresupuesto: presupuestoId ?? undefined,
             estado,
@@ -149,6 +153,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       } else {
         await crearTrabajo.mutateAsync({
           titulo: titulo.trim(),
+          descripcion: descripcion.trim() || undefined,
           idCliente: clienteId!,
           idPresupuesto: presupuestoId ?? undefined,
           estado,
@@ -209,7 +214,22 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   </p>
                 )}
               </div>
-              
+
+              {/* Descripción */}
+              <div>
+                <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                  Descripción (opcional)
+                </label>
+                <textarea
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  placeholder="Agrega una breve descripción del trabajo..."
+                  className="input min-h-[80px] resize-none"
+                  maxLength={500}
+                  rows={3}
+                />
+              </div>
+               
               {/* Cliente */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
