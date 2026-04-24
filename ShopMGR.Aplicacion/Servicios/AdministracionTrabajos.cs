@@ -159,7 +159,7 @@ namespace ShopMGR.Aplicacion.Servicios
             if (!trabajo.TotalLabor.HasValue)
             {
                 var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                trabajo.TotalLabor = (decimal)(trabajo.HorasDeTrabajo.Sum(h => h.Horas) * (float)costoHora);
+                trabajo.TotalLabor = (decimal)trabajo.HorasDeTrabajo.Sum(h => h.Horas) * costoHora;
             }
 
             trabajo.FechaFin = DateOnly.FromDateTime(DateTime.Now);
