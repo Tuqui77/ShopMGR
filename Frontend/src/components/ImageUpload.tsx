@@ -83,8 +83,9 @@ export function ImageUpload({
         setUploadProgress(100);
       }
       
-      // Success - add images to state
-      setImages(prev => [...prev, ...newImages]);
+      // Success - notify parent but don't store locally
+      // The work detail page will refresh with updated photos from server
+      setImages([]); // Clear any pending images
       onUploadComplete?.(filesToAdd);
     } catch (err) {
       console.error('Upload error:', err);

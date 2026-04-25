@@ -41,7 +41,7 @@ export function useTrabajoDetalle(id: number | undefined) {
     queryKey: ['trabajos', id, 'detalle'],
     queryFn: () => trabajosService.obtenerDetalle(id!),
     enabled: typeof id === 'number' && id > 0,
-    staleTime: 1000 * 30,
+    staleTime: 0, // Always fetch fresh data after mutations
   });
 }
 
