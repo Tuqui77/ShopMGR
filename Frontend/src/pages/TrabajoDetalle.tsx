@@ -13,6 +13,8 @@ import {
   DollarSign,
   X,
   ZoomIn,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
@@ -38,6 +40,7 @@ export function TrabajoDetalle() {
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
   const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
 
   // Handle close image modal
   const handleCloseImage = useCallback(() => {
@@ -45,7 +48,34 @@ export function TrabajoDetalle() {
     setSelectedImageId(null);
     setIsZoomed(false);
     setImageFullscreenOpen(false);
+    setShowGallery(false);
   }, [setImageFullscreenOpen]);
+
+  // Navigate photos in gallery
+  const navigateImage = useCallback((direction: number) => {
+    if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
+    const currentIndex = trabajo.fotos.findIndex(f => f.enlace === selectedImage);
+    const nextIndex = (currentIndex + direction + trabajo.fotos.length) % trabajo.fotos.length;
+    setSelectedImage(trabajo.fotos[nextIndex].enlace);
+    setSelectedImageId(trabajo.fotos[nextIndex].id);
+  }, [trabajo?.fotos, selectedImage]);
+
+  // Navigate to specific image by index
+  const navigateToImage = useCallback((index: number) => {
+    if (!trabajo?.fotos || index < 0 || index >= trabajo.fotos.length) return;
+    setSelectedImage(trabajo.fotos[index].enlace);
+    setSelectedImageId(trabajo.fotos[index].id);
+    setIsZoomed(false);
+  }, [trabajo?.fotos]);
+
+  // Open gallery and set first image
+  const openGallery = useCallback(() => {
+    if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
+    setShowGallery(true);
+    setSelectedImage(trabajo.fotos[0].enlace);
+    setSelectedImageId(trabajo.fotos[0].id);
+    setIsZoomed(false);
+  }, [trabajo?.fotos]);
 
   // Handle ESC to close image modal
   useEffect(() => {
@@ -103,18 +133,15 @@ export function TrabajoDetalle() {
     setEditingTrabajoId(null);
   };
 
-  const handleSelectImage = (enlace: string, id: number) => {
-    setSelectedImage(enlace);
-    setSelectedImageId(id);
-    setIsZoomed(false);
-    setImageFullscreenOpen(true);
-  };
+  
 
   const handleDeletePhoto = async () => {
     if (!trabajoId || selectedImageId === null) return;
     try {
       await eliminarFoto.mutateAsync({ idTrabajo: trabajoId, idImagen: selectedImageId });
-      handleCloseImage();
+      setShowDeletePhotoConfirm(false);
+      setSelectedImage(null);
+      setImageFullscreenOpen(false);
     } catch (err) {
       console.error('Error al eliminar foto:', err);
       setShowDeletePhotoConfirm(false);
@@ -261,27 +288,34 @@ export function TrabajoDetalle() {
           </div>
         )}
 
-        {/* Fotos */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Camera className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>FOTOS</span>
+{/* Fotos - con miniaturas */}
+        {trabajo.fotosCount > 0 ? (
+          <div className="card">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Camera className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>
+                  {trabajo.fotosCount} fotos
+                </span>
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); }}
+                className="cursor-pointer"
+              >
+                <ImageUpload onUpload={handleUploadPhotos} />
+              </button>
             </div>
-            <span className="text-sm" style={{ color: 'var(--color-muted)' }}>
-              {trabajo.fotosCount} fotos
-            </span>
-          </div>
-          
-          {trabajo.fotosCount > 0 && trabajo.fotos ? (
-            <div className="grid grid-cols-4 gap-2">
-{trabajo.fotos.slice(0, 4).map((foto) => (
-                  <button
-                    key={foto.id}
-                    onClick={() => handleSelectImage(foto.enlace, foto.id)}
-                    className="aspect-square rounded-lg overflow-hidden cursor-pointer"
-                    style={{ backgroundColor: 'var(--color-surface)' }}
-                  >
+            
+            {/* Miniaturas clickeables */}
+            <div 
+              className="flex gap-2 cursor-pointer"
+              onClick={openGallery}
+            >
+              {trabajo.fotos?.slice(0, 4).map((foto) => (
+                <div
+                  key={foto.id}
+                  className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0"
+                >
                   <img
                     src={foto.enlace}
                     alt={`Foto ${foto.id}`}
@@ -289,34 +323,128 @@ export function TrabajoDetalle() {
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
-                      target.parentElement!.innerHTML = '<Camera class="w-6 h-6" style="color: var(--color-muted); opacity: 0.5;" />';
+                      target.parentElement!.innerHTML = '<Camera class="w-5 h-5" style="color: var(--color-muted); opacity: 0.5;" />';
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="card">
+            <p className="text-sm text-center py-4" style={{ color: 'var(--color-muted)' }}>
+              Sin fotos
+            </p>
+            <ImageUpload onUpload={handleUploadPhotos} />
+          </div>
+        )}
+
+        {/* Gallery modal - fullscreen with thumbnails + navigation */}
+        {showGallery && selectedImage && (
+          <div 
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95"
+          >
+            {/* Close button - top right */}
+            <button
+              onClick={() => {
+                setShowGallery(false);
+                setSelectedImage(null);
+                setIsZoomed(false);
+              }}
+              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Cerrar"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Delete button - top right, left of close */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDeletePhotoConfirm(true); }}
+              className="absolute top-4 right-16 z-20 p-2 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors cursor-pointer"
+              aria-label="Eliminar foto"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Previous button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateImage(-1);
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Foto anterior"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Next button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateImage(1);
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Foto siguiente"
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Main image with zoom */}
+            <img 
+              src={selectedImage} 
+              alt="Foto" 
+              className={clsx(
+                'object-contain transition-all duration-300 cursor-zoom-in',
+                isZoomed 
+                  ? 'max-w-none max-h-none w-auto h-auto scale-150 cursor-zoom-out' 
+                  : 'max-h-[70vh] max-w-[90vw]'
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsZoomed(!isZoomed);
+              }}
+            />
+
+            {/* Thumbnails strip at bottom */}
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 p-3 bg-black/60 rounded-xl overflow-x-auto max-w-[90vw]">
+              {trabajo.fotos?.map((foto, index) => (
+                <button
+                  key={foto.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToImage(index);
+                  }}
+                  className={clsx(
+                    'flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden cursor-pointer transition-all',
+                    selectedImage === foto.enlace 
+                      ? 'ring-2 ring-white opacity-100' 
+                      : 'opacity-40 hover:opacity-80'
+                  )}
+                >
+                  <img
+                    src={foto.enlace}
+                    alt={`Foto ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = '<Camera class="w-3 h-3" style="color: white; opacity: 0.5;" />';
                     }}
                   />
                 </button>
               ))}
-              {trabajo.fotosCount > 4 && (
-                <div 
-                  className="aspect-square rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: 'var(--color-surface)' }}
-                >
-                  <span className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                    +{trabajo.fotosCount - 4}
-                  </span>
-                </div>
-              )}
             </div>
-          ) : (
-            <p className="text-sm text-center py-4" style={{ color: 'var(--color-muted)' }}>
-              Sin fotos
-            </p>
-          )}
-          
-          {/* Upload new photos */}
-          <ImageUpload onUpload={handleUploadPhotos} />
-        </div>
 
-        {/* Image modal - imagen grande con zoom */}
-        {selectedImage && (
+            {/* Counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-sm">
+              {trabajo.fotos?.findIndex(f => f.enlace === selectedImage)! + 1} / {trabajo.fotosCount}
+            </div>
+          </div>
+        )}
+
+        {/* Image modal - solo cuando NO está en modo galería */}
+        {selectedImage && !showGallery && (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
             onClick={handleCloseImage}
