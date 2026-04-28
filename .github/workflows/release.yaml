@@ -1,0 +1,43 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+        
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Semantic-Release
+        id: semantic
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Leer version
+        run: echo "VERSION=$(cat version.txt") >> $GITHUB_ENV
+
+      - name: Construir backend
+        run: docker build -t ghcr.io/Tuqui77/backend:$VERSION ./
+      - name: Push backend
+        run: docker push ghcr.io/Tuqui77/backend:$VERSION
+
+      - name: Construir frontend
+        run: docker build -t ghcr.io/Tuqui77/frontend:$VERSION ./frontend
+      - name: Push frontend
+        run: docker push ghcr.io/Tuqui77/frontend:$VERSION
