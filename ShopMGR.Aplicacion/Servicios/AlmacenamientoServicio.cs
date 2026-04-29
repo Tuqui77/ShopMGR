@@ -12,9 +12,8 @@ namespace ShopMGR.Aplicacion.Servicios
             var tiposPermitidos = new[] { "image/jpeg", "image/png", "image/webp" };
             var tipo = foto.ContentType;
 
-            if (!extensionesPermitidas.Contains(extension)
-                    || !tiposPermitidos.Contains(tipo))
-                    throw new ArgumentException("Tipo de archivo no permitido");
+            if (!extensionesPermitidas.Contains(extension) || !tiposPermitidos.Contains(tipo))
+                throw new ArgumentException("Tipo de archivo no permitido");
 
             var dirId = idTrabajo.ToString();
             var carpeta = Path.Combine(Directory.GetCurrentDirectory(), "imagenes", dirId);
