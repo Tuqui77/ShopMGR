@@ -22,7 +22,9 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   
   // Usar props si se pasan, sino usar store
   const isOpen = isOpenProp ?? store.showTrabajoForm;
-  const onClose = onCloseProp ?? (() => store.setShowTrabajoForm(false));
+  const onClose = useMemo(() => {
+    return onCloseProp ?? (() => store.setShowTrabajoForm(false));
+  }, [onCloseProp, store]);
   
   // Queries y mutations
   const { data: clientes = [], isLoading: loadingClientes } = useClientes();
@@ -46,29 +48,13 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   // Query de presupuestos del cliente (solo cuando hay cliente seleccionado)
   const { data: presupuestosDelCliente = [] } = usePresupuestosPorCliente(clienteId ?? undefined);
   
-  // Sincronizar estado cuando cambian los datos del trabajo
-  useEffect(() => {
-    if (trabajoOriginal && isEditing) {
-      setTitulo(trabajoOriginal.titulo);
-      setDescripcion(trabajoOriginal.descripcion ?? '');
-      setClienteId(trabajoOriginal.clienteId);
-      setPresupuestoId(trabajoOriginal.idPresupuesto ?? null);
-      setEstado(trabajoOriginal.estado);
-    }
-  }, [trabajoOriginal, isEditing]);
-
-  // Resetear presupuesto cuando cambia el cliente (los presupuestos son por cliente)
-  useEffect(() => {
-    if (!isEditing) {
-      setPresupuestoId(null);
-    }
-  }, [clienteId, isEditing]);
-  
-  // Resetear formulario al cerrar
-  useEffect(() => {
-    if (!isOpen) {
-      // Resetear después de que la animación del modal termine
-      const timer = setTimeout(() => {
+  // Resetear formulario al cerrar - handled in onClose
+  const onCloseCallback = useCallback(() => {
+    const closeFn = onClose ?? (() => store.setShowTrabajoForm(false));
+    closeFn();
+    // Reset after animation
+    setTimeout(() => {
+      if (!isOpenProp) {
         setTitulo('');
         setDescripcion('');
         setClienteId(null);
@@ -77,21 +63,20 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
         setErrors({});
         setRegistrarAnticipo(false);
         setMontoAnticipo('');
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
+      }
+    }, 200);
+  }, [onClose, store, isOpenProp]);
 
   // Cerrar con ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        onCloseCallback();
       }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+  }, [isOpen, onCloseCallback]);
   
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -161,7 +146,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       }
       
       onSuccess?.();
-      onClose();
+      onCloseCallback();
     } catch (error) {
       console.error('Error al guardar trabajo:', error);
       setErrors({ submit: 'Error al guardar. Intenta de nuevo.' });
