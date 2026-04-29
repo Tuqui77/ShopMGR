@@ -25,28 +25,21 @@ export function HoursModal() {
   // Mutation para agregar horas
   const agregarHorasMutation = useAgregarHoras();
   
-  // Si ya hay un trabajo seleccionado (ej: desde el detalle), ir directo a registrar horas
-  const [step, setStep] = useState<'select' | 'hours'>(() => selectedTrabajo ? 'hours' : 'select');
+  // Derive step from selectedTrabajo - no separate state needed
+  const step: 'select' | 'hours' = selectedTrabajo ? 'hours' : 'select';
+  
   const [hours, setHours] = useState(0.5);
   const [description, setDescription] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Actualizar el paso cuando cambia selectedTrabajo
-  useEffect(() => {
-    if (selectedTrabajo) {
-      setStep('hours');
-    }
-  }, [selectedTrabajo]);
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setShowHoursModal(false);
-    setStep('select');
     setHours(0.5);
     setDescription('');
     setShowSuccess(false);
     // Limpiar selectedTrabajo para que la próxima apertura sea limpia
     setSelectedTrabajo(null);
-  };
+  }, [setShowHoursModal, setHours, setDescription, setShowSuccess, setSelectedTrabajo]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -56,13 +49,13 @@ export function HoursModal() {
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [showHoursModal]);
+  }, [showHoursModal, handleClose]);
 
   if (!showHoursModal) return null;
   
   const handleSelectTrabajo = (trabajo: Trabajo) => {
     setSelectedTrabajo(trabajo);
-    setStep('hours');
+    // step is now derived from selectedTrabajo, no need to setStep
   };
   
   const handleAddHours = async () => {
@@ -101,7 +94,7 @@ export function HoursModal() {
         <div className="p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <button onClick={step === 'hours' ? () => setStep('select') : handleClose} className="btn-icon">
+            <button onClick={step === 'hours' ? () => setSelectedTrabajo(null) : handleClose} className="btn-icon">
               {step === 'select' ? (
                 <X className="w-5 h-5" />
               ) : (
