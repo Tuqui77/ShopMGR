@@ -19,7 +19,7 @@ import {
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { TrabajoForm } from '../components/TrabajoForm';
 import { ImageUpload } from '../components/ImageUpload';
@@ -39,8 +39,13 @@ export function TrabajoDetalle() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
   const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [showGallery, setShowGallery] = useState(false);
+const [isZoomed, setIsZoomed] = useState(false);
+const [showGallery, setShowGallery] = useState(false);
+// Panning state with refs for continuous dragging
+const panPosition = useRef({ x: 0, y: 0 });
+const isDragging = useRef(false);
+const dragStart = useRef({ x: 0, y: 0 });
+const [panState, setPanState] = useState({ x: 0, y: 0 }); // For React re-render
 
   // Handle close image modal
   const handleCloseImage = useCallback(() => {
@@ -49,44 +54,11 @@ export function TrabajoDetalle() {
     setIsZoomed(false);
     setImageFullscreenOpen(false);
     setShowGallery(false);
+    // Reset pan position
+    panPosition.current = { x: 0, y: 0 };
+    isDragging.current = false;
+    setPanState({ x: 0, y: 0 });
   }, [setImageFullscreenOpen]);
-
-  // Navigate photos in gallery
-  const navigateImage = useCallback((direction: number) => {
-    if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
-    const currentIndex = trabajo.fotos.findIndex(f => f.enlace === selectedImage);
-    const nextIndex = (currentIndex + direction + trabajo.fotos.length) % trabajo.fotos.length;
-    setSelectedImage(trabajo.fotos[nextIndex].enlace);
-    setSelectedImageId(trabajo.fotos[nextIndex].id);
-  }, [trabajo?.fotos, selectedImage]);
-
-  // Navigate to specific image by index
-  const navigateToImage = useCallback((index: number) => {
-    if (!trabajo?.fotos || index < 0 || index >= trabajo.fotos.length) return;
-    setSelectedImage(trabajo.fotos[index].enlace);
-    setSelectedImageId(trabajo.fotos[index].id);
-    setIsZoomed(false);
-  }, [trabajo?.fotos]);
-
-  // Open gallery and set first image
-  const openGallery = useCallback(() => {
-    if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
-    setShowGallery(true);
-    setSelectedImage(trabajo.fotos[0].enlace);
-    setSelectedImageId(trabajo.fotos[0].id);
-    setIsZoomed(false);
-  }, [trabajo?.fotos]);
-
-  // Handle ESC to close image modal
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedImage) {
-        handleCloseImage();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage, handleCloseImage]);
   
   // Handler for uploading photos
   const handleUploadPhotos = async (files: File[]) => {
@@ -129,9 +101,126 @@ export function TrabajoDetalle() {
     }
   };
 
-  const handleEditSuccess = () => {
-    setEditingTrabajoId(null);
+const handleEditSuccess = () => {
+  setEditingTrabajoId(null);
+};
+
+// Navigation functions with pan reset
+const navigateImage = (direction: number) => {
+  if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
+  const currentIndex = trabajo.fotos.findIndex(f => f.enlace === selectedImage);
+  const nextIndex = (currentIndex + direction + trabajo.fotos.length) % trabajo.fotos.length;
+  setSelectedImage(trabajo.fotos[nextIndex].enlace);
+  setSelectedImageId(trabajo.fotos[nextIndex].id);
+  // Reset pan position
+  panPosition.current = { x: 0, y: 0 };
+  isDragging.current = false;
+  setPanState({ x: 0, y: 0 });
+};
+
+const navigateToImage = (index: number) => {
+  if (!trabajo?.fotos || index < 0 || index >= trabajo.fotos.length) return;
+  setSelectedImage(trabajo.fotos[index].enlace);
+  setSelectedImageId(trabajo.fotos[index].id);
+  setIsZoomed(false);
+  // Reset pan position
+  panPosition.current = { x: 0, y: 0 };
+  isDragging.current = false;
+  setPanState({ x: 0, y: 0 });
+};
+
+const openGallery = () => {
+  if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
+  setShowGallery(true);
+  setSelectedImage(trabajo.fotos[0].enlace);
+  setSelectedImageId(trabajo.fotos[0].id);
+  setIsZoomed(false);
+  // Reset pan position
+  panPosition.current = { x: 0, y: 0 };
+  isDragging.current = false;
+  setPanState({ x: 0, y: 0 });
+};
+
+// Robust panning handlers using document-level events for continuous dragging
+const hasDragged = useRef(false);
+const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  if (!isZoomed) return;
+  e.preventDefault();
+  isDragging.current = true;
+  hasDragged.current = false;
+  dragStart.current = {
+    x: e.clientX - panPosition.current.x * 1.5, // Account for scale compensation
+    y: e.clientY - panPosition.current.y * 1.5
   };
+}, [isZoomed]);
+
+const handleMouseMove = useCallback((e: MouseEvent) => {
+  if (!isDragging.current || !isZoomed) return;
+  
+  const newX = (e.clientX - dragStart.current.x) / 1.5; // Compensate for scale(1.5)
+  const newY = (e.clientY - dragStart.current.y) / 1.5;
+  
+  // Mark as dragged if moved more than 5 pixels (threshold to distinguish from click)
+  if (Math.abs(newX - panPosition.current.x) > 5 || Math.abs(newY - panPosition.current.y) > 5) {
+    hasDragged.current = true;
+  }
+  
+  panPosition.current = { x: newX, y: newY };
+  setPanState({ x: newX, y: newY });
+}, [isZoomed]);
+
+const handleMouseUp = useCallback(() => {
+  isDragging.current = false;
+}, []);
+
+// Touch handlers for mobile support
+const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  if (!isZoomed) return;
+  const touch = e.touches[0];
+  isDragging.current = true;
+  hasDragged.current = false;
+  dragStart.current = {
+    x: touch.clientX - panPosition.current.x * 1.5, // Account for scale compensation
+    y: touch.clientY - panPosition.current.y * 1.5
+  };
+}, [isZoomed]);
+
+const handleTouchMove = useCallback((e: TouchEvent) => {
+  if (!isDragging.current || !isZoomed) return;
+  e.preventDefault(); // Prevent page scroll while panning
+  const touch = e.touches[0];
+  const newX = (touch.clientX - dragStart.current.x) / 1.5; // Compensate for scale(1.5)
+  const newY = (touch.clientY - dragStart.current.y) / 1.5;
+  
+  // Mark as dragged if moved more than 5 pixels
+  if (Math.abs(newX - panPosition.current.x) > 5 || Math.abs(newY - panPosition.current.y) > 5) {
+    hasDragged.current = true;
+  }
+  
+  panPosition.current = { x: newX, y: newY };
+  setPanState({ x: newX, y: newY });
+}, [isZoomed]);
+
+const handleTouchEnd = useCallback(() => {
+  isDragging.current = false;
+}, []);
+
+// Setup document-level event listeners for continuous panning
+useEffect(() => {
+  if (isZoomed) {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }
+}, [isZoomed, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
   
 
@@ -390,22 +479,39 @@ export function TrabajoDetalle() {
               <ChevronRight className="w-6 h-6 text-white" />
             </button>
 
-            {/* Main image with zoom */}
-            <img 
-              src={selectedImage} 
-              alt="Foto" 
-              className={clsx(
-                'object-contain transition-all duration-300 cursor-zoom-in',
-                isZoomed 
-                  ? 'max-w-none max-h-none w-auto h-auto scale-150 cursor-zoom-out' 
-                  : 'max-h-[70vh] max-w-[90vw]'
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsZoomed(!isZoomed);
-              }}
-            />
-
+            {/* Main image with zoom and pan */}
+            <div 
+              className="relative flex items-center justify-center overflow-hidden"
+              style={{ height: 'calc(100vh - 200px)', width: '90vw' }}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
+              <img 
+                src={selectedImage} 
+                alt="Foto" 
+                draggable="false"
+                className={clsx(
+                  'object-contain transition-transform duration-300 select-none',
+                  isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+                )}
+                style={{
+                  transform: isZoomed 
+                    ? `translate(${panState.x}px, ${panState.y}px) scale(1.5)`
+                    : 'scale(1)',
+                  maxWidth: isZoomed ? 'none' : '90vw',
+                  maxHeight: isZoomed ? 'none' : '70vh',
+                  width: isZoomed ? 'auto' : undefined,
+                  height: isZoomed ? 'auto' : undefined,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!hasDragged.current) {
+                    setIsZoomed(!isZoomed);
+                  }
+                }}
+              />
+            </div>
+            
             {/* Thumbnails strip at bottom */}
             <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 p-3 bg-black/60 rounded-xl overflow-x-auto max-w-[90vw]">
               {trabajo.fotos?.map((foto, index) => (
@@ -438,7 +544,7 @@ export function TrabajoDetalle() {
 
             {/* Counter */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-sm">
-              {trabajo.fotos?.findIndex(f => f.enlace === selectedImage)! + 1} / {trabajo.fotosCount}
+              {(trabajo.fotos?.findIndex(f => f.enlace === selectedImage) ?? -1) + 1} / {trabajo.fotosCount}
             </div>
           </div>
         )}
@@ -477,22 +583,38 @@ export function TrabajoDetalle() {
               {isZoomed ? 'Salir del zoom' : 'Hacer zoom'}
             </button>
             
-            {/* Imagen - transitions smoothly between zoom states */}
-            <img 
-              src={selectedImage} 
-              alt="Foto ampliada" 
-              className={clsx(
-                'object-contain transition-all duration-300 cursor-zoom-in',
-                isZoomed 
-                  ? 'max-w-none max-h-none w-auto h-auto scale-150' 
-                  : 'max-h-[90vh] max-w-[90vw]'
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isZoomed) setIsZoomed(true);
-              }}
-              style={isZoomed ? { cursor: 'zoom-out' } : undefined}
-            />
+            {/* Imagen con zoom y pan */}
+            <div 
+              className="relative flex items-center justify-center overflow-hidden"
+              style={{ height: 'calc(100vh - 100px)', width: '90vw' }}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
+              <img 
+                src={selectedImage} 
+                alt="Foto ampliada" 
+                draggable="false"
+                className={clsx(
+                  'object-contain transition-transform duration-300 select-none',
+                  isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+                )}
+                style={{
+                  transform: isZoomed 
+                    ? `translate(${panState.x}px, ${panState.y}px) scale(1.5)`
+                    : 'scale(1)',
+                  maxWidth: isZoomed ? 'none' : '90vw',
+                  maxHeight: isZoomed ? 'none' : '90vh',
+                  width: isZoomed ? 'auto' : undefined,
+                  height: isZoomed ? 'auto' : undefined,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!hasDragged.current) {
+                    setIsZoomed(!isZoomed);
+                  }
+                }}
+              />
+            </div>
           </div>
         )}
 
