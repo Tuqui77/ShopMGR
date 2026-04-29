@@ -9,15 +9,11 @@ interface ImageFile {
 
 interface Props {
   onUploadComplete?: (files: File[]) => void;
-  onUpload?: (files: File[]) => Promise<void>;  // Actual upload function
-  accept?: string;
   maxFiles?: number;
 }
 
 export function ImageUpload({
   onUploadComplete,
-  onUpload,
-  accept = 'image/jpeg,image/png',
   maxFiles,
 }: Props = {}) {
   const [images, setImages] = useState<ImageFile[]>([]);
@@ -102,7 +98,7 @@ export function ImageUpload({
         inputRef.current.value = '';
       }
     }
-  }, [accept, maxFiles, images.length, onUploadComplete, onUpload]);
+  }, [maxFiles, images.length, onUploadComplete]);
 
   const handleRemove = useCallback((id: string) => {
     setImages(prev => {
