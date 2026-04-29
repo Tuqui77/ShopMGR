@@ -14,13 +14,13 @@ interface Props {
 }
 
 // Si no se pasa isOpen, usa el store
-export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
+export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose, onSuccess }: Props = {}) {
   const store = useStore();
   const isEditing = !!presupuestoId;
   
   // Usar props si se pasan, sino usar store
   const isOpen = isOpenProp ?? store.showPresupuestoForm;
-  const onClose = onCloseProp ?? (() => store.setShowPresupuestoForm(false));
+  const onClose = onClose ?? (() => store.setShowPresupuestoForm(false));
   
   // Queries y mutations
   const { data: clientes = [] } = useClientes();
@@ -29,16 +29,52 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   const modificarPresupuesto = useModificarPresupuesto();
 
   const [step, setStep] = useState<'cliente' | 'datos'>('cliente');
-  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(() => {
+    // Initialize with duplication data if present
+    if (store.datosDuplicarPresupuesto) {
+      return {
+        id: store.datosDuplicarPresupuesto.idCliente,
+        nombreCompleto: store.datosDuplicarPresupuesto.nombreCliente,
+        telefono: [],
+        balance: 0,
+        trabajosCount: 0,
+        presupuestosCount: 0,
+      } as Cliente;
+    }
+    return null;
+  });
   const [search, setSearch] = useState('');
   
-  // Datos del presupuesto
-  const [titulo, setTitulo] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [horasEstimadas, setHorasEstimadas] = useState(0);
+  // Datos del presupuesto - initialize with presupuestoOriginal if editing, or duplication data
+  const [titulo, setTitulo] = useState(() => {
+    if (presupuestoOriginal?.titulo) return presupuestoOriginal.titulo;
+    if (store.datosDuplicarPresupuesto?.titulo) return store.datosDuplicarPresupuesto.titulo;
+    return '';
+  });
+  const [descripcion, setDescripcion] = useState(() => {
+    if (presupuestoOriginal?.descripcion) return presupuestoOriginal.descripcion;
+    if (store.datosDuplicarPresupuesto?.descripcion) return store.datosDuplicarPresupuesto.descripcion;
+    return '';
+  });
+  const [horasEstimadas, setHorasEstimadas] = useState(() => {
+    if (presupuestoOriginal?.horasEstimadas) return presupuestoOriginal.horasEstimadas;
+    if (store.datosDuplicarPresupuesto?.horasEstimadas) return store.datosDuplicarPresupuesto.horasEstimadas;
+    return 0;
+  });
   
-  // Materiales
-  const [materiales, setMateriales] = useState<MaterialRequest[]>([]);
+  // Materiales - initialize with presupuestoOriginal if editing, or duplication data
+  const [materiales, setMateriales] = useState<MaterialRequest[]>(() => {
+    const source = presupuestoOriginal?.materiales || store.datosDuplicarPresupuesto?.materiales;
+    if (source && Array.isArray(source)) {
+      return source.map(m => ({
+        descripcion: m.descripcion || '',
+        cantidad: m.cantidad || 1,
+        precioUnitario: m.precioUnitario || 0,
+      }));
+    }
+    return [];
+  });
+  
   const [nuevoMaterial, setNuevoMaterial] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
   
   // Estado para edición de materiales en línea
@@ -47,10 +83,12 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
-  const [esDuplicado, setEsDuplicado] = useState(false);
+  const [esDuplicado, setEsDuplicado] = useState(() => !!store.datosDuplicarPresupuesto);
 
-  const handleClose = () => {
-    onClose();
+  const handleClose = useCallback(() => {
+    // Usar onClose si se pasa, sino usar store
+    const closeFn = onClose ?? (() => store.setShowPresupuestoForm(false));
+    closeFn();
     // Reset form after close animation
     setTimeout(() => {
       if (!isOpenProp) {
@@ -67,52 +105,8 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
         setEsDuplicado(false);
       }
     }, 200);
-  };
-
-  // Initialize form data when editing
-  useEffect(() => {
-    if (presupuestoOriginal && isEditing) {
-      // Skip client selection step, go directly to data
-      setStep('datos');
-      setClienteSeleccionado({
-        id: presupuestoOriginal.cliente?.id || 0,
-        nombreCompleto: presupuestoOriginal.cliente?.nombreCompleto || '',
-        telefono: [],
-        balance: 0,
-        trabajosCount: 0,
-        presupuestosCount: 0,
-      });
-      setTitulo(presupuestoOriginal.titulo);
-      setDescripcion(presupuestoOriginal.descripcion || '');
-      setHorasEstimadas(presupuestoOriginal.horasEstimadas);
-      // Map materiales from the service (which maps backend "precio" to "precioUnitario")
-      if (presupuestoOriginal.materiales) {
-        setMateriales(presupuestoOriginal.materiales.map(m => ({
-          descripcion: m.descripcion,
-          cantidad: m.cantidad,
-          Precio: m.precioUnitario || 0,
-          precioUnitario: m.precioUnitario || 0,
-        })));
-      }
-    }
-  }, [presupuestoOriginal, isEditing]);
-
-  // Reset form when closed via prop (not store)
-  useEffect(() => {
-    if (!isOpen && isOpenProp !== undefined) {
-      setStep('cliente');
-      setClienteSeleccionado(null);
-      setSearch('');
-      setTitulo('');
-      setDescripcion('');
-      setHorasEstimadas(0);
-      setMateriales([]);
-      setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
-      setErrors({});
-      setShowSuccess(false);
-    }
-  }, [isOpen, isOpenProp]);
-
+  }, [onClose, store, isOpenProp, setStep, setClienteSeleccionado, setSearch, setTitulo, setDescripcion, setHorasEstimadas, setMateriales, setNuevoMaterial, setErrors, setShowSuccess, setEsDuplicado]);
+  
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -121,34 +115,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen]);
-
-  // Initialize form data when duplicating from store
-  useEffect(() => {
-    if (store.datosDuplicarPresupuesto && isOpen) {
-      setStep('datos');
-      setEsDuplicado(true);
-      setClienteSeleccionado({
-        id: store.datosDuplicarPresupuesto.idCliente,
-        nombreCompleto: store.datosDuplicarPresupuesto.nombreCliente,
-        telefono: [],
-        balance: 0,
-        trabajosCount: 0,
-        presupuestosCount: 0,
-      });
-      setTitulo(store.datosDuplicarPresupuesto.titulo);
-      setDescripcion(store.datosDuplicarPresupuesto.descripcion);
-      setHorasEstimadas(store.datosDuplicarPresupuesto.horasEstimadas);
-      setMateriales(store.datosDuplicarPresupuesto.materiales);
-    }
-  }, [store.datosDuplicarPresupuesto, isOpen]);
-
-  // Clear duplicar data after close
-  useEffect(() => {
-    if (!isOpen && store.datosDuplicarPresupuesto) {
-      store.setDatosDuplicarPresupuesto(null);
-    }
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 

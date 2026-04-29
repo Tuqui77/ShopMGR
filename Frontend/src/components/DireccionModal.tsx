@@ -22,28 +22,14 @@ export function DireccionModal({ direccion, clienteId, isOpen, onClose, isNew = 
   const [isEditing, setIsEditing] = useState(isNew);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    calle: '',
-    altura: '',
-    piso: '',
-    departamento: '',
-    descripcion: '',
-    codigoPostal: '',
-    ciudad: '',
+    calle: direccion?.calle || '',
+    altura: direccion?.altura || '',
+    piso: direccion?.piso || '',
+    departamento: direccion?.departamento || '',
+    descripcion: direccion?.descripcion || '',
+    codigoPostal: direccion?.codigoPostal || '',
+    ciudad: direccion?.ciudad || '',
   });
-
-  useEffect(() => {
-    if (direccion) {
-      setFormData({
-        calle: direccion.calle || '',
-        altura: direccion.altura || '',
-        piso: direccion.piso || '',
-        departamento: direccion.departamento || '',
-        descripcion: direccion.descripcion || '',
-        codigoPostal: direccion.codigoPostal || '',
-        ciudad: direccion.ciudad || '',
-      });
-    }
-  }, [direccion]);
 
   // Handle ESC key
   useEffect(() => {

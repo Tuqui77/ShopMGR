@@ -13,11 +13,13 @@ import {
   DollarSign,
   X,
   ZoomIn,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { TrabajoForm } from '../components/TrabajoForm';
 import { ImageUpload } from '../components/ImageUpload';
@@ -37,7 +39,13 @@ export function TrabajoDetalle() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
   const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
+const [isZoomed, setIsZoomed] = useState(false);
+const [showGallery, setShowGallery] = useState(false);
+// Panning state with refs for continuous dragging
+const panPosition = useRef({ x: 0, y: 0 });
+const isDragging = useRef(false);
+const dragStart = useRef({ x: 0, y: 0 });
+const [panState, setPanState] = useState({ x: 0, y: 0 }); // For React re-render
 
   // Handle close image modal
   const handleCloseImage = useCallback(() => {
@@ -45,18 +53,12 @@ export function TrabajoDetalle() {
     setSelectedImageId(null);
     setIsZoomed(false);
     setImageFullscreenOpen(false);
+    setShowGallery(false);
+    // Reset pan position
+    panPosition.current = { x: 0, y: 0 };
+    isDragging.current = false;
+    setPanState({ x: 0, y: 0 });
   }, [setImageFullscreenOpen]);
-
-  // Handle ESC to close image modal
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedImage) {
-        handleCloseImage();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage, handleCloseImage]);
   
   // Handler for uploading photos
   const handleUploadPhotos = async (files: File[]) => {
@@ -99,22 +101,136 @@ export function TrabajoDetalle() {
     }
   };
 
-  const handleEditSuccess = () => {
-    setEditingTrabajoId(null);
-  };
+const handleEditSuccess = () => {
+  setEditingTrabajoId(null);
+};
 
-  const handleSelectImage = (enlace: string, id: number) => {
-    setSelectedImage(enlace);
-    setSelectedImageId(id);
-    setIsZoomed(false);
-    setImageFullscreenOpen(true);
+// Navigation functions with pan reset
+const navigateImage = (direction: number) => {
+  if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
+  const currentIndex = trabajo.fotos.findIndex(f => f.enlace === selectedImage);
+  const nextIndex = (currentIndex + direction + trabajo.fotos.length) % trabajo.fotos.length;
+  setSelectedImage(trabajo.fotos[nextIndex].enlace);
+  setSelectedImageId(trabajo.fotos[nextIndex].id);
+  // Reset pan position
+  panPosition.current = { x: 0, y: 0 };
+  isDragging.current = false;
+  setPanState({ x: 0, y: 0 });
+};
+
+const navigateToImage = (index: number) => {
+  if (!trabajo?.fotos || index < 0 || index >= trabajo.fotos.length) return;
+  setSelectedImage(trabajo.fotos[index].enlace);
+  setSelectedImageId(trabajo.fotos[index].id);
+  setIsZoomed(false);
+  // Reset pan position
+  panPosition.current = { x: 0, y: 0 };
+  isDragging.current = false;
+  setPanState({ x: 0, y: 0 });
+};
+
+const openGallery = () => {
+  if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
+  setShowGallery(true);
+  setSelectedImage(trabajo.fotos[0].enlace);
+  setSelectedImageId(trabajo.fotos[0].id);
+  setIsZoomed(false);
+  // Reset pan position
+  panPosition.current = { x: 0, y: 0 };
+  isDragging.current = false;
+  setPanState({ x: 0, y: 0 });
+};
+
+// Robust panning handlers using document-level events for continuous dragging
+const hasDragged = useRef(false);
+const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  if (!isZoomed) return;
+  e.preventDefault();
+  isDragging.current = true;
+  hasDragged.current = false;
+  dragStart.current = {
+    x: e.clientX - panPosition.current.x * 1.5, // Account for scale compensation
+    y: e.clientY - panPosition.current.y * 1.5
   };
+}, [isZoomed]);
+
+const handleMouseMove = useCallback((e: MouseEvent) => {
+  if (!isDragging.current || !isZoomed) return;
+  
+  const newX = (e.clientX - dragStart.current.x) / 1.5; // Compensate for scale(1.5)
+  const newY = (e.clientY - dragStart.current.y) / 1.5;
+  
+  // Mark as dragged if moved more than 5 pixels (threshold to distinguish from click)
+  if (Math.abs(newX - panPosition.current.x) > 5 || Math.abs(newY - panPosition.current.y) > 5) {
+    hasDragged.current = true;
+  }
+  
+  panPosition.current = { x: newX, y: newY };
+  setPanState({ x: newX, y: newY });
+}, [isZoomed]);
+
+const handleMouseUp = useCallback(() => {
+  isDragging.current = false;
+}, []);
+
+// Touch handlers for mobile support
+const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  if (!isZoomed) return;
+  const touch = e.touches[0];
+  isDragging.current = true;
+  hasDragged.current = false;
+  dragStart.current = {
+    x: touch.clientX - panPosition.current.x * 1.5, // Account for scale compensation
+    y: touch.clientY - panPosition.current.y * 1.5
+  };
+}, [isZoomed]);
+
+const handleTouchMove = useCallback((e: TouchEvent) => {
+  if (!isDragging.current || !isZoomed) return;
+  e.preventDefault(); // Prevent page scroll while panning
+  const touch = e.touches[0];
+  const newX = (touch.clientX - dragStart.current.x) / 1.5; // Compensate for scale(1.5)
+  const newY = (touch.clientY - dragStart.current.y) / 1.5;
+  
+  // Mark as dragged if moved more than 5 pixels
+  if (Math.abs(newX - panPosition.current.x) > 5 || Math.abs(newY - panPosition.current.y) > 5) {
+    hasDragged.current = true;
+  }
+  
+  panPosition.current = { x: newX, y: newY };
+  setPanState({ x: newX, y: newY });
+}, [isZoomed]);
+
+const handleTouchEnd = useCallback(() => {
+  isDragging.current = false;
+}, []);
+
+// Setup document-level event listeners for continuous panning
+useEffect(() => {
+  if (isZoomed) {
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }
+}, [isZoomed, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+
+  
 
   const handleDeletePhoto = async () => {
     if (!trabajoId || selectedImageId === null) return;
     try {
       await eliminarFoto.mutateAsync({ idTrabajo: trabajoId, idImagen: selectedImageId });
-      handleCloseImage();
+      setShowDeletePhotoConfirm(false);
+      setSelectedImage(null);
+      setImageFullscreenOpen(false);
     } catch (err) {
       console.error('Error al eliminar foto:', err);
       setShowDeletePhotoConfirm(false);
@@ -261,27 +377,34 @@ export function TrabajoDetalle() {
           </div>
         )}
 
-        {/* Fotos */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Camera className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>FOTOS</span>
+{/* Fotos - con miniaturas */}
+        {trabajo.fotosCount > 0 ? (
+          <div className="card">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Camera className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>
+                  {trabajo.fotosCount} fotos
+                </span>
+              </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); }}
+                className="cursor-pointer"
+              >
+                <ImageUpload onUpload={handleUploadPhotos} />
+              </button>
             </div>
-            <span className="text-sm" style={{ color: 'var(--color-muted)' }}>
-              {trabajo.fotosCount} fotos
-            </span>
-          </div>
-          
-          {trabajo.fotosCount > 0 && trabajo.fotos ? (
-            <div className="grid grid-cols-4 gap-2">
-{trabajo.fotos.slice(0, 4).map((foto) => (
-                  <button
-                    key={foto.id}
-                    onClick={() => handleSelectImage(foto.enlace, foto.id)}
-                    className="aspect-square rounded-lg overflow-hidden cursor-pointer"
-                    style={{ backgroundColor: 'var(--color-surface)' }}
-                  >
+            
+            {/* Miniaturas clickeables */}
+            <div 
+              className="flex gap-2 cursor-pointer"
+              onClick={openGallery}
+            >
+              {trabajo.fotos?.slice(0, 4).map((foto) => (
+                <div
+                  key={foto.id}
+                  className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0"
+                >
                   <img
                     src={foto.enlace}
                     alt={`Foto ${foto.id}`}
@@ -289,34 +412,145 @@ export function TrabajoDetalle() {
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
-                      target.parentElement!.innerHTML = '<Camera class="w-6 h-6" style="color: var(--color-muted); opacity: 0.5;" />';
+                      target.parentElement!.innerHTML = '<Camera class="w-5 h-5" style="color: var(--color-muted); opacity: 0.5;" />';
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="card">
+            <p className="text-sm text-center py-4" style={{ color: 'var(--color-muted)' }}>
+              Sin fotos
+            </p>
+            <ImageUpload onUpload={handleUploadPhotos} />
+          </div>
+        )}
+
+        {/* Gallery modal - fullscreen with thumbnails + navigation */}
+        {showGallery && selectedImage && (
+          <div 
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95"
+          >
+            {/* Close button - top right */}
+            <button
+              onClick={() => {
+                setShowGallery(false);
+                setSelectedImage(null);
+                setIsZoomed(false);
+              }}
+              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Cerrar"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Delete button - top right, left of close */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowDeletePhotoConfirm(true); }}
+              className="absolute top-4 right-16 z-20 p-2 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors cursor-pointer"
+              aria-label="Eliminar foto"
+            >
+              <Trash2 className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Previous button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateImage(-1);
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Foto anterior"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Next button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateImage(1);
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+              aria-label="Foto siguiente"
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
+
+            {/* Main image with zoom and pan */}
+            <div 
+              className="relative flex items-center justify-center overflow-hidden"
+              style={{ height: 'calc(100vh - 200px)', width: '90vw' }}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
+              <img 
+                src={selectedImage} 
+                alt="Foto" 
+                draggable="false"
+                className={clsx(
+                  'object-contain transition-transform duration-300 select-none',
+                  isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+                )}
+                style={{
+                  transform: isZoomed 
+                    ? `translate(${panState.x}px, ${panState.y}px) scale(1.5)`
+                    : 'scale(1)',
+                  maxWidth: isZoomed ? 'none' : '90vw',
+                  maxHeight: isZoomed ? 'none' : '70vh',
+                  width: isZoomed ? 'auto' : undefined,
+                  height: isZoomed ? 'auto' : undefined,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!hasDragged.current) {
+                    setIsZoomed(!isZoomed);
+                  }
+                }}
+              />
+            </div>
+            
+            {/* Thumbnails strip at bottom */}
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex items-center gap-2 p-3 bg-black/60 rounded-xl overflow-x-auto max-w-[90vw]">
+              {trabajo.fotos?.map((foto, index) => (
+                <button
+                  key={foto.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToImage(index);
+                  }}
+                  className={clsx(
+                    'flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden cursor-pointer transition-all',
+                    selectedImage === foto.enlace 
+                      ? 'ring-2 ring-white opacity-100' 
+                      : 'opacity-40 hover:opacity-80'
+                  )}
+                >
+                  <img
+                    src={foto.enlace}
+                    alt={`Foto ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.parentElement!.innerHTML = '<Camera class="w-3 h-3" style="color: white; opacity: 0.5;" />';
                     }}
                   />
                 </button>
               ))}
-              {trabajo.fotosCount > 4 && (
-                <div 
-                  className="aspect-square rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: 'var(--color-surface)' }}
-                >
-                  <span className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                    +{trabajo.fotosCount - 4}
-                  </span>
-                </div>
-              )}
             </div>
-          ) : (
-            <p className="text-sm text-center py-4" style={{ color: 'var(--color-muted)' }}>
-              Sin fotos
-            </p>
-          )}
-          
-          {/* Upload new photos */}
-          <ImageUpload onUpload={handleUploadPhotos} />
-        </div>
 
-        {/* Image modal - imagen grande con zoom */}
-        {selectedImage && (
+            {/* Counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-sm">
+              {(trabajo.fotos?.findIndex(f => f.enlace === selectedImage) ?? -1) + 1} / {trabajo.fotosCount}
+            </div>
+          </div>
+        )}
+
+        {/* Image modal - solo cuando NO está en modo galería */}
+        {selectedImage && !showGallery && (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
             onClick={handleCloseImage}
@@ -349,22 +583,38 @@ export function TrabajoDetalle() {
               {isZoomed ? 'Salir del zoom' : 'Hacer zoom'}
             </button>
             
-            {/* Imagen - transitions smoothly between zoom states */}
-            <img 
-              src={selectedImage} 
-              alt="Foto ampliada" 
-              className={clsx(
-                'object-contain transition-all duration-300 cursor-zoom-in',
-                isZoomed 
-                  ? 'max-w-none max-h-none w-auto h-auto scale-150' 
-                  : 'max-h-[90vh] max-w-[90vw]'
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isZoomed) setIsZoomed(true);
-              }}
-              style={isZoomed ? { cursor: 'zoom-out' } : undefined}
-            />
+            {/* Imagen con zoom y pan */}
+            <div 
+              className="relative flex items-center justify-center overflow-hidden"
+              style={{ height: 'calc(100vh - 100px)', width: '90vw' }}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
+            >
+              <img 
+                src={selectedImage} 
+                alt="Foto ampliada" 
+                draggable="false"
+                className={clsx(
+                  'object-contain transition-transform duration-300 select-none',
+                  isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+                )}
+                style={{
+                  transform: isZoomed 
+                    ? `translate(${panState.x}px, ${panState.y}px) scale(1.5)`
+                    : 'scale(1)',
+                  maxWidth: isZoomed ? 'none' : '90vw',
+                  maxHeight: isZoomed ? 'none' : '90vh',
+                  width: isZoomed ? 'auto' : undefined,
+                  height: isZoomed ? 'auto' : undefined,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!hasDragged.current) {
+                    setIsZoomed(!isZoomed);
+                  }
+                }}
+              />
+            </div>
           </div>
         )}
 

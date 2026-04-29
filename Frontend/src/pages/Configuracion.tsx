@@ -93,14 +93,8 @@ export function Configuracion() {
     queryFn: fetchCostoHora,
   });
   
-  // Local state for costo hora input
-  const [costoHoraInput, setCostoHoraInput] = useState<string>('');
-  
-  useEffect(() => {
-    if (costoHora !== undefined) {
-      setCostoHoraInput(costoHora.toString());
-    }
-  }, [costoHora]);
+  // Local state for costo hora input - initialize with costoHora
+  const [costoHoraInput, setCostoHoraInput] = useState<string>(() => costoHora?.toString() || '');
   
   // Mutation for updating costo hora
   const updateCostoHoraMutation = useMutation({

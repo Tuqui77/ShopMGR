@@ -17,27 +17,48 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const { showClienteForm, setShowClienteForm, setEditingCliente } = useStore();
   const crearCliente = useCrearCliente();
   const modificarCliente = useModificarCliente();
-  const [nombre, setNombre] = useState('');
-  const [cuit, setCuit] = useState('');
+  
+  // Initialize state with cliente data if editing
+  const [nombre, setNombre] = useState(cliente?.nombreCompleto || '');
+  const [cuit, setCuit] = useState(cliente?.cuit || '');
   
   // Only needed for create mode
   const [telefonoInput, setTelefonoInput] = useState('');
   const [telefonoDesc, setTelefonoDesc] = useState('');
-  const [telefonos, setTelefonos] = useState<{ id: number; telefono: string; descripcion: string }[]>([]);
-  const [calle, setCalle] = useState('');
-  const [altura, setAltura] = useState('');
-  const [ciudad, setCiudad] = useState('');
-  const [piso, setPiso] = useState('');
-  const [departamento, setDepartamento] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [codigoPostal, setCodigoPostal] = useState('');
+  const [telefonos, setTelefonos] = useState<{ id: number; telefono: string; descripcion: string }[]>(
+    () => {
+      if (!cliente?.telefonosCompletos && !cliente?.telefono) return [];
+      if (cliente.telefonosCompletos && Array.isArray(cliente.telefonosCompletos)) {
+        return cliente.telefonosCompletos.map(t => ({
+          id: t.id || 0,
+          telefono: t.telefono,
+          descripcion: t.descripcion || 'Principal',
+        }));
+      } else if (cliente.telefono && Array.isArray(cliente.telefono)) {
+        return cliente.telefono.map((t: unknown, idx: number) => ({
+          id: idx,
+          telefono: typeof t === 'string' ? t : String(t),
+          descripcion: 'Principal',
+        }));
+      }
+      return [];
+    }
+  );
+  const [calle, setCalle] = useState(cliente?.direcciones?.[0]?.calle || '');
+  const [altura, setAltura] = useState(cliente?.direcciones?.[0]?.altura || '');
+  const [ciudad, setCiudad] = useState(cliente?.direcciones?.[0]?.ciudad || '');
+  const [piso, setPiso] = useState(cliente?.direcciones?.[0]?.piso || '');
+  const [departamento, setDepartamento] = useState(cliente?.direcciones?.[0]?.departamento || '');
+  const [descripcion, setDescripcion] = useState(cliente?.direcciones?.[0]?.descripcion || '');
+  const [codigoPostal, setCodigoPostal] = useState(cliente?.direcciones?.[0]?.codigoPostal || '');
+  
   const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
 
   const formVisible = isEditing || showClienteForm;
-
+ 
   // useCallback needs to be at top level, before any conditionals
   const handleClose = useCallback(() => {
     if (isEditing) {
@@ -61,49 +82,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     setShowSuccess(false);
     setEditingTelefonoIndex(null);
   }, [isEditing, setEditingCliente, setShowClienteForm]);
-
-  // Cargar datos del cliente en modo edición
-  useEffect(() => {
-    const c = cliente;
-    if (!c) return;
-    
-    setNombre(c.nombreCompleto || '');
-    setCuit(c.cuit || '');
-    
-    // Only load phones/directions for create mode
-    if (!isEditing) {
-      // Cargar teléfonos desde telefonosCompletos (estructura con descripcion)
-      if (c.telefonosCompletos && Array.isArray(c.telefonosCompletos)) {
-        setTelefonos(c.telefonosCompletos.map(t => ({
-          id: t.id || 0,
-          telefono: t.telefono,
-          descripcion: t.descripcion || 'Principal',
-        })));
-      } else if (c.telefono && Array.isArray(c.telefono)) {
-        // Fallback: telefono como array de strings
-        const telefonosData = c.telefono.map((t: unknown, idx: number) => {
-          if (typeof t === 'string') return { id: idx, telefono: t, descripcion: 'Principal' };
-          return { id: idx, telefono: t as string, descripcion: 'Principal' };
-        });
-        setTelefonos(telefonosData);
-      }
-      
-      // Cargar dirección desde direccionesCompletas
-      if (c.direccionesCompletas && c.direccionesCompletas.length > 0) {
-        const dir = c.direccionesCompletas[0];
-        setCalle(dir.calle || '');
-        setAltura(dir.altura || '');
-      } else if (c.direccion) {
-        // Fallback: direccion como string
-        const parts = c.direccion.split(' ');
-        if (parts.length >= 2) {
-          setCalle(parts.slice(0, -1).join(' '));
-          setAltura(parts[parts.length - 1]);
-        }
-      }
-    }
-  }, [cliente, isEditing]);
-
+  
   // Cerrar con ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {

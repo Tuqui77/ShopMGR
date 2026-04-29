@@ -9,7 +9,6 @@ interface TelefonoModalProps {
   telefono?: TelefonoCompleto;
   clienteId: number;
   isOpen: boolean;
-  onClose: () => void;
   isNew?: boolean;
 }
 
@@ -17,32 +16,30 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(isNew);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState({
-    telefono: '',
-    descripcion: '',
-  });
-
-  useEffect(() => {
+  const [formData, setFormData] = useState(() => {
     if (telefono && !isNew) {
-      setFormData({
+      return {
         telefono: telefono.telefono || '',
         descripcion: telefono.descripcion || '',
-      });
-    } else if (isNew) {
-      setFormData({ telefono: '', descripcion: '' });
+      };
     }
-  }, [telefono, isNew]);
+    return { telefono: '', descripcion: '' };
+  });
+  
+  const onCloseCallback = useCallback(() => {
+    onClose();
+  }, [onClose]);
 
   // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        onCloseCallback();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onCloseCallback]);
 
   const crearMut = useMutation({
     mutationFn: () => telefonosService.crear(
@@ -52,7 +49,7 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
     ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes', clienteId] });
-      onClose();
+      onCloseCallback();
     },
   });
 
@@ -62,7 +59,7 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes', clienteId] });
       setIsEditing(false);
-      onClose();
+      onCloseCallback();
     },
   });
 
@@ -70,7 +67,7 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
     mutationFn: () => telefonosService.eliminar(telefono!.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes', clienteId] });
-      onClose();
+      onCloseCallback();
     },
   });
 
@@ -133,7 +130,7 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
     <div 
       className="modal-backdrop flex items-center justify-center p-4"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) onCloseCallback();
       }}
     >
       <div 
@@ -199,7 +196,7 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
               <button 
                 onClick={() => {
                   if (isNew) {
-                    onClose();
+                    onCloseCallback();
                   } else {
                     setIsEditing(false);
                     // Reset form to original values
