@@ -44,13 +44,13 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       return [];
     }
   );
-  const [calle, setCalle] = useState(cliente?.direcciones?.[0]?.calle || '');
-  const [altura, setAltura] = useState(cliente?.direcciones?.[0]?.altura || '');
-  const [ciudad, setCiudad] = useState(cliente?.direcciones?.[0]?.ciudad || '');
-  const [piso, setPiso] = useState(cliente?.direcciones?.[0]?.piso || '');
-  const [departamento, setDepartamento] = useState(cliente?.direcciones?.[0]?.departamento || '');
-  const [descripcion, setDescripcion] = useState(cliente?.direcciones?.[0]?.descripcion || '');
-  const [codigoPostal, setCodigoPostal] = useState(cliente?.direcciones?.[0]?.codigoPostal || '');
+  const [calle, setCalle] = useState(cliente?.direccionesCompletas?.[0]?.calle || '');
+  const [altura, setAltura] = useState(cliente?.direccionesCompletas?.[0]?.altura || '');
+  const [ciudad, setCiudad] = useState(cliente?.direccionesCompletas?.[0]?.ciudad || '');
+  const [piso, setPiso] = useState(cliente?.direccionesCompletas?.[0]?.piso || '');
+  const [departamento, setDepartamento] = useState(cliente?.direccionesCompletas?.[0]?.departamento || '');
+  const [descripcion, setDescripcion] = useState(cliente?.direccionesCompletas?.[0]?.descripcion || '');
+  const [codigoPostal, setCodigoPostal] = useState(cliente?.direccionesCompletas?.[0]?.codigoPostal || '');
   
   const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
   
