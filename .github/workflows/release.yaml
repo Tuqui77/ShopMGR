@@ -52,7 +52,7 @@ jobs:
 
       - name: Construir frontend
         if: steps.comprobar_version.outputs.release == 'true'
-        run: docker build -t ghcr.io/tuqui77/shopmgr_frontend:$VERSION ./Frontend
+        run: docker build -t ghcr.io/tuqui77/shopmgr_frontend:$VERSION -f Frontend/Dockerfile .
       - name: Push frontend
         if: steps.comprobar_version.outputs.release == 'true'
         run: docker push ghcr.io/tuqui77/shopmgr_frontend:$VERSION
