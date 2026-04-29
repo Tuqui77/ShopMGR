@@ -8,11 +8,13 @@ interface ImageFile {
 }
 
 interface Props {
+  onUpload?: (files: File[]) => Promise<void>;
   onUploadComplete?: (files: File[]) => void;
   maxFiles?: number;
 }
 
 export function ImageUpload({
+  onUpload,
   onUploadComplete,
   maxFiles,
 }: Props = {}) {
