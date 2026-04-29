@@ -29,15 +29,30 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Leer version
-        run: echo "VERSION=$(cat version.txt") >> $GITHUB_ENV
+      - name: Comprobar version
+        id: comprobar_version
+        run: |
+          if [ -f version.txt ]; then
+              echo "release=true" >> $GITHUB_OUTPUT
+              echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+          else
+              echo "release=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login GHCR
+        if: steps.comprobar_version.outputs.release == 'true'
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Construir backend
+        if: steps.comprobar_version.outputs.release == 'true'
         run: docker build -t ghcr.io/Tuqui77/backend:$VERSION ./
       - name: Push backend
+        if: steps.comprobar_version.outputs.release == 'true'
         run: docker push ghcr.io/Tuqui77/backend:$VERSION
 
       - name: Construir frontend
+        if: steps.comprobar_version.outputs.release == 'true'
         run: docker build -t ghcr.io/Tuqui77/frontend:$VERSION ./frontend
       - name: Push frontend
+        if: steps.comprobar_version.outputs.release == 'true'
         run: docker push ghcr.io/Tuqui77/frontend:$VERSION
