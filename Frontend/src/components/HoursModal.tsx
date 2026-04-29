@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { useTrabajos, useAgregarHoras } from '../hooks/useTrabajos';
 import { useCostoHora } from '../hooks/useCostoHora';

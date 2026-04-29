@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useCrearPresupuesto, useModificarPresupuesto, usePresupuestoDetalle } from '../hooks/usePresupuestos';
@@ -14,13 +14,13 @@ interface Props {
 }
 
 // Si no se pasa isOpen, usa el store
-export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose, onSuccess }: Props = {}) {
+export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
   const store = useStore();
   const isEditing = !!presupuestoId;
   
   // Usar props si se pasan, sino usar store
   const isOpen = isOpenProp ?? store.showPresupuestoForm;
-  const onClose = onClose ?? (() => store.setShowPresupuestoForm(false));
+  const onClose = onCloseProp ?? (() => store.setShowPresupuestoForm(false));
   
   // Queries y mutations
   const { data: clientes = [] } = useClientes();
@@ -66,11 +66,11 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose, on
   const [materiales, setMateriales] = useState<MaterialRequest[]>(() => {
     const source = presupuestoOriginal?.materiales || store.datosDuplicarPresupuesto?.materiales;
     if (source && Array.isArray(source)) {
-      return source.map(m => ({
+      return source.map((m: any) => ({
         descripcion: m.descripcion || '',
         cantidad: m.cantidad || 1,
-        precioUnitario: m.precioUnitario || 0,
-      }));
+        Precio: m.Precio ?? m.precio ?? m.precioUnitario ?? 0,
+      } as MaterialRequest));
     }
     return [];
   });

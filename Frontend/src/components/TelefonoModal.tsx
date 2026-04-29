@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { Loader2, X, Edit, Trash2, Save } from 'lucide-react';
 import type { TelefonoCompleto } from '../types';
@@ -9,6 +9,7 @@ interface TelefonoModalProps {
   telefono?: TelefonoCompleto;
   clienteId: number;
   isOpen: boolean;
+  onClose?: () => void;
   isNew?: boolean;
 }
 
@@ -27,7 +28,7 @@ export function TelefonoModal({ telefono, clienteId, isOpen, onClose, isNew = fa
   });
   
   const onCloseCallback = useCallback(() => {
-    onClose();
+    onClose?.();
   }, [onClose]);
 
   // Handle ESC key
