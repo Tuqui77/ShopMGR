@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useCrearPresupuesto, useModificarPresupuesto, usePresupuestoDetalle } from '../hooks/usePresupuestos';
@@ -14,13 +14,19 @@ interface Props {
 }
 
 // Si no se pasa isOpen, usa el store
-export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose, onSuccess }: Props = {}) {
+export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
   const store = useStore();
   const isEditing = !!presupuestoId;
   
   // Usar props si se pasan, sino usar store
   const isOpen = isOpenProp ?? store.showPresupuestoForm;
-  const onClose = onClose ?? (() => store.setShowPresupuestoForm(false));
+  const onClose = useCallback(() => {
+    if (onCloseProp) {
+      onCloseProp();
+    } else {
+      store.setShowPresupuestoForm(false);
+    }
+  }, [onCloseProp, store]);
   
   // Queries y mutations
   const { data: clientes = [] } = useClientes();
@@ -65,14 +71,17 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose, on
   // Materiales - initialize with presupuestoOriginal if editing, or duplication data
   const [materiales, setMateriales] = useState<MaterialRequest[]>(() => {
     const source = presupuestoOriginal?.materiales || store.datosDuplicarPresupuesto?.materiales;
-    if (source && Array.isArray(source)) {
-      return source.map(m => ({
-        descripcion: m.descripcion || '',
-        cantidad: m.cantidad || 1,
-        precioUnitario: m.precioUnitario || 0,
-      }));
+    if (!source || !Array.isArray(source)) {
+      return [];
     }
-    return [];
+    
+    return source.map((item: unknown) => {
+      const obj = item as Record<string, unknown>;
+      const descripcion = (obj['descripcion'] as string) || '';
+      const cantidad = (obj['cantidad'] as number) || 1;
+      const Precio = (obj['Precio'] as number) ?? (obj['precioUnitario'] as number) ?? (obj['precio'] as number) ?? 0;
+      return { descripcion, cantidad, Precio } as MaterialRequest;
+    });
   });
   
   const [nuevoMaterial, setNuevoMaterial] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
