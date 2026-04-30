@@ -100,7 +100,7 @@ export function ImageUpload({
         inputRef.current.value = '';
       }
     }
-  }, [maxFiles, images.length, onUploadComplete]);
+  }, [maxFiles, images.length, onUploadComplete, onUpload]);
 
   const handleRemove = useCallback((id: string) => {
     setImages(prev => {
