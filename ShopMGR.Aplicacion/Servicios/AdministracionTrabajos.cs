@@ -43,6 +43,24 @@ namespace ShopMGR.Aplicacion.Servicios
             return trabajo;
         }
 
+        public async Task<Trabajo> CrearDesdePresupuestoAsync(int idPresupuesto)
+        {
+            var presupuesto =
+                await _repositorioPresupuestos.ObtenerDetallePorIdAsync(idPresupuesto)
+                ?? throw new KeyNotFoundException($"No hay un presupuesto con el ID {idPresupuesto}");
+
+            var trabajoDTO = new TrabajoDTO
+            {
+                Titulo = presupuesto.Titulo,
+                Descripcion = presupuesto.Descripcion ?? null,
+                IdCliente = presupuesto.IdCliente,
+                IdPresupuesto = presupuesto.Id,
+                Estado = EstadoTrabajo.Pendiente,
+            };
+
+            return await CrearAsync(trabajoDTO);
+        }
+
         public async Task<List<Trabajo>> ListarTodosAsync()
         {
             return await _repositorio.ListarTodosAsync();
@@ -66,7 +84,8 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task EliminarFotoAsync(int idTrabajo, int idImagen)
         {
             var trabajoConFoto = await _repositorio.ObtenerPorIdConFotoAsync(idTrabajo);
-            var foto = trabajoConFoto.Fotos.FirstOrDefault(f => f.Id == idImagen)
+            var foto =
+                trabajoConFoto.Fotos.FirstOrDefault(f => f.Id == idImagen)
                 ?? throw new KeyNotFoundException("No existe una foto con ese id");
             var rutaRelativa = foto.RutaRelativa;
 

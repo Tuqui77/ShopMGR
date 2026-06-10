@@ -29,6 +29,14 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajo);
         }
 
+        [HttpPost]
+        [Route("CrearTrabajoDePresupuesto")]
+        public async Task<IActionResult> CrearTrabajoDePresupuesto(int idPresupuesto)
+        {
+            await administrarTrabajos.CrearDesdePresupuestoAsync(idPresupuesto);
+            return Ok();
+        }
+
         [HttpGet]
         [Route("ObtenerListaTrabajos")]
         public async Task<IActionResult> ObtenerListaTrabajos()

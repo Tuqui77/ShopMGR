@@ -3,8 +3,9 @@ import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useCrearPresupuesto, useModificarPresupuesto, usePresupuestoDetalle } from '../hooks/usePresupuestos';
 import type { Cliente, MaterialRequest } from '../types';
-import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft } from 'lucide-react';
+import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft, Calculator } from 'lucide-react';
 import clsx from 'clsx';
+import { CalculatorModal } from './CalculatorModal';
 
 interface Props {
   presupuestoId?: number;
@@ -94,6 +95,20 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   const [showSuccess, setShowSuccess] = useState(false);
   const [esDuplicado, setEsDuplicado] = useState(() => !!store.datosDuplicarPresupuesto);
 
+  // Cuando se edita y los datos del presupuesto cargan, ir directo al step datos
+  // con el cliente pre-seleccionado, sin pasar por selección de cliente
+  useEffect(() => {
+    if (isEditing && presupuestoOriginal?.cliente) {
+      setClienteSeleccionado(presupuestoOriginal.cliente);
+      setStep('datos');
+    }
+  }, [isEditing, presupuestoOriginal]);
+
+  // Estado para la calculadora
+  const [calculatorField, setCalculatorField] = useState<'cantidad' | 'precio' | 'editCantidad' | 'editPrecio' | null>(null);
+  const [calculatorPosition, setCalculatorPosition] = useState({ x: 0, y: 0 });
+  const [calculatorEditIndex, setCalculatorEditIndex] = useState<number | null>(null);
+
   const handleClose = useCallback(() => {
     // Usar onClose si se pasa, sino usar store
     const closeFn = onClose ?? (() => store.setShowPresupuestoForm(false));
@@ -157,7 +172,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   };
 
   const handleAddMaterial = () => {
-    if (nuevoMaterial.descripcion.trim() && nuevoMaterial.cantidad > 0 && nuevoMaterial.precioUnitario > 0) {
+    if (nuevoMaterial.descripcion.trim() && nuevoMaterial.cantidad > 0 && nuevoMaterial.precioUnitario >= 0) {
       // Map precioUnitario to Precio for backend compatibility
       setMateriales([...materiales, { 
         descripcion: nuevoMaterial.descripcion, 
@@ -195,6 +210,42 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   const handleCancelEditMaterial = () => {
     setMaterialEditando(null);
+  };
+
+  // Manejar resultado de la calculadora
+  const handleCalculatorResult = (value: number, shouldApply: boolean) => {
+    if (!shouldApply) return; // Si no se aplica, no hacer nada (el usuario sigue calculando)
+
+    if (calculatorField === 'cantidad') {
+      setNuevoMaterial({ ...nuevoMaterial, cantidad: value });
+      setCalculatorField(null);
+    } else if (calculatorField === 'precio') {
+      setNuevoMaterial({ ...nuevoMaterial, precioUnitario: value });
+      setCalculatorField(null);
+    } else if (calculatorField === 'editCantidad' && calculatorEditIndex !== null) {
+      setMaterialEditandoData({ ...materialEditandoData, cantidad: value });
+      setCalculatorField(null);
+      setCalculatorEditIndex(null);
+    } else if (calculatorField === 'editPrecio' && calculatorEditIndex !== null) {
+      setMaterialEditandoData({ ...materialEditandoData, precioUnitario: value });
+      setCalculatorField(null);
+      setCalculatorEditIndex(null);
+    }
+  };
+
+  // Abrir calculadora
+  const openCalculator = (field: 'cantidad' | 'precio' | 'editCantidad' | 'editPrecio', e: React.MouseEvent, editIndex?: number) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    // Posicionar cerca del botón; la calculadora misma ajusta a la pantalla
+    setCalculatorPosition({
+      x: Math.min(rect.left, rect.right - 280),
+      y: rect.bottom + 4,
+    });
+    setCalculatorField(field);
+    if (editIndex !== undefined) {
+      setCalculatorEditIndex(editIndex);
+    }
   };
 
   const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * (m.Precio || m.precioUnitario || 0)), 0);
@@ -436,22 +487,43 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                               placeholder="Material"
                               className="input col-span-2"
                             />
-                            <input
-                              type="number"
-                              value={materialEditandoData.cantidad || ''}
-                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, cantidad: parseInt(e.target.value) || 0 })}
-                              placeholder="Cant."
-                              min={1}
-                              className="input col-span-1"
-                            />
-                            <input
-                              type="number"
-                              value={materialEditandoData.precioUnitario || ''}
-                              onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, precioUnitario: parseFloat(e.target.value) || 0 })}
-                              placeholder="Precio"
-                              min={0}
-                              className="input col-span-1"
-                            />
+                            <div className="relative col-span-1">
+                              <input
+                                type="number"
+                                value={materialEditandoData.cantidad || ''}
+                                onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, cantidad: parseFloat(e.target.value) || 0 })}
+                                placeholder="Cant."
+                                min={0}
+                                step={0.01}
+                                className="input w-full pr-8"
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => openCalculator('editCantidad', e, index)}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
+                                aria-label="Open calculator for quantity"
+                              >
+                                <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
+                              </button>
+                            </div>
+                            <div className="relative col-span-1">
+                              <input
+                                type="number"
+                                value={materialEditandoData.precioUnitario || ''}
+                                onChange={(e) => setMaterialEditandoData({ ...materialEditandoData, precioUnitario: parseFloat(e.target.value) || 0 })}
+                                placeholder="Precio"
+                                min={0}
+                                className="input w-full pr-8"
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => openCalculator('editPrecio', e, index)}
+                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
+                                aria-label="Open calculator for price"
+                              >
+                                <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
+                              </button>
+                            </div>
                           </div>
                           <div className="flex justify-between items-center">
                             <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
@@ -513,27 +585,48 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                     placeholder="Material"
                     className="input col-span-2"
                   />
+                  <div className="relative col-span-1">
                   <input
                     type="number"
                     value={nuevoMaterial.cantidad || ''}
-                    onChange={(e) => setNuevoMaterial({ ...nuevoMaterial, cantidad: parseInt(e.target.value) || 0 })}
+                    onChange={(e) => setNuevoMaterial({ ...nuevoMaterial, cantidad: parseFloat(e.target.value) || 0 })}
                     placeholder="Cant."
-                    min={1}
-                    className="input col-span-1"
-                  />
-                  <input
-                    type="number"
-                    value={nuevoMaterial.precioUnitario || ''}
-                    onChange={(e) => setNuevoMaterial({ ...nuevoMaterial, precioUnitario: parseFloat(e.target.value) || 0 })}
-                    placeholder="Precio"
                     min={0}
-                    className="input col-span-1"
+                    step={0.01}
+                    className="input w-full pr-8"
                   />
+                    <button
+                      type="button"
+                      onClick={(e) => openCalculator('cantidad', e)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
+                      aria-label="Open calculator for quantity"
+                    >
+                      <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
+                    </button>
+                  </div>
+                  <div className="relative col-span-1">
+                    <input
+                      type="number"
+                      value={nuevoMaterial.precioUnitario || ''}
+                      onChange={(e) => setNuevoMaterial({ ...nuevoMaterial, precioUnitario: parseFloat(e.target.value) || 0 })}
+                      placeholder="Precio"
+                      min={0}
+                      className="input w-full pr-8"
+                    />
+                    <button
+                      type="button"
+                      onClick={(e) => openCalculator('precio', e)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
+                      aria-label="Open calculator for price"
+                    >
+                      <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
+                    </button>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={handleAddMaterial}
-                  disabled={!nuevoMaterial.descripcion.trim() || !nuevoMaterial.cantidad || !nuevoMaterial.precioUnitario}
+                  disabled={!nuevoMaterial.descripcion.trim() || !nuevoMaterial.cantidad || (nuevoMaterial.precioUnitario === undefined || nuevoMaterial.precioUnitario === null)}
                   className="btn-secondary w-full mt-2"
                 >
                   <Plus className="w-4 h-4 mr-1" />
@@ -574,6 +667,18 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
           )}
         </div>
       </div>
+      
+      {/* Calculator Modal */}
+      {calculatorField && (
+        <CalculatorModal
+          position={calculatorPosition}
+          onResult={handleCalculatorResult}
+          onClose={() => {
+            setCalculatorField(null);
+            setCalculatorEditIndex(null);
+          }}
+        />
+      )}
     </>
   );
 }
