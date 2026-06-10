@@ -313,7 +313,7 @@ useEffect(() => {
               <div className="flex-1">
                 <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.cliente.nombreCompleto}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
+                  {trabajo.cliente.telefono?.[0] || clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
                 </p>
               </div>
             </Link>

@@ -332,7 +332,7 @@ export function PresupuestoDetalle() {
               <div className="flex-1">
                 <p className="font-medium" style={{ color: 'var(--color-text)' }}>{presupuesto.cliente.nombreCompleto}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
+                  {presupuesto.cliente.telefono?.[0] || clienteCompleto?.telefono?.[0] || 'Sin teléfono'}
                 </p>
               </div>
             </Link>
