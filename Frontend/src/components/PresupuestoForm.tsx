@@ -95,6 +95,15 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   const [showSuccess, setShowSuccess] = useState(false);
   const [esDuplicado, setEsDuplicado] = useState(() => !!store.datosDuplicarPresupuesto);
 
+  // Cuando se edita y los datos del presupuesto cargan, ir directo al step datos
+  // con el cliente pre-seleccionado, sin pasar por selección de cliente
+  useEffect(() => {
+    if (isEditing && presupuestoOriginal?.cliente) {
+      setClienteSeleccionado(presupuestoOriginal.cliente);
+      setStep('datos');
+    }
+  }, [isEditing, presupuestoOriginal]);
+
   // Estado para la calculadora
   const [calculatorField, setCalculatorField] = useState<'cantidad' | 'precio' | 'editCantidad' | 'editPrecio' | null>(null);
   const [calculatorPosition, setCalculatorPosition] = useState({ x: 0, y: 0 });
