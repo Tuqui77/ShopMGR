@@ -244,6 +244,14 @@ export const trabajosService = {
   },
 
   /**
+   * Crea un trabajo a partir de un presupuesto aceptado
+   * (endpoint dedicado en TrabajosController)
+   */
+  async crearDesdePresupuesto(idPresupuesto: number): Promise<void> {
+    await apiClient.post(`/Trabajos/CrearTrabajoDePresupuesto?idPresupuesto=${idPresupuesto}`);
+  },
+
+  /**
    * Sube fotos a un trabajo
    */
   async subirFotos(idTrabajo: number, fotos: FileList | File[]): Promise<string> {

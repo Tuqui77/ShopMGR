@@ -20,6 +20,9 @@ export function Presupuestos() {
     onError: (error: Error) => {
       setMutationError(error.message);
     },
+    onSuccess: () => {
+      setSuccessMessage('Presupuesto aceptado y trabajo creado exitosamente');
+    },
   });
   const rechazarMutation = useRechazarPresupuesto({
     onError: (error: Error) => {
@@ -34,8 +37,9 @@ export function Presupuestos() {
     titulo: string;
   } | null>(null);
   
-  // Error state
+  // Error / Success states
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Filter by client if provided
   const filtered = presupuestos?.filter(p => {
@@ -123,6 +127,19 @@ export function Presupuestos() {
   
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
+      {/* Success Banner */}
+      {successMessage && (
+        <div 
+          className="mx-4 mt-4 p-3 rounded-lg flex items-center justify-between"
+          style={{ backgroundColor: 'var(--color-success)', color: 'white' }}
+        >
+          <span className="text-sm">{successMessage}</span>
+          <button onClick={() => setSuccessMessage(null)} className="ml-2">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Mutation Error Banner */}
       {mutationError && (
         <div 
@@ -252,11 +269,11 @@ export function Presupuestos() {
                 ¿Confirmar acción?
               </h3>
               <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
-                ¿Estás seguro de que deseas{' '}
-                <span style={{ color: confirmAction.action === 'aceptar' ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                  {confirmAction.action === 'aceptar' ? 'aceptar' : 'rechazar'}
-                </span>{' '}
-                el presupuesto "<strong>{confirmAction.titulo}</strong>"?
+                {confirmAction.action === 'aceptar' ? (
+                  <>Se creará automáticamente un <strong>trabajo</strong> en estado <strong>Pendiente</strong> a partir del presupuesto.</>
+                ) : (
+                  'El presupuesto será rechazado.'
+                )}
               </p>
               <div className="flex gap-3">
                 <button 

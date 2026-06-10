@@ -13,6 +13,7 @@ import {
   Copy,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
+import { trabajosService } from '../services/trabajos';
 import { useState } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto, Cliente } from '../types';
@@ -140,8 +141,13 @@ export function PresupuestoDetalle() {
 
   const { data: clienteCompleto } = useClienteDetalle(presupuesto?.cliente?.id);
 
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const aceptarMutation = useMutation({
     mutationFn: async (id: number) => {
+      // Primero crear el trabajo desde el presupuesto
+      await trabajosService.crearDesdePresupuesto(id);
+      // Luego marcar el presupuesto como aceptado
       await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
         estado: 'Aceptado',
       });
@@ -149,6 +155,8 @@ export function PresupuestoDetalle() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });
       queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      setSuccessMessage('Presupuesto aceptado y trabajo creado exitosamente');
     },
   });
 
@@ -186,13 +194,19 @@ export function PresupuestoDetalle() {
     return <span className={`badge ${config.class}`}>{config.label}</span>;
   };
 
-  const handleAceptar = async () => {
-    if (presupuesto && confirm('¿Aceptar este presupuesto?')) {
-      try {
-        await aceptarMutation.mutateAsync(presupuesto.id);
-      } catch (err) {
-        console.error('Error al aceptar presupuesto:', err);
-      }
+  const [showAceptarConfirm, setShowAceptarConfirm] = useState(false);
+
+  const handleAceptar = () => {
+    setShowAceptarConfirm(true);
+  };
+
+  const handleConfirmAceptar = async () => {
+    if (!presupuesto) return;
+    setShowAceptarConfirm(false);
+    try {
+      await aceptarMutation.mutateAsync(presupuesto.id);
+    } catch (err) {
+      console.error('Error al aceptar presupuesto:', err);
     }
   };
 
@@ -285,6 +299,19 @@ export function PresupuestoDetalle() {
       </header>
 
       <section className="px-4 space-y-4">
+        {/* Success message */}
+        {successMessage && (
+          <div 
+            className="p-3 rounded-lg flex items-center justify-between"
+            style={{ backgroundColor: 'var(--color-success)', color: 'white' }}
+          >
+            <span className="text-sm">{successMessage}</span>
+            <button onClick={() => setSuccessMessage(null)} className="ml-2">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Card principal */}
         <div className="card">
           <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</h2>
@@ -442,6 +469,42 @@ export function PresupuestoDetalle() {
           </div>
         </div>
       </section>
+
+      {/* Modal de confirmación de aceptar (crea trabajo automáticamente) */}
+      {showAceptarConfirm && (
+        <>
+          <div className="modal-backdrop" onClick={() => setShowAceptarConfirm(false)} />
+          <div className="modal-content">
+            <div className="p-6 text-center">
+              <Check className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-success)' }} />
+              <h3 className="text-lg font-semibold mb-2">¿Aceptar presupuesto?</h3>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
+                Se creará automáticamente un <strong>trabajo</strong> en estado <strong>Pendiente</strong> a partir de este presupuesto.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button 
+                  onClick={() => setShowAceptarConfirm(false)}
+                  className="btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleConfirmAceptar}
+                  disabled={aceptarMutation.isPending}
+                  style={{ 
+                    backgroundColor: 'var(--color-success)',
+                    color: 'white',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '0.625rem 1rem'
+                  }}
+                >
+                  {aceptarMutation.isPending ? 'Aceptando...' : 'Aceptar y crear trabajo'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (
