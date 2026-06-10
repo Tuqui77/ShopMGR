@@ -1,12 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
-import { Home, Users, Wrench, Clipboard } from 'lucide-react';
+import { Home, Users, Wrench, Clipboard, Settings } from 'lucide-react';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
   { path: '/clientes', icon: Users, label: 'Clientes' },
   { path: '/trabajos', icon: Wrench, label: 'Trabajos' },
   { path: '/presupuestos', icon: Clipboard, label: 'Presup.' },
+  { path: '/configuracion', icon: Settings, label: 'Config.' },
 ];
 
 export function BottomNav() {
