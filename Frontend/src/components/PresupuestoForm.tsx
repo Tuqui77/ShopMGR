@@ -228,9 +228,10 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   const openCalculator = (field: 'cantidad' | 'precio' | 'editCantidad' | 'editPrecio', e: React.MouseEvent, editIndex?: number) => {
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
+    // Posicionar cerca del botón; la calculadora misma ajusta a la pantalla
     setCalculatorPosition({
-      x: rect.left - 260, // Posicionar a la izquierda del botón
-      y: rect.top,
+      x: Math.min(rect.left, rect.right - 280),
+      y: rect.bottom + 4,
     });
     setCalculatorField(field);
     if (editIndex !== undefined) {
