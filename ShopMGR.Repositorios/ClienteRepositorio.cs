@@ -13,9 +13,7 @@ namespace ShopMGR.Repositorios
         public async Task<Cliente> CrearAsync(Cliente cliente)
         {
             if (await _contexto.Clientes.AnyAsync(x => x.NombreCompleto == cliente.NombreCompleto))
-                throw new InvalidOperationException(
-                    $"Ya existe un cliente llamado {cliente.NombreCompleto}"
-                );
+                throw new InvalidOperationException($"Ya existe un cliente llamado {cliente.NombreCompleto}");
 
             _contexto.Clientes.Add(cliente);
             await _contexto.SaveChangesAsync();
@@ -73,15 +71,12 @@ namespace ShopMGR.Repositorios
         {
             // Filtrar por clientes que tienen movimientos con suma negativa
             var clientesConSaldoNegativo = await _contexto
-                .MovimientoBalance
-                .GroupBy(m => m.IdCliente)
+                .MovimientoBalance.GroupBy(m => m.IdCliente)
                 .Where(g => g.Sum(m => m.Monto) < 0)
                 .Select(g => g.Key)
                 .ToListAsync();
 
-            return await _contexto
-                .Clientes.Where(c => clientesConSaldoNegativo.Contains(c.Id))
-                .ToListAsync();
+            return await _contexto.Clientes.Where(c => clientesConSaldoNegativo.Contains(c.Id)).ToListAsync();
         }
 
         public async Task ActualizarAsync(Cliente cliente)
