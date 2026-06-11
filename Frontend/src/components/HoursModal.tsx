@@ -78,10 +78,6 @@ export function HoursModal() {
     }
   };
   
-  const handleQuickAdd = (amount: number) => {
-    setHours(prev => Math.min(prev + amount, 24));
-  };
-  
   const activeTrabajos = trabajos.filter(t => t.estado !== 'Terminado');
   const lastTrabajo = lastTrabajoId 
     ? trabajos.find(t => t.id === lastTrabajoId) 
@@ -132,7 +128,6 @@ export function HoursModal() {
               isSubmitting={agregarHorasMutation.isPending}
               onHoursChange={setHours}
               onDescriptionChange={setDescription}
-              onQuickAdd={handleQuickAdd}
               onSubmit={handleAddHours}
             />
           )}
@@ -228,6 +223,14 @@ function SelectTrabajoView({
   );
 }
 
+function formatHoursToTime(h: number): string {
+  const whole = Math.floor(h);
+  const mins = Math.round((h - whole) * 60);
+  if (whole === 0) return `${mins}m`;
+  if (mins === 0) return `${whole}h`;
+  return `${whole}h ${mins}m`;
+}
+
 function HoursInputView({
   trabajo,
   hours,
@@ -237,7 +240,6 @@ function HoursInputView({
   isSubmitting,
   onHoursChange,
   onDescriptionChange,
-  onQuickAdd,
   onSubmit,
 }: {
   trabajo: Trabajo;
@@ -248,10 +250,22 @@ function HoursInputView({
   isSubmitting: boolean;
   onHoursChange: (h: number) => void;
   onDescriptionChange: (d: string) => void;
-  onQuickAdd: (a: number) => void;
   onSubmit: () => void;
 }) {
   const costoNoConfigurado = !isLoading && (valorHora === undefined || valorHora === 0);
+  
+  const presetValues = [0.5, 1, 2, 4, 8];
+  
+  const handlePresetClick = (value: number) => {
+    onHoursChange(Math.min(value, 24));
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+    if (!isNaN(value)) {
+      onHoursChange(Math.min(Math.max(value, 0), 24));
+    }
+  };
   
   return (
     <div className="animate-fade-in">
@@ -261,52 +275,62 @@ function HoursInputView({
       </div>
       
       <div className="mb-6">
-        <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>HORAS TRABAJADAS</label>
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          <button 
-            onClick={() => onQuickAdd(0.5)}
-            className="btn-secondary py-4"
-          >
-            <span className="text-lg font-bold">+½</span>
-            <span className="text-xs" style={{ color: 'var(--color-muted)' }}>0.5h</span>
-          </button>
-          <button 
-            onClick={() => onQuickAdd(1)}
-            className="btn-secondary py-4"
-          >
-            <span className="text-lg font-bold">+1</span>
-            <span className="text-xs" style={{ color: 'var(--color-muted)' }}>1h</span>
-          </button>
-          <button 
-            onClick={() => onQuickAdd(2)}
-            className="btn-secondary py-4"
-          >
-            <span className="text-lg font-bold">+2</span>
-            <span className="text-xs" style={{ color: 'var(--color-muted)' }}>2h</span>
-          </button>
+        <label className="text-sm mb-3 block" style={{ color: 'var(--color-muted)' }}>HORAS TRABAJADAS</label>
+        
+        {/* Big number input – the hero */}
+        <div className="text-center mb-3">
+          <input
+            type="number"
+            value={hours}
+            onChange={handleInputChange}
+            min="0"
+            max="24"
+            step="0.25"
+            className="w-full text-center text-4xl font-bold font-mono bg-transparent border-none outline-none"
+            style={{ color: 'var(--color-text)' }}
+          />
+          <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
+            {formatHoursToTime(hours)}
+          </p>
         </div>
         
-        <button 
-          onClick={() => {
-            const input = prompt('¿Cuántas horas?', hours.toString());
-            if (input) onHoursChange(parseFloat(input) || 0);
-          }}
-          className="input text-center text-2xl font-bold font-mono"
-        >
-          {hours} horas
-        </button>
+        {/* Preset chips – set value directly */}
+        <div className="flex gap-2 justify-center flex-wrap mb-4">
+          {presetValues.map((value) => {
+            const isActive = Math.abs(hours - value) < 0.01;
+            return (
+              <button
+                key={value}
+                onClick={() => handlePresetClick(value)}
+                className={clsx(
+                  'px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer',
+                  isActive
+                    ? 'text-white'
+                    : 'hover:text-white'
+                )}
+                style={{
+                  backgroundColor: isActive ? 'var(--color-accent)' : 'var(--color-surface)',
+                  color: isActive ? '#fff' : 'var(--color-muted)',
+                  border: isActive ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
+                }}
+              >
+                {formatHoursToTime(value)}
+              </button>
+            );
+          })}
+        </div>
         
         {isLoading ? (
-          <p className="text-center text-sm mt-2 animate-pulse" style={{ color: 'var(--color-muted)' }}>
+          <p className="text-center text-sm animate-pulse" style={{ color: 'var(--color-muted)' }}>
             Cargando costo hora...
           </p>
         ) : costoNoConfigurado ? (
-          <p className="text-center text-sm mt-2" style={{ color: 'var(--color-warning)' }}>
+          <p className="text-center text-sm" style={{ color: 'var(--color-warning)' }}>
             Valor hora no configurado. Configurá el costo hora en Ajustes.
           </p>
         ) : (
-          <p className="text-center font-mono mt-2" style={{ color: 'var(--color-success)' }}>
-            {formatCurrency(hours * valorHora!)} (≈{hours}h @ {formatCurrency(valorHora!)}/h)
+          <p className="text-center font-mono text-lg" style={{ color: 'var(--color-success)' }}>
+            {formatCurrency(hours * valorHora!)} <span className="text-sm" style={{ color: 'var(--color-muted)' }}>({formatHoursToTime(hours)} @ {formatCurrency(valorHora!)}/h)</span>
           </p>
         )}
       </div>
