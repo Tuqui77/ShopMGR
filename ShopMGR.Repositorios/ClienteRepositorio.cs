@@ -28,6 +28,7 @@ namespace ShopMGR.Repositorios
             var clientes = await _contexto
                 .Clientes.Include(c => c.Trabajos)
                 .Include(c => c.Presupuestos)
+                .Include(c => c.MovimientosBalance)
                 .ToListAsync();
 
             return clientes;
@@ -51,6 +52,7 @@ namespace ShopMGR.Repositorios
                     .Include(c => c.Trabajos)
                         .ThenInclude(t => t.HorasDeTrabajo)
                     .Include(c => c.Presupuestos)
+                    .Include(c => c.MovimientosBalance)
                     .FirstOrDefaultAsync(x => x.Id == id)
                 ?? throw new KeyNotFoundException($"No se encontró un cliente con el ID {id}.");
 
