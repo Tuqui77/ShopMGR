@@ -12,6 +12,9 @@ export interface MovimientoBalanceRequest {
 
 export const movimientosService = {
   async crear(data: MovimientoBalanceRequest): Promise<void> {
-    await apiClient.post('/Movimiento/CrearMovimiento', data);
+    await apiClient.post('/Cliente/CrearMovimiento', {
+      ...data,
+      fecha: new Date().toISOString().split('T')[0],
+    });
   },
 };
