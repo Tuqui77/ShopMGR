@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
-import { X, Loader2, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, Loader2, ArrowUpRight, ArrowDownRight, Minus, Edit3, Trash2, Check, Ban } from 'lucide-react';
 import clsx from 'clsx';
 import type { MovimientoBalance, TipoMovimiento } from '../types';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
-import { useMovimientosCliente } from '../hooks/useMovimientosCliente';
+import { useMovimientosCliente, useModificarMovimiento, useEliminarMovimiento } from '../hooks/useMovimientosCliente';
 
 interface Props {
   clienteId: number;
@@ -22,16 +22,78 @@ const tipoConfig: Record<TipoMovimiento, { label: string; positive: boolean | 'n
 
 export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onClose }: Props) {
   const { data: movimientos, isLoading, error } = useMovimientosCliente(clienteId);
+  const modificarMovimiento = useModificarMovimiento();
+  const eliminarMovimiento = useEliminarMovimiento();
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<{
+    tipo: TipoMovimiento;
+    monto: string;
+    descripcion: string;
+    fecha: string;
+  } | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        if (editingId) {
+          cancelEdit();
+        } else {
+          onClose();
+        }
+      }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, editingId]);
+
+  function startEdit(mov: MovimientoBalance) {
+    setEditingId(mov.id);
+    setEditForm({
+      tipo: mov.tipo,
+      monto: String(mov.monto),
+      descripcion: mov.descripcion,
+      fecha: mov.fecha ? mov.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditForm(null);
+  }
+
+  async function saveEdit(mov: MovimientoBalance) {
+    if (!editForm) return;
+    try {
+      await modificarMovimiento.mutateAsync({
+        id: mov.id,
+        idCliente: mov.idCliente,
+        tipo: editForm.tipo,
+        monto: parseFloat(editForm.monto),
+        descripcion: editForm.descripcion,
+        fecha: editForm.fecha,
+        idTrabajo: mov.idTrabajo,
+      });
+      cancelEdit();
+    } catch (err) {
+      console.error('Error al modificar movimiento:', err);
+    }
+  }
+
+  async function handleDelete(mov: MovimientoBalance) {
+    if (!confirm(`¿Eliminar el movimiento "${mov.descripcion}"?`)) return;
+    setDeletingId(mov.id);
+    try {
+      await eliminarMovimiento.mutateAsync({ idMovimiento: mov.id, idCliente: mov.idCliente });
+    } catch (err) {
+      console.error('Error al eliminar movimiento:', err);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   if (!isOpen) return null;
 
@@ -50,7 +112,7 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
       <div className="modal-backdrop" onClick={onClose} />
       <div className="modal-content max-w-lg max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'var(--color-border, #e5e7eb)' }}>
+        <div className="flex items-center justify-between p-4 border-b shrink-0" style={{ borderColor: 'var(--color-border, #e5e7eb)' }}>
           <div className="min-w-0 flex-1">
             <h2 className="font-semibold text-lg truncate" style={{ color: 'var(--color-text)' }}>
               Movimientos
@@ -83,16 +145,33 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
             </div>
           ) : (
             <div className="space-y-2">
-              {movimientos.map((mov) => (
-                <MovimientoRow key={mov.id} movimiento={mov} />
-              ))}
+              {movimientos.map((mov) =>
+                editingId === mov.id ? (
+                  <MovimientoEditRow
+                    key={mov.id}
+                    editForm={editForm!}
+                    onChange={setEditForm}
+                    onSave={() => saveEdit(mov)}
+                    onCancel={cancelEdit}
+                    isPending={modificarMovimiento.isPending}
+                  />
+                ) : (
+                  <MovimientoRow
+                    key={mov.id}
+                    movimiento={mov}
+                    onEdit={() => startEdit(mov)}
+                    onDelete={() => handleDelete(mov)}
+                    isDeleting={deletingId === mov.id}
+                  />
+                )
+              )}
             </div>
           )}
         </div>
 
         {/* Footer summary */}
         {movimientos && movimientos.length > 0 && !isLoading && !error && (
-          <div className="p-4 border-t space-y-1.5" style={{ borderColor: 'var(--color-border, #e5e7eb)', backgroundColor: 'var(--color-surface, #f9fafb)' }}>
+          <div className="p-4 border-t space-y-1.5 shrink-0" style={{ borderColor: 'var(--color-border, #e5e7eb)', backgroundColor: 'var(--color-surface, #f9fafb)' }}>
             <div className="flex justify-between text-sm">
               <span style={{ color: 'var(--color-muted)' }}>Créditos</span>
               <span className="font-mono" style={{ color: 'var(--color-success)' }}>{formatCurrency(totalCreditos)}</span>
@@ -119,12 +198,24 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
   );
 }
 
-function MovimientoRow({ movimiento }: { movimiento: MovimientoBalance }) {
+// ─── Read-only row ──────────────────────────────────────────────────────────
+
+function MovimientoRow({
+  movimiento,
+  onEdit,
+  onDelete,
+  isDeleting,
+}: {
+  movimiento: MovimientoBalance;
+  onEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) {
   const config = tipoConfig[movimiento.tipo] || { label: movimiento.tipo, positive: 'neutral' as const };
 
   return (
     <div
-      className="flex items-start gap-3 p-3 rounded-lg"
+      className="flex items-start gap-3 p-3 rounded-lg group"
       style={{ backgroundColor: 'var(--color-page, #f3f4f6)' }}
     >
       {/* Icon */}
@@ -171,6 +262,135 @@ function MovimientoRow({ movimiento }: { movimiento: MovimientoBalance }) {
           {formatDate(movimiento.fecha)}
           {movimiento.idTrabajo && ` · Trabajo #${movimiento.idTrabajo}`}
         </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          type="button"
+          onClick={onEdit}
+          className="btn-icon w-7 h-7"
+          title="Editar movimiento"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={isDeleting}
+          className="btn-icon w-7 h-7"
+          style={{ color: 'var(--color-danger)' }}
+          title="Eliminar movimiento"
+        >
+          {isDeleting ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Trash2 className="w-3.5 h-3.5" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Editable row ───────────────────────────────────────────────────────────
+
+function MovimientoEditRow({
+  editForm,
+  onChange,
+  onSave,
+  onCancel,
+  isPending,
+}: {
+  editForm: { tipo: TipoMovimiento; monto: string; descripcion: string; fecha: string };
+  onChange: (form: { tipo: TipoMovimiento; monto: string; descripcion: string; fecha: string }) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  isPending: boolean;
+}) {
+  return (
+    <div
+      className="p-3 rounded-lg space-y-2"
+      style={{ backgroundColor: 'var(--color-page, #f3f4f6)', border: '2px solid var(--color-accent, #f97316)' }}
+    >
+      <div className="grid grid-cols-2 gap-2">
+        {/* Tipo */}
+        <div>
+          <label className="text-xs font-medium mb-0.5 block" style={{ color: 'var(--color-muted)' }}>Tipo</label>
+          <select
+            value={editForm.tipo}
+            onChange={(e) => onChange({ ...editForm, tipo: e.target.value as TipoMovimiento })}
+            className="search-input text-sm py-1"
+          >
+            <option value="Pago">Pago</option>
+            <option value="Cargo">Cargo</option>
+            <option value="Anticipo">Anticipo</option>
+            <option value="Compra">Compra</option>
+            <option value="Ajuste">Ajuste</option>
+          </select>
+        </div>
+
+        {/* Monto */}
+        <div>
+          <label className="text-xs font-medium mb-0.5 block" style={{ color: 'var(--color-muted)' }}>Monto</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={editForm.monto}
+            onChange={(e) => onChange({ ...editForm, monto: e.target.value })}
+            className="search-input text-sm py-1"
+          />
+        </div>
+      </div>
+
+      {/* Fecha */}
+      <div>
+        <label className="text-xs font-medium mb-0.5 block" style={{ color: 'var(--color-muted)' }}>Fecha</label>
+        <input
+          type="date"
+          value={editForm.fecha}
+          onChange={(e) => onChange({ ...editForm, fecha: e.target.value })}
+          className="search-input text-sm py-1"
+        />
+      </div>
+
+      {/* Descripción */}
+      <div>
+        <label className="text-xs font-medium mb-0.5 block" style={{ color: 'var(--color-muted)' }}>Descripción</label>
+        <input
+          type="text"
+          value={editForm.descripcion}
+          onChange={(e) => onChange({ ...editForm, descripcion: e.target.value })}
+          className="search-input text-sm py-1"
+        />
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2 pt-1">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="btn-icon w-7 h-7"
+          disabled={isPending}
+          title="Cancelar"
+        >
+          <Ban className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={isPending || !editForm.monto || !editForm.descripcion}
+          className="btn-icon w-7 h-7"
+          style={{ color: 'var(--color-success)' }}
+          title="Guardar"
+        >
+          {isPending ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Check className="w-3.5 h-3.5" />
+          )}
+        </button>
       </div>
     </div>
   );
