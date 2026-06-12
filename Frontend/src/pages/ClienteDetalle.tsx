@@ -8,6 +8,7 @@ import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { ClienteForm } from '../components/ClienteForm';
 import { DireccionModal } from '../components/DireccionModal';
 import { TelefonoModal } from '../components/TelefonoModal';
+import { MovimientosClienteModal } from '../components/MovimientosClienteModal';
 import type { DireccionItem, TelefonoCompleto } from '../types';
 
 export function ClienteDetalle() {
@@ -26,6 +27,8 @@ export function ClienteDetalle() {
   const [showNewTelefono, setShowNewTelefono] = useState(false);
   // Estado para crear nueva dirección
   const [showNewDireccion, setShowNewDireccion] = useState(false);
+  // Estado para modal de movimientos
+  const [showMovimientos, setShowMovimientos] = useState(false);
   
   // Handle edit button
   const handleEdit = () => {
@@ -124,11 +127,15 @@ export function ClienteDetalle() {
               {cliente.balance > 0 ? 'Saldo a favor' : cliente.balance < 0 ? 'Debe' : 'Al día'}
             </p>
           </div>
-          <div className="text-right flex-shrink-0">
+          <button
+            onClick={() => setShowMovimientos(true)}
+            className="text-right flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            title="Ver movimientos"
+          >
             <p className={clsx('text-xl font-bold font-mono', balance.class)}>
               {balance.text}
             </p>
-          </div>
+          </button>
         </div>
 
         {/* Contact Info - Side by side with independent heights */}
@@ -371,6 +378,16 @@ export function ClienteDetalle() {
           isOpen={showNewDireccion} 
           onClose={() => setShowNewDireccion(false)}
           isNew={true}
+        />
+      )}
+
+      {/* Movimientos Cliente Modal */}
+      {clienteId && (
+        <MovimientosClienteModal
+          clienteId={clienteId}
+          nombreCliente={cliente.nombreCompleto}
+          isOpen={showMovimientos}
+          onClose={() => setShowMovimientos(false)}
         />
       )}
     </div>
