@@ -79,6 +79,13 @@ namespace ShopMGR.Repositorios
             return await _contexto.Clientes.Where(c => clientesConSaldoNegativo.Contains(c.Id)).ToListAsync();
         }
 
+        public async Task<List<MovimientoBalance>> ObtenerMovimientosPorIdAsync(int idCliente)
+        {
+            var movimientos = await _contexto.MovimientoBalance.Where(m => m.IdCliente == idCliente).ToListAsync();
+
+            return movimientos;
+        }
+
         public async Task ActualizarAsync(Cliente cliente)
         {
             _contexto.Clientes.Update(cliente);

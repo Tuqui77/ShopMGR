@@ -59,7 +59,9 @@ namespace ShopMGR.WebApi.Controllers
         {
             var clientesConSaldoNegativo = await administracionClientes.BuscarSaldosNegativosAsync();
 
-            return clientesConSaldoNegativo.Any() ? Ok(clientesConSaldoNegativo) : Ok($"No hay clientes con saldo negativo.");
+            return clientesConSaldoNegativo.Any()
+                ? Ok(clientesConSaldoNegativo)
+                : Ok($"No hay clientes con saldo negativo.");
         }
 
         [HttpGet]
@@ -75,6 +77,17 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(cliente);
         }
 
+        [HttpGet]
+        [Route("ObtenerMovimientosPorId")]
+        public async Task<IActionResult> ObtenerMovimientosPorId(int idCliente)
+        {
+            var movimientos = await administracionClientes.ObtenerMovimientosPorIdAsync(idCliente);
+
+            return movimientos.Any()
+                ? Ok(movimientos)
+                : Ok($"No hay movimientos asociados al cliente");
+        }
+
         [HttpPost]
         [Route("CrearMovimiento")]
         public async Task<IActionResult> CrearMovimiento(MovimientoBalanceDTO movimiento)
@@ -86,8 +99,10 @@ namespace ShopMGR.WebApi.Controllers
 
         [HttpPatch]
         [Route("ModificarCliente")]
-        public async Task<IActionResult> ActualizarCliente(int idCliente,
-            [FromBody] ModificarCliente clienteActualizado)
+        public async Task<IActionResult> ActualizarCliente(
+            int idCliente,
+            [FromBody] ModificarCliente clienteActualizado
+        )
         {
             if (clienteActualizado == null)
             {

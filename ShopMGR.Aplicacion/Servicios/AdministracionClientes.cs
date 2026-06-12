@@ -88,6 +88,13 @@ namespace ShopMGR.Aplicacion.Servicios
             await _clienteRepositorio.ActualizarAsync(cliente);
         }
 
+        public async Task<List<MovimientoBalance>> ObtenerMovimientosPorIdAsync(int idCliente)
+        {
+            var movimientos = await _clienteRepositorio.ObtenerMovimientosPorIdAsync(idCliente);
+
+            return movimientos;
+        }
+
         public async Task EliminarAsync(int idCliente)
         {
             await _clienteRepositorio.EliminarAsync(idCliente);
