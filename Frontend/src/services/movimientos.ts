@@ -9,6 +9,17 @@ export interface MovimientoBalanceRequest {
   tipo: TipoMovimiento;
   monto: number;
   descripcion: string;
+  fecha?: string;
+}
+
+export interface ModificarMovimientoRequest {
+  id: number;
+  idCliente: number;
+  idTrabajo?: number;
+  tipo: TipoMovimiento;
+  monto: number;
+  descripcion: string;
+  fecha: string;
 }
 
 function extractMovimientos(data: unknown): MovimientoBalance[] {
@@ -23,7 +34,7 @@ export const movimientosService = {
   async crear(data: MovimientoBalanceRequest): Promise<void> {
     await apiClient.post('/Cliente/CrearMovimiento', {
       ...data,
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: data.fecha ?? new Date().toISOString().split('T')[0],
     });
   },
 
@@ -32,5 +43,15 @@ export const movimientosService = {
       params: { idCliente },
     });
     return extractMovimientos(response.data);
+  },
+
+  async modificar(data: ModificarMovimientoRequest): Promise<void> {
+    await apiClient.delete('/Cliente/EditarMovimiento', { data });
+  },
+
+  async eliminar(idMovimiento: number, idCliente: number): Promise<void> {
+    await apiClient.delete('/Cliente/EliminarMovimiento', {
+      params: { idMovimiento, idCliente },
+    });
   },
 };
