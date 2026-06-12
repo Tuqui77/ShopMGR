@@ -16,7 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useTrabajoDetalle, useTerminarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
+import { useTrabajoDetalle, useTerminarTrabajo, useModificarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -31,6 +31,7 @@ export function TrabajoDetalle() {
   const { data: trabajo, isLoading, error } = useTrabajoDetalle(trabajoId);
   const { data: clienteCompleto } = useClienteDetalle(trabajo?.clienteId);
   const terminarTrabajo = useTerminarTrabajo();
+  const modificarTrabajo = useModificarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
   const subirFotos = useSubirFotos();
   const eliminarFoto = useEliminarFoto();
@@ -74,6 +75,23 @@ const [isPanning, setIsPanning] = useState(false); // Controls CSS transition du
     }
   };
   
+  const handleIniciar = async () => {
+    if (trabajo) {
+      try {
+        await modificarTrabajo.mutateAsync({
+          id: trabajo.id,
+          trabajo: {
+            titulo: trabajo.titulo,
+            idCliente: trabajo.clienteId,
+            estado: 'Iniciado',
+          },
+        });
+      } catch (err) {
+        console.error('Error al iniciar trabajo:', err);
+      }
+    }
+  };
+
   const handleTerminar = async () => {
     if (trabajo && confirm('¿Terminar este trabajo? Se generará un cargo en el balance del cliente.')) {
       try {
@@ -751,9 +769,13 @@ useEffect(() => {
           )}
           
           {trabajo.estado === 'Pendiente' && (
-            <button className="btn-primary w-full flex items-center justify-center gap-2">
+            <button 
+              onClick={handleIniciar}
+              disabled={modificarTrabajo.isPending}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
               <Play className="w-4 h-4" />
-              Iniciar Trabajo
+              {modificarTrabajo.isPending ? 'Iniciando...' : 'Iniciar Trabajo'}
             </button>
           )}
           

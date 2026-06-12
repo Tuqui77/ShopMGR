@@ -198,6 +198,23 @@ function extractData(response: unknown): ClienteBackendDTO[] {
   return Array.from(clientesMap.values()).sort((a, b) => a.id - b.id);
 }
 
+/**
+ * Dado un array de items (que pueden ser objetos completos o { $ref: "X" }),
+ * resuelve las referencias usando el mapa de $id.
+ * .NET ReferenceHandler.Preserve serializa objetos compartidos con $id/$ref.
+ */
+function resolveRefsInArray<T>(items: unknown[], idToObject: Map<string, unknown>): T[] {
+  return items.map((item) => {
+    if (typeof item !== 'object' || item === null) return item as T;
+    const ref = (item as Record<string, unknown>).$ref;
+    if (typeof ref === 'string') {
+      const resolved = idToObject.get(ref);
+      if (resolved) return resolved as T;
+    }
+    return item as T;
+  });
+}
+
 export const clientesService = {
   async listar(): Promise<Cliente[]> {
     const response = await apiClient.get<ClienteBackendDTO[]>('/Cliente/ObtenerListaClientes');
@@ -215,6 +232,37 @@ export const clientesService = {
     const response = await apiClient.get<ClienteBackendDTO>('/Cliente/ObtenerDetallePorId', {
       params: { idCliente: id },
     });
+
+    // Indexar todos los objetos con $id para resolver $ref
+    const idToObject = new Map<string, unknown>();
+    const indexObjects = (obj: unknown) => {
+      if (typeof obj !== 'object' || obj === null) return;
+      const item = obj as Record<string, unknown>;
+      if ('$id' in item && typeof item.$id === 'string') {
+        idToObject.set(item.$id, item);
+      }
+      for (const value of Object.values(item)) {
+        if (Array.isArray(value)) {
+          value.forEach(indexObjects);
+        } else if (typeof value === 'object' && value !== null) {
+          indexObjects(value);
+        }
+      }
+    };
+    indexObjects(response.data);
+
+    // Resolver $ref en los arrays de trabajos y presupuestos
+    const data = response.data as unknown as Record<string, unknown>;
+    const trabajosObj = data.trabajos as Record<string, unknown> | undefined;
+    const presupuestosObj = data.presupuestos as Record<string, unknown> | undefined;
+
+    if (trabajosObj && Array.isArray(trabajosObj.$values)) {
+      trabajosObj.$values = resolveRefsInArray(trabajosObj.$values, idToObject);
+    }
+    if (presupuestosObj && Array.isArray(presupuestosObj.$values)) {
+      presupuestosObj.$values = resolveRefsInArray(presupuestosObj.$values, idToObject);
+    }
+
     return mapBackendToFrontendDetalle(response.data);
   },
 

@@ -40,6 +40,17 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   const [estado, setEstado] = useState<EstadoTrabajo>(() => trabajoOriginal?.estado ?? 'Pendiente');
   const [errors, setErrors] = useState<Record<string, string>>({});
   
+  // Sincronizar estado del formulario cuando los datos del trabajo se cargan (edición)
+  useEffect(() => {
+    if (isEditing && trabajoOriginal) {
+      setTitulo(trabajoOriginal.titulo);
+      setDescripcion(trabajoOriginal.descripcion ?? '');
+      setClienteId(trabajoOriginal.clienteId);
+      setPresupuestoId(trabajoOriginal.idPresupuesto ?? null);
+      setEstado(trabajoOriginal.estado);
+    }
+  }, [isEditing, trabajoOriginal]);
+
   // Anticipo
   const [registrarAnticipo, setRegistrarAnticipo] = useState(false);
   const [montoAnticipo, setMontoAnticipo] = useState('');

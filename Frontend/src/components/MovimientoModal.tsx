@@ -2,52 +2,58 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useTrabajosPorCliente } from '../hooks/useTrabajos';
-import { movimientosService, type TipoMovimiento } from '../services/movimientos';
+import { useCrearMovimiento } from '../hooks/useMovimientosCliente';
+import type { TipoMovimiento } from '../types';
 import { X, Loader2 } from 'lucide-react';
+
+function todayString(): string {
+  return new Date().toISOString().split('T')[0];
+}
 
 export function MovimientoModal() {
   const { showMovimientoModal, setShowMovimientoModal } = useStore();
-  
+
   const [idCliente, setIdCliente] = useState<number | null>(null);
   const [idTrabajo, setIdTrabajo] = useState<number | null>(null);
   const [tipo, setTipo] = useState<TipoMovimiento>('Pago');
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fecha, setFecha] = useState(todayString());
   const [error, setError] = useState<string | null>(null);
 
   // Queries
   const { data: clientes, isLoading: loadingClientes } = useClientes();
   const { data: trabajos, isLoading: loadingTrabajos } = useTrabajosPorCliente(idCliente ?? undefined);
 
+  // Mutation
+  const crearMovimiento = useCrearMovimiento();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!idCliente || !monto || !descripcion) {
       setError('Por favor completá los campos requeridos');
       return;
     }
 
-    setIsSubmitting(true);
     setError(null);
 
     try {
-      await movimientosService.crear({
+      await crearMovimiento.mutateAsync({
         idCliente: idCliente!,
         idTrabajo: idTrabajo ?? undefined,
         tipo,
         monto: parseFloat(monto),
         descripcion,
+        fecha,
       });
-      
+
       // Cerrar modal y limpiar form
       setShowMovimientoModal(false);
       resetForm();
     } catch (err) {
       setError('Error al registrar el movimiento. Intentalo de nuevo.');
       console.error(err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -57,6 +63,7 @@ export function MovimientoModal() {
     setTipo('Pago');
     setMonto('');
     setDescripcion('');
+    setFecha(todayString());
     setError(null);
   };
 
@@ -81,9 +88,9 @@ export function MovimientoModal() {
           <div className="p-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-semibold text-lg">Registrar Movimiento</h2>
-              <button 
+              <button
                 type="button"
-                onClick={handleClose} 
+                onClick={handleClose}
                 className="btn-icon"
               >
                 <X className="w-5 h-5" />
@@ -181,6 +188,20 @@ export function MovimientoModal() {
                 />
               </div>
 
+              {/* Fecha */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Fecha <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  className="search-input"
+                  required
+                />
+              </div>
+
               {/* Descripción */}
               <div>
                 <label className="block text-sm font-medium mb-1">
@@ -202,16 +223,16 @@ export function MovimientoModal() {
                 type="button"
                 onClick={handleClose}
                 className="btn-secondary flex-1"
-                disabled={isSubmitting}
+                disabled={crearMovimiento.isPending}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 className="btn-primary flex-1 flex items-center justify-center gap-2"
-                disabled={isSubmitting || !idCliente || !monto || !descripcion}
+                disabled={crearMovimiento.isPending || !idCliente || !monto || !descripcion}
               >
-                {isSubmitting ? (
+                {crearMovimiento.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Guardando...
