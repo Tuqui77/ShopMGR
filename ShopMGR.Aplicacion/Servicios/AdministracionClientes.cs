@@ -95,6 +95,32 @@ namespace ShopMGR.Aplicacion.Servicios
             return movimientos;
         }
 
+        public async Task ModificarMovimientoAsync(ModificarMovimientoBalance movimientoModificado)
+        {
+            var cliente = await ObtenerDetallePorIdAsync(movimientoModificado.IdCliente);
+            var movimiento = cliente.MovimientosBalance.FirstOrDefault(m => m.Id == movimientoModificado.Id)
+                ?? throw new KeyNotFoundException($"No se encontro un movimiento con el ID {movimientoModificado.Id}");
+
+            movimiento.Monto = movimientoModificado.Monto;
+            movimiento.Descripcion = movimientoModificado.Descripcion;
+            movimiento.Fecha = movimientoModificado.Fecha;
+            movimiento.Tipo = movimientoModificado.Tipo;
+            movimiento.IdCliente = movimientoModificado.IdCliente;
+            movimiento.IdTrabajo = movimientoModificado.IdTrabajo;
+
+            await _clienteRepositorio.ActualizarAsync(cliente);
+        }
+
+        public async Task EliminarMovimientoAsync(int idMovimiento, int idCliente)
+        {
+            var cliente = await ObtenerDetallePorIdAsync(idCliente);
+            var movimiento = cliente.MovimientosBalance.Find(m => m.Id == idMovimiento)
+                ?? throw new KeyNotFoundException($"No se encontro un movimiento con el ID {idMovimiento}");
+
+            cliente.MovimientosBalance.Remove(movimiento);
+            await _clienteRepositorio.ActualizarAsync(cliente);
+        }
+
         public async Task EliminarAsync(int idCliente)
         {
             await _clienteRepositorio.EliminarAsync(idCliente);

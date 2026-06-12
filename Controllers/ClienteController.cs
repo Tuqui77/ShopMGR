@@ -97,6 +97,24 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(movimiento);
         }
 
+        [HttpDelete]
+        [Route("EliminarMovimiento")]
+        public async Task<IActionResult> EliminarMovimiento(int idMovimiento, int idCliente)
+        {
+            await administracionClientes.EliminarMovimientoAsync(idMovimiento, idCliente);
+
+            return Ok();
+        }
+
+        [HttpDelete]
+        [Route("EditarMovimiento")]
+        public async Task<IActionResult> EditarMovimiento(ModificarMovimientoBalance movimientoModificado)
+        {
+            await administracionClientes.ModificarMovimientoAsync(movimientoModificado);
+
+            return Ok();
+        }
+
         [HttpPatch]
         [Route("ModificarCliente")]
         public async Task<IActionResult> ActualizarCliente(

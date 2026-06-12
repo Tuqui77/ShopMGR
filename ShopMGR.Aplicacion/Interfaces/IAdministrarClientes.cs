@@ -10,5 +10,7 @@ namespace ShopMGR.Aplicacion.Interfaces
         public Task<List<Cliente>> BuscarSaldosNegativosAsync();
         public Task RegistrarMovimientoAsync(MovimientoBalanceDTO movimiento);
         public Task<List<MovimientoBalance>> ObtenerMovimientosPorIdAsync(int idCliente);
+        public Task EliminarMovimientoAsync(int idMovimiento, int idCliente);
+        public Task ModificarMovimientoAsync(ModificarMovimientoBalance movimientoModificado);
     }
 }
