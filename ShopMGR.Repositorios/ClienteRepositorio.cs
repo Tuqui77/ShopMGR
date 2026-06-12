@@ -13,9 +13,7 @@ namespace ShopMGR.Repositorios
         public async Task<Cliente> CrearAsync(Cliente cliente)
         {
             if (await _contexto.Clientes.AnyAsync(x => x.NombreCompleto == cliente.NombreCompleto))
-                throw new InvalidOperationException(
-                    $"Ya existe un cliente llamado {cliente.NombreCompleto}"
-                );
+                throw new InvalidOperationException($"Ya existe un cliente llamado {cliente.NombreCompleto}");
 
             _contexto.Clientes.Add(cliente);
             await _contexto.SaveChangesAsync();
@@ -28,6 +26,7 @@ namespace ShopMGR.Repositorios
             var clientes = await _contexto
                 .Clientes.Include(c => c.Trabajos)
                 .Include(c => c.Presupuestos)
+                .Include(c => c.MovimientosBalance)
                 .ToListAsync();
 
             return clientes;
@@ -51,6 +50,7 @@ namespace ShopMGR.Repositorios
                     .Include(c => c.Trabajos)
                         .ThenInclude(t => t.HorasDeTrabajo)
                     .Include(c => c.Presupuestos)
+                    .Include(c => c.MovimientosBalance)
                     .FirstOrDefaultAsync(x => x.Id == id)
                 ?? throw new KeyNotFoundException($"No se encontró un cliente con el ID {id}.");
 
@@ -71,15 +71,19 @@ namespace ShopMGR.Repositorios
         {
             // Filtrar por clientes que tienen movimientos con suma negativa
             var clientesConSaldoNegativo = await _contexto
-                .MovimientoBalance
-                .GroupBy(m => m.IdCliente)
+                .MovimientoBalance.GroupBy(m => m.IdCliente)
                 .Where(g => g.Sum(m => m.Monto) < 0)
                 .Select(g => g.Key)
                 .ToListAsync();
 
-            return await _contexto
-                .Clientes.Where(c => clientesConSaldoNegativo.Contains(c.Id))
-                .ToListAsync();
+            return await _contexto.Clientes.Where(c => clientesConSaldoNegativo.Contains(c.Id)).ToListAsync();
+        }
+
+        public async Task<List<MovimientoBalance>> ObtenerMovimientosPorIdAsync(int idCliente)
+        {
+            var movimientos = await _contexto.MovimientoBalance.Where(m => m.IdCliente == idCliente).ToListAsync();
+
+            return movimientos;
         }
 
         public async Task ActualizarAsync(Cliente cliente)

@@ -1,9 +1,12 @@
-﻿namespace ShopMGR.Dominio.Abstracciones
+﻿using ShopMGR.Dominio.Modelo;
+
+namespace ShopMGR.Dominio.Abstracciones
 {
     public interface IRepositorioCliente<Cliente> : IRepositorio<Cliente>
     {
         public Task<Cliente> ObtenerPorNombreAsync(string nombre);
         public Task<List<Cliente>> ListarTodosAsync();
         public Task<List<Cliente>> BuscarSaldosNegativosAsync();
+        public Task<List<MovimientoBalance>> ObtenerMovimientosPorIdAsync(int idCliente);
     }
 }

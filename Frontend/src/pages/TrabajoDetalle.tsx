@@ -46,6 +46,7 @@ const panPosition = useRef({ x: 0, y: 0 });
 const isDragging = useRef(false);
 const dragStart = useRef({ x: 0, y: 0 });
 const [panState, setPanState] = useState({ x: 0, y: 0 }); // For React re-render
+const [isPanning, setIsPanning] = useState(false); // Controls CSS transition during drag
 
   // Handle close image modal
   const handleCloseImage = useCallback(() => {
@@ -123,7 +124,7 @@ const navigateToImage = (index: number) => {
   setSelectedImage(trabajo.fotos[index].enlace);
   setSelectedImageId(trabajo.fotos[index].id);
   setIsZoomed(false);
-  // Reset pan position
+  // Reset pan and zoom origin
   panPosition.current = { x: 0, y: 0 };
   isDragging.current = false;
   setPanState({ x: 0, y: 0 });
@@ -135,7 +136,7 @@ const openGallery = () => {
   setSelectedImage(trabajo.fotos[0].enlace);
   setSelectedImageId(trabajo.fotos[0].id);
   setIsZoomed(false);
-  // Reset pan position
+  // Reset pan and zoom origin
   panPosition.current = { x: 0, y: 0 };
   isDragging.current = false;
   setPanState({ x: 0, y: 0 });
@@ -148,6 +149,7 @@ const handleMouseDown = useCallback((e: React.MouseEvent) => {
   e.preventDefault();
   isDragging.current = true;
   hasDragged.current = false;
+  setIsPanning(true);
   dragStart.current = {
     x: e.clientX - panPosition.current.x * 1.5, // Account for scale compensation
     y: e.clientY - panPosition.current.y * 1.5
@@ -171,6 +173,7 @@ const handleMouseMove = useCallback((e: MouseEvent) => {
 
 const handleMouseUp = useCallback(() => {
   isDragging.current = false;
+  setIsPanning(false);
 }, []);
 
 // Touch handlers for mobile support
@@ -179,6 +182,7 @@ const handleTouchStart = useCallback((e: React.TouchEvent) => {
   const touch = e.touches[0];
   isDragging.current = true;
   hasDragged.current = false;
+  setIsPanning(true);
   dragStart.current = {
     x: touch.clientX - panPosition.current.x * 1.5, // Account for scale compensation
     y: touch.clientY - panPosition.current.y * 1.5
@@ -203,6 +207,7 @@ const handleTouchMove = useCallback((e: TouchEvent) => {
 
 const handleTouchEnd = useCallback(() => {
   isDragging.current = false;
+  setIsPanning(false);
 }, []);
 
 // Setup document-level event listeners for continuous panning
@@ -220,9 +225,19 @@ useEffect(() => {
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }
-}, [isZoomed, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+  }, [isZoomed, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
-  
+  // Close image with Escape key
+  useEffect(() => {
+    if (!selectedImage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseImage();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, handleCloseImage]);
 
   const handleDeletePhoto = async () => {
     if (!trabajoId || selectedImageId === null) return;
@@ -432,6 +447,7 @@ useEffect(() => {
         {showGallery && selectedImage && (
           <div 
             className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95"
+            onClick={handleCloseImage}
           >
             {/* Close button - top right */}
             <button
@@ -491,8 +507,10 @@ useEffect(() => {
                 alt="Foto" 
                 draggable="false"
                 className={clsx(
-                  'object-contain transition-transform duration-300 select-none',
-                  isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+                  'object-contain select-none',
+                  isPanning && 'cursor-grabbing',
+                  !isPanning && isZoomed && 'cursor-zoom-out',
+                  !isPanning && !isZoomed && 'cursor-zoom-in'
                 )}
                 style={{
                   transform: isZoomed 
@@ -505,7 +523,27 @@ useEffect(() => {
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!hasDragged.current) {
+                  if (!hasDragged.current && !isPanning) {
+                    if (!isZoomed) {
+                      // Traducir coordenadas al espacio de la imagen en tamaño natural
+                      const img = e.currentTarget as HTMLImageElement;
+                      const rect = img.getBoundingClientRect();
+                      const clickDisplayX = e.clientX - rect.left;
+                      const clickDisplayY = e.clientY - rect.top;
+                      const nw = img.naturalWidth || rect.width;
+                      const nh = img.naturalHeight || rect.height;
+                      // Mapear click a coordenadas naturales
+                      const clickNaturalX = clickDisplayX * (nw / rect.width);
+                      const clickNaturalY = clickDisplayY * (nh / rect.height);
+                      // Mover el punto clickeado al centro en espacio natural
+                      const tx = nw / 2 - clickNaturalX;
+                      const ty = nh / 2 - clickNaturalY;
+                      panPosition.current = { x: tx, y: ty };
+                      setPanState({ x: tx, y: ty });
+                    } else {
+                      panPosition.current = { x: 0, y: 0 };
+                      setPanState({ x: 0, y: 0 });
+                    }
                     setIsZoomed(!isZoomed);
                   }
                 }}
@@ -595,8 +633,10 @@ useEffect(() => {
                 alt="Foto ampliada" 
                 draggable="false"
                 className={clsx(
-                  'object-contain transition-transform duration-300 select-none',
-                  isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+                  'object-contain select-none',
+                  isPanning && 'cursor-grabbing',
+                  !isPanning && isZoomed && 'cursor-zoom-out',
+                  !isPanning && !isZoomed && 'cursor-zoom-in'
                 )}
                 style={{
                   transform: isZoomed 
@@ -609,7 +649,25 @@ useEffect(() => {
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!hasDragged.current) {
+                  if (!hasDragged.current && !isPanning) {
+                    if (!isZoomed) {
+                      // Traducir coordenadas al espacio de la imagen en tamaño natural
+                      const img = e.currentTarget as HTMLImageElement;
+                      const rect = img.getBoundingClientRect();
+                      const clickDisplayX = e.clientX - rect.left;
+                      const clickDisplayY = e.clientY - rect.top;
+                      const nw = img.naturalWidth || rect.width;
+                      const nh = img.naturalHeight || rect.height;
+                      const clickNaturalX = clickDisplayX * (nw / rect.width);
+                      const clickNaturalY = clickDisplayY * (nh / rect.height);
+                      const tx = nw / 2 - clickNaturalX;
+                      const ty = nh / 2 - clickNaturalY;
+                      panPosition.current = { x: tx, y: ty };
+                      setPanState({ x: tx, y: ty });
+                    } else {
+                      panPosition.current = { x: 0, y: 0 };
+                      setPanState({ x: 0, y: 0 });
+                    }
                     setIsZoomed(!isZoomed);
                   }
                 }}
