@@ -103,12 +103,14 @@ namespace ShopMGR.Aplicacion.Servicios
                 cliente.MovimientosBalance.FirstOrDefault(m => m.Id == movimientoModificado.Id)
                 ?? throw new KeyNotFoundException($"No se encontro un movimiento con el ID {movimientoModificado.Id}");
 
-            movimiento.Monto = movimientoModificado.Monto;
-            movimiento.Descripcion = movimientoModificado.Descripcion;
-            movimiento.Fecha = movimientoModificado.Fecha;
-            movimiento.Tipo = movimientoModificado.Tipo;
-            movimiento.IdCliente = movimientoModificado.IdCliente;
-            movimiento.IdTrabajo = movimientoModificado.IdTrabajo;
+            movimiento.Editar(
+                movimientoModificado.Tipo,
+                movimientoModificado.Monto,
+                movimientoModificado.Descripcion,
+                movimientoModificado.Fecha,
+                movimientoModificado.IdCliente,
+                movimientoModificado.IdTrabajo
+            );
 
             await _clienteRepositorio.ActualizarAsync(cliente);
         }

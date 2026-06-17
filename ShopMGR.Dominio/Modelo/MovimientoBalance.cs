@@ -8,35 +8,46 @@ public class MovimientoBalance
     private bool esDebito => Tipo is TipoMovimiento.Cargo or TipoMovimiento.Compra;
     private bool esCredito => Tipo is TipoMovimiento.Pago or TipoMovimiento.Anticipo;
 
-    public int Id { get; set; }
+    public int Id { get; private set; }
     public decimal Monto
     {
         get => monto;
-        set => monto = (esDebito && value > 0 || esCredito && value < 0) ? value * -1 : value;
+        private set => monto = (esDebito && value > 0 || esCredito && value < 0) ? value * -1 : value;
     }
-    public string Descripcion { get; set; }
-    public DateOnly Fecha { get; set; }
-    public TipoMovimiento Tipo { get; set; }
+    public string Descripcion { get; private set; } = null!;
+    public DateOnly Fecha { get; private set; }
+    public TipoMovimiento Tipo { get; private set; }
 
     //Relaciones
-    public Cliente Cliente { get; set; } = null!;
-    public int IdCliente { get; set; }
-    public Trabajo? Trabajo { get; set; }
-    public int? IdTrabajo { get; set; }
+    public Cliente Cliente { get; private set; } = null!;
+    public int IdCliente { get; private set; }
+    public Trabajo? Trabajo { get; private set; }
+    public int? IdTrabajo { get; private set; }
 
     public MovimientoBalance() { } //constructor para EF
 
-    public MovimientoBalance(
-        TipoMovimiento tipo,
-        decimal monto,
-        string descripcion,
-        DateOnly? fecha = null
-    )
+    public MovimientoBalance(TipoMovimiento tipo, decimal monto, string descripcion, DateOnly? fecha = null)
     {
         Tipo = tipo;
         Monto = monto;
         Descripcion = descripcion;
         Fecha = fecha ?? DateOnly.FromDateTime(DateTime.Now);
     }
-    //TODO: Mover la lógica de la edición a la entidad para asegurar que el monto se calcula correctamente.
+
+    public void Editar(
+        TipoMovimiento tipo,
+        decimal monto,
+        string descripcion,
+        DateOnly fecha,
+        int idCliente,
+        int? idTrabajo
+    )
+    {
+        Tipo = tipo;
+        Monto = monto;
+        Descripcion = descripcion;
+        Fecha = fecha;
+        IdCliente = idCliente;
+        IdTrabajo = idTrabajo;
+    }
 }
