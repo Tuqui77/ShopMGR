@@ -1,12 +1,10 @@
 ﻿using Extensiones;
-using Google.Apis.Drive.v3;
 using Microsoft.Extensions.DependencyInjection;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Aplicacion.Servicios;
 using ShopMGR.Dominio.Abstracciones;
 using ShopMGR.Dominio.Modelo;
-using ShopMGR.Infraestructura.Drive;
 using ShopMGR.Repositorios;
 
 namespace ShopMGR.Aplicacion
@@ -37,11 +35,6 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IAdministrarAuth, AdministrarAuth>();
 
             services.AddScoped<IAlmacenamientoServicio, AlmacenamientoServicio>();
-
-            //Dependencias de almacenamiento en la nube.
-            services.AddScoped<GoogleDriveClient>();
-            services.AddScoped<IGoogleDriveServicio, GoogleDriveServicio>();
-            services.AddScoped<DriveService>();
 
             //Herramientas adicionales
             // Mapeadores manuales

@@ -15,7 +15,6 @@ using Scalar.AspNetCore;
 using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
 using ShopMGR.Infraestructura;
-using ShopMGR.Infraestructura.Drive;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace ShopMGR.WebApi.Aplicacion
@@ -53,9 +52,6 @@ namespace ShopMGR.WebApi.Aplicacion
                         .ReferenceHandler
                         .Preserve;
                 });
-            builder.Services.Configure<GoogleDriveSettings>(
-                builder.Configuration.GetSection("GoogleDrive")
-            );
 
             //servicios del contenedor
             builder.Services.AddControllers();
