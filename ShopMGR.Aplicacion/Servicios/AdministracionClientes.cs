@@ -11,14 +11,12 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioCliente<Cliente> clienteRepositorio,
         IRepositorioConCliente<Direccion> direccionRepositorio,
         IRepositorioConCliente<TelefonoCliente> telefonoRepositorio,
-        IMovimientoBalanceRepositorio movimientoBalanceRepositorio,
         MapperRegistry mapper
     ) : IAdministrarClientes
     {
         private readonly IRepositorioCliente<Cliente> _clienteRepositorio = clienteRepositorio;
         private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
         private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoRepositorio;
-        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio = movimientoBalanceRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)

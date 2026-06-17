@@ -34,8 +34,6 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioConFoto, TrabajoRepositorio>();
             services.AddScoped<IAdministrarTrabajos, AdministracionTrabajos>();
 
-            services.AddScoped<IMovimientoBalanceRepositorio, MovimientoBalanceRepoositorio>();
-
             services.AddScoped<IAdministrarAuth, AdministrarAuth>();
 
             services.AddScoped<IAlmacenamientoServicio, AlmacenamientoServicio>();
