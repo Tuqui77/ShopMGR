@@ -2,6 +2,7 @@
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
@@ -76,13 +77,15 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var cliente = await _clienteRepositorio.ObtenerPorIdAsync(movimientoDTO.IdCliente);
 
-            var movimiento = new MovimientoBalance
-            {
-                Monto = movimientoDTO.Monto,
-                Descripcion = movimientoDTO.Descripcion,
-                Fecha = movimientoDTO.Fecha,
-                Tipo = movimientoDTO.Tipo,
-            };
+            var movimiento = new MovimientoBalance(
+                movimientoDTO.Tipo,
+                movimientoDTO.Monto,
+                movimientoDTO.Descripcion,
+                movimientoDTO.Fecha
+            );
+
+            Console.WriteLine($"Tipo: {movimiento.Tipo}");
+            Console.WriteLine($"Monto: {movimiento.Monto}");
 
             cliente.MovimientosBalance.Add(movimiento);
             await _clienteRepositorio.ActualizarAsync(cliente);
@@ -98,7 +101,8 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task ModificarMovimientoAsync(ModificarMovimientoBalance movimientoModificado)
         {
             var cliente = await ObtenerDetallePorIdAsync(movimientoModificado.IdCliente);
-            var movimiento = cliente.MovimientosBalance.FirstOrDefault(m => m.Id == movimientoModificado.Id)
+            var movimiento =
+                cliente.MovimientosBalance.FirstOrDefault(m => m.Id == movimientoModificado.Id)
                 ?? throw new KeyNotFoundException($"No se encontro un movimiento con el ID {movimientoModificado.Id}");
 
             movimiento.Monto = movimientoModificado.Monto;
@@ -114,7 +118,8 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task EliminarMovimientoAsync(int idMovimiento, int idCliente)
         {
             var cliente = await ObtenerDetallePorIdAsync(idCliente);
-            var movimiento = cliente.MovimientosBalance.Find(m => m.Id == idMovimiento)
+            var movimiento =
+                cliente.MovimientosBalance.Find(m => m.Id == idMovimiento)
                 ?? throw new KeyNotFoundException($"No se encontro un movimiento con el ID {idMovimiento}");
 
             cliente.MovimientosBalance.Remove(movimiento);
