@@ -100,7 +100,10 @@ namespace ShopMGR.WebApi.Aplicacion
                 });
             var app = builder.Build();
 
-            var rutaImagenes = "/app/imagenes";
+            var rutaImagenes = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "imagenes");
+            Directory.CreateDirectory(rutaImagenes);
 
             app.UseStaticFiles(
                 new StaticFileOptions
