@@ -14,7 +14,6 @@ using Middleware;
 using Scalar.AspNetCore;
 using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
-using ShopMGR.Infraestructura;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace ShopMGR.WebApi.Aplicacion

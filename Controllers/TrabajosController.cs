@@ -10,7 +10,7 @@ namespace ShopMGR.WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class TrabajosController(
-        IAdministrarTrabajos administrarTrabajos,
+        IAdministrarTrabajos administrarTrabajos
     ) : ControllerBase
     {
         [HttpPost]

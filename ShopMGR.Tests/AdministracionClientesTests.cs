@@ -16,7 +16,6 @@ public class AdministracionClientesTests
     private readonly Mock<IRepositorioCliente<Cliente>> _clienteRepositorioMock;
     private readonly Mock<IRepositorioConCliente<Direccion>> _direccionRepositorioMock;
     private readonly Mock<IRepositorioConCliente<TelefonoCliente>> _telefonoRepositorioMock;
-    private readonly Mock<IMovimientoBalanceRepositorio> _movimientoBalanceRepositorioMock;
     private readonly AdministracionClientes _servicio;
 
     public AdministracionClientesTests()
@@ -24,7 +23,6 @@ public class AdministracionClientesTests
         _clienteRepositorioMock = new Mock<IRepositorioCliente<Cliente>>();
         _direccionRepositorioMock = new Mock<IRepositorioConCliente<Direccion>>();
         _telefonoRepositorioMock = new Mock<IRepositorioConCliente<TelefonoCliente>>();
-        _movimientoBalanceRepositorioMock = new Mock<IMovimientoBalanceRepositorio>();
 
         // MapperRegistry no puede ser mockeado porque requiere IServiceProvider en constructor
         // Los métodos testados no usan el mapper, así que pasamos null!
@@ -32,7 +30,6 @@ public class AdministracionClientesTests
             _clienteRepositorioMock.Object,
             _direccionRepositorioMock.Object,
             _telefonoRepositorioMock.Object,
-            _movimientoBalanceRepositorioMock.Object,
             null!
         );
     }
@@ -230,10 +227,6 @@ public class AdministracionClientesTests
 
         _clienteRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Cliente>()))
-            .Returns(Task.CompletedTask);
-
-        _movimientoBalanceRepositorioMock
-            .Setup(x => x.AgregarAsync(It.IsAny<MovimientoBalance>()))
             .Returns(Task.CompletedTask);
 
         // Act
