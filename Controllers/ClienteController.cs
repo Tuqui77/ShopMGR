@@ -97,7 +97,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(movimiento);
         }
 
-        [HttpDelete]
+        [HttpPatch]
         [Route("EliminarMovimiento")]
         public async Task<IActionResult> EliminarMovimiento(int idMovimiento, int idCliente)
         {
