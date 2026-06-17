@@ -4,8 +4,8 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
 #Definir el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-#Copiar DBSeeder
-COPY DBSeeder/ ./DBSeeder/
+# #Copiar DBSeeder
+# COPY DBSeeder/ ./DBSeeder/
 
 #Copia los archivos de proyecto y restaura las dependencias
 COPY *.csproj ./
@@ -19,8 +19,8 @@ RUN dotnet publish DBSeeder/DBSeeder.csproj -c Release -o dbseed-out
 #Construye la imagen de runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime-env
 WORKDIR /app
+# COPY --from=build-env /app/dbseed-out .
 COPY --from=build-env /app/out .
-COPY --from=build-env /app/dbseed-out .
 
 #Configura el punto de entrada
 ENV ASPNETCORE_URLS=http://+:80
