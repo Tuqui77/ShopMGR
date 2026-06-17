@@ -106,7 +106,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok();
         }
 
-        [HttpDelete]
+        [HttpPatch]
         [Route("EditarMovimiento")]
         public async Task<IActionResult> EditarMovimiento(ModificarMovimientoBalance movimientoModificado)
         {
