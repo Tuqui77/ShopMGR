@@ -214,7 +214,7 @@ public class AdministracionClientesTests
         {
             Id = 1,
             NombreCompleto = "Juan Perez",
-            MovimientosBalance = [new MovimientoBalance { Monto = 100m, Tipo = TipoMovimiento.Pago, Descripcion = "Saldo inicial", Fecha = DateOnly.FromDateTime(DateTime.Today) }]
+            MovimientosBalance = [new MovimientoBalance(TipoMovimiento.Pago, 100m, "Saldo inicial", DateOnly.FromDateTime(DateTime.Today))]
         };
 
         var movimientoDTO = new MovimientoBalanceDTO
