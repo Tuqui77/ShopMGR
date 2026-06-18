@@ -22,5 +22,14 @@ namespace ShopMGR.Dominio.Modelo
         public int IdCliente { get; set; }
         public Presupuesto? Presupuesto { get; set; }
         public int? IdPresupuesto { get; set; }
+        public Trabajo() { } //Constructor para EF
+        public Trabajo(string titulo, string? descripcion, int idCliente, EstadoTrabajo? estado, int? idPresupuesto)
+        {
+            Titulo = titulo;
+            Descripcion = descripcion;
+            IdCliente = idCliente;
+            IdPresupuesto = idPresupuesto;
+            Estado = estado ?? EstadoTrabajo.Pendiente;
+        }
     }
 }
