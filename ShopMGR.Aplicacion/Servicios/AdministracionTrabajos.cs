@@ -95,18 +95,20 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task AgregarHorasAsync(HorasYDescripcionDTO horasDTO)
         {
-            horasDTO.Fecha = horasDTO.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horasDTO.Fecha;
+            if (horasDTO.Fecha == default)
+                horasDTO.Fecha = DateOnly.FromDateTime(DateTime.Now);
 
             var horas = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horasDTO);
-
             var trabajo = await _repositorio.ObtenerPorIdAsync(horasDTO.IdTrabajo);
-            trabajo.HorasDeTrabajo.Add(horas);
 
             if (trabajo.IdPresupuesto == null)
             {
                 var valorHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                trabajo.TotalLabor = valorHora * (decimal)trabajo.TotalHoras;
+                trabajo.AgregarHoras(horas, valorHora);
             }
+            else
+                trabajo.AgregarHoras(horas);
+
             await _repositorio.ActualizarAsync(trabajo);
         }
 
@@ -167,7 +169,6 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
             trabajo.TerminarTrabajo();
-
 
             await _repositorio.ActualizarAsync(trabajo);
 

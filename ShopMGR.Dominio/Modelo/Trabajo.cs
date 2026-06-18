@@ -5,6 +5,7 @@ namespace ShopMGR.Dominio.Modelo
 {
     public class Trabajo
     {
+        private readonly List<HorasYDescripcion> _horasDeTrabajo = [];
         public int Id { get; private set; }
         public EstadoTrabajo Estado { get; private set; }
         public DateOnly? FechaInicio { get; private set; }
@@ -14,6 +15,7 @@ namespace ShopMGR.Dominio.Modelo
         public decimal? TotalLabor { get; private set; }
         public float TotalHoras => HorasDeTrabajo.Sum(h => h.Horas);
         public double HorasEstimadas { get; private set; } //TODO: Implementar
+        public IReadOnlyCollection<HorasYDescripcion> HorasDeTrabajo => _horasDeTrabajo;
 
         //Relaciones
         public Cliente Cliente { get; private set; } = null!;
@@ -21,8 +23,6 @@ namespace ShopMGR.Dominio.Modelo
         public Presupuesto? Presupuesto { get; private set; }
         public int? IdPresupuesto { get; private set; }
 
-        public List<Foto> Fotos { get; set; } = [];
-        public List<HorasYDescripcion> HorasDeTrabajo { get; set; } = [];
         public Trabajo() { } //Constructor para EF
 
         public Trabajo(string titulo, string? descripcion, int idCliente, EstadoTrabajo? estado, int? idPresupuesto)
@@ -63,6 +63,17 @@ namespace ShopMGR.Dominio.Modelo
         {
             IdPresupuesto = idPresupuesto;
             TotalLabor = costoLabor;
+        }
+
+        public void AgregarHoras(HorasYDescripcion horas)
+        {
+            _horasDeTrabajo.Add(horas);
+        }
+
+        public void AgregarHoras(HorasYDescripcion horas, decimal costoHora)
+        {
+            _horasDeTrabajo.Add(horas);
+            TotalLabor = costoHora * (decimal)TotalHoras;
         }
     }
 }
