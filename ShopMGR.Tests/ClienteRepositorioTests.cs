@@ -238,12 +238,8 @@ public class ClienteRepositorioTests
                 _ => (TipoMovimiento.Pago, 0m),
             };
 
-            await contexto.MovimientoBalance.AddAsync(
-                new MovimientoBalance(tipo, monto, "Test", DateOnly.FromDateTime(DateTime.Today))
-                {
-                    IdCliente = c.Id
-                }
-            );
+            var movimiento = new MovimientoBalance(tipo, monto, "Test", DateOnly.FromDateTime(DateTime.Today), c.Id);
+            await contexto.MovimientoBalance.AddAsync(movimiento);
         }
         await contexto.SaveChangesAsync();
 
