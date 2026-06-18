@@ -6,6 +6,8 @@ namespace ShopMGR.Dominio.Modelo
     public class Trabajo
     {
         private readonly List<HorasYDescripcion> _horasDeTrabajo = [];
+        private readonly List<Foto> _fotos = [];
+
         public int Id { get; private set; }
         public EstadoTrabajo Estado { get; private set; }
         public DateOnly? FechaInicio { get; private set; }
@@ -15,6 +17,7 @@ namespace ShopMGR.Dominio.Modelo
         public decimal? TotalLabor { get; private set; }
         public float TotalHoras => HorasDeTrabajo.Sum(h => h.Horas);
         public double HorasEstimadas { get; private set; } //TODO: Implementar
+        public IReadOnlyCollection<Foto> Fotos => _fotos;
         public IReadOnlyCollection<HorasYDescripcion> HorasDeTrabajo => _horasDeTrabajo;
 
         //Relaciones
@@ -74,6 +77,16 @@ namespace ShopMGR.Dominio.Modelo
         {
             _horasDeTrabajo.Add(horas);
             TotalLabor = costoHora * (decimal)TotalHoras;
+        }
+
+        public void AgregarFotos(List<Foto> fotos)
+        {
+            _fotos.AddRange(fotos);
+        }
+
+        public void EliminarFoto(Foto foto)
+        {
+            _fotos.Remove(foto);
         }
     }
 }

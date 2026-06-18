@@ -66,6 +66,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotosNuevas)
         {
+            var trabajo = await ObtenerPorIdAsync(idTrabajo);
             var fotos = new List<Foto>();
 
             foreach (var foto in fotosNuevas)
@@ -76,19 +77,20 @@ namespace ShopMGR.Aplicacion.Servicios
                 fotos.Add(fotoTmp);
             }
 
-            await _repositorio.AgregarFotosAsync(fotos);
+            trabajo.AgregarFotos(fotos);
+            await _repositorio.ActualizarAsync(trabajo);
         }
 
         public async Task EliminarFotoAsync(int idTrabajo, int idImagen)
         {
-            var trabajoConFoto = await _repositorio.ObtenerPorIdConFotoAsync(idTrabajo);
+            var trabajo = await _repositorio.ObtenerPorIdConFotoAsync(idTrabajo);
             var foto =
-                trabajoConFoto.Fotos.FirstOrDefault(f => f.Id == idImagen)
+                trabajo.Fotos.FirstOrDefault(f => f.Id == idImagen)
                 ?? throw new KeyNotFoundException("No existe una foto con ese id");
             var rutaRelativa = foto.RutaRelativa;
 
-            trabajoConFoto.Fotos.Remove(foto);
-            await _repositorio.ActualizarAsync(trabajoConFoto);
+            trabajo.EliminarFoto(foto);
+            await _repositorio.ActualizarAsync(trabajo);
 
             _ = Task.Run(() => _almacenamiento.EliminarFotoAsync(rutaRelativa));
         }
