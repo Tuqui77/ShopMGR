@@ -133,37 +133,32 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task ActualizarAsync(int id, ModificarTrabajo trabajoModificado)
         {
             var trabajoDb = await _repositorio.ObtenerDetallePorIdAsync(id);
+            trabajoDb.Editar(trabajoModificado.Titulo, trabajoModificado.Descripcion, trabajoModificado.IdCliente);
 
             if (trabajoDb.FechaInicio == null && trabajoModificado.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajoDb.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
+                trabajoDb.IniciarTrabajo();
             }
-
-            trabajoDb.IdCliente = trabajoModificado.IdCliente;
-            trabajoDb.Titulo = trabajoModificado.Titulo;
-            trabajoDb.Descripcion = trabajoModificado.Descripcion;
-            trabajoDb.Estado = trabajoModificado.Estado;
 
             var presupuestoAnterior = trabajoDb.IdPresupuesto;
             var presupuestoNuevo = trabajoModificado.IdPresupuesto;
             var cambioPresupuesto = presupuestoAnterior != presupuestoNuevo;
 
-            if (cambioPresupuesto)
+            if (cambioPresupuesto) //TODO: Implementar endpoints separados para estas modificaciones
             {
                 if (presupuestoNuevo == null) //Se eliminó el presupuesto
                 {
                     var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                    trabajoDb.TotalLabor = costoHora * (decimal)trabajoDb.HorasDeTrabajo.Sum(h => h.Horas);
+                    trabajoDb.EliminarPresupuesto(costoHora);
                 }
                 else //Se agregó o cambió el presupuesto
                 {
                     var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(
                         (int)trabajoModificado.IdPresupuesto!
                     );
-                    trabajoDb.TotalLabor = presupuesto.CostoLabor;
+                    trabajoDb.ModificarPresupuesto(presupuesto.Id, presupuesto.CostoLabor);
                 }
             }
-            trabajoDb.IdPresupuesto = trabajoModificado.IdPresupuesto;
 
             await _repositorio.ActualizarAsync(trabajoDb);
         }
@@ -171,23 +166,15 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task TerminarTrabajo(int idTrabajo)
         {
             var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
+            trabajo.TerminarTrabajo();
 
-            // Calcular total si no existe
-            if (!trabajo.TotalLabor.HasValue)
-            {
-                var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                trabajo.TotalLabor = (decimal)trabajo.HorasDeTrabajo.Sum(h => h.Horas) * costoHora;
-            }
-
-            trabajo.FechaFin = DateOnly.FromDateTime(DateTime.Now);
-            trabajo.Estado = EstadoTrabajo.Terminado;
 
             await _repositorio.ActualizarAsync(trabajo);
 
             var movimiento = new MovimientoBalanceDTO
             {
                 Tipo = TipoMovimiento.Cargo,
-                Monto = -trabajo.TotalLabor.Value,
+                Monto = trabajo.TotalLabor.Value,
                 Descripcion = $"Trabajo #{idTrabajo} - {trabajo.Titulo}",
                 Fecha = DateOnly.FromDateTime(DateTime.Now),
                 IdCliente = trabajo.IdCliente,

@@ -5,24 +5,26 @@ namespace ShopMGR.Dominio.Modelo
 {
     public class Trabajo
     {
-        public int Id { get; set; }
-        public EstadoTrabajo Estado { get; set; }
-        public DateOnly? FechaInicio { get; set; }
-        public DateOnly? FechaFin { get; set; }
-        public string Titulo { get; set; }
-        public string? Descripcion { get; set; }
-        public decimal? TotalLabor { get; set; }
+        public int Id { get; private set; }
+        public EstadoTrabajo Estado { get; private set; }
+        public DateOnly? FechaInicio { get; private set; }
+        public DateOnly? FechaFin { get; private set; }
+        public string Titulo { get; private set; } = null!;
+        public string? Descripcion { get; private set; }
+        public decimal? TotalLabor { get; private set; }
         public float TotalHoras => HorasDeTrabajo.Sum(h => h.Horas);
-        public double HorasEstimadas { get; set; }
+        public double HorasEstimadas { get; private set; } //TODO: Implementar
 
         //Relaciones
+        public Cliente Cliente { get; private set; } = null!;
+        public int IdCliente { get; private set; }
+        public Presupuesto? Presupuesto { get; private set; }
+        public int? IdPresupuesto { get; private set; }
+
         public List<Foto> Fotos { get; set; } = [];
         public List<HorasYDescripcion> HorasDeTrabajo { get; set; } = [];
-        public Cliente Cliente { get; set; }
-        public int IdCliente { get; set; }
-        public Presupuesto? Presupuesto { get; set; }
-        public int? IdPresupuesto { get; set; }
         public Trabajo() { } //Constructor para EF
+
         public Trabajo(string titulo, string? descripcion, int idCliente, EstadoTrabajo? estado, int? idPresupuesto)
         {
             Titulo = titulo;
@@ -30,6 +32,37 @@ namespace ShopMGR.Dominio.Modelo
             IdCliente = idCliente;
             IdPresupuesto = idPresupuesto;
             Estado = estado ?? EstadoTrabajo.Pendiente;
+        }
+
+        public void Editar(string titulo, string? descripcion, int idCliente)
+        {
+            Titulo = titulo;
+            Descripcion = descripcion;
+            IdCliente = idCliente;
+        }
+
+        public void IniciarTrabajo()
+        {
+            Estado = EstadoTrabajo.Iniciado;
+            FechaInicio = DateOnly.FromDateTime(DateTime.Now);
+        }
+
+        public void TerminarTrabajo()
+        {
+            Estado = EstadoTrabajo.Terminado;
+            FechaFin = DateOnly.FromDateTime(DateTime.Now);
+        }
+
+        public void EliminarPresupuesto(decimal costoHora)
+        {
+            IdPresupuesto = null;
+            TotalLabor = costoHora * (decimal)TotalHoras;
+        }
+
+        public void ModificarPresupuesto(int idPresupuesto, decimal costoLabor)
+        {
+            IdPresupuesto = idPresupuesto;
+            TotalLabor = costoLabor;
         }
     }
 }
