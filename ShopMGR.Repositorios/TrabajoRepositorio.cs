@@ -24,18 +24,6 @@ namespace ShopMGR.Repositorios
             return trabajos;
         }
 
-        public async Task AgregarFotosAsync(List<Foto> fotos)
-        {
-            var trabajo =
-                await ObtenerPorIdAsync(fotos[0].IdTrabajo)
-                ?? throw new KeyNotFoundException(
-                    $"No existe un trabajo con el Id {fotos[0].IdTrabajo}"
-                );
-
-            _contexto.Fotos.AddRange(fotos);
-            await _contexto.SaveChangesAsync();
-        }
-
         public async Task AgregarHorasAsync(HorasYDescripcion horas)
         {
             var trabajo =
