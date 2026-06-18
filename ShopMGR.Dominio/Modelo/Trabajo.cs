@@ -13,6 +13,7 @@ namespace ShopMGR.Dominio.Modelo
         public string? Descripcion { get; set; }
         public decimal? TotalLabor { get; set; }
         public float TotalHoras => HorasDeTrabajo.Sum(h => h.Horas);
+        public double HorasEstimadas { get; set; }
 
         //Relaciones
         public List<Foto> Fotos { get; set; } = [];

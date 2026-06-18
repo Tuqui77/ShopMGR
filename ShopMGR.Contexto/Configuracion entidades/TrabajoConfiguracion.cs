@@ -44,6 +44,9 @@ namespace ShopMGR.Contexto.Configuracion_entidades
                 .IsRequired(false)
                 .HasColumnType("decimal(18,2)");
 
+            builder.Property(t => t.HorasEstimadas)
+                .IsRequired(true);
+
             //Relaciones
             builder.HasOne(t => t.Cliente)
                  .WithMany(c => c.Trabajos)
