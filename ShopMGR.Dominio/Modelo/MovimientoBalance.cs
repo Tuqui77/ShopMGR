@@ -26,12 +26,23 @@ public class MovimientoBalance
 
     public MovimientoBalance() { } //constructor para EF
 
-    public MovimientoBalance(TipoMovimiento tipo, decimal monto, string descripcion, DateOnly? fecha = null)
+    public MovimientoBalance(
+        TipoMovimiento tipo,
+        decimal monto,
+        string descripcion,
+        DateOnly? fecha = null,
+        int? idCliente = null, //tienen que estar en el constructor para los test
+        int? idTrabajo = null
+    )
     {
         Tipo = tipo;
         Monto = monto;
         Descripcion = descripcion;
         Fecha = fecha ?? DateOnly.FromDateTime(DateTime.Now);
+        if (idCliente.HasValue)
+            IdCliente = idCliente.Value;
+        if (idTrabajo.HasValue)
+            IdTrabajo = idTrabajo.Value;
     }
 
     public void Editar(
