@@ -148,18 +148,6 @@ const navigateToImage = (index: number) => {
   setPanState({ x: 0, y: 0 });
 };
 
-const openGallery = () => {
-  if (!trabajo?.fotos || trabajo.fotos.length === 0) return;
-  setShowGallery(true);
-  setSelectedImage(trabajo.fotos[0].enlace);
-  setSelectedImageId(trabajo.fotos[0].id);
-  setIsZoomed(false);
-  // Reset pan and zoom origin
-  panPosition.current = { x: 0, y: 0 };
-  isDragging.current = false;
-  setPanState({ x: 0, y: 0 });
-};
-
 // Robust panning handlers using document-level events for continuous dragging
 const hasDragged = useRef(false);
 const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -429,14 +417,20 @@ useEffect(() => {
             </div>
             
             {/* Miniaturas clickeables */}
-            <div 
-              className="flex gap-2 cursor-pointer"
-              onClick={openGallery}
-            >
+            <div className="flex gap-2">
               {trabajo.fotos?.slice(0, 4).map((foto) => (
                 <div
                   key={foto.id}
-                  className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0"
+                  className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+                  onClick={() => {
+                    setShowGallery(true);
+                    setSelectedImage(foto.enlace);
+                    setSelectedImageId(foto.id);
+                    setIsZoomed(false);
+                    panPosition.current = { x: 0, y: 0 };
+                    isDragging.current = false;
+                    setPanState({ x: 0, y: 0 });
+                  }}
                 >
                   <img
                     src={foto.enlace}

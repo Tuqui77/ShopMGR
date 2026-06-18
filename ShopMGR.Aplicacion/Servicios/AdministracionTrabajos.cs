@@ -13,7 +13,6 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioConValorHora repositorioPresupuestos,
         IAdministrarClientes clientes,
         IAlmacenamientoServicio almacenamiento,
-        IGoogleDriveServicio drive,
         MapperRegistry mapper
     ) : IAdministrarTrabajos
     {
@@ -21,7 +20,6 @@ namespace ShopMGR.Aplicacion.Servicios
         private readonly IRepositorioConValorHora _repositorioPresupuestos = repositorioPresupuestos;
         private readonly IAdministrarClientes _clientes = clientes;
         private readonly IAlmacenamientoServicio _almacenamiento = almacenamiento;
-        private readonly IGoogleDriveServicio _drive = drive;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Trabajo> CrearAsync(TrabajoDTO nuevoTrabajo)

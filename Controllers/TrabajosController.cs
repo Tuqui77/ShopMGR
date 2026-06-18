@@ -1,6 +1,4 @@
-﻿using Google.Apis.Drive.v3;
-using Google.Apis.Services;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
@@ -12,8 +10,7 @@ namespace ShopMGR.WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class TrabajosController(
-        IAdministrarTrabajos administrarTrabajos,
-        IGoogleDriveServicio servicio
+        IAdministrarTrabajos administrarTrabajos
     ) : ControllerBase
     {
         [HttpPost]

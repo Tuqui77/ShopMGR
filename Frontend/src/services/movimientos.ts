@@ -46,11 +46,11 @@ export const movimientosService = {
   },
 
   async modificar(data: ModificarMovimientoRequest): Promise<void> {
-    await apiClient.delete('/Cliente/EditarMovimiento', { data });
+    await apiClient.patch('/Cliente/EditarMovimiento', data);
   },
 
   async eliminar(idMovimiento: number, idCliente: number): Promise<void> {
-    await apiClient.delete('/Cliente/EliminarMovimiento', {
+    await apiClient.patch('/Cliente/EliminarMovimiento', null, {
       params: { idMovimiento, idCliente },
     });
   },

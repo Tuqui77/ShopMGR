@@ -2,6 +2,7 @@
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
 using ShopMGR.Dominio.Abstracciones;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
@@ -10,14 +11,12 @@ namespace ShopMGR.Aplicacion.Servicios
         IRepositorioCliente<Cliente> clienteRepositorio,
         IRepositorioConCliente<Direccion> direccionRepositorio,
         IRepositorioConCliente<TelefonoCliente> telefonoRepositorio,
-        IMovimientoBalanceRepositorio movimientoBalanceRepositorio,
         MapperRegistry mapper
     ) : IAdministrarClientes
     {
         private readonly IRepositorioCliente<Cliente> _clienteRepositorio = clienteRepositorio;
         private readonly IRepositorioConCliente<Direccion> _direccionRepositorio = direccionRepositorio;
         private readonly IRepositorioConCliente<TelefonoCliente> _telefonoClienteRepositorio = telefonoRepositorio;
-        private readonly IMovimientoBalanceRepositorio _movimientoBalanceRepositorio = movimientoBalanceRepositorio;
         private readonly MapperRegistry _mapper = mapper;
 
         public async Task<Cliente> CrearAsync(ClienteDTO nuevoCliente)
@@ -76,13 +75,15 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var cliente = await _clienteRepositorio.ObtenerPorIdAsync(movimientoDTO.IdCliente);
 
-            var movimiento = new MovimientoBalance
-            {
-                Monto = movimientoDTO.Monto,
-                Descripcion = movimientoDTO.Descripcion,
-                Fecha = movimientoDTO.Fecha,
-                Tipo = movimientoDTO.Tipo,
-            };
+            var movimiento = new MovimientoBalance(
+                movimientoDTO.Tipo,
+                movimientoDTO.Monto,
+                movimientoDTO.Descripcion,
+                movimientoDTO.Fecha
+            );
+
+            Console.WriteLine($"Tipo: {movimiento.Tipo}");
+            Console.WriteLine($"Monto: {movimiento.Monto}");
 
             cliente.MovimientosBalance.Add(movimiento);
             await _clienteRepositorio.ActualizarAsync(cliente);
@@ -98,15 +99,18 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task ModificarMovimientoAsync(ModificarMovimientoBalance movimientoModificado)
         {
             var cliente = await ObtenerDetallePorIdAsync(movimientoModificado.IdCliente);
-            var movimiento = cliente.MovimientosBalance.FirstOrDefault(m => m.Id == movimientoModificado.Id)
+            var movimiento =
+                cliente.MovimientosBalance.FirstOrDefault(m => m.Id == movimientoModificado.Id)
                 ?? throw new KeyNotFoundException($"No se encontro un movimiento con el ID {movimientoModificado.Id}");
 
-            movimiento.Monto = movimientoModificado.Monto;
-            movimiento.Descripcion = movimientoModificado.Descripcion;
-            movimiento.Fecha = movimientoModificado.Fecha;
-            movimiento.Tipo = movimientoModificado.Tipo;
-            movimiento.IdCliente = movimientoModificado.IdCliente;
-            movimiento.IdTrabajo = movimientoModificado.IdTrabajo;
+            movimiento.Editar(
+                movimientoModificado.Tipo,
+                movimientoModificado.Monto,
+                movimientoModificado.Descripcion,
+                movimientoModificado.Fecha,
+                movimientoModificado.IdCliente,
+                movimientoModificado.IdTrabajo
+            );
 
             await _clienteRepositorio.ActualizarAsync(cliente);
         }
@@ -114,7 +118,8 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task EliminarMovimientoAsync(int idMovimiento, int idCliente)
         {
             var cliente = await ObtenerDetallePorIdAsync(idCliente);
-            var movimiento = cliente.MovimientosBalance.Find(m => m.Id == idMovimiento)
+            var movimiento =
+                cliente.MovimientosBalance.Find(m => m.Id == idMovimiento)
                 ?? throw new KeyNotFoundException($"No se encontro un movimiento con el ID {idMovimiento}");
 
             cliente.MovimientosBalance.Remove(movimiento);

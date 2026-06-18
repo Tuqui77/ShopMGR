@@ -224,19 +224,22 @@ public class ClienteRepositorioTests
         await contexto.SaveChangesAsync();
 
         // Agregar movimientos para que el balance se calcule correctamente
+        // El constructor de MovimientoBalance aplica invariantes de signo automáticamente:
+        //   - Créditos (Pago/Anticipo): montos negativos → se niegan (quedan positivos)
+        //   - Débitos (Cargo/Compra):  montos positivos → se niegan (quedan negativos)
         var clientes = await contexto.Clientes.ToListAsync();
         foreach (var c in clientes)
         {
-            await contexto.MovimientoBalance.AddAsync(new MovimientoBalance
+            var (tipo, monto) = c.NombreCompleto switch
             {
-                Monto = c.NombreCompleto.Contains("Positivo") ? 100m :
-                       c.NombreCompleto.Contains("Negativo") ? -50m :
-                       c.NombreCompleto.Contains("Muy Negativo") ? -200m : 0m,
-                Tipo = TipoMovimiento.Pago,
-                Descripcion = "Test",
-                Fecha = DateOnly.FromDateTime(DateTime.Today),
-                IdCliente = c.Id
-            });
+                string n when n.Contains("Positivo") => (TipoMovimiento.Pago, 100m),
+                string n when n.Contains("Negativo") => (TipoMovimiento.Cargo, 50m),
+                string n when n.Contains("Muy Negativo") => (TipoMovimiento.Cargo, 200m),
+                _ => (TipoMovimiento.Pago, 0m),
+            };
+
+            var movimiento = new MovimientoBalance(tipo, monto, "Test", DateOnly.FromDateTime(DateTime.Today), c.Id);
+            await contexto.MovimientoBalance.AddAsync(movimiento);
         }
         await contexto.SaveChangesAsync();
 

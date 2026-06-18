@@ -13,7 +13,7 @@ Creo que vale la pena dejar esto muy en claro, tanto para no tomar crédito por 
 - **C#**
 - **Entity Framework Core** para la base de datos.
 - **Domain Driven Design (DDD)** como patrón de diseño.
-- **Google Drive API** para la carga y almacenamiento de fotos de los trabajos.
+- **Almacenamiento local** para la carga y almacenamiento de fotos de los trabajos, sea en Docker Volumes o en Persistent Volumes de Kubernetes.
 
 ## Funcionalidades principales
 
@@ -29,4 +29,4 @@ Creo que vale la pena dejar esto muy en claro, tanto para no tomar crédito por 
 ### Trabajos
 - Registro de tareas realizadas por trabajo.
 - Seguimiento de las horas trabajadas.
-- Carga de fotos directamente a Google Drive como evidencia del progreso.
+- Carga de fotos como evidencia del progreso.

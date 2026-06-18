@@ -18,7 +18,6 @@ public class AdministracionTrabajosTests
     private readonly Mock<IRepositorioConFoto> _repositorioFotoMock;
     private readonly Mock<IRepositorioConValorHora> _repositorioPresupuestoMock;
     private readonly Mock<IAdministrarClientes> _clientesMock;
-    private readonly Mock<IGoogleDriveServicio> _driveMock;
     private readonly Mock<IAlmacenamientoServicio> _almacenamientoMock;
     private readonly AdministracionTrabajos _servicio;
 
@@ -27,7 +26,6 @@ public class AdministracionTrabajosTests
         _repositorioFotoMock = new Mock<IRepositorioConFoto>();
         _repositorioPresupuestoMock = new Mock<IRepositorioConValorHora>();
         _clientesMock = new Mock<IAdministrarClientes>();
-        _driveMock = new Mock<IGoogleDriveServicio>();
         _almacenamientoMock = new Mock<IAlmacenamientoServicio>();
 
         // Create MapperRegistry with IServiceProvider
@@ -39,7 +37,6 @@ public class AdministracionTrabajosTests
             _repositorioPresupuestoMock.Object,
             _clientesMock.Object,
             _almacenamientoMock.Object,
-            _driveMock.Object,
             mapperRegistry
         );
     }
@@ -221,12 +218,6 @@ public class AdministracionTrabajosTests
         mockFiles.Setup(c => c.GetEnumerator()).Returns(fileList.GetEnumerator());
         mockFiles.Setup(c => c.Count).Returns(1);
         mockFiles.Setup(c => c[It.IsAny<int>()]).Returns(mockFile.Object);
-
-        _driveMock.Setup(x => x.ConectarConGoogleDrive()).ReturnsAsync((Google.Apis.Auth.OAuth2.UserCredential)null!);
-
-        _driveMock
-            .Setup(x => x.SubirArchivoAsync(It.IsAny<IFormFile>()))
-            .ReturnsAsync("https://drive.google.com/uc?id=test123");
 
         _almacenamientoMock
             .Setup(x => x.SubirFotoAsync(It.IsAny<int>(), It.IsAny<IFormFile>()))
