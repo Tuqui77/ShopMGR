@@ -145,27 +145,23 @@ namespace ShopMGR.Aplicacion.Servicios
                 trabajoDb.IniciarTrabajo();
             }
 
-            var presupuestoAnterior = trabajoDb.IdPresupuesto;
-            var presupuestoNuevo = trabajoModificado.IdPresupuesto;
-            var cambioPresupuesto = presupuestoAnterior != presupuestoNuevo;
-
-            if (cambioPresupuesto) //TODO: Implementar endpoints separados para estas modificaciones
-            {
-                if (presupuestoNuevo == null) //Se eliminó el presupuesto
-                {
-                    var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                    trabajoDb.EliminarPresupuesto(costoHora);
-                }
-                else //Se agregó o cambió el presupuesto
-                {
-                    var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(
-                        (int)trabajoModificado.IdPresupuesto!
-                    );
-                    trabajoDb.ModificarPresupuesto(presupuesto.Id, presupuesto.CostoLabor);
-                }
-            }
-
             await _repositorio.ActualizarAsync(trabajoDb);
+        }
+
+        public async Task EliminarPresupuesto(int idTrabajo)
+        {
+            var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
+            var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
+            trabajo.EliminarPresupuesto(costoHora);
+            await _repositorio.ActualizarAsync(trabajo);
+        }
+
+        public async Task CambiarPresupuesto(int idTrabajo, int idPresupuesto)
+        {
+            var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
+            var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(idPresupuesto);
+            trabajo.CambiarPresupuesto(presupuesto.Id, presupuesto.CostoLabor, presupuesto.HorasEstimadas);
+            await _repositorio.ActualizarAsync(trabajo);
         }
 
         public async Task TerminarTrabajo(int idTrabajo)
