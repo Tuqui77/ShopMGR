@@ -48,6 +48,12 @@ html {
   image-rendering: auto;
 }
 
+@media (min-width: 1024px) {
+  html {
+    font-size: 12px;
+  }
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
