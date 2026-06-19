@@ -11,5 +11,6 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
         public int? IdPresupuesto { get; set; }
         public EstadoTrabajo? Estado { get; set; }
         public double? HorasEstimadas { get; set; }
+        public decimal? TotalLabor { get; set; }
     }
 }

@@ -28,7 +28,15 @@ namespace ShopMGR.Dominio.Modelo
 
         public Trabajo() { } //Constructor para EF
 
-        public Trabajo(string titulo, string? descripcion, int idCliente, EstadoTrabajo? estado, int? idPresupuesto, double? horasEstimadas)
+        public Trabajo(
+            string titulo,
+            string? descripcion,
+            int idCliente,
+            EstadoTrabajo? estado,
+            int? idPresupuesto,
+            double? horasEstimadas,
+            decimal? totalLabor
+        )
         {
             Titulo = titulo;
             Descripcion = descripcion;
@@ -36,6 +44,7 @@ namespace ShopMGR.Dominio.Modelo
             IdPresupuesto = idPresupuesto;
             Estado = estado ?? EstadoTrabajo.Pendiente;
             HorasEstimadas = horasEstimadas;
+            TotalLabor = TotalLabor;
         }
 
         public void Editar(string titulo, string? descripcion, int idCliente)

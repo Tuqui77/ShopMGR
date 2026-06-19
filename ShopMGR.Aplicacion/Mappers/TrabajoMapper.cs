@@ -31,7 +31,8 @@ public class TrabajoDTOMapper : IMapper<TrabajoDTO, Trabajo>
             trabajoDTO.IdCliente,
             trabajoDTO.Estado,
             trabajoDTO.IdPresupuesto,
-            trabajoDTO.HorasEstimadas
+            trabajoDTO.HorasEstimadas,
+            trabajoDTO.TotalLabor
         );
     }
 }

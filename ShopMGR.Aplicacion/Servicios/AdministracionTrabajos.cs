@@ -28,13 +28,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             if (nuevoTrabajo.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajo.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
-            }
-
-            if (nuevoTrabajo.IdPresupuesto != null)
-            {
-                var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(nuevoTrabajo.IdPresupuesto.Value);
-                trabajo.TotalLabor = presupuesto.CostoLabor;
+                trabajo.IniciarTrabajo();
             }
 
             await _repositorio.CrearAsync(trabajo);
@@ -55,6 +49,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 IdPresupuesto = presupuesto.Id,
                 Estado = EstadoTrabajo.Pendiente,
                 HorasEstimadas = presupuesto.HorasEstimadas,
+                TotalLabor = presupuesto.CostoLabor,
             };
 
             return await CrearAsync(trabajoDTO);
