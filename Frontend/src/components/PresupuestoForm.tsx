@@ -366,10 +366,10 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                       'w-full p-3 rounded-lg text-left transition-all duration-150 cursor-pointer',
                       clienteSeleccionado?.id === cliente.id
                         ? 'ring-2 ring-[var(--color-accent)]'
-                        : 'hover:ring-1 hover:ring-[var(--color-accent)]/40 hover:bg-[var(--color-surface)]'
+                        : 'hover:brightness-125'
                     )}
                     style={{ 
-                      backgroundColor: clienteSeleccionado?.id === cliente.id ? 'var(--color-surface)' : 'transparent',
+                      backgroundColor: 'var(--color-surface)',
                     }}
                   >
                     <p className="font-medium" style={{ color: 'var(--color-text)' }}>
