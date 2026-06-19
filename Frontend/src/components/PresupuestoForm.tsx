@@ -363,12 +363,13 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                     key={cliente.id}
                     onClick={() => handleSelectCliente(cliente)}
                     className={clsx(
-                      'w-full p-3 rounded-lg text-left transition-colors',
-                      clienteSeleccionado?.id === cliente.id && 'border-2'
+                      'w-full p-3 rounded-lg text-left transition-all duration-150 cursor-pointer',
+                      clienteSeleccionado?.id === cliente.id
+                        ? 'ring-2 ring-[var(--color-accent)]'
+                        : 'hover:ring-1 hover:ring-[var(--color-accent)]/40 hover:bg-[var(--color-surface)]'
                     )}
                     style={{ 
-                      backgroundColor: 'var(--color-surface)',
-                      borderColor: clienteSeleccionado?.id === cliente.id ? 'var(--color-accent)' : 'transparent'
+                      backgroundColor: clienteSeleccionado?.id === cliente.id ? 'var(--color-surface)' : 'transparent',
                     }}
                   >
                     <p className="font-medium" style={{ color: 'var(--color-text)' }}>
