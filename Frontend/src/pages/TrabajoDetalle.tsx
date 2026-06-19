@@ -16,7 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { useTrabajoDetalle, useTerminarTrabajo, useModificarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
+import { useTrabajoDetalle, useTerminarTrabajo, useIniciarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -31,7 +31,7 @@ export function TrabajoDetalle() {
   const { data: trabajo, isLoading, error } = useTrabajoDetalle(trabajoId);
   const { data: clienteCompleto } = useClienteDetalle(trabajo?.clienteId);
   const terminarTrabajo = useTerminarTrabajo();
-  const modificarTrabajo = useModificarTrabajo();
+  const iniciarTrabajo = useIniciarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
   const subirFotos = useSubirFotos();
   const eliminarFoto = useEliminarFoto();
@@ -78,14 +78,7 @@ const [isPanning, setIsPanning] = useState(false); // Controls CSS transition du
   const handleIniciar = async () => {
     if (trabajo) {
       try {
-        await modificarTrabajo.mutateAsync({
-          id: trabajo.id,
-          trabajo: {
-            titulo: trabajo.titulo,
-            idCliente: trabajo.clienteId,
-            estado: 'Iniciado',
-          },
-        });
+        await iniciarTrabajo.mutateAsync(trabajo.id);
       } catch (err) {
         console.error('Error al iniciar trabajo:', err);
       }
@@ -765,11 +758,11 @@ useEffect(() => {
           {trabajo.estado === 'Pendiente' && (
             <button 
               onClick={handleIniciar}
-              disabled={modificarTrabajo.isPending}
+              disabled={iniciarTrabajo.isPending}
               className="btn-primary w-full flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4" />
-              {modificarTrabajo.isPending ? 'Iniciando...' : 'Iniciar Trabajo'}
+              {iniciarTrabajo.isPending ? 'Iniciando...' : 'Iniciar Trabajo'}
             </button>
           )}
           
