@@ -105,6 +105,55 @@ export function useModificarTrabajo() {
 }
 
 /**
+ * Inicia un trabajo usando el endpoint dedicado (PATCH IniciarTrabajo)
+ */
+export function useIniciarTrabajo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => trabajosService.iniciar(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id, 'detalle'] });
+    },
+  });
+}
+
+/**
+ * Elimina el presupuesto asociado a un trabajo
+ */
+export function useEliminarPresupuesto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => trabajosService.eliminarPresupuesto(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id, 'detalle'] });
+    },
+  });
+}
+
+/**
+ * Cambia el presupuesto asociado a un trabajo
+ */
+export function useCambiarPresupuesto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, idPresupuesto }: { id: number; idPresupuesto: number }) =>
+      trabajosService.cambiarPresupuesto(id, idPresupuesto),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id, 'detalle'] });
+    },
+  });
+}
+
+/**
  * Termina un trabajo (cambia estado a Terminado)
  */
 export function useTerminarTrabajo() {
