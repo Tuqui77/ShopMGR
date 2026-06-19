@@ -160,6 +160,14 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpPatch]
+        [Route("IniciarTrabajo")]
+        public async Task<IActionResult> IniciarTrabajo(int idTrabajo)
+        {
+            await administrarTrabajos.IniciarTrabajo(idTrabajo);
+            return Ok($"Trabajo #{idTrabajo} marcado como iniciado.");
+        }
+
+        [HttpPatch]
         [Route("TerminarTrabajo")]
         public async Task<IActionResult> TerminarTrabajo(int idTrabajo)
         {

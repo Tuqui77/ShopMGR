@@ -159,6 +159,13 @@ namespace ShopMGR.Aplicacion.Servicios
             await _repositorio.ActualizarAsync(trabajo);
         }
 
+        public async Task IniciarTrabajo(int idTrabajo)
+        {
+            var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
+            trabajo.IniciarTrabajo();
+            await _repositorio.ActualizarAsync(trabajo);
+        }
+
         public async Task TerminarTrabajo(int idTrabajo)
         {
             var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
