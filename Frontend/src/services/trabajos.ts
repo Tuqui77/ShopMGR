@@ -14,8 +14,6 @@ export interface ModificarTrabajoRequest {
   descripcion?: string;
   estado?: EstadoTrabajo;
   idCliente?: number;
-  idPresupuesto?: number;
-  totalLabor?: number;
 }
 
 // ============================================================================
@@ -99,7 +97,7 @@ function mapTrabajoBackend(dto: TrabajoBackendDTO): Trabajo {
     fechaFin: dto.fechaFin,
     totalLabor: dto.totalLabor,
     horasRegistradas: totalHoras,
-    horasEstimadas: dto.presupuesto?.horasEstimadas,
+    horasEstimadas: dto.horasEstimadas ?? dto.presupuesto?.horasEstimadas,
     fotosCount: fotosValues.length,
     fotos,
     cliente: mapClienteFull(dto.cliente),
@@ -220,6 +218,27 @@ export const trabajosService = {
    */
   async modificar(id: number, data: ModificarTrabajoRequest): Promise<void> {
     await apiClient.patch(`/Trabajos/ModificarTrabajo?idTrabajo=${id}`, data);
+  },
+
+  /**
+   * Inicia un trabajo (cambia estado a Iniciado y setea fecha de inicio)
+   */
+  async iniciar(id: number): Promise<void> {
+    await apiClient.patch(`/Trabajos/IniciarTrabajo?idTrabajo=${id}`);
+  },
+
+  /**
+   * Elimina el presupuesto asociado a un trabajo
+   */
+  async eliminarPresupuesto(id: number): Promise<void> {
+    await apiClient.patch(`/Trabajos/EliminarPresupuesto?idTrabajo=${id}`);
+  },
+
+  /**
+   * Cambia el presupuesto asociado a un trabajo
+   */
+  async cambiarPresupuesto(id: number, idPresupuesto: number): Promise<void> {
+    await apiClient.patch(`/Trabajos/CambiarPresupuesto?idTrabajo=${id}&idPresupuesto=${idPresupuesto}`);
   },
 
   /**
