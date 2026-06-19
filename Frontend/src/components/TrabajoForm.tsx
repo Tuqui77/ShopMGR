@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
-import { usePresupuestosPorCliente } from '../hooks/usePresupuestos';
-import { useCrearTrabajo, useModificarTrabajo, useTrabajo } from '../hooks/useTrabajos';
+import { usePresupuestosPorCliente, usePresupuesto } from '../hooks/usePresupuestos';
+import { useCrearTrabajo, useModificarTrabajo, useTrabajo, useCambiarPresupuesto, useEliminarPresupuesto } from '../hooks/useTrabajos';
 import { movimientosService, type TipoMovimiento } from '../services/movimientos';
 import type { EstadoTrabajo, Cliente, Presupuesto } from '../types';
-import { Loader2, X, Check, Banknote } from 'lucide-react';
+import { Loader2, X, Check, Banknote, FileText, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Props {
@@ -31,6 +31,8 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   const { data: trabajoOriginal, isLoading: loadingTrabajo } = useTrabajo(trabajoId);
   const crearTrabajo = useCrearTrabajo();
   const modificarTrabajo = useModificarTrabajo();
+  const cambiarPresupuesto = useCambiarPresupuesto();
+  const eliminarPresupuesto = useEliminarPresupuesto();
   
   // Estado del formulario - inicializar con datos del trabajo si estamos editando
   const [titulo, setTitulo] = useState(() => trabajoOriginal?.titulo ?? '');
@@ -58,6 +60,10 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
 
   // Query de presupuestos del cliente (solo cuando hay cliente seleccionado)
   const { data: presupuestosDelCliente = [] } = usePresupuestosPorCliente(clienteId ?? undefined);
+  
+  // Presupuesto actual (para edición)
+  const { data: presupuestoActual } = usePresupuesto(isEditing ? (presupuestoId ?? undefined) : undefined);
+  const [showPresupuestoSelector, setShowPresupuestoSelector] = useState(false);
   
   // Resetear formulario al cerrar - handled in onClose
   const onCloseCallback = useCallback(() => {
@@ -89,6 +95,30 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onCloseCallback]);
   
+  // Handler: seleccionar un presupuesto (cambiar el asociado al trabajo)
+  const handleSeleccionarPresupuesto = async (nuevoPresupuestoId: number) => {
+    if (!trabajoId) return;
+    try {
+      await cambiarPresupuesto.mutateAsync({ id: trabajoId, idPresupuesto: nuevoPresupuestoId });
+      setPresupuestoId(nuevoPresupuestoId);
+      setShowPresupuestoSelector(false);
+    } catch (err) {
+      console.error('Error al cambiar presupuesto:', err);
+    }
+  };
+
+  // Handler: eliminar presupuesto asociado
+  const handleEliminarPresupuesto = async () => {
+    if (!trabajoId) return;
+    try {
+      await eliminarPresupuesto.mutateAsync(trabajoId);
+      setPresupuestoId(null);
+      setShowPresupuestoSelector(false);
+    } catch (err) {
+      console.error('Error al eliminar presupuesto:', err);
+    }
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
     
@@ -136,13 +166,14 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
     
     try {
       if (isEditing && trabajoId) {
+        // Nota: el presupuesto se cambia/elimina mediante los endpoints dedicados
+        // (cambiarPresupuesto / eliminarPresupuesto), no via ModificarTrabajo
         await modificarTrabajo.mutateAsync({
           id: trabajoId,
           trabajo: {
             titulo: titulo.trim(),
             descripcion: descripcion.trim() || undefined,
             idCliente: clienteId!,
-            idPresupuesto: presupuestoId ?? undefined,
             estado,
           },
         });
@@ -250,8 +281,8 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                 )}
               </div>
 
-              {/* Presupuesto (solo si hay cliente seleccionado) */}
-              {clienteId && (
+              {/* Presupuesto - modo creación: select simple */}
+              {!isEditing && clienteId && (
                 <div>
                   <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
                     Presupuesto asociado (opcional)
@@ -263,13 +294,58 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   >
                     <option value="">Sin presupuesto</option>
                     {presupuestosDelCliente
-                      .filter((p: Presupuesto) => p.estado === 'Aceptado')
+                      .filter((p: Presupuesto) => p.estado === 'Aceptado' || p.estado === 'Pendiente')
                       .map((presupuesto: Presupuesto) => (
                         <option key={presupuesto.id} value={presupuesto.id}>
                           {presupuesto.titulo} - ${presupuesto.total?.toLocaleString('es-AR')}
                         </option>
                       ))}
                   </select>
+                </div>
+              )}
+
+              {/* Presupuesto - modo edición: display + botón cambiar */}
+              {isEditing && clienteId && (
+                <div>
+                  <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                    Presupuesto asociado
+                  </label>
+                  <div
+                    className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors"
+                    style={{ backgroundColor: 'var(--color-surface)' }}
+                    onClick={() => setShowPresupuestoSelector(true)}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: 'var(--color-elevated)' }}
+                    >
+                      <FileText className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {presupuestoActual ? (
+                        <>
+                          <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                            {presupuestoActual.titulo}
+                          </p>
+                          <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                            {presupuestoActual.horasEstimadas}h estimadas &middot; ${presupuestoActual.total?.toLocaleString('es-AR')}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                            Sin presupuesto
+                          </p>
+                          <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                            Tocar para seleccionar
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <span className="text-xs font-medium flex-shrink-0" style={{ color: 'var(--color-accent)' }}>
+                      Cambiar
+                    </span>
+                  </div>
                 </div>
               )}
               
@@ -381,6 +457,107 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
           )}
         </div>
       </div>
+
+      {/* Modal selector de presupuesto - fuera del modal-content para evitar clipping por transform */}
+      {showPresupuestoSelector && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60" onClick={() => setShowPresupuestoSelector(false)}>
+          <div
+            className="bg-[var(--color-elevated)] rounded-2xl w-[90vw] max-w-md max-h-[70vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+                {presupuestoId ? 'Cambiar presupuesto' : 'Asociar presupuesto'}
+              </h3>
+
+              {presupuestosDelCliente.filter((p: Presupuesto) => p.estado === 'Aceptado' || p.estado === 'Pendiente').length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--color-muted)' }} />
+                  <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                    No hay presupuestos disponibles para este cliente
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {presupuestosDelCliente
+                    .filter((p: Presupuesto) => p.estado === 'Aceptado' || p.estado === 'Pendiente')
+                    .map((presupuesto: Presupuesto) => {
+                      const isSelected = presupuesto.id === presupuestoId;
+                      return (
+                        <button
+                          key={presupuesto.id}
+                          type="button"
+                          onClick={() => handleSeleccionarPresupuesto(presupuesto.id)}
+                          disabled={cambiarPresupuesto.isPending}
+                          className={clsx(
+                            'w-full text-left p-3 rounded-lg transition-all duration-150 flex items-center gap-3 cursor-pointer',
+                            isSelected
+                              ? 'ring-2 ring-[var(--color-accent)]'
+                              : 'hover:ring-1 hover:ring-[var(--color-accent)]/40 hover:bg-[var(--color-surface)]'
+                          )}
+                          style={{
+                            backgroundColor: isSelected ? 'var(--color-surface)' : 'transparent',
+                          }}
+                        >
+                          <div
+                            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: 'var(--color-elevated)' }}
+                          >
+                            <FileText className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                              {presupuesto.titulo}
+                            </p>
+                            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                              {presupuesto.horasEstimadas}h &middot; ${presupuesto.total?.toLocaleString('es-AR')}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
+                          )}
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Opción para eliminar presupuesto */}
+              {presupuestoId && (
+                <button
+                  type="button"
+                  onClick={handleEliminarPresupuesto}
+                  disabled={eliminarPresupuesto.isPending}
+                  className="w-full flex items-center justify-center gap-2 mt-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer hover:bg-[var(--color-surface)]"
+                  style={{ color: 'var(--color-danger)' }}
+                >
+                  {eliminarPresupuesto.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Eliminando...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      Quitar presupuesto
+                    </>
+                  )}
+                </button>
+              )}
+
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPresupuestoSelector(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
