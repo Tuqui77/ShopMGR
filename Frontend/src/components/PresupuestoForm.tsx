@@ -272,7 +272,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
           descripcion: descripcion.trim() || undefined,
           horasEstimadas,
           idCliente: clienteSeleccionado.id,
-          materiales: materiales.length > 0 ? materiales : undefined,
+          materiales: materiales.length > 0 ? materiales : [],
         });
       }
       setShowSuccess(true);
@@ -465,12 +465,9 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
               
               {/* Materiales */}
               <div>
-                <label className="text-sm mb-1 block" style={{ color: 'var(--color-muted)' }}>
-                  Materiales <span style={{ color: 'var(--color-muted)', opacity: 0.6 }}>(opcional)</span>
+                <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
+                  MATERIALES
                 </label>
-                <p className="text-xs mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }}>
-                  ¿Solo mano de obra? Dejá esta sección vacía.
-                </p>
                 
                 {materiales.length > 0 && (
                   <div className="space-y-2 mb-3">
