@@ -41,7 +41,7 @@ export function Dashboard() {
               })}, {formatDate(new Date())}
             </p>
           </div>
-          <button className="btn-icon lg:hidden" onClick={() => navigate('/configuracion')}>
+          <button className="btn-icon lg:!hidden" onClick={() => navigate('/configuracion')}>
             <Settings className="w-5 h-5" />
           </button>
         </div>
