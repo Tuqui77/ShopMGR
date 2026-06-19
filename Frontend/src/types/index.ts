@@ -163,6 +163,7 @@ export interface TrabajoBackendDTO {
   fechaInicio?: string;
   fechaFin?: string;
   totalLabor?: number;
+  horasEstimadas?: number;
   idCliente: number;
   idPresupuesto?: number;
   cliente: ClienteBackendDTO | null;
@@ -183,8 +184,8 @@ export interface CrearTrabajoRequest {
 
 export interface ModificarTrabajoRequest {
   titulo?: string;
+  descripcion?: string;
   idCliente?: number;
-  idPresupuesto?: number;
   estado?: EstadoTrabajo;
 }
 
