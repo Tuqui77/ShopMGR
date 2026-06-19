@@ -44,7 +44,7 @@ namespace ShopMGR.Dominio.Modelo
             IdPresupuesto = idPresupuesto;
             Estado = estado ?? EstadoTrabajo.Pendiente;
             HorasEstimadas = horasEstimadas;
-            TotalLabor = TotalLabor;
+            TotalLabor = totalLabor;
         }
 
         public void Editar(string titulo, string? descripcion, int idCliente)
