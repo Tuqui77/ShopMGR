@@ -54,6 +54,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 IdCliente = presupuesto.IdCliente,
                 IdPresupuesto = presupuesto.Id,
                 Estado = EstadoTrabajo.Pendiente,
+                HorasEstimadas = presupuesto.HorasEstimadas,
             };
 
             return await CrearAsync(trabajoDTO);
