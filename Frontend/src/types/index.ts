@@ -252,6 +252,7 @@ export interface PresupuestoListaDTO {
   id: number;
   titulo: string;
   nombreCliente: string;
+  idCliente?: number;
   horasEstimadas: number;
   total: number;
   estado: EstadoPresupuesto;
