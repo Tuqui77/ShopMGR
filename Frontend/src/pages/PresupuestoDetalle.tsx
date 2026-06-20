@@ -11,10 +11,11 @@ import {
   X,
   Package,
   Copy,
+  MoreVertical,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { trabajosService } from '../services/trabajos';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import type { Presupuesto, EstadoPresupuesto, Cliente } from '../types';
 import { useStore } from '../store';
@@ -131,7 +132,21 @@ export function PresupuestoDetalle() {
   const presupuestoId = id ? parseInt(id, 10) : undefined;
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const { editingPresupuestoId, setEditingPresupuestoId, setDatosDuplicarPresupuesto, setShowPresupuestoForm } = useStore();
+  
+  // Cerrar menú 3 puntos al hacer click fuera
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showMenu]);
 
   const { data: presupuesto, isLoading, error } = useQuery({
     queryKey: ['presupuesto', presupuestoId],
@@ -210,13 +225,19 @@ export function PresupuestoDetalle() {
     }
   };
 
-  const handleRechazar = async () => {
-    if (presupuesto && confirm('¿Rechazar este presupuesto?')) {
-      try {
-        await rechazarMutation.mutateAsync(presupuesto.id);
-      } catch (err) {
-        console.error('Error al rechazar presupuesto:', err);
-      }
+  const [showRechazarConfirm, setShowRechazarConfirm] = useState(false);
+
+  const handleRechazar = () => {
+    setShowRechazarConfirm(true);
+  };
+
+  const handleConfirmRechazar = async () => {
+    if (!presupuesto) return;
+    setShowRechazarConfirm(false);
+    try {
+      await rechazarMutation.mutateAsync(presupuesto.id);
+    } catch (err) {
+      console.error('Error al rechazar presupuesto:', err);
     }
   };
 
@@ -295,6 +316,71 @@ export function PresupuestoDetalle() {
             <h1 className="text-xl font-bold font-display">Detalle del Presupuesto</h1>
           </div>
           {getStatusBadge()}
+          {/* 3-dot menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="btn-icon"
+              aria-label="Opciones"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {showMenu && (
+              <div
+                className="absolute right-0 top-full mt-1 w-44 py-1 rounded-lg shadow-lg z-20 border"
+                style={{
+                  backgroundColor: 'var(--color-card)',
+                  borderColor: 'var(--color-border)',
+                }}
+              >
+                {presupuesto.estado === 'Pendiente' && (
+                  <button
+                    onClick={() => { handleAceptar(); setShowMenu(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                    style={{ color: 'var(--color-success)' }}
+                  >
+                    <Check className="w-4 h-4" />
+                    Aceptar
+                  </button>
+                )}
+                {presupuesto.estado === 'Pendiente' && (
+                  <button
+                    onClick={() => { handleRechazar(); setShowMenu(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                    style={{ color: 'var(--color-danger)' }}
+                  >
+                    <X className="w-4 h-4" />
+                    Rechazar
+                  </button>
+                )}
+                <button
+                  onClick={() => { handleDuplicar(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  <Copy className="w-4 h-4" />
+                  Duplicar
+                </button>
+                <div className="h-px my-1" style={{ backgroundColor: 'var(--color-border)' }} />
+                <button
+                  onClick={() => { handleEdit(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-danger)' }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -412,62 +498,7 @@ export function PresupuestoDetalle() {
           </div>
         </div>
 
-        {/* Acciones */}
-        <div className="space-y-3">
-          {presupuesto.estado === 'Pendiente' && (
-            <div className="flex gap-3">
-              <button 
-                onClick={handleAceptar}
-                disabled={aceptarMutation.isPending}
-                className="btn-primary flex items-center justify-center gap-2 max-w-[160px]"
-              >
-                {aceptarMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                Aceptar
-              </button>
-              <button 
-                onClick={handleRechazar}
-                disabled={rechazarMutation.isPending}
-                className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]"
-                style={{ color: 'var(--color-danger)' }}
-              >
-                {rechazarMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <X className="w-4 h-4" />
-                )}
-                Rechazar
-              </button>
-            </div>
-          )}
-          
-          <div className="flex gap-3">
-            <button 
-              onClick={handleDuplicar}
-              className="btn-secondary flex items-center justify-center gap-2 max-w-[160px]"
-            >
-              <Copy className="w-4 h-4" />
-              Duplicar
-            </button>
-            <button 
-              onClick={handleEdit}
-              className="btn-secondary flex items-center justify-center gap-2 max-w-[120px]"
-            >
-              <Edit className="w-4 h-4" />
-              Editar
-            </button>
-            <button 
-              onClick={() => setShowDeleteConfirm(true)}
-              className="btn-secondary flex items-center justify-center gap-2 px-4"
-              style={{ color: 'var(--color-danger)' }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <div className="h-4" />
       </section>
 
       {/* Modal de confirmación de aceptar (crea trabajo automáticamente) */}
@@ -495,6 +526,38 @@ export function PresupuestoDetalle() {
                   style={{ backgroundColor: 'var(--color-success)' }}
                 >
                   {aceptarMutation.isPending ? 'Aceptando...' : 'Aceptar y crear trabajo'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de confirmación de rechazar */}
+      {showRechazarConfirm && (
+        <>
+          <div className="modal-backdrop" onClick={() => setShowRechazarConfirm(false)} />
+          <div className="modal-content">
+            <div className="p-6 text-center">
+              <X className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-danger)' }} />
+              <h3 className="text-lg font-semibold mb-2">¿Rechazar presupuesto?</h3>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
+                El presupuesto será rechazado.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setShowRechazarConfirm(false)}
+                  className="btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmRechazar}
+                  disabled={rechazarMutation.isPending}
+                  className="py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
+                >
+                  {rechazarMutation.isPending ? 'Rechazando...' : 'Rechazar'}
                 </button>
               </div>
             </div>
