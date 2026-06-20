@@ -18,7 +18,7 @@ interface Props {
 export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
   const store = useStore();
   const isEditing = !!presupuestoId;
-  
+
   // Usar props si se pasan, sino usar store
   const isOpen = isOpenProp ?? store.showPresupuestoForm;
   const onClose = useCallback(() => {
@@ -28,7 +28,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       store.setShowPresupuestoForm(false);
     }
   }, [onCloseProp, store]);
-  
+
   // Queries y mutations
   const { data: clientes = [] } = useClientes();
   const { data: presupuestoOriginal } = usePresupuestoDetalle(presupuestoId);
@@ -51,7 +51,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     return null;
   });
   const [search, setSearch] = useState('');
-  
+
   // Datos del presupuesto - initialize with presupuestoOriginal if editing, or duplication data
   const [titulo, setTitulo] = useState(() => {
     if (presupuestoOriginal?.titulo) return presupuestoOriginal.titulo;
@@ -68,14 +68,14 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     if (store.datosDuplicarPresupuesto?.horasEstimadas) return store.datosDuplicarPresupuesto.horasEstimadas;
     return 0;
   });
-  
+
   // Materiales - initialize with presupuestoOriginal if editing, or duplication data
   const [materiales, setMateriales] = useState<MaterialRequest[]>(() => {
     const source = presupuestoOriginal?.materiales || store.datosDuplicarPresupuesto?.materiales;
     if (!source || !Array.isArray(source)) {
       return [];
     }
-    
+
     return source.map((item: unknown) => {
       const obj = item as Record<string, unknown>;
       const descripcion = (obj['descripcion'] as string) || '';
@@ -84,19 +84,18 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       return { descripcion, cantidad, Precio } as MaterialRequest;
     });
   });
-  
+
   const [nuevoMaterial, setNuevoMaterial] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
-  
+
   // Estado para edición de materiales en línea
   const [materialEditando, setMaterialEditando] = useState<number | null>(null);
   const [materialEditandoData, setMaterialEditandoData] = useState({ descripcion: '', cantidad: 1, precioUnitario: 0 });
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [esDuplicado, setEsDuplicado] = useState(() => !!store.datosDuplicarPresupuesto);
 
   // Cuando se edita y los datos del presupuesto cargan, ir directo al step datos
-  // con el cliente pre-seleccionado, sin pasar por selección de cliente
   useEffect(() => {
     if (isEditing && presupuestoOriginal?.cliente) {
       setClienteSeleccionado(presupuestoOriginal.cliente);
@@ -110,7 +109,6 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   const [calculatorEditIndex, setCalculatorEditIndex] = useState<number | null>(null);
 
   const handleClose = useCallback(() => {
-    // Usar onClose si se pasa, sino usar store
     const closeFn = onClose ?? (() => store.setShowPresupuestoForm(false));
     closeFn();
     // Reset form after close animation
@@ -129,8 +127,8 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
         setEsDuplicado(false);
       }
     }, 200);
-  }, [onClose, store, isOpenProp, setStep, setClienteSeleccionado, setSearch, setTitulo, setDescripcion, setHorasEstimadas, setMateriales, setNuevoMaterial, setErrors, setShowSuccess, setEsDuplicado]);
-  
+  }, [onClose, store, isOpenProp]);
+
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -143,7 +141,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   if (!isOpen) return null;
 
-  const filteredClientes = clientes.filter(c => 
+  const filteredClientes = clientes.filter(c =>
     c.nombreCompleto.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -154,30 +152,29 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!clienteSeleccionado) {
       newErrors.cliente = 'Selecciona un cliente';
     }
-    
+
     if (!titulo.trim()) {
       newErrors.titulo = 'El título es requerido';
     }
-    
+
     if (horasEstimadas < 0) {
       newErrors.horasEstimadas = 'Las horas deben ser positivas';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleAddMaterial = () => {
     if (nuevoMaterial.descripcion.trim() && nuevoMaterial.cantidad > 0 && nuevoMaterial.precioUnitario >= 0) {
-      // Map precioUnitario to Precio for backend compatibility
-      setMateriales([...materiales, { 
-        descripcion: nuevoMaterial.descripcion, 
-        cantidad: nuevoMaterial.cantidad, 
-        Precio: nuevoMaterial.precioUnitario 
+      setMateriales([...materiales, {
+        descripcion: nuevoMaterial.descripcion,
+        cantidad: nuevoMaterial.cantidad,
+        Precio: nuevoMaterial.precioUnitario,
       }]);
       setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
     }
@@ -214,7 +211,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   // Manejar resultado de la calculadora
   const handleCalculatorResult = (value: number, shouldApply: boolean) => {
-    if (!shouldApply) return; // Si no se aplica, no hacer nada (el usuario sigue calculando)
+    if (!shouldApply) return;
 
     if (calculatorField === 'cantidad') {
       setNuevoMaterial({ ...nuevoMaterial, cantidad: value });
@@ -237,7 +234,6 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   const openCalculator = (field: 'cantidad' | 'precio' | 'editCantidad' | 'editPrecio', e: React.MouseEvent, editIndex?: number) => {
     e.preventDefault();
     const rect = e.currentTarget.getBoundingClientRect();
-    // Posicionar cerca del botón; la calculadora misma ajusta a la pantalla
     setCalculatorPosition({
       x: Math.min(rect.left, rect.right - 280),
       y: rect.bottom + 4,
@@ -254,10 +250,9 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   const handleSubmit = async () => {
     if (!validate() || !clienteSeleccionado) return;
-    
+
     try {
       if (isEditing && presupuestoOriginal) {
-        // Usar DTO para modificar
         await modificarPresupuesto.mutateAsync({
           id: presupuestoId!,
           presupuesto: {
@@ -282,10 +277,9 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       }, 1500);
     } catch (error) {
       console.error('Error al guardar presupuesto:', error);
-      
-      // Extraer mensaje de error del backend
+
       let errorMessage = 'Error al guardar el presupuesto';
-      
+
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
         if (axiosError.response?.data?.error) {
@@ -298,37 +292,59 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       setErrors({ submit: errorMessage });
     }
   };
 
   return (
     <>
+      {/* Backdrop */}
       <div className="modal-backdrop" onClick={handleClose} />
+
+      {/* Modal principal */}
       <div className="modal-content">
-        <div className="p-4">
+        <div className="p-6">
+
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <button 
-              onClick={() => step === 'datos' ? setStep('cliente') : handleClose()} 
-              className="btn-icon"
-            >
-              {step === 'cliente' ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <ArrowLeft className="w-5 h-5" />
+            <div className="flex items-center gap-2">
+              {step === 'datos' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('cliente');
+                    setSearch('');
+                  }}
+                  className="btn-icon"
+                  aria-label="Volver"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
               )}
+              <h2 className="text-lg font-semibold">
+                {showSuccess
+                  ? '¡Listo!'
+                  : step === 'cliente'
+                    ? 'Seleccionar Cliente'
+                    : esDuplicado
+                      ? 'Duplicar Presupuesto'
+                      : 'Nuevo Presupuesto'}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="btn-icon"
+              aria-label="Cerrar"
+            >
+              <X className="w-5 h-5" />
             </button>
-            <h2 className="font-semibold text-lg">
-              {showSuccess ? '¡Listo!' : step === 'cliente' ? 'Seleccionar Cliente' : esDuplicado ? 'Duplicar Presupuesto' : 'Nuevo Presupuesto'}
-            </h2>
-            <div className="w-11" />
           </div>
-          
+
           {showSuccess ? (
             <div className="animate-scale-in text-center py-8">
-              <div 
+              <div
                 className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: 'color-mix(in srgb, var(--color-success) 20%, transparent)' }}
               >
@@ -355,22 +371,19 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                   autoFocus
                 />
               </div>
-              
-              {/* Cliente list */}
-              <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+
+              {/* Client list */}
+              <div className="space-y-1 max-h-[50vh] overflow-y-auto">
                 {filteredClientes.map(cliente => (
                   <button
                     key={cliente.id}
                     onClick={() => handleSelectCliente(cliente)}
                     className={clsx(
-                      'w-full p-3 rounded-lg text-left transition-all duration-150 cursor-pointer',
+                      'w-full p-3 rounded-lg text-left cursor-pointer transition-colors duration-200',
                       clienteSeleccionado?.id === cliente.id
-                        ? 'ring-2 ring-[var(--color-accent)]'
-                        : 'hover:brightness-125'
+                        ? 'bg-[var(--color-accent)]/15'
+                        : 'bg-transparent hover:bg-[var(--color-hover)]'
                     )}
-                    style={{ 
-                      backgroundColor: 'var(--color-surface)',
-                    }}
                   >
                     <p className="font-medium" style={{ color: 'var(--color-text)' }}>
                       {cliente.nombreCompleto}
@@ -382,7 +395,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                     )}
                   </button>
                 ))}
-                
+
                 {filteredClientes.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
@@ -393,14 +406,14 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
               </div>
             </div>
           ) : (
-            <div className="animate-fade-in space-y-4">
+            <div className="animate-fade-in space-y-5">
               {/* Cliente seleccionado */}
-              <div 
-                className="p-3 rounded-lg flex items-center justify-between"
+              <div
+                className="flex items-center justify-between p-3 rounded-lg"
                 style={{ backgroundColor: 'var(--color-surface)' }}
               >
                 <div>
-                  <p className="text-xs" style={{ color: 'var(--color-muted)' }}>CLIENTE</p>
+                  <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Cliente</p>
                   <p className="font-medium" style={{ color: 'var(--color-text)' }}>
                     {clienteSeleccionado?.nombreCompleto}
                   </p>
@@ -416,18 +429,18 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                   Cambiar
                 </button>
               </div>
-              
+
               {/* Título */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  TÍTULO *
+                  Título del presupuesto *
                 </label>
                 <input
                   type="text"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   placeholder="Reparación de motor"
-                  className="input"
+                  className={clsx('input', errors.titulo && 'input-error')}
                 />
                 {errors.titulo && (
                   <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
@@ -435,11 +448,11 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                   </p>
                 )}
               </div>
-              
+
               {/* Descripción */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  DESCRIPCIÓN
+                  Descripción
                 </label>
                 <textarea
                   value={descripcion}
@@ -448,11 +461,11 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                   className="input min-h-[80px] resize-none"
                 />
               </div>
-              
+
               {/* Horas estimadas */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  HORAS ESTIMADAS
+                  Horas estimadas
                 </label>
                 <input
                   type="number"
@@ -462,22 +475,27 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                   step={0.5}
                   className="input"
                 />
+                {errors.horasEstimadas && (
+                  <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                    {errors.horasEstimadas}
+                  </p>
+                )}
               </div>
-              
+
               {/* Materiales */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  MATERIALES
+                  Materiales
                 </label>
-                
+
                 {materiales.length > 0 && (
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-1 mb-3">
                     {materiales.map((m, index) => (
                       materialEditando === index ? (
                         // Modo edición
-                        <div 
+                        <div
                           key={index}
-                          className="p-2 rounded"
+                          className="p-2 rounded-lg"
                           style={{ backgroundColor: 'var(--color-surface)' }}
                         >
                           <div className="grid grid-cols-4 gap-2 mb-2">
@@ -501,8 +519,8 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                               <button
                                 type="button"
                                 onClick={(e) => openCalculator('editCantidad', e, index)}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
-                                aria-label="Open calculator for quantity"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                                aria-label="Abrir calculadora"
                               >
                                 <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
                               </button>
@@ -519,8 +537,8 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                               <button
                                 type="button"
                                 onClick={(e) => openCalculator('editPrecio', e, index)}
-                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
-                                aria-label="Open calculator for price"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                                aria-label="Abrir calculadora"
                               >
                                 <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
                               </button>
@@ -535,6 +553,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                                 type="button"
                                 onClick={() => handleSaveMaterial(index)}
                                 className="btn-icon p-1"
+                                aria-label="Guardar"
                               >
                                 <Check className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
                               </button>
@@ -542,6 +561,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                                 type="button"
                                 onClick={handleCancelEditMaterial}
                                 className="btn-icon p-1"
+                                aria-label="Cancelar"
                               >
                                 <X className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
                               </button>
@@ -550,12 +570,12 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                         </div>
                       ) : (
                         // Modo visualización
-                        <div 
+                        <div
                           key={index}
-                          className="flex items-center justify-between p-2 rounded"
+                          className="flex items-center justify-between p-2 rounded-lg transition-colors duration-200 hover:bg-[var(--color-hover)]"
                           style={{ backgroundColor: 'var(--color-surface)' }}
                         >
-                          <div 
+                          <div
                             className="flex-1 min-w-0 cursor-pointer"
                             onClick={() => handleEditMaterial(index)}
                           >
@@ -568,6 +588,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                             type="button"
                             onClick={() => handleRemoveMaterial(index)}
                             className="btn-icon p-1 ml-2"
+                            aria-label="Eliminar material"
                           >
                             <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
                           </button>
@@ -576,7 +597,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                     ))}
                   </div>
                 )}
-                
+
                 {/* Agregar material */}
                 <div className="grid grid-cols-4 gap-2">
                   <input
@@ -587,20 +608,20 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                     className="input col-span-2"
                   />
                   <div className="relative col-span-1">
-                  <input
-                    type="number"
-                    value={nuevoMaterial.cantidad || ''}
-                    onChange={(e) => setNuevoMaterial({ ...nuevoMaterial, cantidad: parseFloat(e.target.value) || 0 })}
-                    placeholder="Cant."
-                    min={0}
-                    step={0.01}
-                    className="input w-full pr-8"
-                  />
+                    <input
+                      type="number"
+                      value={nuevoMaterial.cantidad || ''}
+                      onChange={(e) => setNuevoMaterial({ ...nuevoMaterial, cantidad: parseFloat(e.target.value) || 0 })}
+                      placeholder="Cant."
+                      min={0}
+                      step={0.01}
+                      className="input w-full pr-8"
+                    />
                     <button
                       type="button"
                       onClick={(e) => openCalculator('cantidad', e)}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
-                      aria-label="Open calculator for quantity"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                      aria-label="Abrir calculadora"
                     >
                       <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
                     </button>
@@ -617,8 +638,8 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                     <button
                       type="button"
                       onClick={(e) => openCalculator('precio', e)}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-white/10 transition-colors"
-                      aria-label="Open calculator for price"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                      aria-label="Abrir calculadora"
                     >
                       <Calculator className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
                     </button>
@@ -633,24 +654,26 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                   <Plus className="w-4 h-4 mr-1" />
                   Agregar Material
                 </button>
-                
+
                 {totalMateriales > 0 && (
                   <p className="text-right text-sm mt-2" style={{ color: 'var(--color-success)' }}>
                     Total materiales: ${totalMateriales.toLocaleString()}
                   </p>
                 )}
               </div>
-              
-              {/* Submit */}
+
+              {/* Submit error */}
               {errors.submit && (
                 <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
                   {errors.submit}
                 </p>
               )}
+
+              {/* Submit button */}
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
+                className="btn-primary w-full flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>
@@ -668,7 +691,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
           )}
         </div>
       </div>
-      
+
       {/* Calculator Modal */}
       {calculatorField && (
         <CalculatorModal

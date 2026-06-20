@@ -294,7 +294,7 @@ useEffect(() => {
     <div className="min-h-screen pb-24 lg:pb-8">
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <Link to="/trabajos" className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors">
+          <Link to="/trabajos" className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-hover)] transition-colors duration-200">
             <ArrowLeft className="w-5 h-5" style={{ color: 'var(--color-text)' }} />
           </Link>
           <div className="flex-1">
@@ -318,7 +318,7 @@ useEffect(() => {
           {trabajo.cliente && (
             <Link 
               to={`/clientes/${trabajo.cliente.id}`}
-              className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors"
+              className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors duration-200 hover:bg-[var(--color-hover)]"
               style={{ backgroundColor: 'var(--color-surface)' }}
             >
               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-elevated)' }}>
@@ -361,7 +361,7 @@ useEffect(() => {
           <div className="card">
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>PROGRESO</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Progreso</span>
             </div>
             
             <div className="flex justify-between text-sm mb-2">
@@ -685,7 +685,7 @@ useEffect(() => {
         <div className="card">
           <div className="flex items-center gap-2 mb-3">
             <DollarSign className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>TOTALES</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Totales</span>
           </div>
           
           <div className="space-y-2">
@@ -700,31 +700,32 @@ useEffect(() => {
 
         {/* Delete photo confirmation modal */}
         {showDeletePhotoConfirm && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
             onClick={() => setShowDeletePhotoConfirm(false)}
           >
-            <div 
-              className="modal-content max-w-sm"
+            <div
+              className="bg-[var(--color-elevated)] rounded-xl p-6 w-[90vw] max-w-sm shadow-2xl animate-fade-in"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
                 Eliminar foto
               </h3>
-              <p className="mb-6" style={{ color: 'var(--color-muted)' }}>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
                 ¿Estás seguro de que deseas eliminar esta foto? Esta acción no se puede deshacer.
               </p>
               <div className="flex gap-3">
-                <button 
+                <button
                   onClick={() => setShowDeletePhotoConfirm(false)}
                   className="btn-secondary flex-1"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleDeletePhoto}
                   disabled={eliminarFoto.isPending}
-                  className="btn-primary flex-1 !bg-red-500 hover:!bg-red-600"
+                  className="flex-1 py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
                 >
                   {eliminarFoto.isPending ? 'Eliminando...' : 'Eliminar'}
                 </button>
@@ -797,21 +798,17 @@ useEffect(() => {
                 Esta acción no se puede deshacer.
               </p>
               <div className="flex gap-3 justify-center">
-                <button 
+                <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="btn-secondary"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleEliminar}
                   disabled={eliminarTrabajo.isPending}
-                  style={{ 
-                    backgroundColor: 'var(--color-danger)',
-                    color: 'white',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '0.625rem 1rem'
-                  }}
+                  className="py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
                 >
                   {eliminarTrabajo.isPending ? 'Eliminando...' : 'Eliminar'}
                 </button>
