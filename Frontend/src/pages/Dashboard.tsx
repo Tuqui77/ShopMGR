@@ -1,4 +1,4 @@
-import { Settings, Loader2 } from 'lucide-react';
+import { Settings, Loader2, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { useTrabajos } from '../hooks/useTrabajos';
@@ -49,7 +49,7 @@ export function Dashboard() {
       
       {/* Metrics - Compact version */}
       <section className="px-4 mb-4">
-        <h2 className="text-xs font-medium mb-2" style={{ color: 'var(--color-muted)' }}>ESTE MES</h2>
+        <h2 className="text-xs font-medium mb-2" style={{ color: 'var(--color-muted)' }}>Este mes</h2>
         
         {isLoading ? (
           <div className="flex justify-center py-4">
@@ -57,19 +57,19 @@ export function Dashboard() {
           </div>
         ) : metricas ? (
           <div className="grid grid-cols-3 gap-2">
-            <div className="card !p-3">
+            <div className="card !p-3 hover:bg-[var(--color-hover)] transition-colors duration-200">
               <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-accent)' }}>
                 {formatCurrency(metricas.ingresos)}
               </span>
               <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>Ingresos</span>
             </div>
-            <div className="card !p-3">
+            <div className="card !p-3 hover:bg-[var(--color-hover)] transition-colors duration-200">
               <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-text)' }}>
                 {metricas.horasTrabajadas}
               </span>
               <span className="text-xs block" style={{ color: 'var(--color-muted)' }}>Horas trabajadas</span>
             </div>
-            <div className="card !p-3">
+            <div className="card !p-3 hover:bg-[var(--color-hover)] transition-colors duration-200">
               <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-success)' }}>
                 {metricas.trabajosTerminados}
               </span>
@@ -86,9 +86,9 @@ export function Dashboard() {
       {/* Active Jobs - Compact version */}
       <section className="px-4">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-xs font-medium" style={{ color: 'var(--color-muted)' }}>TRABAJOS ACTIVOS</h2>
+          <h2 className="text-xs font-medium" style={{ color: 'var(--color-muted)' }}>Trabajos activos</h2>
           <button 
-            className="text-xs" 
+            className="text-xs px-2 py-1 rounded-lg hover:bg-[var(--color-hover)] transition-colors duration-200" 
             style={{ color: 'var(--color-accent)' }}
             onClick={() => navigate('/trabajos')}
           >
@@ -105,7 +105,7 @@ export function Dashboard() {
             {activeTrabajos.slice(0, 4).map(trabajo => (
               <div 
                 key={trabajo.id}
-                className="card !p-3 flex items-center justify-between cursor-pointer"
+                className="card !p-3 flex items-center justify-between cursor-pointer hover:bg-[var(--color-hover)] transition-colors duration-200"
                 onClick={() => navigate(`/trabajos/${trabajo.id}`)}
               >
                 <div className="flex-1 min-w-0">
@@ -125,9 +125,7 @@ export function Dashboard() {
                       handleRegisterHours(trabajo);
                     }}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <Clock className="w-4 h-4" />
                   </button>
                 </div>
               </div>
