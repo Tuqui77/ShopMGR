@@ -29,7 +29,7 @@ function ClienteListItem({ cliente, formatBalance, getBalanceLabel }: ClienteLis
     <Link 
       key={cliente.id} 
       to={`/clientes/${cliente.id}`}
-      className="block card"
+      className="block card hover:bg-[var(--color-hover)] transition-colors duration-200"
     >
       <div className="flex items-start gap-3">
         <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>

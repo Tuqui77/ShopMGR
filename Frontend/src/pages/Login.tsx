@@ -101,7 +101,7 @@ export function Login() {
           {/* Forgot Password Link (decorative) */}
           <p className="text-center text-sm text-[var(--color-muted)]">
             ¿Olvidaste tu contraseña?{' '}
-            <button type="button" className="text-[var(--color-accent)] hover:underline">
+            <button type="button" className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200">
               Recuperar
             </button>
           </p>
