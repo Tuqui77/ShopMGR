@@ -15,6 +15,7 @@ import {
   ZoomIn,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
 } from 'lucide-react';
 import { useTrabajoDetalle, useTerminarTrabajo, useIniciarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
@@ -36,6 +37,8 @@ export function TrabajoDetalle() {
   const subirFotos = useSubirFotos();
   const eliminarFoto = useEliminarFoto();
   const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId, setImageFullscreenOpen } = useStore();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
@@ -62,6 +65,18 @@ const [isPanning, setIsPanning] = useState(false); // Controls CSS transition du
     setPanState({ x: 0, y: 0 });
   }, [setImageFullscreenOpen]);
   
+  // Cerrar menú 3 puntos al hacer click fuera
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showMenu]);
+
   // Handler for uploading photos
   const handleUploadPhotos = async (files: File[]) => {
     if (!trabajoId) return;
@@ -301,6 +316,75 @@ useEffect(() => {
             <h1 className="text-xl font-bold font-display">Detalle del Trabajo</h1>
           </div>
           {getStatusBadge()}
+          {/* 3-dot menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="btn-icon"
+              aria-label="Opciones"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {showMenu && (
+              <div
+                className="absolute right-0 top-full mt-1 w-48 py-1 rounded-lg shadow-lg z-20 border"
+                style={{
+                  backgroundColor: 'var(--color-card)',
+                  borderColor: 'var(--color-border)',
+                }}
+              >
+                {trabajo.estado === 'Pendiente' && (
+                  <button
+                    onClick={() => { handleIniciar(); setShowMenu(false); }}
+                    disabled={iniciarTrabajo.isPending}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer disabled:opacity-50"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    <Play className="w-4 h-4" />
+                    Iniciar trabajo
+                  </button>
+                )}
+                {trabajo.estado === 'Iniciado' && (
+                  <>
+                    <button
+                      onClick={() => { handleRegisterHours(); setShowMenu(false); }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <Clock className="w-4 h-4" />
+                      Registrar horas
+                    </button>
+                    <button
+                      onClick={() => { handleTerminar(); setShowMenu(false); }}
+                      disabled={terminarTrabajo.isPending}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Terminar trabajo
+                    </button>
+                  </>
+                )}
+                <div className="h-px my-1" style={{ backgroundColor: 'var(--color-border)' }} />
+                <button
+                  onClick={() => { handleEdit(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-danger)' }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -734,56 +818,8 @@ useEffect(() => {
           </div>
         )}
 
-        {/* Acciones */}
-        <div className="space-y-3">
-          {trabajo.estado === 'Iniciado' && (
-            <>
-              <button 
-                onClick={handleRegisterHours}
-                className="btn-secondary w-full flex items-center justify-center gap-2"
-              >
-                <Clock className="w-4 h-4" />
-                Registrar Horas
-              </button>
-              <button 
-                onClick={handleTerminar}
-                disabled={terminarTrabajo.isPending}
-                className="btn-primary w-full flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                {terminarTrabajo.isPending ? 'Terminando...' : 'Terminar Trabajo'}
-              </button>
-            </>
-          )}
-          
-          {trabajo.estado === 'Pendiente' && (
-            <button 
-              onClick={handleIniciar}
-              disabled={iniciarTrabajo.isPending}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4" />
-              {iniciarTrabajo.isPending ? 'Iniciando...' : 'Iniciar Trabajo'}
-            </button>
-          )}
-          
-          <div className="flex gap-3">
-            <button 
-              onClick={handleEdit}
-              className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]"
-            >
-              <Edit className="w-4 h-4" />
-              Editar
-            </button>
-            <button 
-              onClick={() => setShowDeleteConfirm(true)}
-              className="btn-secondary flex items-center justify-center gap-2 px-4"
-              style={{ color: 'var(--color-danger)' }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        {/* Spacer para dar aire antes del modal de eliminación */}
+        <div className="h-4" />
       </section>
 
       {/* Modal de confirmación de eliminación */}
