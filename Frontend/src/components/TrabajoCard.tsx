@@ -1,8 +1,7 @@
 import type { Trabajo } from '../types';
 import clsx from 'clsx';
-import { Check, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { formatCurrency } from '../utils/dateFormat';
 
 interface Props {
   trabajo: Trabajo;
@@ -10,8 +9,6 @@ interface Props {
 }
 
 export function TrabajoCard({ trabajo, hideClientName }: Props) {
-  const progress = (trabajo.horasRegistradas / (trabajo.horasEstimadas || 1)) * 100;
-
   return (
     <Link 
       to={`/trabajos/${trabajo.id}`} 
@@ -27,40 +24,6 @@ export function TrabajoCard({ trabajo, hideClientName }: Props) {
         </div>
         <ChevronRight className="w-5 h-5" style={{ color: 'var(--color-muted)' }} />
       </div>
-      
-      {trabajo.estado !== 'Pendiente' && (
-        <div className="mt-3">
-          <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--color-muted)' }}>
-            <span>Progreso</span>
-            <span>{trabajo.horasRegistradas}h / {trabajo.horasEstimadas || 0}h</span>
-          </div>
-          <div className="progress-bar">
-            <div 
-              className={clsx('progress-fill', trabajo.estado === 'Terminado')}
-              style={{ 
-                width: `${Math.min(progress, 100)}%`,
-                backgroundColor: trabajo.estado === 'Terminado' ? 'var(--color-success)' : undefined
-              }}
-            />
-          </div>
-        </div>
-      )}
-      
-      {trabajo.estado === 'Pendiente' && (
-        <div className="mt-3 flex justify-between text-sm" style={{ color: 'var(--color-muted)' }}>
-          <span>Estimado: {trabajo.horasEstimadas}h</span>
-          <span>{formatCurrency(trabajo.totalLabor || 0)}</span>
-        </div>
-      )}
-      
-      {trabajo.estado === 'Terminado' && (
-        <div className="mt-3">
-          <span className="text-sm flex items-center gap-1" style={{ color: 'var(--color-success)' }}>
-            <Check className="w-4 h-4" />
-            Terminado
-          </span>
-        </div>
-      )}
     </Link>
   );
 }
