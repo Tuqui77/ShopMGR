@@ -123,7 +123,7 @@ function mapPresupuestoLista(dto: PresupuestoListaDTO): Presupuesto {
     estado: dto.estado || 'Pendiente',
     fecha: '',
     cliente: {
-      id: 0,
+      id: dto.idCliente ?? 0,
       nombreCompleto: dto.nombreCliente || '',
       telefono: [],
       balance: 0,
@@ -136,6 +136,7 @@ function mapPresupuestoLista(dto: PresupuestoListaDTO): Presupuesto {
     costoInsumos: 0,
     total: dto.total || 0,
     materiales: [],
+    idCliente: dto.idCliente,
   };
 }
 

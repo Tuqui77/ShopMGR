@@ -1,19 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import type { EstadoPresupuesto } from '../types';
-import { usePresupuestos, useAceptarPresupuesto, useRechazarPresupuesto } from '../hooks/usePresupuestos';
+import { usePresupuestos, usePresupuestosPorCliente, useAceptarPresupuesto, useRechazarPresupuesto } from '../hooks/usePresupuestos';
+import { useCliente } from '../hooks/useClientes';
 import { Clipboard, Clock, Loader2, ArrowLeft, Check, X, AlertTriangle } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
 
 type FilterType = 'todos' | 'pendientes' | 'aceptados' | 'rechazados';
 
 export function Presupuestos() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const clienteIdParam = searchParams.get('cliente');
   const clienteId = clienteIdParam ? parseInt(clienteIdParam, 10) : undefined;
   
-  const { data: presupuestos, isLoading, error } = usePresupuestos();
+  // Use the correct hook based on whether we're filtering by client
+  const allPresupuestosQuery = usePresupuestos();
+  const clientPresupuestosQuery = usePresupuestosPorCliente(clienteId);
+  const { data: clienteData } = useCliente(clienteId);
+  const presupuestos = clienteId !== undefined ? clientPresupuestosQuery.data : allPresupuestosQuery.data;
+  const isLoading = clienteId !== undefined ? clientPresupuestosQuery.isLoading : allPresupuestosQuery.isLoading;
+  const error = clienteId !== undefined ? clientPresupuestosQuery.error : allPresupuestosQuery.error;
+  
   const [filter, setFilter] = useState<FilterType>('todos');
   
   const aceptarMutation = useAceptarPresupuesto({
@@ -41,27 +49,20 @@ export function Presupuestos() {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
-  // Filter by client if provided
+  // Filter by status (backend already filters by client if clienteId is provided)
   const filtered = presupuestos?.filter(p => {
-    // Filter by client first
-    if (clienteId !== undefined && p.cliente?.id !== clienteId) return false;
-    
-    // Then apply status filter
     if (filter === 'pendientes') return p.estado === 'Pendiente';
     if (filter === 'aceptados') return p.estado === 'Aceptado';
     if (filter === 'rechazados') return p.estado === 'Rechazado';
     return true;
   }) || [];
   
+  const allData = presupuestos || [];
   const counts = {
-    todos: presupuestos?.length || 0,
-    pendientes: presupuestos?.filter(p => p.estado === 'Pendiente').length || 0,
-    aceptados: presupuestos?.filter(p => p.estado === 'Aceptado').length || 0,
-    rechazados: presupuestos?.filter(p => p.estado === 'Rechazado').length || 0,
-  };
-  
-  const handleClearClientFilter = () => {
-    setSearchParams({});
+    todos: allData.length,
+    pendientes: allData.filter(p => p.estado === 'Pendiente').length,
+    aceptados: allData.filter(p => p.estado === 'Aceptado').length,
+    rechazados: allData.filter(p => p.estado === 'Rechazado').length,
   };
   
   const getStatusBadge = (estado: EstadoPresupuesto) => {
@@ -106,6 +107,16 @@ export function Presupuestos() {
   const handleCancelConfirm = () => {
     setConfirmAction(null);
   };
+
+  // Escape key handler for confirmation dialog
+  useEffect(() => {
+    if (!confirmAction) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmAction(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [confirmAction]);
   
   if (isLoading) {
     return (
@@ -155,19 +166,18 @@ export function Presupuestos() {
 
       {/* Header */}
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
-        {/* Client filter indicator */}
-        {clienteId !== undefined && (
-          <button
-            onClick={handleClearClientFilter}
-            className="flex items-center gap-1 text-sm mb-3 hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--color-accent)' }}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Ver todos los presupuestos
-          </button>
-        )}
-        
-        <h1 className="text-xl font-bold font-display mb-4">Presupuestos</h1>
+        <div className="flex items-center gap-3 mb-4">
+          {clienteId !== undefined ? (
+            <Link to={`/clientes/${clienteId}`} className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors">
+              <ArrowLeft className="w-5 h-5" style={{ color: 'var(--color-text)' }} />
+            </Link>
+          ) : (
+            <div className="p-2 -ml-2" />
+          )}
+          <h1 className="text-xl font-bold font-display flex-1">
+            {clienteId !== undefined && clienteData ? `Presupuestos · ${clienteData.nombreCompleto}` : 'Presupuestos'}
+          </h1>
+        </div>
         
         {/* Filters */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -196,13 +206,15 @@ export function Presupuestos() {
             to={`/presupuestos/${presupuesto.id}`}
             className="block"
           >
-            <div className="card">
+            <div className="card hover:bg-[var(--color-hover)] transition-colors duration-200">
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</h3>
                   </div>
-                  <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{presupuesto.cliente?.nombreCompleto || 'Sin cliente'}</p>
+                  {clienteId === undefined && (
+                    <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{presupuesto.cliente?.nombreCompleto || 'Sin cliente'}</p>
+                  )}
                 </div>
                 {getStatusBadge(presupuesto.estado)}
               </div>
@@ -216,18 +228,18 @@ export function Presupuestos() {
                 {presupuesto.estado === 'Pendiente' && (
                   <>
                     <button 
-                      className="btn-secondary text-sm"
+                      className="btn-secondary text-sm hover:bg-[var(--color-hover)]"
                       onClick={(e) => handleAceptar(presupuesto.id, presupuesto.titulo, e)}
                       disabled={aceptarMutation.isPending}
                     >
-                      {aceptarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> Aceptado</>}
+                      {aceptarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> Aceptar</>}
                     </button>
                     <button 
-                      className="btn-secondary text-sm"
+                      className="btn-secondary text-sm hover:bg-[var(--color-hover)]"
                       onClick={(e) => handleRechazar(presupuesto.id, presupuesto.titulo, e)}
                       disabled={rechazarMutation.isPending}
                     >
-                      {rechazarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><X className="w-4 h-4" /> Rechazado</>}
+                      {rechazarMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><X className="w-4 h-4" /> Rechazar</>}
                     </button>
                   </>
                 )}
@@ -253,8 +265,8 @@ export function Presupuestos() {
 
       {/* Confirmation Dialog */}
       {confirmAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-          <div className="modal-content max-w-sm w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" onClick={() => setConfirmAction(null)}>
+          <div className="modal-content max-w-sm w-full" onClick={e => e.stopPropagation()}>
             <div className="text-center">
               <div 
                 className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
