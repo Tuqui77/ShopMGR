@@ -288,7 +288,7 @@ export function PresupuestoDetalle() {
     <div className="min-h-screen pb-24 lg:pb-8">
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <Link to="/presupuestos" className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors">
+          <Link to="/presupuestos" className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-hover)] transition-colors duration-200">
             <ArrowLeft className="w-5 h-5" style={{ color: 'var(--color-text)' }} />
           </Link>
           <div className="flex-1">
@@ -323,7 +323,7 @@ export function PresupuestoDetalle() {
           {presupuesto.cliente && (
             <Link 
               to={`/clientes/${presupuesto.cliente.id}`}
-              className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors"
+              className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors duration-200 hover:bg-[var(--color-hover)]"
               style={{ backgroundColor: 'var(--color-surface)' }}
             >
               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-elevated)' }}>
@@ -350,7 +350,7 @@ export function PresupuestoDetalle() {
           <div className="card">
             <div className="flex items-center gap-2 mb-3">
               <Package className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>MATERIALES</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Materiales</span>
             </div>
             
             <div className="space-y-2">
@@ -482,21 +482,17 @@ export function PresupuestoDetalle() {
                 Se creará automáticamente un <strong>trabajo</strong> en estado <strong>Pendiente</strong> a partir de este presupuesto.
               </p>
               <div className="flex gap-3 justify-center">
-                <button 
+                <button
                   onClick={() => setShowAceptarConfirm(false)}
                   className="btn-secondary"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleConfirmAceptar}
                   disabled={aceptarMutation.isPending}
-                  style={{ 
-                    backgroundColor: 'var(--color-success)',
-                    color: 'white',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '0.625rem 1rem'
-                  }}
+                  className="py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-success)' }}
                 >
                   {aceptarMutation.isPending ? 'Aceptando...' : 'Aceptar y crear trabajo'}
                 </button>
@@ -518,21 +514,17 @@ export function PresupuestoDetalle() {
                 Esta acción no se puede deshacer.
               </p>
               <div className="flex gap-3 justify-center">
-                <button 
+                <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="btn-secondary"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleEliminar}
                   disabled={eliminarMutation.isPending}
-                  style={{ 
-                    backgroundColor: 'var(--color-danger)',
-                    color: 'white',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '0.625rem 1rem'
-                  }}
+                  className="py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
                 >
                   {eliminarMutation.isPending ? 'Eliminando...' : 'Eliminar'}
                 </button>

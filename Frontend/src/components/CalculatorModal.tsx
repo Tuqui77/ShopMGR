@@ -132,7 +132,7 @@ export function CalculatorModal({ position, onResult, onClose }: CalculatorModal
 
   // Botón base
   const baseBtn =
-    "flex items-center justify-center rounded-[var(--radius-md)] font-medium text-sm transition-all duration-100 select-none active:scale-95";
+    "flex items-center justify-center rounded-[var(--radius-md)] font-medium text-sm transition-transform duration-100 select-none active:scale-95";
 
   const numberBtn = `${baseBtn} bg-[var(--color-card)] hover:bg-white/10 active:bg-white/15 text-[var(--color-text)] border border-white/10`;
 
@@ -225,7 +225,7 @@ export function CalculatorModal({ position, onResult, onClose }: CalculatorModal
         {/* Apply button */}
         <button
           onClick={handleApply}
-          className="flex items-center justify-center gap-1.5 h-[44px] rounded-[var(--radius-md)] font-medium text-sm transition-all duration-100 active:scale-95 mt-0.5"
+          className="flex items-center justify-center gap-1.5 h-[44px] rounded-[var(--radius-md)] font-medium text-sm transition-transform duration-100 active:scale-95 mt-0.5"
           style={{
             backgroundColor: 'var(--color-accent)',
             color: 'white',

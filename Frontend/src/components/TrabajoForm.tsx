@@ -19,13 +19,13 @@ interface Props {
 export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
   const store = useStore();
   const isEditing = !!trabajoId;
-  
+
   // Usar props si se pasan, sino usar store
   const isOpen = isOpenProp ?? store.showTrabajoForm;
   const onClose = useMemo(() => {
     return onCloseProp ?? (() => store.setShowTrabajoForm(false));
   }, [onCloseProp, store]);
-  
+
   // Queries y mutations
   const { data: clientes = [], isLoading: loadingClientes } = useClientes();
   const { data: trabajoOriginal, isLoading: loadingTrabajo } = useTrabajo(trabajoId);
@@ -33,7 +33,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   const modificarTrabajo = useModificarTrabajo();
   const cambiarPresupuesto = useCambiarPresupuesto();
   const eliminarPresupuesto = useEliminarPresupuesto();
-  
+
   // Estado del formulario - inicializar con datos del trabajo si estamos editando
   const [titulo, setTitulo] = useState(() => trabajoOriginal?.titulo ?? '');
   const [descripcion, setDescripcion] = useState(() => trabajoOriginal?.descripcion ?? '');
@@ -41,7 +41,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
   const [presupuestoId, setPresupuestoId] = useState<number | null>(() => trabajoOriginal?.idPresupuesto ?? null);
   const [estado, setEstado] = useState<EstadoTrabajo>(() => trabajoOriginal?.estado ?? 'Pendiente');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   // Sincronizar estado del formulario cuando los datos del trabajo se cargan (edición)
   useEffect(() => {
     if (isEditing && trabajoOriginal) {
@@ -60,11 +60,11 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
 
   // Query de presupuestos del cliente (solo cuando hay cliente seleccionado)
   const { data: presupuestosDelCliente = [] } = usePresupuestosPorCliente(clienteId ?? undefined);
-  
+
   // Presupuesto actual (para edición)
   const { data: presupuestoActual } = usePresupuesto(isEditing ? (presupuestoId ?? undefined) : undefined);
   const [showPresupuestoSelector, setShowPresupuestoSelector] = useState(false);
-  
+
   // Resetear formulario al cerrar - handled in onClose
   const onCloseCallback = useCallback(() => {
     const closeFn = onClose ?? (() => store.setShowTrabajoForm(false));
@@ -94,7 +94,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen, onCloseCallback]);
-  
+
   // Handler: seleccionar un presupuesto (cambiar el asociado al trabajo)
   const handleSeleccionarPresupuesto = async (nuevoPresupuestoId: number) => {
     if (!trabajoId) return;
@@ -121,30 +121,30 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!titulo.trim()) {
       newErrors.titulo = 'El título es requerido';
     } else if (titulo.length > 100) {
       newErrors.titulo = 'Máximo 100 caracteres';
     }
-    
+
     if (!clienteId) {
       newErrors.clienteId = 'Selecciona un cliente';
     }
-    
+
     if (registrarAnticipo && !montoAnticipo) {
       newErrors.montoAnticipo = 'Ingresa el monto del anticipo';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
-    
+
     // Crear anticipo primero si está habilitado (solo en modo creación)
     if (registrarAnticipo && montoAnticipo && !errors.montoAnticipo && clienteId && !isEditing) {
       setCreandoAnticipo(true);
@@ -163,11 +163,9 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       }
       setCreandoAnticipo(false);
     }
-    
+
     try {
       if (isEditing && trabajoId) {
-        // Nota: el presupuesto se cambia/elimina mediante los endpoints dedicados
-        // (cambiarPresupuesto / eliminarPresupuesto), no via ModificarTrabajo
         await modificarTrabajo.mutateAsync({
           id: trabajoId,
           trabajo: {
@@ -186,7 +184,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
           estado,
         });
       }
-      
+
       onSuccess?.();
       onCloseCallback();
     } catch (error) {
@@ -194,28 +192,35 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       setErrors({ submit: 'Error al guardar. Intenta de nuevo.' });
     }
   };
-  
+
   if (!isOpen) return null;
-  
+
   const isLoading = loadingClientes || (isEditing && loadingTrabajo);
   const isSubmitting = crearTrabajo.isPending || modificarTrabajo.isPending || creandoAnticipo;
 
   return (
     <>
-      <div className="modal-backdrop" onClick={onClose} />
+      {/* Backdrop */}
+      <div className="modal-backdrop" onClick={onCloseCallback} />
+
+      {/* Modal principal */}
       <div className="modal-content">
-        <div className="p-4">
+        <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <button onClick={onClose} className="btn-icon">
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="font-semibold text-lg">
+            <h2 className="text-lg font-semibold">
               {isEditing ? 'Editar Trabajo' : 'Nuevo Trabajo'}
             </h2>
-            <div className="w-11" />
+            <button
+              type="button"
+              onClick={onCloseCallback}
+              className="btn-icon"
+              aria-label="Cerrar"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          
+
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
@@ -232,7 +237,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   placeholder="Ej: Cambio de aceite"
-                  className={clsx('input', errors.titulo && 'border-[var(--color-danger)]')}
+                  className={clsx('input', errors.titulo && 'input-error')}
                   maxLength={100}
                 />
                 {errors.titulo && (
@@ -256,7 +261,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   rows={3}
                 />
               </div>
-               
+
               {/* Cliente */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
@@ -265,7 +270,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                 <select
                   value={clienteId ?? ''}
                   onChange={(e) => setClienteId(e.target.value ? Number(e.target.value) : null)}
-                  className={clsx('input', errors.clienteId && 'border-[var(--color-danger)]')}
+                  className={clsx('input', errors.clienteId && 'input-error')}
                 >
                   <option value="">Seleccionar cliente...</option>
                   {clientes.map((cliente: Cliente) => (
@@ -310,10 +315,11 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
                     Presupuesto asociado
                   </label>
-                  <div
-                    className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors"
-                    style={{ backgroundColor: 'var(--color-surface)' }}
+                  <button
+                    type="button"
                     onClick={() => setShowPresupuestoSelector(true)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                    style={{ backgroundColor: 'var(--color-surface)' }}
                   >
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -321,7 +327,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                     >
                       <FileText className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-left">
                       {presupuestoActual ? (
                         <>
                           <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
@@ -345,10 +351,10 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                     <span className="text-xs font-medium flex-shrink-0" style={{ color: 'var(--color-accent)' }}>
                       Cambiar
                     </span>
-                  </div>
+                  </button>
                 </div>
               )}
-              
+
               {/* Estado */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
@@ -361,29 +367,24 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                       type="button"
                       onClick={() => setEstado(est)}
                       className={clsx(
-                        'flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors',
+                        'flex-1 py-2.5 px-4 rounded-lg text-sm font-medium cursor-pointer transition-colors duration-200',
                         estado === est
-                          ? est === 'Pendiente'
-                            ? 'badge-warning'
-                            : 'badge-active'
-                          : ''
+                          ? 'bg-[var(--color-accent)] text-white'
+                          : 'bg-transparent text-[var(--color-muted)] hover:bg-[var(--color-hover)]'
                       )}
-                      style={{
-                        backgroundColor: estado !== est ? 'var(--color-surface)' : undefined,
-                        color: estado !== est ? 'var(--color-text)' : undefined,
-                        borderWidth: '1px',
-                        borderColor: estado !== est ? 'var(--color-border)' : 'transparent',
-                      }}
                     >
                       {est === 'Pendiente' ? 'Pendiente' : 'En curso'}
                     </button>
                   ))}
                 </div>
               </div>
-              
+
               {/* Anticipo - solo en modo creación */}
               {!isEditing && clienteId && (
-                <div className="border rounded-lg p-3" style={{ borderColor: 'var(--color-border)' }}>
+                <div
+                  className="border rounded-lg p-4"
+                  style={{ borderColor: 'var(--color-border)' }}
+                >
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -394,7 +395,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                     <Banknote className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
                     <span className="text-sm font-medium">Registrar anticipo para materiales</span>
                   </label>
-                  
+
                   {registrarAnticipo && (
                     <div className="mt-3">
                       <input
@@ -404,7 +405,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                         value={montoAnticipo}
                         onChange={(e) => setMontoAnticipo(e.target.value)}
                         placeholder="Monto del anticipo"
-                        className={clsx('input', errors.montoAnticipo && 'border-[var(--color-danger)]')}
+                        className={clsx('input', errors.montoAnticipo && 'input-error')}
                       />
                       {errors.montoAnticipo && (
                         <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
@@ -418,19 +419,19 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   )}
                 </div>
               )}
-              
+
               {/* Error de submit */}
               {errors.submit && (
                 <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
                   {errors.submit}
                 </p>
               )}
-              
-              {/* Botones */}
+
+              {/* Botones de acción */}
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={onCloseCallback}
                   className="btn-secondary flex-1"
                 >
                   Cancelar
@@ -460,15 +461,29 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
 
       {/* Modal selector de presupuesto - fuera del modal-content para evitar clipping por transform */}
       {showPresupuestoSelector && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60" onClick={() => setShowPresupuestoSelector(false)}>
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
+          onClick={() => setShowPresupuestoSelector(false)}
+        >
           <div
-            className="bg-[var(--color-elevated)] rounded-2xl w-[90vw] max-w-md max-h-[70vh] overflow-y-auto shadow-2xl"
+            className="bg-[var(--color-elevated)] rounded-xl w-[90vw] max-w-md max-h-[70vh] overflow-y-auto shadow-2xl animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
-                {presupuestoId ? 'Cambiar presupuesto' : 'Asociar presupuesto'}
-              </h3>
+            <div className="p-6">
+              {/* Header del selector */}
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
+                  {presupuestoId ? 'Cambiar presupuesto' : 'Asociar presupuesto'}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowPresupuestoSelector(false)}
+                  className="btn-icon"
+                  aria-label="Cerrar"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
               {presupuestosDelCliente.filter((p: Presupuesto) => p.estado === 'Aceptado' || p.estado === 'Pendiente').length === 0 ? (
                 <div className="text-center py-8">
@@ -478,7 +493,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {presupuestosDelCliente
                     .filter((p: Presupuesto) => p.estado === 'Aceptado' || p.estado === 'Pendiente')
                     .map((presupuesto: Presupuesto) => {
@@ -490,14 +505,11 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                           onClick={() => handleSeleccionarPresupuesto(presupuesto.id)}
                           disabled={cambiarPresupuesto.isPending}
                           className={clsx(
-                            'w-full text-left p-3 rounded-lg transition-all duration-150 flex items-center gap-3 cursor-pointer',
+                            'w-full text-left p-3 rounded-lg flex items-center gap-3 cursor-pointer transition-colors duration-200',
                             isSelected
-                              ? 'ring-2 ring-[var(--color-accent)]'
-                              : 'hover:ring-1 hover:ring-[var(--color-accent)]/40 hover:bg-[var(--color-surface)]'
+                              ? 'bg-[var(--color-accent)]/15'
+                              : 'hover:bg-[var(--color-hover)] bg-transparent'
                           )}
-                          style={{
-                            backgroundColor: isSelected ? 'var(--color-surface)' : 'transparent',
-                          }}
                         >
                           <div
                             className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -528,7 +540,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
                   type="button"
                   onClick={handleEliminarPresupuesto}
                   disabled={eliminarPresupuesto.isPending}
-                  className="w-full flex items-center justify-center gap-2 mt-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer hover:bg-[var(--color-surface)]"
+                  className="w-full flex items-center justify-center gap-2 mt-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer hover:bg-[var(--color-hover)]"
                   style={{ color: 'var(--color-danger)' }}
                 >
                   {eliminarPresupuesto.isPending ? (
