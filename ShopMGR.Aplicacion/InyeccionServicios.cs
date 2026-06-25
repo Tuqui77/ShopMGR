@@ -20,10 +20,7 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioConCliente<Direccion>, DireccionRepositorio>();
             services.AddScoped<IAdministrarDireccion, AdministracionDireccion>();
 
-            services.AddScoped<
-                IRepositorioConCliente<TelefonoCliente>,
-                TelefonoClienteRepositorio
-            >();
+            services.AddScoped<IRepositorioConCliente<TelefonoCliente>, TelefonoClienteRepositorio>();
             services.AddScoped<IAdministrarTelefonoCliente, AdministracionTelefonoCliente>();
 
             services.AddScoped<IRepositorioConValorHora, PresupuestoRepositorio>();
@@ -31,6 +28,9 @@ namespace ShopMGR.Aplicacion
 
             services.AddScoped<IRepositorioConFoto, TrabajoRepositorio>();
             services.AddScoped<IAdministrarTrabajos, AdministracionTrabajos>();
+
+            services.AddScoped<IAdministracionMetricas, AdministracionMetricas>();
+            services.AddScoped<IRepositorioMetricas, MetricasRepositorio>();
 
             services.AddScoped<IAdministrarAuth, AdministrarAuth>();
 
