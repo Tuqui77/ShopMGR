@@ -94,10 +94,10 @@ public class DominioModelTests
     public void Foto_DeberiaTenerNavigacionATrabajo()
     {
         // Arrange
-        var trabajo = new Trabajo { Id = 1, Titulo = "Reparación" };
+        var trabajo = new Trabajo("Reparación", null, 0, null, null, null, null);
 
         // Act
-        var foto = new Foto(trabajo.Id, "/fotos/trabajo1/foto1.jpg")
+        var foto = new Foto(1, "/fotos/trabajo1/foto1.jpg")
         {
             Id = 1,
             Trabajo = trabajo,
@@ -137,7 +137,7 @@ public class DominioModelTests
     public void HorasYDescripcion_DeberiaTenerNavigacionATrabajo()
     {
         // Arrange
-        var trabajo = new Trabajo { Id = 1, Titulo = "Reparación" };
+        var trabajo = new Trabajo("Reparación", null, 0, null, null, null, null);
 
         // Act
         var horasDesc = new HorasYDescripcion
@@ -146,7 +146,7 @@ public class DominioModelTests
             Horas = 2.5f,
             Descripcion = "Diagnóstico",
             Fecha = new DateOnly(2024, 1, 15),
-            IdTrabajo = trabajo.Id,
+            IdTrabajo = 1,
             Trabajo = trabajo,
         };
 

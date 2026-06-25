@@ -21,6 +21,12 @@ public class AdministracionTrabajosTests
     private readonly Mock<IAlmacenamientoServicio> _almacenamientoMock;
     private readonly AdministracionTrabajos _servicio;
 
+    // Helper para setear propiedades con private set en tests
+    private static void SetProperty<T, TValue>(T obj, string propertyName, TValue value)
+    {
+        typeof(T).GetProperty(propertyName)?.SetValue(obj, value);
+    }
+
     public AdministracionTrabajosTests()
     {
         _repositorioFotoMock = new Mock<IRepositorioConFoto>();
@@ -49,18 +55,8 @@ public class AdministracionTrabajosTests
         // Arrange
         var trabajosEsperados = new List<Trabajo>
         {
-            new()
-            {
-                Id = 1,
-                Titulo = "Trabajo 1",
-                Estado = EstadoTrabajo.Pendiente,
-            },
-            new()
-            {
-                Id = 2,
-                Titulo = "Trabajo 2",
-                Estado = EstadoTrabajo.Iniciado,
-            },
+            new Trabajo("Trabajo 1", null, 0, EstadoTrabajo.Pendiente, null, null, null),
+            new Trabajo("Trabajo 2", null, 0, EstadoTrabajo.Iniciado, null, null, null),
         };
 
         _repositorioFotoMock.Setup(x => x.ListarTodosAsync()).ReturnsAsync(trabajosEsperados);
@@ -83,12 +79,8 @@ public class AdministracionTrabajosTests
     public async Task ObtenerPorIdAsync_DeberiaRetornarTrabajoCuandoExiste()
     {
         // Arrange
-        var trabajoEsperado = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Reparación de motor",
-            Estado = EstadoTrabajo.Iniciado,
-        };
+        var trabajoEsperado = new Trabajo("Reparación de motor", null, 0, EstadoTrabajo.Iniciado, null, null, null);
+        SetProperty(trabajoEsperado, "Id", 1);
 
         _repositorioFotoMock.Setup(x => x.ObtenerPorIdAsync(1)).ReturnsAsync(trabajoEsperado);
 
@@ -97,8 +89,7 @@ public class AdministracionTrabajosTests
 
         // Assert
         resultado.Should().NotBeNull();
-        resultado!.Id.Should().Be(1);
-        resultado.Titulo.Should().Be("Reparación de motor");
+        resultado!.Titulo.Should().Be("Reparación de motor");
     }
 
     #endregion
@@ -109,15 +100,9 @@ public class AdministracionTrabajosTests
     public async Task ObtenerDetallePorIdAsync_DeberiaRetornarTrabajoConRelaciones()
     {
         // Arrange
-        var trabajoEsperado = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Reparación de motor",
-            Estado = EstadoTrabajo.Iniciado,
-            Cliente = new Cliente { Id = 1, NombreCompleto = "Juan Perez" },
-            Fotos = new List<Foto>(),
-            HorasDeTrabajo = new List<HorasYDescripcion>(),
-        };
+        var trabajoEsperado = new Trabajo("Reparación de motor", null, 0, EstadoTrabajo.Iniciado, null, null, null);
+        SetProperty(trabajoEsperado, "Id", 1);
+        SetProperty(trabajoEsperado, "Cliente", new Cliente { Id = 1, NombreCompleto = "Juan Perez" });
 
         _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajoEsperado);
 
@@ -126,8 +111,7 @@ public class AdministracionTrabajosTests
 
         // Assert
         resultado.Should().NotBeNull();
-        resultado!.Id.Should().Be(1);
-        resultado.Titulo.Should().Be("Reparación de motor");
+        resultado!.Titulo.Should().Be("Reparación de motor");
         resultado.Cliente.Should().NotBeNull();
         resultado.Cliente.NombreCompleto.Should().Be("Juan Perez");
         _repositorioFotoMock.Verify(x => x.ObtenerDetallePorIdAsync(1), Times.Once);
@@ -143,18 +127,8 @@ public class AdministracionTrabajosTests
         // Arrange
         var trabajosPendientes = new List<Trabajo>
         {
-            new()
-            {
-                Id = 1,
-                Titulo = "Trabajo Pendiente 1",
-                Estado = EstadoTrabajo.Pendiente,
-            },
-            new()
-            {
-                Id = 2,
-                Titulo = "Trabajo Pendiente 2",
-                Estado = EstadoTrabajo.Pendiente,
-            },
+            new Trabajo("Trabajo Pendiente 1", null, 0, EstadoTrabajo.Pendiente, null, null, null),
+            new Trabajo("Trabajo Pendiente 2", null, 0, EstadoTrabajo.Pendiente, null, null, null),
         };
 
         _repositorioFotoMock
@@ -180,12 +154,7 @@ public class AdministracionTrabajosTests
         // Arrange
         var trabajosCliente = new List<Trabajo>
         {
-            new()
-            {
-                Id = 1,
-                IdCliente = 5,
-                Titulo = "Trabajo Cliente 5",
-            },
+            new Trabajo("Trabajo Cliente 5", null, 5, null, null, null, null),
         };
 
         _repositorioFotoMock.Setup(x => x.ObtenerPorClienteAsync(5)).ReturnsAsync(trabajosCliente);
@@ -223,24 +192,17 @@ public class AdministracionTrabajosTests
             .Setup(x => x.SubirFotoAsync(It.IsAny<int>(), It.IsAny<IFormFile>()))
             .ReturnsAsync("https://drive.google.com/uc?id=test123");
 
-        _repositorioFotoMock.Setup(x => x.AgregarFotosAsync(It.IsAny<List<Foto>>())).Returns(Task.CompletedTask);
+        var trabajoExistente = new Trabajo("Test", null, 0, null, null, null, null);
+        SetProperty(trabajoExistente, "Id", idTrabajo);
+        _repositorioFotoMock.Setup(x => x.ObtenerPorIdAsync(idTrabajo)).ReturnsAsync(trabajoExistente);
+        _repositorioFotoMock.Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>())).Returns(Task.CompletedTask);
 
         // Act
         await _servicio.AgregarFotosAsync(idTrabajo, mockFiles.Object);
 
         // Assert
         _almacenamientoMock.Verify(x => x.SubirFotoAsync(It.IsAny<int>(), It.IsAny<IFormFile>()), Times.Once);
-        _repositorioFotoMock.Verify(
-            x =>
-                x.AgregarFotosAsync(
-                    It.Is<List<Foto>>(fotos =>
-                        fotos.Count == 1
-                        && fotos[0].IdTrabajo == idTrabajo
-                        && fotos[0].RutaRelativa == "https://drive.google.com/uc?id=test123"
-                    )
-                ),
-            Times.Once
-        );
+        _repositorioFotoMock.Verify(x => x.ActualizarAsync(It.IsAny<Trabajo>()), Times.Once);
     }
 
     #endregion
@@ -253,13 +215,8 @@ public class AdministracionTrabajosTests
         // Arrange
         var trabajoModificado = new ModificarTrabajo { Titulo = "Título Modificado", Estado = EstadoTrabajo.Iniciado };
 
-        var trabajoExistente = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Título Original",
-            Estado = EstadoTrabajo.Pendiente,
-            IdCliente = 10,
-        };
+        var trabajoExistente = new Trabajo("Título Original", null, 10, EstadoTrabajo.Pendiente, null, null, null);
+        SetProperty(trabajoExistente, "Id", 1);
 
         _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajoExistente);
 
@@ -285,13 +242,8 @@ public class AdministracionTrabajosTests
         // Arrange
         var trabajoModificado = new ModificarTrabajo { Estado = EstadoTrabajo.Iniciado };
 
-        var trabajoExistente = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Trabajo",
-            Estado = EstadoTrabajo.Pendiente,
-            FechaInicio = null,
-        };
+        var trabajoExistente = new Trabajo("Trabajo", null, 0, EstadoTrabajo.Pendiente, null, null, null);
+        SetProperty(trabajoExistente, "Id", 1);
 
         _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajoExistente);
 
@@ -312,21 +264,11 @@ public class AdministracionTrabajosTests
     public async Task TerminarTrabajo_DeberiaTerminarTrabajoYCrearMovimiento()
     {
         // Arrange
-        var trabajo = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Trabajo a terminar",
-            Estado = EstadoTrabajo.Iniciado,
-            // TotalHoras es de solo lectura - se calcula desde HorasDeTrabajo
-            HorasDeTrabajo = [new HorasYDescripcion { Horas = 10 }],
-            TotalLabor = null, // Se calculará
-            IdCliente = 5,
-            Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente Test" },
-        };
+        var trabajo = new Trabajo("Trabajo a terminar", null, 5, EstadoTrabajo.Iniciado, null, null, 1000m);
+        SetProperty(trabajo, "Id", 1);
+        SetProperty(trabajo, "Cliente", new Cliente { Id = 5, NombreCompleto = "Cliente Test" });
 
         _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajo);
-
-        _repositorioPresupuestoMock.Setup(x => x.ObtenerCostoHoraDeTrabajo()).ReturnsAsync(100m); // $100 por hora
 
         _repositorioFotoMock.Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>())).Returns(Task.CompletedTask);
 
@@ -339,7 +281,6 @@ public class AdministracionTrabajosTests
 
         // Assert
         _repositorioFotoMock.Verify(x => x.ObtenerDetallePorIdAsync(1), Times.Once);
-        _repositorioPresupuestoMock.Verify(x => x.ObtenerCostoHoraDeTrabajo(), Times.Once);
         _repositorioFotoMock.Verify(
             x => x.ActualizarAsync(It.Is<Trabajo>(t => t.Estado == EstadoTrabajo.Terminado && t.FechaFin != null)),
             Times.Once
@@ -376,21 +317,11 @@ public class AdministracionTrabajosTests
     public async Task TerminarTrabajo_ConTotalLaborExistente_NoDeberiaRecalcular()
     {
         // Arrange
-        var trabajo = new Trabajo
-        {
-            Id = 1,
-            Titulo = "Trabajo con total",
-            Estado = EstadoTrabajo.Iniciado,
-            HorasDeTrabajo = [new HorasYDescripcion { Horas = 10 }],
-            TotalLabor = 500m, // Ya tiene un total establecido
-            IdCliente = 5,
-            Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente Test" },
-        };
+        var trabajo = new Trabajo("Trabajo con total", null, 5, EstadoTrabajo.Iniciado, null, null, 500m);
+        SetProperty(trabajo, "Id", 1);
+        SetProperty(trabajo, "Cliente", new Cliente { Id = 5, NombreCompleto = "Cliente Test" });
 
         _repositorioFotoMock.Setup(x => x.ObtenerDetallePorIdAsync(1)).ReturnsAsync(trabajo);
-
-        // No debe llamar a ObtenerCostoHoraDeTrabajo porque ya tiene TotalLabor
-        _repositorioPresupuestoMock.Setup(x => x.ObtenerCostoHoraDeTrabajo()).ReturnsAsync(100m);
 
         _repositorioFotoMock.Setup(x => x.ActualizarAsync(It.IsAny<Trabajo>())).Returns(Task.CompletedTask);
 

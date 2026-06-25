@@ -32,12 +32,7 @@ public class TrabajoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var nuevoTrabajo = new Trabajo
-        {
-            Titulo = "Reparación de Motor",
-            IdCliente = cliente.Id,
-            Estado = EstadoTrabajo.Pendiente
-        };
+        var nuevoTrabajo = new Trabajo("Reparación de Motor", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
 
         // Act
         var resultado = await repositorio.CrearAsync(nuevoTrabajo);
@@ -64,9 +59,9 @@ public class TrabajoRepositorioTests
         await contexto.SaveChangesAsync();
 
         await contexto.Trabajos.AddRangeAsync(
-            new Trabajo { Titulo = "Trabajo 1", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente },
-            new Trabajo { Titulo = "Trabajo 2", IdCliente = cliente.Id, Estado = EstadoTrabajo.Iniciado },
-            new Trabajo { Titulo = "Trabajo 3", IdCliente = cliente.Id, Estado = EstadoTrabajo.Terminado }
+            new Trabajo("Trabajo 1", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null),
+            new Trabajo("Trabajo 2", null, cliente.Id, EstadoTrabajo.Iniciado, null, null, null),
+            new Trabajo("Trabajo 3", null, cliente.Id, EstadoTrabajo.Terminado, null, null, null)
         );
         await contexto.SaveChangesAsync();
 
@@ -93,7 +88,7 @@ public class TrabajoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo { Titulo = "Reparación", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente };
+        var trabajo = new Trabajo("Reparación", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
         var id = trabajo.Id;
@@ -114,7 +109,7 @@ public class TrabajoRepositorioTests
         var repositorio = new TrabajoRepositorio(contexto);
 
         // Act & Assert
-        var accion = () => repositorio.ObtenerPorIdAsync(999);
+        Func<Task> accion = () => repositorio.ObtenerPorIdAsync(999);
         await accion.Should().ThrowAsync<KeyNotFoundException>()
             .WithMessage("*No existe un trabajo con el Id 999*");
     }
@@ -134,13 +129,8 @@ public class TrabajoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo
-        {
-            Titulo = "Reparación Completa",
-            IdCliente = cliente.Id,
-            Estado = EstadoTrabajo.Pendiente,
-            Fotos = new List<Foto> { new Foto(cliente.Id, "/fotos/foto1.jpg") }
-        };
+        var trabajo = new Trabajo("Reparación Completa", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        trabajo.AgregarFotos(new List<Foto> { new Foto(1, "/fotos/foto1.jpg") });
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
         var id = trabajo.Id;
@@ -171,9 +161,9 @@ public class TrabajoRepositorioTests
         await contexto.SaveChangesAsync();
 
         await contexto.Trabajos.AddRangeAsync(
-            new Trabajo { Titulo = "Trabajo Cliente 1 - 1", IdCliente = cliente1.Id, Estado = EstadoTrabajo.Pendiente },
-            new Trabajo { Titulo = "Trabajo Cliente 1 - 2", IdCliente = cliente1.Id, Estado = EstadoTrabajo.Terminado },
-            new Trabajo { Titulo = "Trabajo Cliente 2", IdCliente = cliente2.Id, Estado = EstadoTrabajo.Pendiente }
+            new Trabajo("Trabajo Cliente 1 - 1", null, cliente1.Id, EstadoTrabajo.Pendiente, null, null, null),
+            new Trabajo("Trabajo Cliente 1 - 2", null, cliente1.Id, EstadoTrabajo.Terminado, null, null, null),
+            new Trabajo("Trabajo Cliente 2", null, cliente2.Id, EstadoTrabajo.Pendiente, null, null, null)
         );
         await contexto.SaveChangesAsync();
 
@@ -202,9 +192,9 @@ public class TrabajoRepositorioTests
         await contexto.SaveChangesAsync();
 
         await contexto.Trabajos.AddRangeAsync(
-            new Trabajo { Titulo = "Trabajo Pendiente", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente },
-            new Trabajo { Titulo = "Otro Pendiente", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente },
-            new Trabajo { Titulo = "Trabajo Terminado", IdCliente = cliente.Id, Estado = EstadoTrabajo.Terminado }
+            new Trabajo("Trabajo Pendiente", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null),
+            new Trabajo("Otro Pendiente", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null),
+            new Trabajo("Trabajo Terminado", null, cliente.Id, EstadoTrabajo.Terminado, null, null, null)
         );
         await contexto.SaveChangesAsync();
 
@@ -232,7 +222,7 @@ public class TrabajoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo { Titulo = "Reparación", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente };
+        var trabajo = new Trabajo("Reparación", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
 
@@ -243,31 +233,14 @@ public class TrabajoRepositorioTests
         };
 
         // Act
-        await repositorio.AgregarFotosAsync(fotos);
+        trabajo.AgregarFotos(fotos);
+        await repositorio.ActualizarAsync(trabajo);
 
         // Assert
         var trabajoConFotos = await contexto.Trabajos
             .Include(t => t.Fotos)
             .FirstOrDefaultAsync(t => t.Id == trabajo.Id);
         trabajoConFotos!.Fotos.Should().HaveCount(2);
-    }
-
-    [Fact]
-    public async Task AgregarFotosAsync_DeberiaLanzarExcepcionCuandoTrabajoNoExiste()
-    {
-        // Arrange
-        using var contexto = CreateDbContext();
-        var repositorio = new TrabajoRepositorio(contexto);
-
-        var fotos = new List<Foto>
-        {
-            new Foto(999, "/fotos/foto1.jpg")
-        };
-
-        // Act & Assert
-        var accion = () => repositorio.AgregarFotosAsync(fotos);
-        await accion.Should().ThrowAsync<KeyNotFoundException>()
-            .WithMessage("*No existe un trabajo con el Id 999*");
     }
 
     #endregion
@@ -285,7 +258,7 @@ public class TrabajoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo { Titulo = "Reparación", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente };
+        var trabajo = new Trabajo("Reparación", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
 
@@ -320,12 +293,12 @@ public class TrabajoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo { Titulo = "Título Original", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente };
+        var trabajo = new Trabajo("Título Original", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
 
-        trabajo.Titulo = "Título Modificado";
-        trabajo.Estado = EstadoTrabajo.Terminado;
+        trabajo.Editar("Título Modificado", null, trabajo.IdCliente);
+        trabajo.TerminarTrabajo();
 
         // Act
         await repositorio.ActualizarAsync(trabajo);
@@ -351,7 +324,7 @@ public class TrabajoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo { Titulo = "Trabajo", IdCliente = cliente.Id, Estado = EstadoTrabajo.Pendiente };
+        var trabajo = new Trabajo("Trabajo", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
         var id = trabajo.Id;
@@ -372,7 +345,7 @@ public class TrabajoRepositorioTests
         var repositorio = new TrabajoRepositorio(contexto);
 
         // Act & Assert
-        var accion = () => repositorio.EliminarAsync(999);
+        Func<Task> accion = () => repositorio.EliminarAsync(999);
         await accion.Should().ThrowAsync<KeyNotFoundException>()
             .WithMessage("*No existe un trabajo con el Id 999*");
     }
