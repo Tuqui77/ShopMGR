@@ -87,7 +87,8 @@ namespace ShopMGR.Dominio.Modelo
         public void AgregarHoras(HorasYDescripcion horas, decimal costoHora)
         {
             _horasDeTrabajo.Add(horas);
-            TotalLabor = costoHora * (decimal)TotalHoras;
+            if (IdPresupuesto == null)
+                TotalLabor = costoHora * (decimal)TotalHoras;
         }
 
         public void AgregarFotos(List<Foto> fotos)
