@@ -2,6 +2,7 @@
 
 namespace ShopMGR.Dominio.Modelo
 {
+    //TODO: refactorizar entidad con invariables
     public class Presupuesto
     {
         public int Id { get; set; }
@@ -9,6 +10,7 @@ namespace ShopMGR.Dominio.Modelo
         public string? Descripcion { get; set; }
         public double HorasEstimadas { get; set; }
         public DateOnly Fecha { get; set; }
+        public DateOnly? FechaAceptado { get; set; }
         public decimal CostoMateriales { get; set; }
         public decimal CostoLabor { get; set; }
         public decimal CostoInsumos { get; set; }
