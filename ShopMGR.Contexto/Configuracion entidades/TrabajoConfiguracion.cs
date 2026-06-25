@@ -45,7 +45,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
                 .HasColumnType("decimal(18,2)");
 
             builder.Property(t => t.HorasEstimadas)
-                .IsRequired(true);
+                .IsRequired(false);
 
             //Relaciones
             builder.HasOne(t => t.Cliente)
