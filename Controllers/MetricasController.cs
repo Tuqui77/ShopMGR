@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Interfaces;
 
-//TODO: Implementar las consultas de las métricas
-
-
 namespace ShopMGR.WebApi.Controllers
 {
     [Route("api/[controller]")]
