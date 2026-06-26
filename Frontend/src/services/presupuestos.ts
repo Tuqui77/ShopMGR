@@ -74,18 +74,12 @@ interface MaterialItem {
   subtotal: number;
 }
 
-// Response wrapper de .NET
-interface ListResponse<T> {
-  $id?: string;
-  $values?: T[];
-}
-
 // ============================================================================
 // Mappers
 // ============================================================================
 
-function mapMateriales(dto: { $id: string; $values: MaterialItem[] } | undefined): Material[] {
-  const values = dto?.$values || [];
+function mapMateriales(dto: MaterialItem[] | undefined): Material[] {
+  const values = dto || [];
   return values.map(m => ({
     id: m.id,
     descripcion: m.descripcion,
@@ -104,13 +98,13 @@ function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {
   return {
     id: dto.id,
     nombreCompleto: dto.nombreCompleto,
-    telefono: dto.telefono?.$values?.map(t => t.telefono) || [],
-    direccion: dto.direccion?.$values?.[0]
-      ? `${dto.direccion.$values[0].calle} ${dto.direccion.$values[0].altura}`
+    telefono: dto.telefono?.map(t => t.telefono) || [],
+    direccion: dto.direccion?.[0]
+      ? `${dto.direccion[0].calle} ${dto.direccion[0].altura}`
       : undefined,
     balance: dto.balance || 0,
-    trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.filter((p: unknown) => p && typeof p === 'object' && 'id' in p).length || 0,
+    trabajosCount: dto.trabajos?.length || 0,
+    presupuestosCount: dto.presupuestos?.length || 0,
   };
 }
 
@@ -166,8 +160,8 @@ export const presupuestosService = {
    * Obtiene todos los presupuestos (list view)
    */
   async listar(): Promise<Presupuesto[]> {
-    const response = await apiClient.get<ListResponse<PresupuestoListaDTO>>('/Presupuestos/ListarPresupuestos');
-    const values = response.data.$values || [];
+    const response = await apiClient.get<PresupuestoListaDTO[]>('/Presupuestos/ListarPresupuestos');
+    const values = response.data;
     return values.map(mapPresupuestoLista);
   },
 
@@ -195,10 +189,10 @@ export const presupuestosService = {
    * Obtiene todos los presupuestos de un cliente
    */
   async obtenerPorCliente(idCliente: number): Promise<Presupuesto[]> {
-    const response = await apiClient.get<ListResponse<PresupuestoBackendDTO>>('/Presupuestos/ObtenerPresupuestosPorCliente', {
+    const response = await apiClient.get<PresupuestoBackendDTO[]>('/Presupuestos/ObtenerPresupuestosPorCliente', {
       params: { idCliente },
     });
-    const values = response.data.$values || [];
+    const values = response.data;
     return values.map(mapPresupuestoBackend);
   },
 
@@ -206,10 +200,10 @@ export const presupuestosService = {
    * Obtiene todos los presupuestos con un estado específico
    */
   async obtenerPorEstado(estado: EstadoPresupuesto): Promise<Presupuesto[]> {
-    const response = await apiClient.get<ListResponse<PresupuestoBackendDTO>>('/Presupuestos/ObtenerPresupuestosEstado', {
+    const response = await apiClient.get<PresupuestoBackendDTO[]>('/Presupuestos/ObtenerPresupuestosEstado', {
       params: { estado },
     });
-    const values = response.data.$values || [];
+    const values = response.data;
     return values.map(mapPresupuestoBackend);
   },
 
