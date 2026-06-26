@@ -80,7 +80,9 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
         {
-            var trabajos = await _contexto.Trabajos.Where(t => t.Estado == estado).ToListAsync();
+            var trabajos = await _contexto.Trabajos.Where(t => t.Estado == estado)
+                .Include(t => t.Cliente)
+                .ToListAsync();
 
             return trabajos;
         }
