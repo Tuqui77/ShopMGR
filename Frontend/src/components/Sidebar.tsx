@@ -10,20 +10,30 @@ const navItems = [
   { path: '/presupuestos', icon: Clipboard, label: 'Presupuestos' },
 ];
 
+function isActivePath(currentPath: string, itemPath: string) {
+  if (itemPath === '/') return currentPath === '/';
+  return currentPath.startsWith(itemPath);
+}
+
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { setIsAuthenticated } = useStore();
-  
+
   const handleLogout = () => {
     setIsAuthenticated(false);
     navigate('/login');
   };
-  
+
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">ShopMGR</div>
-      
+      {/* Header */}
+      <div className="sidebar-header">
+        <div className="sidebar-logo">ShopMGR</div>
+        <p className="sidebar-subtitle">Taller Mecánico</p>
+      </div>
+
+      {/* Navigation */}
       <nav className="sidebar-nav">
         {navItems.map(({ path, icon: Icon, label }) => (
           <Link
@@ -31,22 +41,35 @@ export function Sidebar() {
             to={path}
             className={clsx(
               'sidebar-item',
-              location.pathname === path && 'active'
+              isActivePath(location.pathname, path) && 'active'
             )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="sidebar-item-icon" />
             <span>{label}</span>
           </Link>
         ))}
       </nav>
-      
-      <div className="mt-auto space-y-1">
-        <Link to="/configuracion" className="sidebar-item">
-          <Settings className="w-5 h-5" />
+
+      {/* Separator */}
+      <div className="sidebar-divider" />
+
+      {/* Footer actions */}
+      <div className="sidebar-footer">
+        <Link
+          to="/configuracion"
+          className={clsx(
+            'sidebar-item',
+            location.pathname === '/configuracion' && 'active'
+          )}
+        >
+          <Settings className="sidebar-item-icon" />
           <span>Configuración</span>
         </Link>
-        <button onClick={handleLogout} className="sidebar-item w-full text-left">
-          <LogOut className="w-5 h-5" />
+        <button
+          onClick={handleLogout}
+          className="sidebar-item w-full text-left"
+        >
+          <LogOut className="sidebar-item-icon" />
           <span>Cerrar sesión</span>
         </button>
       </div>

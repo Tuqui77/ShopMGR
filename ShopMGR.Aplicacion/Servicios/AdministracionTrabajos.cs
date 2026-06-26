@@ -28,13 +28,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
             if (nuevoTrabajo.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajo.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
-            }
-
-            if (nuevoTrabajo.IdPresupuesto != null)
-            {
-                var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(nuevoTrabajo.IdPresupuesto.Value);
-                trabajo.TotalLabor = presupuesto.CostoLabor;
+                trabajo.IniciarTrabajo();
             }
 
             await _repositorio.CrearAsync(trabajo);
@@ -54,6 +48,8 @@ namespace ShopMGR.Aplicacion.Servicios
                 IdCliente = presupuesto.IdCliente,
                 IdPresupuesto = presupuesto.Id,
                 Estado = EstadoTrabajo.Pendiente,
+                HorasEstimadas = presupuesto.HorasEstimadas,
+                TotalLabor = presupuesto.CostoLabor,
             };
 
             return await CrearAsync(trabajoDTO);
@@ -66,6 +62,7 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotosNuevas)
         {
+            var trabajo = await ObtenerPorIdAsync(idTrabajo);
             var fotos = new List<Foto>();
 
             foreach (var foto in fotosNuevas)
@@ -76,37 +73,40 @@ namespace ShopMGR.Aplicacion.Servicios
                 fotos.Add(fotoTmp);
             }
 
-            await _repositorio.AgregarFotosAsync(fotos);
+            trabajo.AgregarFotos(fotos);
+            await _repositorio.ActualizarAsync(trabajo);
         }
 
         public async Task EliminarFotoAsync(int idTrabajo, int idImagen)
         {
-            var trabajoConFoto = await _repositorio.ObtenerPorIdConFotoAsync(idTrabajo);
+            var trabajo = await _repositorio.ObtenerPorIdConFotoAsync(idTrabajo);
             var foto =
-                trabajoConFoto.Fotos.FirstOrDefault(f => f.Id == idImagen)
+                trabajo.Fotos.FirstOrDefault(f => f.Id == idImagen)
                 ?? throw new KeyNotFoundException("No existe una foto con ese id");
             var rutaRelativa = foto.RutaRelativa;
 
-            trabajoConFoto.Fotos.Remove(foto);
-            await _repositorio.ActualizarAsync(trabajoConFoto);
+            trabajo.EliminarFoto(foto);
+            await _repositorio.ActualizarAsync(trabajo);
 
             _ = Task.Run(() => _almacenamiento.EliminarFotoAsync(rutaRelativa));
         }
 
         public async Task AgregarHorasAsync(HorasYDescripcionDTO horasDTO)
         {
-            horasDTO.Fecha = horasDTO.Fecha == default ? DateOnly.FromDateTime(DateTime.Now) : horasDTO.Fecha;
+            if (horasDTO.Fecha == default)
+                horasDTO.Fecha = DateOnly.FromDateTime(DateTime.Now);
 
             var horas = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horasDTO);
-
             var trabajo = await _repositorio.ObtenerPorIdAsync(horasDTO.IdTrabajo);
-            trabajo.HorasDeTrabajo.Add(horas);
 
             if (trabajo.IdPresupuesto == null)
             {
                 var valorHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                trabajo.TotalLabor = valorHora * (decimal)trabajo.TotalHoras;
+                trabajo.AgregarHoras(horas, valorHora);
             }
+            else
+                trabajo.AgregarHoras(horas);
+
             await _repositorio.ActualizarAsync(trabajo);
         }
 
@@ -133,61 +133,50 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task ActualizarAsync(int id, ModificarTrabajo trabajoModificado)
         {
             var trabajoDb = await _repositorio.ObtenerDetallePorIdAsync(id);
+            trabajoDb.Editar(trabajoModificado.Titulo, trabajoModificado.Descripcion, trabajoModificado.IdCliente);
 
             if (trabajoDb.FechaInicio == null && trabajoModificado.Estado == EstadoTrabajo.Iniciado)
             {
-                trabajoDb.FechaInicio = DateOnly.FromDateTime(DateTime.Now);
+                trabajoDb.IniciarTrabajo();
             }
-
-            trabajoDb.IdCliente = trabajoModificado.IdCliente;
-            trabajoDb.Titulo = trabajoModificado.Titulo;
-            trabajoDb.Descripcion = trabajoModificado.Descripcion;
-            trabajoDb.Estado = trabajoModificado.Estado;
-
-            var presupuestoAnterior = trabajoDb.IdPresupuesto;
-            var presupuestoNuevo = trabajoModificado.IdPresupuesto;
-            var cambioPresupuesto = presupuestoAnterior != presupuestoNuevo;
-
-            if (cambioPresupuesto)
-            {
-                if (presupuestoNuevo == null) //Se eliminó el presupuesto
-                {
-                    var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                    trabajoDb.TotalLabor = costoHora * (decimal)trabajoDb.HorasDeTrabajo.Sum(h => h.Horas);
-                }
-                else //Se agregó o cambió el presupuesto
-                {
-                    var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(
-                        (int)trabajoModificado.IdPresupuesto!
-                    );
-                    trabajoDb.TotalLabor = presupuesto.CostoLabor;
-                }
-            }
-            trabajoDb.IdPresupuesto = trabajoModificado.IdPresupuesto;
 
             await _repositorio.ActualizarAsync(trabajoDb);
+        }
+
+        public async Task EliminarPresupuesto(int idTrabajo)
+        {
+            var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
+            var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
+            trabajo.EliminarPresupuesto(costoHora);
+            await _repositorio.ActualizarAsync(trabajo);
+        }
+
+        public async Task CambiarPresupuesto(int idTrabajo, int idPresupuesto)
+        {
+            var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
+            var presupuesto = await _repositorioPresupuestos.ObtenerPorIdAsync(idPresupuesto);
+            trabajo.CambiarPresupuesto(presupuesto.Id, presupuesto.CostoLabor, presupuesto.HorasEstimadas);
+            await _repositorio.ActualizarAsync(trabajo);
+        }
+
+        public async Task IniciarTrabajo(int idTrabajo)
+        {
+            var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
+            trabajo.IniciarTrabajo();
+            await _repositorio.ActualizarAsync(trabajo);
         }
 
         public async Task TerminarTrabajo(int idTrabajo)
         {
             var trabajo = await _repositorio.ObtenerDetallePorIdAsync(idTrabajo);
-
-            // Calcular total si no existe
-            if (!trabajo.TotalLabor.HasValue)
-            {
-                var costoHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();
-                trabajo.TotalLabor = (decimal)trabajo.HorasDeTrabajo.Sum(h => h.Horas) * costoHora;
-            }
-
-            trabajo.FechaFin = DateOnly.FromDateTime(DateTime.Now);
-            trabajo.Estado = EstadoTrabajo.Terminado;
+            trabajo.TerminarTrabajo();
 
             await _repositorio.ActualizarAsync(trabajo);
 
             var movimiento = new MovimientoBalanceDTO
             {
                 Tipo = TipoMovimiento.Cargo,
-                Monto = -trabajo.TotalLabor.Value,
+                Monto = trabajo.TotalLabor.Value,
                 Descripcion = $"Trabajo #{idTrabajo} - {trabajo.Titulo}",
                 Fecha = DateOnly.FromDateTime(DateTime.Now),
                 IdCliente = trabajo.IdCliente,

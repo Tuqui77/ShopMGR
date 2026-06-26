@@ -144,6 +144,30 @@ namespace ShopMGR.WebApi.Controllers
         }
 
         [HttpPatch]
+        [Route("EliminarPresupuesto")]
+        public async Task<IActionResult> EliminarPresupuesto(int idTrabajo)
+        {
+            await administrarTrabajos.EliminarPresupuesto(idTrabajo);
+            return Ok();
+        }
+
+        [HttpPatch]
+        [Route("CambiarPresupuesto")]
+        public async Task<IActionResult> CambiarPresupuesto(int idTrabajo, int idPresupuesto)
+        {
+            await administrarTrabajos.CambiarPresupuesto(idTrabajo, idPresupuesto);
+            return Ok();
+        }
+
+        [HttpPatch]
+        [Route("IniciarTrabajo")]
+        public async Task<IActionResult> IniciarTrabajo(int idTrabajo)
+        {
+            await administrarTrabajos.IniciarTrabajo(idTrabajo);
+            return Ok($"Trabajo #{idTrabajo} marcado como iniciado.");
+        }
+
+        [HttpPatch]
         [Route("TerminarTrabajo")]
         public async Task<IActionResult> TerminarTrabajo(int idTrabajo)
         {

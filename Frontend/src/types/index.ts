@@ -80,11 +80,11 @@ export interface ClienteBackendDTO {
   nombreCompleto: string;
   cuit?: string;
   balance: number;
-  telefono: { $id: string; $values: TelefonoItem[] };
-  direccion: { $id: string; $values: DireccionItem[] };
-  trabajos: { $id: string; $values: unknown[] };
-  presupuestos: { $id: string; $values: unknown[] };
-  movimientosBalance: { $id: string; $values: unknown[] };
+  telefono: TelefonoItem[];
+  direccion: DireccionItem[];
+  trabajos: unknown[];
+  presupuestos: unknown[];
+  movimientosBalance: unknown[];
 }
 
 // Full backend DTO for detail view
@@ -93,11 +93,11 @@ export interface ClienteDetalleBackendDTO {
   nombreCompleto: string;
   cuit?: string;
   balance: number;
-  telefono: { $id: string; $values: TelefonoItem[] };
-  direccion: { $id: string; $values: DireccionItem[] };
-  trabajos: { $id: string; $values: unknown[] };
-  presupuestos: { $id: string; $values: unknown[] };
-  movimientosBalance: { $id: string; $values: unknown[] };
+  telefono: TelefonoItem[];
+  direccion: DireccionItem[];
+  trabajos: unknown[];
+  presupuestos: unknown[];
+  movimientosBalance: unknown[];
 }
 
 export interface CrearClienteRequest {
@@ -163,12 +163,13 @@ export interface TrabajoBackendDTO {
   fechaInicio?: string;
   fechaFin?: string;
   totalLabor?: number;
+  horasEstimadas?: number;
   idCliente: number;
   idPresupuesto?: number;
   cliente: ClienteBackendDTO | null;
   presupuesto?: PresupuestoBackendDTO;
-  fotos: { $id: string; $values: FotoBackendDTO[] };
-  horasDeTrabajo: { $id: string; $values: HorasDeTrabajoBackendDTO[] };
+  fotos: FotoBackendDTO[];
+  horasDeTrabajo: HorasDeTrabajoBackendDTO[];
 }
 
 export type TrabajoDetalleDTO = TrabajoBackendDTO;
@@ -183,8 +184,8 @@ export interface CrearTrabajoRequest {
 
 export interface ModificarTrabajoRequest {
   titulo?: string;
+  descripcion?: string;
   idCliente?: number;
-  idPresupuesto?: number;
   estado?: EstadoTrabajo;
 }
 
@@ -251,6 +252,7 @@ export interface PresupuestoListaDTO {
   id: number;
   titulo: string;
   nombreCliente: string;
+  idCliente?: number;
   horasEstimadas: number;
   total: number;
   estado: EstadoPresupuesto;
@@ -270,7 +272,7 @@ export interface PresupuestoBackendDTO {
   costoInsumos?: number;
   total?: number;
   cliente?: ClienteBackendDTO;
-  materiales: { $id: string; $values: MaterialBackendDTO[] };
+  materiales: MaterialBackendDTO[];
 }
 
 export interface Presupuesto {
@@ -341,7 +343,6 @@ export interface MetricasMes {
   ingresos: number;
   horasTrabajadas: number;
   trabajosTerminados: number;
-  cambiosIngresos: number;
-  cambiosHoras: number;
-  cambiosTerminados: number;
+  presupuestosCreados: number;
+  presupuestosAceptados: number;
 }

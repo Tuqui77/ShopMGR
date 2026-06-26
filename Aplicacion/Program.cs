@@ -35,7 +35,8 @@ namespace ShopMGR.WebApi.Aplicacion
                             maxRetryCount: 5,
                             maxRetryDelay: TimeSpan.FromSeconds(10),
                             errorNumbersToAdd: null
-                        );
+                        )
+                        .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     }
                 );
             });
@@ -49,7 +50,7 @@ namespace ShopMGR.WebApi.Aplicacion
                         .Json
                         .Serialization
                         .ReferenceHandler
-                        .Preserve;
+                        .IgnoreCycles;
                 });
 
             //servicios del contenedor

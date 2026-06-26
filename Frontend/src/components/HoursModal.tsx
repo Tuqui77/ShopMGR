@@ -190,7 +190,7 @@ function SelectTrabajoView({
           <button
             key={trabajo.id}
             onClick={() => onSelect(trabajo)}
-            className="w-full p-3 rounded-lg text-left transition-colors"
+            className="w-full p-3 rounded-lg text-left transition-colors duration-200 hover:bg-[var(--color-hover)]"
             style={{ backgroundColor: 'var(--color-surface)' }}
           >
             <div className="flex items-center gap-3">
@@ -275,7 +275,7 @@ function HoursInputView({
       </div>
       
       <div className="mb-6">
-        <label className="text-sm mb-3 block" style={{ color: 'var(--color-muted)' }}>HORAS TRABAJADAS</label>
+        <label className="text-sm mb-3 block" style={{ color: 'var(--color-muted)' }}>Horas trabajadas</label>
         
         {/* Big number input – the hero */}
         <div className="text-center mb-3">
@@ -303,10 +303,8 @@ function HoursInputView({
                 key={value}
                 onClick={() => handlePresetClick(value)}
                 className={clsx(
-                  'px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer',
-                  isActive
-                    ? 'text-white'
-                    : 'hover:text-white'
+                  'px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer',
+                  isActive && 'text-white'
                 )}
                 style={{
                   backgroundColor: isActive ? 'var(--color-accent)' : 'var(--color-surface)',
@@ -336,7 +334,7 @@ function HoursInputView({
       </div>
       
       <div className="mb-6">
-        <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>DESCRIPCIÓN (opcional)</label>
+        <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>Descripción (opcional)</label>
         <textarea
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
@@ -385,7 +383,7 @@ function SuccessView({
         <CheckCircle className="w-10 h-10" style={{ color: 'var(--color-success)' }} />
       </div>
       
-      <p className="text-sm mb-1" style={{ color: 'var(--color-muted)' }}>HORAS REGISTRADAS</p>
+      <p className="text-sm mb-1" style={{ color: 'var(--color-muted)' }}>Horas registradas</p>
       <p className="text-4xl font-bold font-mono mb-1" style={{ color: 'var(--color-text)' }}>{hours}h</p>
       {valor !== undefined ? (
         <p className="text-xl font-mono" style={{ color: 'var(--color-success)' }}>{formatCurrency(valor)}</p>

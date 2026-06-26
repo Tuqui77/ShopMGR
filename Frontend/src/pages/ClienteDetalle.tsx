@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import clsx from 'clsx';
-import { useState } from 'react';
-import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight, Plus } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight, Plus, MoreVertical } from 'lucide-react';
 import { useClienteDetalle, useEliminarCliente } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
@@ -29,7 +29,23 @@ export function ClienteDetalle() {
   const [showNewDireccion, setShowNewDireccion] = useState(false);
   // Estado para modal de movimientos
   const [showMovimientos, setShowMovimientos] = useState(false);
+  // Estado para menú de 3 puntos
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   
+  // Cerrar menú al hacer click fuera
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showMenu]);
+
   // Handle edit button
   const handleEdit = () => {
     if (cliente) {
@@ -58,15 +74,15 @@ export function ClienteDetalle() {
   
   // Handle delete button
   const handleDelete = async () => {
-    if (cliente && window.confirm(`¿Estás seguro de eliminar el cliente "${cliente.nombreCompleto}"?`)) {
-      try {
-        await eliminarCliente.mutateAsync(cliente.id);
-        // Navigate back after delete
-        window.location.href = '/clientes';
-      } catch (err) {
-        console.error('Error al eliminar cliente:', err);
-        alert('Error al eliminar el cliente');
-      }
+    if (!cliente) return;
+    try {
+      await eliminarCliente.mutateAsync(cliente.id);
+      setShowDeleteConfirm(false);
+      // Navigate back after delete
+      window.location.href = '/clientes';
+    } catch (err) {
+      console.error('Error al eliminar cliente:', err);
+      alert('Error al eliminar el cliente');
     }
   };
 
@@ -111,7 +127,43 @@ export function ClienteDetalle() {
           <Link to="/clientes" className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors">
             <ArrowLeft className="w-5 h-5" style={{ color: 'var(--color-text)' }} />
           </Link>
-          <h1 className="text-xl font-bold font-display">Detalle del Cliente</h1>
+          <h1 className="text-xl font-bold font-display flex-1">Detalle del Cliente</h1>
+          {/* 3-dot menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="btn-icon"
+              aria-label="Opciones"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {showMenu && (
+              <div
+                className="absolute right-0 top-full mt-1 w-40 py-1 rounded-lg shadow-lg z-20 border"
+                style={{
+                  backgroundColor: 'var(--color-card)',
+                  borderColor: 'var(--color-border)',
+                }}
+              >
+                <button
+                  onClick={() => { handleEdit(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-danger)' }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -257,86 +309,93 @@ export function ClienteDetalle() {
           </Link>
         </div>
 
-        {/* Recent Items - Two Column Grid */}
-        {(hasTrabajos || hasPresupuestos) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {hasTrabajos && (
-              <div className="card py-3">
-                <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                  Trabajos Recientes
-                </h3>
-                <div className="space-y-1">
-                  {cliente.trabajosRecientes!.map((trabajo) => (
-                    <Link 
-                      key={trabajo.id}
-                      to={`/trabajos/${trabajo.id}`}
-                      className="flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors group"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
-                        <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                          {trabajo.estado} · {formatDate(trabajo.fechaInicio) || 'Sin fecha'}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
-                    </Link>
-                  ))}
-                </div>
+        {/* Recent Items - each item is its own card */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {hasTrabajos && (
+            <div>
+              <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                Trabajos Recientes
+              </h3>
+              <div className="space-y-2">
+                {cliente.trabajosRecientes!.map((trabajo) => (
+                  <Link
+                    key={trabajo.id}
+                    to={`/trabajos/${trabajo.id}`}
+                    className="card flex items-center justify-between py-3 gap-3 transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
+                      <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                        {trabajo.estado} · {formatDate(trabajo.fechaInicio) || 'Sin fecha'}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-muted)' }} />
+                  </Link>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {hasPresupuestos && (
-              <div className="card py-3">
-                <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                  Presupuestos Recientes
-                </h3>
-                <div className="space-y-1">
-                  {cliente.presupuestosRecientes!.map((presupuesto) => (
-                    <Link 
-                      key={presupuesto.id}
-                      to={`/presupuestos/${presupuesto.id}`}
-                      className="flex items-center justify-between py-1.5 px-2 -mx-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors group"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</p>
-                        <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                          {presupuesto.estado} · {formatDate(presupuesto.fecha) || 'Sin fecha'}
-                          {presupuesto.total && ` · ${formatCurrency(presupuesto.total)}`}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--color-muted)' }} />
-                    </Link>
-                  ))}
-                </div>
+          {hasPresupuestos && (
+            <div>
+              <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                Presupuestos Recientes
+              </h3>
+              <div className="space-y-2">
+                {cliente.presupuestosRecientes!.map((presupuesto) => (
+                  <Link
+                    key={presupuesto.id}
+                    to={`/presupuestos/${presupuesto.id}`}
+                    className="card flex items-center justify-between py-3 gap-3 transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</p>
+                      <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+                        {presupuesto.estado} · {formatDate(presupuesto.fecha) || 'Sin fecha'}
+                        {presupuesto.total && ` · ${formatCurrency(presupuesto.total)}`}
+                      </p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-muted)' }} />
+                  </Link>
+                ))}
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-2">
-          <button 
-            onClick={handleEdit}
-            className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]"
-          >
-            <Edit className="w-4 h-4" />
-            Editar
-          </button>
-          <button 
-            onClick={handleDelete}
-            disabled={eliminarCliente.isPending}
-            className="btn-secondary flex items-center justify-center gap-2 px-4"
-            style={{ color: 'var(--color-danger)' }}
-          >
-            {eliminarCliente.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-          </button>
+            </div>
+          )}
         </div>
       </section>
       
+      {/* Modal de confirmación de eliminación */}
+      {showDeleteConfirm && (
+        <>
+          <div className="modal-backdrop" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="modal-content max-w-sm">
+            <div className="p-6 text-center">
+              <Trash2 className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-danger)' }} />
+              <h3 className="text-lg font-semibold mb-2">¿Eliminar cliente?</h3>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
+                Se eliminará: <strong>{cliente.nombreCompleto}</strong>
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={eliminarCliente.isPending}
+                  className="py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
+                >
+                  {eliminarCliente.isPending ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Cliente Form for editing */}
       {editingCliente && <ClienteForm cliente={editingCliente} />}
       

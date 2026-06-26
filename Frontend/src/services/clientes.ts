@@ -6,11 +6,11 @@ interface ClienteBackendDTO {
   nombreCompleto: string;
   cuit?: string;
   balance: number;
-  telefono: { $id: string; $values: TelefonoItem[] };
-  direccion: { $id: string; $values: DireccionItem[] };
-  trabajos: { $id: string; $values: TrabajoItem[] };
-  presupuestos: { $id: string; $values: PresupuestoItem[] };
-  movimientosBalance: { $id: string; $values: unknown[] };
+  telefono: TelefonoItem[];
+  direccion: DireccionItem[];
+  trabajos: TrabajoItem[];
+  presupuestos: PresupuestoItem[];
+  movimientosBalance: unknown[];
 }
 
 // Items with basic info for lists
@@ -63,8 +63,8 @@ export interface ModificarClienteRequest {
 }
 
 function mapBackendToFrontend(dto: ClienteBackendDTO): Cliente {
-  const telefonos = dto.telefono?.$values?.map((t: TelefonoItem) => t.telefono) || [];
-  const primeraDireccion = dto.direccion?.$values?.[0];
+  const telefonos = dto.telefono?.map((t: TelefonoItem) => t.telefono) || [];
+  const primeraDireccion = dto.direccion?.[0];
   const direccionCompleta = primeraDireccion 
     ? `${primeraDireccion.calle} ${primeraDireccion.altura}`
     : undefined;
@@ -76,22 +76,22 @@ function mapBackendToFrontend(dto: ClienteBackendDTO): Cliente {
     direccion: direccionCompleta,
     cuit: dto.cuit,
     balance: dto.balance || 0,
-    trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.length || 0,
+    trabajosCount: dto.trabajos?.length || 0,
+    presupuestosCount: dto.presupuestos?.length || 0,
   };
 }
 
 function mapBackendToFrontendDetalle(dto: ClienteBackendDTO): Cliente {
-  const telefonos = dto.telefono?.$values?.map((t: TelefonoItem) => t.telefono) || [];
-  const telefonosCompletos = dto.telefono?.$values || [];
-  const direccionesCompletas = dto.direccion?.$values || [];
-  const primeraDireccion = dto.direccion?.$values?.[0];
+  const telefonos = dto.telefono?.map((t: TelefonoItem) => t.telefono) || [];
+  const telefonosCompletos = dto.telefono || [];
+  const direccionesCompletas = dto.direccion || [];
+  const primeraDireccion = dto.direccion?.[0];
   const direccionCompleta = primeraDireccion 
     ? `${primeraDireccion.calle} ${primeraDireccion.altura}`
     : undefined;
   
   // Map recent trabajos (up to 10, newest first by id desc)
-  const trabajosValues = dto.trabajos?.$values || [];
+  const trabajosValues = dto.trabajos || [];
   const trabajosRecientes = trabajosValues
     .sort((a: TrabajoItem, b: TrabajoItem) => b.id - a.id)
     .slice(0, 10)
@@ -105,7 +105,7 @@ function mapBackendToFrontendDetalle(dto: ClienteBackendDTO): Cliente {
     }));
   
   // Map recent presupuestos (up to 10, newest first by id desc)
-  const presupuestosValues = dto.presupuestos?.$values || [];
+  const presupuestosValues = dto.presupuestos || [];
   const presupuestosRecientes = presupuestosValues
     .sort((a: PresupuestoItem, b: PresupuestoItem) => b.id - a.id)
     .slice(0, 10)
@@ -126,93 +126,15 @@ function mapBackendToFrontendDetalle(dto: ClienteBackendDTO): Cliente {
     direccion: direccionCompleta,
     cuit: dto.cuit,
     balance: dto.balance || 0,
-    trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.length || 0,
+    trabajosCount: dto.trabajos?.length || 0,
+    presupuestosCount: dto.presupuestos?.length || 0,
     trabajosRecientes,
     presupuestosRecientes,
   };
 }
 
-function extractData(response: unknown): ClienteBackendDTO[] {
-  const clientesMap = new Map<number, ClienteBackendDTO>();
-  const idToObject = new Map<string, unknown>();
-  
-  // First pass: index all objects by their $id
-  const indexObjects = (obj: unknown) => {
-    if (typeof obj !== 'object' || obj === null) return;
-    const item = obj as Record<string, unknown>;
-    
-    if ('$id' in item && typeof item.$id === 'string') {
-      idToObject.set(item.$id, item);
-    }
-    
-    for (const value of Object.values(item)) {
-      if (Array.isArray(value)) {
-        value.forEach(indexObjects);
-      } else if (typeof value === 'object' && value !== null) {
-        indexObjects(value);
-      }
-    }
-  };
-  
-  // Second pass: extract all unique clients
-  const collectClientes = (obj: unknown) => {
-    if (typeof obj !== 'object' || obj === null) return;
-    const item = obj as Record<string, unknown>;
-    
-    // Handle $ref - resolve to actual object
-    if ('$ref' in item && typeof item.$ref === 'string') {
-      const refObj = idToObject.get(item.$ref);
-      if (refObj) {
-        collectClientes(refObj);
-      }
-      return;
-    }
-    
-    // Check if this looks like a Cliente object
-    if ('id' in item && 'nombreCompleto' in item && 'balance' in item) {
-      const id = item.id as number;
-      if (id !== undefined && id !== null && !clientesMap.has(id)) {
-        clientesMap.set(id, item as unknown as ClienteBackendDTO);
-      }
-    }
-  };
-  
-  // Process response
-  if (typeof response === 'object' && response !== null) {
-    const data = response as { $values?: unknown[] };
-    const values = data.$values || [];
-    
-    // First index all objects by $id
-    for (const item of values) {
-      indexObjects(item);
-    }
-    
-    // Then collect all clients
-    for (const item of values) {
-      collectClientes(item);
-    }
-  }
-  
-  // Sort by ID and return
-  return Array.from(clientesMap.values()).sort((a, b) => a.id - b.id);
-}
-
-/**
- * Dado un array de items (que pueden ser objetos completos o { $ref: "X" }),
- * resuelve las referencias usando el mapa de $id.
- * .NET ReferenceHandler.Preserve serializa objetos compartidos con $id/$ref.
- */
-function resolveRefsInArray<T>(items: unknown[], idToObject: Map<string, unknown>): T[] {
-  return items.map((item) => {
-    if (typeof item !== 'object' || item === null) return item as T;
-    const ref = (item as Record<string, unknown>).$ref;
-    if (typeof ref === 'string') {
-      const resolved = idToObject.get(ref);
-      if (resolved) return resolved as T;
-    }
-    return item as T;
-  });
+function extractData(items: ClienteBackendDTO[]): ClienteBackendDTO[] {
+  return items.filter(c => c.id != null && c.nombreCompleto != null);
 }
 
 export const clientesService = {
@@ -232,36 +154,6 @@ export const clientesService = {
     const response = await apiClient.get<ClienteBackendDTO>('/Cliente/ObtenerDetallePorId', {
       params: { idCliente: id },
     });
-
-    // Indexar todos los objetos con $id para resolver $ref
-    const idToObject = new Map<string, unknown>();
-    const indexObjects = (obj: unknown) => {
-      if (typeof obj !== 'object' || obj === null) return;
-      const item = obj as Record<string, unknown>;
-      if ('$id' in item && typeof item.$id === 'string') {
-        idToObject.set(item.$id, item);
-      }
-      for (const value of Object.values(item)) {
-        if (Array.isArray(value)) {
-          value.forEach(indexObjects);
-        } else if (typeof value === 'object' && value !== null) {
-          indexObjects(value);
-        }
-      }
-    };
-    indexObjects(response.data);
-
-    // Resolver $ref en los arrays de trabajos y presupuestos
-    const data = response.data as unknown as Record<string, unknown>;
-    const trabajosObj = data.trabajos as Record<string, unknown> | undefined;
-    const presupuestosObj = data.presupuestos as Record<string, unknown> | undefined;
-
-    if (trabajosObj && Array.isArray(trabajosObj.$values)) {
-      trabajosObj.$values = resolveRefsInArray(trabajosObj.$values, idToObject);
-    }
-    if (presupuestosObj && Array.isArray(presupuestosObj.$values)) {
-      presupuestosObj.$values = resolveRefsInArray(presupuestosObj.$values, idToObject);
-    }
 
     return mapBackendToFrontendDetalle(response.data);
   },

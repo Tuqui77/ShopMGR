@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useTrabajosPorCliente } from '../hooks/useTrabajos';
@@ -78,6 +78,16 @@ export function MovimientoModal() {
     setIdTrabajo(null); // Reset trabajo cuando cambia el cliente
   };
 
+  // Handle Escape key
+  useEffect(() => {
+    if (!showMovimientoModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showMovimientoModal]);
+
   if (!showMovimientoModal) return null;
 
   return (
@@ -85,20 +95,23 @@ export function MovimientoModal() {
       <div className="modal-backdrop" onClick={handleClose} />
       <div className="modal-content">
         <form onSubmit={handleSubmit}>
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-semibold text-lg">Registrar Movimiento</h2>
+          <div className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
+                Registrar Movimiento
+              </h2>
               <button
                 type="button"
                 onClick={handleClose}
                 className="btn-icon"
+                aria-label="Cerrar"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'color-mix(in srgb, var(--color-danger) 15%, transparent)', color: 'var(--color-danger)' }}>
                 {error}
               </div>
             )}
@@ -106,8 +119,8 @@ export function MovimientoModal() {
             <div className="space-y-4">
               {/* Cliente */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Cliente <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-muted)' }}>
+                  Cliente <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </label>
                 <select
                   value={idCliente ?? ''}
@@ -130,8 +143,8 @@ export function MovimientoModal() {
 
               {/* Trabajo (opcional) */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Trabajo <span className="text-gray-400">(opcional)</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-muted)' }}>
+                  Trabajo <span style={{ color: 'var(--color-muted)' }}>(opcional)</span>
                 </label>
                 <select
                   value={idTrabajo ?? ''}
@@ -154,8 +167,8 @@ export function MovimientoModal() {
 
               {/* Tipo de movimiento */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Tipo <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-muted)' }}>
+                  Tipo <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </label>
                 <select
                   value={tipo}
@@ -173,8 +186,8 @@ export function MovimientoModal() {
 
               {/* Monto */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Monto <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-muted)' }}>
+                  Monto <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </label>
                 <input
                   type="number"
@@ -190,8 +203,8 @@ export function MovimientoModal() {
 
               {/* Fecha */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Fecha <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-muted)' }}>
+                  Fecha <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </label>
                 <input
                   type="date"
@@ -204,8 +217,8 @@ export function MovimientoModal() {
 
               {/* Descripción */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Descripción <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-muted)' }}>
+                  Descripción <span style={{ color: 'var(--color-danger)' }}>*</span>
                 </label>
                 <textarea
                   value={descripcion}
@@ -218,7 +231,7 @@ export function MovimientoModal() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={handleClose}

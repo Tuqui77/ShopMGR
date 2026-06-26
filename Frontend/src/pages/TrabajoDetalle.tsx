@@ -15,8 +15,9 @@ import {
   ZoomIn,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
 } from 'lucide-react';
-import { useTrabajoDetalle, useTerminarTrabajo, useModificarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
+import { useTrabajoDetalle, useTerminarTrabajo, useIniciarTrabajo, useEliminarTrabajo, useSubirFotos, useEliminarFoto } from '../hooks/useTrabajos';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -31,11 +32,13 @@ export function TrabajoDetalle() {
   const { data: trabajo, isLoading, error } = useTrabajoDetalle(trabajoId);
   const { data: clienteCompleto } = useClienteDetalle(trabajo?.clienteId);
   const terminarTrabajo = useTerminarTrabajo();
-  const modificarTrabajo = useModificarTrabajo();
+  const iniciarTrabajo = useIniciarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
   const subirFotos = useSubirFotos();
   const eliminarFoto = useEliminarFoto();
   const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId, setImageFullscreenOpen } = useStore();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
@@ -62,6 +65,18 @@ const [isPanning, setIsPanning] = useState(false); // Controls CSS transition du
     setPanState({ x: 0, y: 0 });
   }, [setImageFullscreenOpen]);
   
+  // Cerrar menú 3 puntos al hacer click fuera
+  useEffect(() => {
+    if (!showMenu) return;
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showMenu]);
+
   // Handler for uploading photos
   const handleUploadPhotos = async (files: File[]) => {
     if (!trabajoId) return;
@@ -78,14 +93,7 @@ const [isPanning, setIsPanning] = useState(false); // Controls CSS transition du
   const handleIniciar = async () => {
     if (trabajo) {
       try {
-        await modificarTrabajo.mutateAsync({
-          id: trabajo.id,
-          trabajo: {
-            titulo: trabajo.titulo,
-            idCliente: trabajo.clienteId,
-            estado: 'Iniciado',
-          },
-        });
+        await iniciarTrabajo.mutateAsync(trabajo.id);
       } catch (err) {
         console.error('Error al iniciar trabajo:', err);
       }
@@ -301,13 +309,82 @@ useEffect(() => {
     <div className="min-h-screen pb-24 lg:pb-8">
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
         <div className="flex items-center gap-3 mb-4">
-          <Link to="/trabajos" className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors">
+          <Link to="/trabajos" className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-hover)] transition-colors duration-200">
             <ArrowLeft className="w-5 h-5" style={{ color: 'var(--color-text)' }} />
           </Link>
           <div className="flex-1">
             <h1 className="text-xl font-bold font-display">Detalle del Trabajo</h1>
           </div>
           {getStatusBadge()}
+          {/* 3-dot menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="btn-icon"
+              aria-label="Opciones"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {showMenu && (
+              <div
+                className="absolute right-0 top-full mt-1 w-48 py-1 rounded-lg shadow-lg z-20 border"
+                style={{
+                  backgroundColor: 'var(--color-card)',
+                  borderColor: 'var(--color-border)',
+                }}
+              >
+                {trabajo.estado === 'Pendiente' && (
+                  <button
+                    onClick={() => { handleIniciar(); setShowMenu(false); }}
+                    disabled={iniciarTrabajo.isPending}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer disabled:opacity-50"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    <Play className="w-4 h-4" />
+                    Iniciar trabajo
+                  </button>
+                )}
+                {trabajo.estado === 'Iniciado' && (
+                  <>
+                    <button
+                      onClick={() => { handleRegisterHours(); setShowMenu(false); }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <Clock className="w-4 h-4" />
+                      Registrar horas
+                    </button>
+                    <button
+                      onClick={() => { handleTerminar(); setShowMenu(false); }}
+                      disabled={terminarTrabajo.isPending}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Terminar trabajo
+                    </button>
+                  </>
+                )}
+                <div className="h-px my-1" style={{ backgroundColor: 'var(--color-border)' }} />
+                <button
+                  onClick={() => { handleEdit(); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-text)' }}
+                >
+                  <Edit className="w-4 h-4" />
+                  Editar
+                </button>
+                <button
+                  onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-left transition-colors duration-200 hover:bg-[var(--color-hover)] cursor-pointer"
+                  style={{ color: 'var(--color-danger)' }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -325,7 +402,7 @@ useEffect(() => {
           {trabajo.cliente && (
             <Link 
               to={`/clientes/${trabajo.cliente.id}`}
-              className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors"
+              className="flex items-center gap-3 mb-4 p-3 rounded-lg transition-colors duration-200 hover:bg-[var(--color-hover)]"
               style={{ backgroundColor: 'var(--color-surface)' }}
             >
               <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-elevated)' }}>
@@ -368,7 +445,7 @@ useEffect(() => {
           <div className="card">
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>PROGRESO</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Progreso</span>
             </div>
             
             <div className="flex justify-between text-sm mb-2">
@@ -692,7 +769,7 @@ useEffect(() => {
         <div className="card">
           <div className="flex items-center gap-2 mb-3">
             <DollarSign className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-            <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>TOTALES</span>
+            <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Totales</span>
           </div>
           
           <div className="space-y-2">
@@ -707,31 +784,32 @@ useEffect(() => {
 
         {/* Delete photo confirmation modal */}
         {showDeletePhotoConfirm && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
             onClick={() => setShowDeletePhotoConfirm(false)}
           >
-            <div 
-              className="modal-content max-w-sm"
+            <div
+              className="bg-[var(--color-elevated)] rounded-xl p-6 w-[90vw] max-w-sm shadow-2xl animate-fade-in"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
+              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--color-text)' }}>
                 Eliminar foto
               </h3>
-              <p className="mb-6" style={{ color: 'var(--color-muted)' }}>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
                 ¿Estás seguro de que deseas eliminar esta foto? Esta acción no se puede deshacer.
               </p>
               <div className="flex gap-3">
-                <button 
+                <button
                   onClick={() => setShowDeletePhotoConfirm(false)}
                   className="btn-secondary flex-1"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleDeletePhoto}
                   disabled={eliminarFoto.isPending}
-                  className="btn-primary flex-1 !bg-red-500 hover:!bg-red-600"
+                  className="flex-1 py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
                 >
                   {eliminarFoto.isPending ? 'Eliminando...' : 'Eliminar'}
                 </button>
@@ -740,56 +818,8 @@ useEffect(() => {
           </div>
         )}
 
-        {/* Acciones */}
-        <div className="space-y-3">
-          {trabajo.estado === 'Iniciado' && (
-            <>
-              <button 
-                onClick={handleRegisterHours}
-                className="btn-secondary w-full flex items-center justify-center gap-2"
-              >
-                <Clock className="w-4 h-4" />
-                Registrar Horas
-              </button>
-              <button 
-                onClick={handleTerminar}
-                disabled={terminarTrabajo.isPending}
-                className="btn-primary w-full flex items-center justify-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                {terminarTrabajo.isPending ? 'Terminando...' : 'Terminar Trabajo'}
-              </button>
-            </>
-          )}
-          
-          {trabajo.estado === 'Pendiente' && (
-            <button 
-              onClick={handleIniciar}
-              disabled={modificarTrabajo.isPending}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4" />
-              {modificarTrabajo.isPending ? 'Iniciando...' : 'Iniciar Trabajo'}
-            </button>
-          )}
-          
-          <div className="flex gap-3">
-            <button 
-              onClick={handleEdit}
-              className="btn-secondary flex items-center justify-center gap-2 max-w-[140px]"
-            >
-              <Edit className="w-4 h-4" />
-              Editar
-            </button>
-            <button 
-              onClick={() => setShowDeleteConfirm(true)}
-              className="btn-secondary flex items-center justify-center gap-2 px-4"
-              style={{ color: 'var(--color-danger)' }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        {/* Spacer para dar aire antes del modal de eliminación */}
+        <div className="h-4" />
       </section>
 
       {/* Modal de confirmación de eliminación */}
@@ -804,21 +834,17 @@ useEffect(() => {
                 Esta acción no se puede deshacer.
               </p>
               <div className="flex gap-3 justify-center">
-                <button 
+                <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="btn-secondary"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleEliminar}
                   disabled={eliminarTrabajo.isPending}
-                  style={{ 
-                    backgroundColor: 'var(--color-danger)',
-                    color: 'white',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '0.625rem 1rem'
-                  }}
+                  className="py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
                 >
                   {eliminarTrabajo.isPending ? 'Eliminando...' : 'Eliminar'}
                 </button>

@@ -5,7 +5,7 @@ import { Search, User, Phone, MapPin, Wrench, FileText, Loader2 } from 'lucide-r
 import { useClientes } from '../hooks/useClientes';
 import { formatCurrency } from '../utils/dateFormat';
 
-type FilterType = 'todos' | 'conDeuda' | 'nuevos';
+type FilterType = 'todos' | 'conDeuda';
 
 interface ClienteListItemProps {
   cliente: {
@@ -29,7 +29,7 @@ function ClienteListItem({ cliente, formatBalance, getBalanceLabel }: ClienteLis
     <Link 
       key={cliente.id} 
       to={`/clientes/${cliente.id}`}
-      className="block card"
+      className="block card hover:bg-[var(--color-hover)] transition-colors duration-200"
     >
       <div className="flex items-start gap-3">
         <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
@@ -113,7 +113,6 @@ export function Clientes() {
       c.telefono?.some(t => t.includes(search));
     
     if (filter === 'conDeuda') return matchesSearch && c.balance < 0;
-    if (filter === 'nuevos') return matchesSearch && c.trabajosCount === 0;
     return matchesSearch;
   });
   
@@ -134,7 +133,7 @@ export function Clientes() {
         </div>
         
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-          {(['todos', 'conDeuda', 'nuevos'] as FilterType[]).map(f => (
+          {(['todos', 'conDeuda'] as FilterType[]).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -142,7 +141,6 @@ export function Clientes() {
             >
               {f === 'todos' && 'Todos'}
               {f === 'conDeuda' && 'Con deuda'}
-              {f === 'nuevos' && 'Nuevos'}
             </button>
           ))}
         </div>

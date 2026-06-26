@@ -31,6 +31,10 @@ namespace ShopMGR.Contexto.Configuracion_entidades
                 .IsRequired(true)
                 .HasColumnType("date");
 
+            builder.Property(p => p.FechaAceptado)
+                .IsRequired(false)
+                .HasColumnType("date");
+
             builder.Property(p => p.HorasEstimadas)
                 .IsRequired(true);
 

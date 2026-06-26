@@ -33,6 +33,7 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
     fecha: string;
   } | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<MovimientoBalance | null>(null);
 
   // Close on Escape key
   useEffect(() => {
@@ -84,7 +85,6 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
   }
 
   async function handleDelete(mov: MovimientoBalance) {
-    if (!confirm(`¿Eliminar el movimiento "${mov.descripcion}"?`)) return;
     setDeletingId(mov.id);
     try {
       await eliminarMovimiento.mutateAsync({ idMovimiento: mov.id, idCliente: mov.idCliente });
@@ -92,6 +92,7 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
       console.error('Error al eliminar movimiento:', err);
     } finally {
       setDeletingId(null);
+      setDeleteConfirm(null);
     }
   }
 
@@ -112,22 +113,22 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
       <div className="modal-backdrop" onClick={onClose} />
       <div className="modal-content max-w-lg max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b shrink-0" style={{ borderColor: 'var(--color-border, #e5e7eb)' }}>
+        <div className="flex items-center justify-between p-6 pb-4 border-b shrink-0" style={{ borderColor: 'var(--color-border)' }}>
           <div className="min-w-0 flex-1">
-            <h2 className="font-semibold text-lg truncate" style={{ color: 'var(--color-text)' }}>
+            <h2 className="text-lg font-semibold truncate" style={{ color: 'var(--color-text)' }}>
               Movimientos
             </h2>
             <p className="text-sm truncate" style={{ color: 'var(--color-muted)' }}>
               {nombreCliente}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="btn-icon ml-2 flex-shrink-0">
+          <button type="button" onClick={onClose} className="btn-icon ml-2 flex-shrink-0" aria-label="Cerrar">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-6 pt-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
@@ -160,7 +161,7 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
                     key={mov.id}
                     movimiento={mov}
                     onEdit={() => startEdit(mov)}
-                    onDelete={() => handleDelete(mov)}
+                    onDelete={() => setDeleteConfirm(mov)}
                     isDeleting={deletingId === mov.id}
                   />
                 )
@@ -171,7 +172,7 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
 
         {/* Footer summary */}
         {movimientos && movimientos.length > 0 && !isLoading && !error && (
-          <div className="p-4 border-t space-y-1.5 shrink-0" style={{ borderColor: 'var(--color-border, #e5e7eb)', backgroundColor: 'var(--color-surface, #f9fafb)' }}>
+          <div className="p-6 pt-4 border-t space-y-1.5 shrink-0" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
             <div className="flex justify-between text-sm">
               <span style={{ color: 'var(--color-muted)' }}>Créditos</span>
               <span className="font-mono" style={{ color: 'var(--color-success)' }}>{formatCurrency(totalCreditos)}</span>
@@ -180,12 +181,14 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
               <span style={{ color: 'var(--color-muted)' }}>Débitos</span>
               <span className="font-mono" style={{ color: 'var(--color-danger)' }}>{formatCurrency(totalDebitos)}</span>
             </div>
-            <div className="flex justify-between text-sm font-semibold pt-1.5 border-t" style={{ borderColor: 'var(--color-border, #e5e7eb)' }}>
+            <div className="flex justify-between text-sm font-semibold pt-1.5 border-t" style={{ borderColor: 'var(--color-border)' }}>
               <span style={{ color: 'var(--color-text)' }}>Balance</span>
               <span
                 className={clsx(
                   'font-mono font-bold',
-                  balance > 0 ? 'text-[var(--color-success)]' : balance < 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-muted)]'
+                  balance > 0 && 'text-[var(--color-success)]',
+                  balance < 0 && 'text-[var(--color-danger)]',
+                  balance === 0 && 'text-[var(--color-muted)]'
                 )}
               >
                 {formatCurrency(balance)}
@@ -194,6 +197,38 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
           </div>
         )}
       </div>
+
+      {/* Modal de confirmación de eliminación */}
+      {deleteConfirm && (
+        <>
+          <div className="modal-backdrop" onClick={() => setDeleteConfirm(null)} />
+          <div className="modal-content max-w-sm">
+            <div className="p-6 text-center">
+              <Trash2 className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-danger)' }} />
+              <h3 className="text-lg font-semibold mb-2">¿Eliminar movimiento?</h3>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>
+                Se eliminará: <strong>{deleteConfirm.descripcion}</strong>
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteConfirm)}
+                  disabled={eliminarMovimiento.isPending}
+                  className="py-2.5 px-4 rounded-lg font-medium text-white transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  style={{ backgroundColor: 'var(--color-danger)' }}
+                >
+                  {eliminarMovimiento.isPending ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
@@ -215,24 +250,24 @@ function MovimientoRow({
 
   return (
     <div
-      className="flex items-start gap-3 p-3 rounded-lg group"
-      style={{ backgroundColor: 'var(--color-page, #f3f4f6)' }}
+      className="flex items-start gap-3 p-3 rounded-lg border group transition-colors duration-200 hover:bg-[var(--color-hover)]"
+      style={{ borderColor: 'var(--color-border)' }}
     >
       {/* Icon */}
       <div
         className={clsx(
           'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
-          config.positive === true && 'bg-green-100',
-          config.positive === false && 'bg-red-100',
-          config.positive === 'neutral' && 'bg-gray-100'
+          config.positive === true && 'bg-emerald-900/20',
+          config.positive === false && 'bg-red-900/20',
+          config.positive === 'neutral' && 'bg-gray-500/20'
         )}
       >
         {config.positive === true ? (
-          <ArrowUpRight className="w-4 h-4 text-green-600" />
+          <ArrowUpRight className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
         ) : config.positive === false ? (
-          <ArrowDownRight className="w-4 h-4 text-red-600" />
+          <ArrowDownRight className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
         ) : (
-          <Minus className="w-4 h-4 text-gray-500" />
+          <Minus className="w-4 h-4" style={{ color: 'var(--color-muted)' }} />
         )}
       </div>
 
@@ -250,7 +285,7 @@ function MovimientoRow({
               config.positive === 'neutral' && 'text-[var(--color-muted)]'
             )}
           >
-            {config.positive === false ? '-' : '+'}{formatCurrency(movimiento.monto)}
+            {formatCurrency(Math.abs(movimiento.monto))}
           </span>
         </div>
         {movimiento.descripcion && (
@@ -265,12 +300,13 @@ function MovimientoRow({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <button
           type="button"
           onClick={onEdit}
           className="btn-icon w-7 h-7"
           title="Editar movimiento"
+          aria-label="Editar movimiento"
         >
           <Edit3 className="w-3.5 h-3.5" />
         </button>
@@ -281,6 +317,7 @@ function MovimientoRow({
           className="btn-icon w-7 h-7"
           style={{ color: 'var(--color-danger)' }}
           title="Eliminar movimiento"
+          aria-label="Eliminar movimiento"
         >
           {isDeleting ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -311,7 +348,7 @@ function MovimientoEditRow({
   return (
     <div
       className="p-3 rounded-lg space-y-2"
-      style={{ backgroundColor: 'var(--color-page, #f3f4f6)', border: '2px solid var(--color-accent, #f97316)' }}
+      style={{ backgroundColor: 'var(--color-surface)', boxShadow: '0 0 0 2px var(--color-accent)' }}
     >
       <div className="grid grid-cols-2 gap-2">
         {/* Tipo */}

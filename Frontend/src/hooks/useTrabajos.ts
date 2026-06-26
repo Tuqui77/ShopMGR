@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   trabajosService,
@@ -105,6 +106,55 @@ export function useModificarTrabajo() {
 }
 
 /**
+ * Inicia un trabajo usando el endpoint dedicado (PATCH IniciarTrabajo)
+ */
+export function useIniciarTrabajo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => trabajosService.iniciar(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id, 'detalle'] });
+    },
+  });
+}
+
+/**
+ * Elimina el presupuesto asociado a un trabajo
+ */
+export function useEliminarPresupuesto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => trabajosService.eliminarPresupuesto(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id, 'detalle'] });
+    },
+  });
+}
+
+/**
+ * Cambia el presupuesto asociado a un trabajo
+ */
+export function useCambiarPresupuesto() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, idPresupuesto }: { id: number; idPresupuesto: number }) =>
+      trabajosService.cambiarPresupuesto(id, idPresupuesto),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', id, 'detalle'] });
+    },
+  });
+}
+
+/**
  * Termina un trabajo (cambia estado a Terminado)
  */
 export function useTerminarTrabajo() {
@@ -184,4 +234,37 @@ export function useEliminarFoto() {
       queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo, 'detalle'] });
     },
   });
+}
+
+// ============================================================================
+// Active Jobs (Dashboard)
+// ============================================================================
+
+/**
+ * Obtiene los trabajos activos (Pendiente + Iniciado) con polling
+ * cada 30 segundos para el dashboard.
+ */
+export function useTrabajosActivos() {
+  const pendientes = useQuery({
+    queryKey: ['trabajos', 'estado', 'Pendiente'],
+    queryFn: () => trabajosService.obtenerPorEstado('Pendiente'),
+    refetchInterval: 30_000, // 30 segundos
+  });
+
+  const iniciados = useQuery({
+    queryKey: ['trabajos', 'estado', 'Iniciado'],
+    queryFn: () => trabajosService.obtenerPorEstado('Iniciado'),
+    refetchInterval: 30_000,
+  });
+
+  const data = useMemo(() => {
+    if (!pendientes.data && !iniciados.data) return undefined;
+    return [...(iniciados.data || []), ...(pendientes.data || [])];
+  }, [pendientes.data, iniciados.data]);
+
+  return {
+    data,
+    isLoading: pendientes.isLoading || iniciados.isLoading,
+    error: pendientes.error || iniciados.error,
+  };
 }

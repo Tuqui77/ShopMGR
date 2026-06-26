@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShopMGR.Contexto;
 
@@ -11,9 +12,11 @@ using ShopMGR.Contexto;
 namespace ShopMGR.Contexto.Migrations
 {
     [DbContext(typeof(ShopMGRDbContexto))]
-    partial class ShopMGRDbContextoModelSnapshot : ModelSnapshot
+    [Migration("20260618164330_Agrega HorasEstimadas a Trabajo")]
+    partial class AgregaHorasEstimadasaTrabajo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -292,9 +295,6 @@ namespace ShopMGR.Contexto.Migrations
                     b.Property<DateOnly>("Fecha")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly?>("FechaAceptado")
-                        .HasColumnType("date");
-
                     b.Property<double>("HorasEstimadas")
                         .HasColumnType("float");
 
@@ -373,7 +373,7 @@ namespace ShopMGR.Contexto.Migrations
                     b.Property<DateOnly?>("FechaInicio")
                         .HasColumnType("date");
 
-                    b.Property<double?>("HorasEstimadas")
+                    b.Property<double>("HorasEstimadas")
                         .HasColumnType("float");
 
                     b.Property<int>("IdCliente")
