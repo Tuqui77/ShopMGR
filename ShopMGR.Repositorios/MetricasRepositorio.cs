@@ -11,9 +11,11 @@ namespace ShopMGR.Repositorios
         public async Task<decimal> ObtenerIngresosAsync(DateOnly fecha)
         {
             var (mes, anio) = ObtenerPeríodo(fecha);
-            var ingresosMes = await _contexto
-                .MovimientoBalance.Where(m => m.Fecha.Month == mes && m.Fecha.Year == anio)
-                .SumAsync(m => m.Monto);
+            var ingresosMes = await _contexto.Trabajos
+                .Where(t => t.FechaFin.HasValue && 
+                        t.FechaFin.Value.Month == mes && 
+                        t.FechaFin.Value.Year == anio)
+                .SumAsync(t => t.TotalLabor ?? 0m);
 
             return ingresosMes;
         }
