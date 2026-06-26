@@ -4,9 +4,8 @@ export const metricasMock: MetricasMes = {
   ingresos: 45200,
   horasTrabajadas: 32.5,
   trabajosTerminados: 8,
-  cambiosIngresos: 12,
-  cambiosHoras: 8,
-  cambiosTerminados: -3,
+  presupuestosCreados: 22,
+  presupuestosAceptados: 14,
 };
 
 export const clientesMock: Cliente[] = [

@@ -229,9 +229,8 @@ describe('Type definitions', () => {
         ingresos: 50000,
         horasTrabajadas: 40,
         trabajosTerminados: 10,
-        cambiosIngresos: 15,
-        cambiosHoras: 5,
-        cambiosTerminados: 2,
+        presupuestosCreados: 22,
+        presupuestosAceptados: 14,
       };
       expect(metricas.ingresos).toBe(50000);
       expect(metricas.trabajosTerminados).toBe(10);

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   trabajosService,
@@ -233,4 +234,37 @@ export function useEliminarFoto() {
       queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo, 'detalle'] });
     },
   });
+}
+
+// ============================================================================
+// Active Jobs (Dashboard)
+// ============================================================================
+
+/**
+ * Obtiene los trabajos activos (Pendiente + Iniciado) con polling
+ * cada 30 segundos para el dashboard.
+ */
+export function useTrabajosActivos() {
+  const pendientes = useQuery({
+    queryKey: ['trabajos', 'estado', 'Pendiente'],
+    queryFn: () => trabajosService.obtenerPorEstado('Pendiente'),
+    refetchInterval: 30_000, // 30 segundos
+  });
+
+  const iniciados = useQuery({
+    queryKey: ['trabajos', 'estado', 'Iniciado'],
+    queryFn: () => trabajosService.obtenerPorEstado('Iniciado'),
+    refetchInterval: 30_000,
+  });
+
+  const data = useMemo(() => {
+    if (!pendientes.data && !iniciados.data) return undefined;
+    return [...(iniciados.data || []), ...(pendientes.data || [])];
+  }, [pendientes.data, iniciados.data]);
+
+  return {
+    data,
+    isLoading: pendientes.isLoading || iniciados.isLoading,
+    error: pendientes.error || iniciados.error,
+  };
 }
