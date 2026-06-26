@@ -50,7 +50,7 @@ namespace ShopMGR.WebApi.Aplicacion
                         .Json
                         .Serialization
                         .ReferenceHandler
-                        .Preserve;
+                        .IgnoreCycles;
                 });
 
             //servicios del contenedor
