@@ -6,7 +6,7 @@
       {
         "preset": "conventionalcommits",
         "releaseRules": [
-          { "breaking": true, "release": "minor" }
+          { "breaking": true, "release": "minor" },
           { "type": "hotfix", "release": "patch" }
         ]
       }
