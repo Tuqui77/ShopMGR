@@ -25,7 +25,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
 
             builder.Property(t => t.Descripcion)
                 .IsRequired(false)
-                .HasMaxLength(100);
+                .HasMaxLength(500);
 
             builder.Property(t => t.Estado)
                 .IsRequired(true)
