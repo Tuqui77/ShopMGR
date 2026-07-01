@@ -106,7 +106,8 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
     ?.filter((m) => tipoConfig[m.tipo]?.positive === false)
     .reduce((sum, m) => sum + m.monto, 0) ?? 0;
 
-  const balance = totalCreditos - totalDebitos;
+  // Los montos ya vienen con signo del backend (+ créditos, - débitos)
+  const balance = totalCreditos + totalDebitos;
 
   return (
     <>
@@ -175,11 +176,11 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
           <div className="p-6 pt-4 border-t space-y-1.5 shrink-0" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface)' }}>
             <div className="flex justify-between text-sm">
               <span style={{ color: 'var(--color-muted)' }}>Créditos</span>
-              <span className="font-mono" style={{ color: 'var(--color-success)' }}>{formatCurrency(totalCreditos)}</span>
+              <span className="font-mono" style={{ color: 'var(--color-success)' }}>{formatCurrency(Math.abs(totalCreditos))}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span style={{ color: 'var(--color-muted)' }}>Débitos</span>
-              <span className="font-mono" style={{ color: 'var(--color-danger)' }}>{formatCurrency(totalDebitos)}</span>
+              <span className="font-mono" style={{ color: 'var(--color-danger)' }}>{formatCurrency(Math.abs(totalDebitos))}</span>
             </div>
             <div className="flex justify-between text-sm font-semibold pt-1.5 border-t" style={{ borderColor: 'var(--color-border)' }}>
               <span style={{ color: 'var(--color-text)' }}>Balance</span>
