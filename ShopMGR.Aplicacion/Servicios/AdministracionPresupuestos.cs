@@ -82,10 +82,15 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuestoBd.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoBd.HorasEstimadas;
             presupuestoBd.Estado = entidad.Estado ?? presupuestoBd.Estado;
 
-            presupuestoBd.Materiales.Clear();
-            foreach (var materialModificado in entidad.Materiales)
+            if (entidad.Materiales != null)
             {
-                presupuestoBd.Materiales.Add(_mapper.Map<MaterialDTO, Material>(materialModificado));
+                presupuestoBd.Materiales.Clear();
+                foreach (var materialModificado in entidad.Materiales)
+                {
+                    presupuestoBd.Materiales.Add(
+                        _mapper.Map<MaterialDTO, Material>(materialModificado)
+                    );
+                }
             }
 
             presupuestoBd = await CalcularCostos(presupuestoBd);
