@@ -2,26 +2,27 @@
 
 namespace ShopMGR.Dominio.Modelo
 {
-    //TODO: refactorizar entidad con invariables
     public class Presupuesto
     {
-        public int Id { get; set; }
-        public string Titulo { get; set; }
-        public string? Descripcion { get; set; }
-        public double HorasEstimadas { get; set; }
-        public DateOnly Fecha { get; set; }
-        public DateOnly? FechaAceptado { get; set; }
-        public decimal CostoMateriales { get; set; }
-        public decimal CostoLabor { get; set; }
-        public decimal CostoInsumos { get; set; }
-        public decimal Total { get; set; }
-        public EstadoPresupuesto Estado { get; set; }
+        private readonly List<Material> _materiales = [];
+
+        public int Id { get; private set; }
+        public string Titulo { get; private set; }
+        public string? Descripcion { get; private set; }
+        public double HorasEstimadas { get; private set; }
+        public DateOnly Fecha { get; private set; }
+        public DateOnly? FechaAceptado { get; private set; }
+        public decimal CostoMateriales { get; private set; }
+        public decimal CostoLabor { get; private set; }
+        public decimal CostoInsumos { get; private set; }
+        public decimal Total { get; private set; }
+        public EstadoPresupuesto Estado { get; private set; }
 
         //Relaciones
-        public int IdCliente { get; set; }
-        public Cliente Cliente { get; set; }
-        public Trabajo? Trabajo { get; set; }
-        public List<Material> Materiales { get; set; }
+        public int IdCliente { get; private set; }
+        public Cliente Cliente { get; private set; } = null!;
+        public Trabajo? Trabajo { get; private set; }
+        public IReadOnlyCollection<Material> Materiales => _materiales;
 
         public Presupuesto() { }
 
@@ -36,7 +37,7 @@ namespace ShopMGR.Dominio.Modelo
             IdCliente = idCliente;
             Titulo = titulo;
             Descripcion = descripcion;
-            Materiales = materiales;
+            _materiales = materiales;
             HorasEstimadas = horasEstimadas;
             Fecha = DateOnly.FromDateTime(DateTime.Now);
             Estado = EstadoPresupuesto.Pendiente;
@@ -58,10 +59,10 @@ namespace ShopMGR.Dominio.Modelo
 
             if (materiales != null)
             {
-                Materiales.Clear();
+                _materiales.Clear();
                 foreach (var material in materiales)
                 {
-                    Materiales.Add(material);
+                    _materiales.Add(material);
                 }
             }
 
@@ -82,7 +83,7 @@ namespace ShopMGR.Dominio.Modelo
         //Método local para calcular los costos del presupuesto
         public void CalcularCostos(decimal valorHoraDeTrabajo)
         {
-            CostoMateriales = Materiales.Count > 0 ? Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) : 0;
+            CostoMateriales = _materiales.Count > 0 ? _materiales.Sum(m => (decimal)m.Cantidad * m.Precio) : 0;
             CostoLabor = (decimal)HorasEstimadas * valorHoraDeTrabajo;
             CostoInsumos = CostoLabor * 0.1m;
             Total = CostoMateriales + CostoLabor + CostoInsumos;
