@@ -95,10 +95,20 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
   const [showSuccess, setShowSuccess] = useState(false);
   const [esDuplicado, setEsDuplicado] = useState(() => !!store.datosDuplicarPresupuesto);
 
-  // Cuando se edita y los datos del presupuesto cargan, ir directo al step datos
+  // Cuando se edita y los datos del presupuesto cargan, poblar el formulario
   useEffect(() => {
     if (isEditing && presupuestoOriginal?.cliente) {
       setClienteSeleccionado(presupuestoOriginal.cliente);
+      setTitulo(presupuestoOriginal.titulo);
+      setDescripcion(presupuestoOriginal.descripcion || '');
+      setHorasEstimadas(presupuestoOriginal.horasEstimadas);
+      setMateriales(
+        (presupuestoOriginal.materiales || []).map(m => ({
+          descripcion: m.descripcion,
+          cantidad: m.cantidad,
+          Precio: m.precioUnitario,
+        }))
+      );
       setStep('datos');
     }
   }, [isEditing, presupuestoOriginal]);
@@ -259,6 +269,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
             titulo: titulo.trim(),
             descripcion: descripcion.trim() || null,
             horasEstimadas,
+            materiales: materiales.length > 0 ? materiales : [],
           },
         });
       } else {

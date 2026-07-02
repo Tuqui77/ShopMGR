@@ -81,6 +81,18 @@ namespace ShopMGR.Aplicacion.Servicios
             presupuestoBd.Descripcion = entidad.Descripcion ?? presupuestoBd.Descripcion;
             presupuestoBd.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoBd.HorasEstimadas;
             presupuestoBd.Estado = entidad.Estado ?? presupuestoBd.Estado;
+
+            if (entidad.Materiales != null)
+            {
+                presupuestoBd.Materiales.Clear();
+                foreach (var materialModificado in entidad.Materiales)
+                {
+                    presupuestoBd.Materiales.Add(
+                        _mapper.Map<MaterialDTO, Material>(materialModificado)
+                    );
+                }
+            }
+
             presupuestoBd = await CalcularCostos(presupuestoBd);
 
             await _presupuestoRepositorio.ActualizarAsync(presupuestoBd);

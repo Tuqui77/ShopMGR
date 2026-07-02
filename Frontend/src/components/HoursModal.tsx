@@ -256,14 +256,37 @@ function HoursInputView({
   
   const presetValues = [0.5, 1, 2, 4, 8];
   
+  // Local string state for the input to allow clearing and typing partial numbers.
+  // Syncs with the canonical `hours` prop on init, preset clicks, and blur.
+  const [inputValue, setInputValue] = useState(() => hours.toString());
+  
   const handlePresetClick = (value: number) => {
-    onHoursChange(Math.min(value, 24));
+    const clamped = Math.min(value, 24);
+    setInputValue(clamped.toString());
+    onHoursChange(clamped);
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value)) {
-      onHoursChange(Math.min(Math.max(value, 0), 24));
+    const raw = e.target.value;
+    setInputValue(raw);
+    
+    if (raw === '') return;
+    
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed) && parsed >= 0) {
+      onHoursChange(Math.min(parsed, 24));
+    }
+  };
+  
+  const handleBlur = () => {
+    const parsed = parseFloat(inputValue);
+    if (isNaN(parsed) || parsed < 0) {
+      // Invalid or empty → reset to current canonical hours
+      setInputValue(hours.toString());
+    } else {
+      const clamped = Math.min(parsed, 24);
+      setInputValue(clamped.toString());
+      onHoursChange(clamped);
     }
   };
   
@@ -281,8 +304,9 @@ function HoursInputView({
         <div className="text-center mb-3">
           <input
             type="number"
-            value={hours}
+            value={inputValue}
             onChange={handleInputChange}
+            onBlur={handleBlur}
             min="0"
             max="24"
             step="0.25"

@@ -1,4 +1,5 @@
 ﻿using ShopMGR.Dominio.Enums;
+using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 {
@@ -13,5 +14,6 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
         //Relaciones
         public int? IdCliente { get; set; }
         public int? IdTrabajo { get; set; }
+        public List<MaterialDTO> Materiales { get; set; }
     }
 }

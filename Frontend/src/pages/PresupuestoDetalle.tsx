@@ -49,11 +49,6 @@ interface MaterialRaw {
   precio: number;
 }
 
-interface MaterialesResponse {
-  $id: string;
-  $values: MaterialRaw[];
-}
-
 interface PresupuestoRaw {
   id: number;
   titulo: string;
@@ -66,7 +61,7 @@ interface PresupuestoRaw {
   costoInsumos?: number;
   total?: number;
   cliente?: ClienteRaw;
-  materiales?: MaterialesResponse;
+  materiales?: MaterialRaw[] | { $id: string; $values: MaterialRaw[] };
 }
 
 interface MaterialFrontend {
@@ -77,8 +72,15 @@ interface MaterialFrontend {
   subtotal: number;
 }
 
-function mapMateriales(dto: MaterialesResponse | undefined): MaterialFrontend[] {
-  const values = dto?.$values || [];
+function mapMateriales(dto: MaterialRaw[] | { $id: string; $values: MaterialRaw[] } | undefined): MaterialFrontend[] {
+  let values: MaterialRaw[];
+  if (!dto) {
+    values = [];
+  } else if (Array.isArray(dto)) {
+    values = dto;
+  } else {
+    values = dto.$values || [];
+  }
   return values.map(m => ({
     id: m.id,
     descripcion: m.descripcion,
