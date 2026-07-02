@@ -22,5 +22,22 @@ namespace ShopMGR.Dominio.Modelo
         public Cliente Cliente { get; set; }
         public Trabajo? Trabajo { get; set; }
         public List<Material> Materiales { get; set; }
+
+        public Presupuesto() { }
+
+        public Presupuesto(
+            string titulo,
+            string? descripcion,
+            List<Material> materiales,
+            double horasEstimadas,
+            int idCliente
+        )
+        {
+            IdCliente = idCliente;
+            Titulo = titulo;
+            Descripcion = descripcion;
+            Materiales = materiales;
+            HorasEstimadas = horasEstimadas;
+        }
     }
 }
