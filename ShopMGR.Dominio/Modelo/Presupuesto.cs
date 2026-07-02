@@ -68,6 +68,17 @@ namespace ShopMGR.Dominio.Modelo
             CalcularCostos(valorHoraDeTrabajo);
         }
 
+        public void AceptarPresupuesto()
+        {
+            Estado = EstadoPresupuesto.Aceptado;
+            FechaAceptado = DateOnly.FromDateTime(DateTime.Now);
+        }
+
+        public void RechazarPresupuesto()
+        {
+            Estado = EstadoPresupuesto.Rechazado;
+        }
+
         //Método local para calcular los costos del presupuesto
         public void CalcularCostos(decimal valorHoraDeTrabajo)
         {

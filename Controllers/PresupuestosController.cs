@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
@@ -96,6 +97,24 @@ namespace ShopMGR.WebApi.Controllers
 
             await administracionPresupuestos.ActualizarAsync(idPresupuesto, presupuestoModificado);
             return Ok("Presupuesto modificado correctamente");
+        }
+
+        [HttpPatch]
+        [Route("AceptarPresupuesto")]
+        public async Task<IActionResult> AceptarPresupuesto(int idPresupuesto)
+        {
+            await administracionPresupuestos.AceptarPresupuesto(idPresupuesto);
+
+            return Ok();
+        }
+
+        [HttpPatch]
+        [Route("RechazarPresupuesto")]
+        public async Task<IActionResult> RechazarPresupuesto(int idPresupuesto)
+        {
+            await administracionPresupuestos.RechazarPresupuesto(idPresupuesto);
+
+            return Ok();
         }
 
         [HttpDelete]

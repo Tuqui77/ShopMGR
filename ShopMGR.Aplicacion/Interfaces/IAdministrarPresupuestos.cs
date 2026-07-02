@@ -11,5 +11,7 @@ namespace ShopMGR.Aplicacion.Interfaces
         public Task<List<PresupuestoDTOlista>> ListarPresupuestos();
         public Task ActualizarCostoHoraDeTrabajo(decimal nuevoCosto);
         public Task<decimal> ObtenerCostoHoraDeTrabajo();
+        public Task AceptarPresupuesto(int idPresupuesto);
+        public Task RechazarPresupuesto(int idPresupuesto);
     }
 }

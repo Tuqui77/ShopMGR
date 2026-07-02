@@ -86,6 +86,22 @@ namespace ShopMGR.Aplicacion.Servicios
             await _presupuestoRepositorio.ActualizarAsync(presupuestoBd);
         }
 
+        public async Task AceptarPresupuesto(int idPresupuesto)
+        {
+            var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
+            presupuesto.AceptarPresupuesto();
+
+            await _presupuestoRepositorio.ActualizarAsync(presupuesto);
+        }
+
+        public async Task RechazarPresupuesto(int idPresupuesto)
+        {
+            var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
+            presupuesto.RechazarPresupuesto();
+
+            await _presupuestoRepositorio.ActualizarAsync(presupuesto);
+        }
+
         public async Task EliminarAsync(int idPresupuesto)
         {
             await _presupuestoRepositorio.EliminarAsync(idPresupuesto);
