@@ -80,6 +80,7 @@ namespace ShopMGR.Aplicacion.Servicios
                 entidad.Descripcion!,
                 entidad.HorasEstimadas!.Value,
                 _mapper.Map<MaterialDTO, Material>(entidad.Materiales).ToList(),
+                valorHoraDeTrabajo
             );
             presupuestoBd.CalcularCostos(valorHoraDeTrabajo);
 
