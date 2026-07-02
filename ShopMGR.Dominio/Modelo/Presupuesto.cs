@@ -39,5 +39,40 @@ namespace ShopMGR.Dominio.Modelo
             Materiales = materiales;
             HorasEstimadas = horasEstimadas;
         }
+
+        public void Editar(
+                int idCliente,
+                string titulo,
+                string descripcion,
+                double horasEstimadas,
+                List<Material> materiales,
+                decimal valorHoraDeTrabajo
+                )
+        {
+            IdCliente = idCliente;
+            Titulo = titulo;
+            Descripcion = descripcion;
+            HorasEstimadas = horasEstimadas;
+
+            if (materiales != null)
+            {
+                Materiales.Clear();
+                foreach (var material in materiales)
+                {
+                    Materiales.Add(material);
+                }
+            }
+
+            CalcularCostos(valorHoraDeTrabajo);
+        }
+
+        //Método local para calcular los costos del presupuesto
+        private void CalcularCostos(decimal valorHoraDeTrabajo)
+        {
+            CostoMateriales = Materiales.Count > 0 ? Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) : 0;
+            CostoLabor = (decimal)HorasEstimadas * valorHoraDeTrabajo;
+            CostoInsumos = CostoLabor * 0.1m;
+            Total = CostoMateriales + CostoLabor + CostoInsumos;
+        }
     }
 }

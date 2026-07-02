@@ -7,10 +7,8 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionPresupuestos(
-        IRepositorioConValorHora presupuestoRepositorio,
-        MapperRegistry mapper
-    ) : IAdministrarPresupuestos
+    public class AdministracionPresupuestos(IRepositorioConValorHora presupuestoRepositorio, MapperRegistry mapper)
+        : IAdministrarPresupuestos
     {
         private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
         private readonly MapperRegistry _mapper = mapper;
@@ -72,28 +70,19 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
         {
-            var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(
-                idPresupuesto
+            var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
+            var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
+
+            //TODO: No modifica estado, endpoints aparte.
+
+            presupuestoBd.Editar(
+                entidad.IdCliente!.Value,
+                entidad.Titulo!,
+                entidad.Descripcion!,
+                entidad.HorasEstimadas!.Value,
+                _mapper.Map<MaterialDTO, Material>(entidad.Materiales).ToList(),
+                valorHoraDeTrabajo
             );
-
-            presupuestoBd.IdCliente = entidad.IdCliente ?? presupuestoBd.IdCliente;
-            presupuestoBd.Titulo = entidad.Titulo ?? presupuestoBd.Titulo;
-            presupuestoBd.Descripcion = entidad.Descripcion ?? presupuestoBd.Descripcion;
-            presupuestoBd.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoBd.HorasEstimadas;
-            presupuestoBd.Estado = entidad.Estado ?? presupuestoBd.Estado;
-
-            if (entidad.Materiales != null)
-            {
-                presupuestoBd.Materiales.Clear();
-                foreach (var materialModificado in entidad.Materiales)
-                {
-                    presupuestoBd.Materiales.Add(
-                        _mapper.Map<MaterialDTO, Material>(materialModificado)
-                    );
-                }
-            }
-
-            presupuestoBd = await CalcularCostos(presupuestoBd);
 
             await _presupuestoRepositorio.ActualizarAsync(presupuestoBd);
         }
@@ -118,13 +107,10 @@ namespace ShopMGR.Aplicacion.Servicios
         {
             var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
             presupuesto.CostoMateriales =
-                presupuesto.Materiales.Count > 0
-                    ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio)
-                    : 0;
+                presupuesto.Materiales.Count > 0 ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) : 0;
             presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * valorHoraDeTrabajo;
             presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
-            presupuesto.Total =
-                presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
+            presupuesto.Total = presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
             return presupuesto;
         }
     }
