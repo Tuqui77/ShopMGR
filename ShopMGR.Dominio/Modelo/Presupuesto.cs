@@ -38,6 +38,8 @@ namespace ShopMGR.Dominio.Modelo
             Descripcion = descripcion;
             Materiales = materiales;
             HorasEstimadas = horasEstimadas;
+            Fecha = DateOnly.FromDateTime(DateTime.Now);
+            Estado = EstadoPresupuesto.Pendiente;
         }
 
         public void Editar(
@@ -67,7 +69,7 @@ namespace ShopMGR.Dominio.Modelo
         }
 
         //Método local para calcular los costos del presupuesto
-        private void CalcularCostos(decimal valorHoraDeTrabajo)
+        public void CalcularCostos(decimal valorHoraDeTrabajo)
         {
             CostoMateriales = Materiales.Count > 0 ? Materiales.Sum(m => (decimal)m.Cantidad * m.Precio) : 0;
             CostoLabor = (decimal)HorasEstimadas * valorHoraDeTrabajo;

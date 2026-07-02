@@ -15,11 +15,10 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task<Presupuesto> CrearAsync(PresupuestoDTOcreacion nuevoPresupuesto)
         {
+            var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
             var presupuesto = _mapper.Map<PresupuestoDTOcreacion, Presupuesto>(nuevoPresupuesto);
 
-            presupuesto.Fecha = DateOnly.FromDateTime(DateTime.Now);
-            presupuesto.Estado = EstadoPresupuesto.Pendiente;
-            presupuesto = await CalcularCostos(presupuesto);
+            presupuesto.CalcularCostos(valorHoraDeTrabajo);
 
             await _presupuestoRepositorio.CrearAsync(presupuesto);
 
@@ -81,8 +80,8 @@ namespace ShopMGR.Aplicacion.Servicios
                 entidad.Descripcion!,
                 entidad.HorasEstimadas!.Value,
                 _mapper.Map<MaterialDTO, Material>(entidad.Materiales).ToList(),
-                valorHoraDeTrabajo
             );
+            presupuestoBd.CalcularCostos(valorHoraDeTrabajo);
 
             await _presupuestoRepositorio.ActualizarAsync(presupuestoBd);
         }
