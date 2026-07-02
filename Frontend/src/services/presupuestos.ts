@@ -7,6 +7,7 @@ import type {
   Cliente,
   ClienteBackendDTO,
   CrearPresupuestoRequest,
+  MaterialRequest,
   EstadoPresupuesto,
 } from '../types';
 
@@ -18,6 +19,7 @@ export interface ModificarPresupuestoRequest {
   valorHoraDeTrabajo?: number;
   idCliente?: number;
   idTrabajo?: number;
+  materiales?: MaterialRequest[];
 }
 
 // Helper to extract error message from backend response
