@@ -64,9 +64,9 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     return '';
   });
   const [horasEstimadas, setHorasEstimadas] = useState(() => {
-    if (presupuestoOriginal?.horasEstimadas) return presupuestoOriginal.horasEstimadas;
-    if (store.datosDuplicarPresupuesto?.horasEstimadas) return store.datosDuplicarPresupuesto.horasEstimadas;
-    return 0;
+    if (presupuestoOriginal?.horasEstimadas) return presupuestoOriginal.horasEstimadas.toString();
+    if (store.datosDuplicarPresupuesto?.horasEstimadas) return store.datosDuplicarPresupuesto.horasEstimadas.toString();
+    return '0';
   });
 
   // Materiales - initialize with presupuestoOriginal if editing, or duplication data
@@ -101,7 +101,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       setClienteSeleccionado(presupuestoOriginal.cliente);
       setTitulo(presupuestoOriginal.titulo);
       setDescripcion(presupuestoOriginal.descripcion || '');
-      setHorasEstimadas(presupuestoOriginal.horasEstimadas);
+      setHorasEstimadas(presupuestoOriginal.horasEstimadas.toString());
       setMateriales(
         (presupuestoOriginal.materiales || []).map(m => ({
           descripcion: m.descripcion,
@@ -129,7 +129,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
         setSearch('');
         setTitulo('');
         setDescripcion('');
-        setHorasEstimadas(0);
+        setHorasEstimadas('0');
         setMateriales([]);
         setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
         setErrors({});
@@ -171,7 +171,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       newErrors.titulo = 'El título es requerido';
     }
 
-    if (horasEstimadas < 0) {
+    if (parseFloat(horasEstimadas) < 0) {
       newErrors.horasEstimadas = 'Las horas deben ser positivas';
     }
 
@@ -268,7 +268,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
           presupuesto: {
             titulo: titulo.trim(),
             descripcion: descripcion.trim() || null,
-            horasEstimadas,
+            horasEstimadas: parseFloat(horasEstimadas) || 0,
             materiales: materiales.length > 0 ? materiales : [],
           },
         });
@@ -276,7 +276,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
         await crearPresupuesto.mutateAsync({
           titulo: titulo.trim(),
           descripcion: descripcion.trim() || undefined,
-          horasEstimadas,
+          horasEstimadas: parseFloat(horasEstimadas) || 0,
           idCliente: clienteSeleccionado.id,
           materiales: materiales.length > 0 ? materiales : [],
         });
@@ -481,7 +481,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
                 <input
                   type="number"
                   value={horasEstimadas}
-                  onChange={(e) => setHorasEstimadas(parseFloat(e.target.value) || 0)}
+                  onChange={(e) => setHorasEstimadas(e.target.value)}
                   min={0}
                   step={0.5}
                   className="input"
