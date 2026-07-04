@@ -184,7 +184,7 @@ public class DominioModelTests
     public void Material_DeberiaTenerNavigacionAPresupuesto()
     {
         // Arrange
-        var presupuesto = new Presupuesto { Id = 1, Titulo = "Presupuesto 1" };
+        var presupuesto = new Presupuesto("Presupuesto 1", null, [], 0, 0);
 
         // Act
         var material = new Material
