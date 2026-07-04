@@ -14,6 +14,7 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
+import { presupuestosService } from '../services/presupuestos';
 import { trabajosService } from '../services/trabajos';
 import { useState, useEffect, useRef } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
@@ -164,10 +165,8 @@ export function PresupuestoDetalle() {
     mutationFn: async (id: number) => {
       // Primero crear el trabajo desde el presupuesto
       await trabajosService.crearDesdePresupuesto(id);
-      // Luego marcar el presupuesto como aceptado
-      await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-        estado: 'Aceptado',
-      });
+      // Luego marcar el presupuesto como aceptado (endpoint dedicado)
+      await presupuestosService.aceptar(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });
@@ -179,9 +178,7 @@ export function PresupuestoDetalle() {
 
   const rechazarMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-        estado: 'Rechazado',
-      });
+      await presupuestosService.rechazar(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });

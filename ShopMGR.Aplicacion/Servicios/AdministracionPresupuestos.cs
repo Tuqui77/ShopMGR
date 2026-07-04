@@ -72,8 +72,6 @@ namespace ShopMGR.Aplicacion.Servicios
             var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
             var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
 
-            //TODO: No modifica estado, endpoints aparte.
-
             presupuestoBd.Editar(
                 entidad.IdCliente!.Value,
                 entidad.Titulo!,
