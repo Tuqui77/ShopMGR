@@ -42,7 +42,7 @@ export const movimientosService = {
     const response = await apiClient.get('/Cliente/ObtenerMovimientosPorId', {
       params: { idCliente },
     });
-    return extractMovimientos(response.data);
+    return extractMovimientos(response.data).sort((a, b) => b.id - a.id);
   },
 
   async modificar(data: ModificarMovimientoRequest): Promise<void> {

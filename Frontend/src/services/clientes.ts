@@ -140,7 +140,7 @@ function extractData(items: ClienteBackendDTO[]): ClienteBackendDTO[] {
 export const clientesService = {
   async listar(): Promise<Cliente[]> {
     const response = await apiClient.get<ClienteBackendDTO[]>('/Cliente/ObtenerListaClientes');
-    return extractData(response.data).map(mapBackendToFrontend);
+    return extractData(response.data).map(mapBackendToFrontend).sort((a, b) => b.id - a.id);
   },
 
   async obtenerPorId(id: number): Promise<Cliente> {

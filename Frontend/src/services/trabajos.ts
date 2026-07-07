@@ -117,7 +117,8 @@ export const trabajosService = {
         typeof item === 'object' && item !== null
         && 'id' in item && typeof (item as TrabajoBackendDTO).id === 'number'
       )
-      .map(mapTrabajoBackend);
+      .map(mapTrabajoBackend)
+      .sort((a, b) => b.id - a.id);
   },
 
   /**
@@ -148,7 +149,7 @@ export const trabajosService = {
       params: { idCliente },
     });
     const values = response.data;
-    return values.map(mapTrabajoBackend);
+    return values.map(mapTrabajoBackend).sort((a, b) => b.id - a.id);
   },
 
   /**
@@ -165,7 +166,8 @@ export const trabajosService = {
         typeof item === 'object' && item !== null
         && 'id' in item && typeof (item as TrabajoBackendDTO).id === 'number'
       )
-      .map(mapTrabajoBackend);
+      .map(mapTrabajoBackend)
+      .sort((a, b) => b.id - a.id);
   },
 
   /**

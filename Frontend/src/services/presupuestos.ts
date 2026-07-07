@@ -164,7 +164,7 @@ export const presupuestosService = {
   async listar(): Promise<Presupuesto[]> {
     const response = await apiClient.get<PresupuestoListaDTO[]>('/Presupuestos/ListarPresupuestos');
     const values = response.data;
-    return values.map(mapPresupuestoLista);
+    return values.map(mapPresupuestoLista).sort((a, b) => b.id - a.id);
   },
 
   /**
@@ -195,7 +195,7 @@ export const presupuestosService = {
       params: { idCliente },
     });
     const values = response.data;
-    return values.map(mapPresupuestoBackend);
+    return values.map(mapPresupuestoBackend).sort((a, b) => b.id - a.id);
   },
 
   /**
@@ -206,7 +206,7 @@ export const presupuestosService = {
       params: { estado },
     });
     const values = response.data;
-    return values.map(mapPresupuestoBackend);
+    return values.map(mapPresupuestoBackend).sort((a, b) => b.id - a.id);
   },
 
   /**

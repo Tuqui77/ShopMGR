@@ -259,7 +259,7 @@ export function useTrabajosActivos() {
 
   const data = useMemo(() => {
     if (!pendientes.data && !iniciados.data) return undefined;
-    return [...(iniciados.data || []), ...(pendientes.data || [])];
+    return [...(iniciados.data || []), ...(pendientes.data || [])].sort((a, b) => b.id - a.id);
   }, [pendientes.data, iniciados.data]);
 
   return {
