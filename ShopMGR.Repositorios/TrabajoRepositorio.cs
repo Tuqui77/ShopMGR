@@ -54,6 +54,14 @@ namespace ShopMGR.Repositorios
             return trabajoConFoto;
         }
 
+        public async Task<Trabajo?> ObtenerPorIdPresupuesto(int idPresupuesto)
+        {
+            var trabajo =
+                await _contexto.Trabajos.FirstOrDefaultAsync(t => t.IdPresupuesto == idPresupuesto);
+
+            return trabajo;
+        }
+
         public async Task<Trabajo> ObtenerDetallePorIdAsync(int id)
         {
             var trabajoDB =

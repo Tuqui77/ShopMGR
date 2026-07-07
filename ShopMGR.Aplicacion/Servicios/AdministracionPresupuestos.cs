@@ -7,11 +7,15 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios
 {
-    public class AdministracionPresupuestos(IRepositorioConValorHora presupuestoRepositorio, MapperRegistry mapper)
-        : IAdministrarPresupuestos
+    public class AdministracionPresupuestos(
+        IRepositorioConValorHora presupuestoRepositorio,
+        MapperRegistry mapper,
+        IAdministrarTrabajos administrarTrabajos
+    ) : IAdministrarPresupuestos
     {
         private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
         private readonly MapperRegistry _mapper = mapper;
+        private readonly IAdministrarTrabajos _administrarTrabajos = administrarTrabajos;
 
         public async Task<Presupuesto> CrearAsync(PresupuestoDTOcreacion nuevoPresupuesto)
         {
@@ -90,6 +94,7 @@ namespace ShopMGR.Aplicacion.Servicios
             var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
             presupuesto.AceptarPresupuesto();
 
+            await _administrarTrabajos.CrearDesdePresupuestoAsync(idPresupuesto);
             await _presupuestoRepositorio.ActualizarAsync(presupuesto);
         }
 
