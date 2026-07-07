@@ -236,9 +236,7 @@ export const presupuestosService = {
  */
 async aceptar(id: number): Promise<void> {
   try {
-    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-      estado: 'Aceptado',
-    });
+    await apiClient.patch(`/Presupuestos/AceptarPresupuesto?idPresupuesto=${id}`);
   } catch (error) {
     await handleApiError(error);
   }
@@ -249,9 +247,7 @@ async aceptar(id: number): Promise<void> {
  */
 async rechazar(id: number): Promise<void> {
   try {
-    await apiClient.patch(`/Presupuestos/ActualizarPresupuesto?idPresupuesto=${id}`, {
-      estado: 'Rechazado',
-    });
+    await apiClient.patch(`/Presupuestos/RechazarPresupuesto?idPresupuesto=${id}`);
   } catch (error) {
     await handleApiError(error);
   }

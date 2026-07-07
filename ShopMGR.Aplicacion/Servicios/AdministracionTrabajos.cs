@@ -41,10 +41,16 @@ namespace ShopMGR.Aplicacion.Servicios
                 await _repositorioPresupuestos.ObtenerDetallePorIdAsync(idPresupuesto)
                 ?? throw new KeyNotFoundException($"No hay un presupuesto con el ID {idPresupuesto}");
 
+            var existeTrabajo = await _repositorio.ObtenerPorIdPresupuesto(idPresupuesto);
+            if (existeTrabajo != default)
+            {
+                return existeTrabajo;
+            }
+
             var trabajoDTO = new TrabajoDTO
             {
                 Titulo = presupuesto.Titulo,
-                Descripcion = presupuesto.Descripcion ?? null,
+                Descripcion = presupuesto.Descripcion,
                 IdCliente = presupuesto.IdCliente,
                 IdPresupuesto = presupuesto.Id,
                 Estado = EstadoTrabajo.Pendiente,

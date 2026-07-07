@@ -9,19 +9,20 @@ namespace ShopMGR.Aplicacion.Servicios
 {
     public class AdministracionPresupuestos(
         IRepositorioConValorHora presupuestoRepositorio,
-        MapperRegistry mapper
+        MapperRegistry mapper,
+        IAdministrarTrabajos administrarTrabajos
     ) : IAdministrarPresupuestos
     {
         private readonly IRepositorioConValorHora _presupuestoRepositorio = presupuestoRepositorio;
         private readonly MapperRegistry _mapper = mapper;
+        private readonly IAdministrarTrabajos _administrarTrabajos = administrarTrabajos;
 
         public async Task<Presupuesto> CrearAsync(PresupuestoDTOcreacion nuevoPresupuesto)
         {
+            var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
             var presupuesto = _mapper.Map<PresupuestoDTOcreacion, Presupuesto>(nuevoPresupuesto);
 
-            presupuesto.Fecha = DateOnly.FromDateTime(DateTime.Now);
-            presupuesto.Estado = EstadoPresupuesto.Pendiente;
-            presupuesto = await CalcularCostos(presupuesto);
+            presupuesto.CalcularCostos(valorHoraDeTrabajo);
 
             await _presupuestoRepositorio.CrearAsync(presupuesto);
 
@@ -72,30 +73,37 @@ namespace ShopMGR.Aplicacion.Servicios
 
         public async Task ActualizarAsync(int idPresupuesto, ModificarPresupuesto entidad)
         {
-            var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(
-                idPresupuesto
+            var presupuestoBd = await _presupuestoRepositorio.ObtenerDetallePorIdAsync(idPresupuesto);
+            var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
+
+            presupuestoBd.Editar(
+                entidad.IdCliente!.Value,
+                entidad.Titulo!,
+                entidad.Descripcion!,
+                entidad.HorasEstimadas!.Value,
+                _mapper.Map<MaterialDTO, Material>(entidad.Materiales).ToList(),
+                valorHoraDeTrabajo
             );
-
-            presupuestoBd.IdCliente = entidad.IdCliente ?? presupuestoBd.IdCliente;
-            presupuestoBd.Titulo = entidad.Titulo ?? presupuestoBd.Titulo;
-            presupuestoBd.Descripcion = entidad.Descripcion ?? presupuestoBd.Descripcion;
-            presupuestoBd.HorasEstimadas = entidad.HorasEstimadas ?? presupuestoBd.HorasEstimadas;
-            presupuestoBd.Estado = entidad.Estado ?? presupuestoBd.Estado;
-
-            if (entidad.Materiales != null)
-            {
-                presupuestoBd.Materiales.Clear();
-                foreach (var materialModificado in entidad.Materiales)
-                {
-                    presupuestoBd.Materiales.Add(
-                        _mapper.Map<MaterialDTO, Material>(materialModificado)
-                    );
-                }
-            }
-
-            presupuestoBd = await CalcularCostos(presupuestoBd);
+            presupuestoBd.CalcularCostos(valorHoraDeTrabajo);
 
             await _presupuestoRepositorio.ActualizarAsync(presupuestoBd);
+        }
+
+        public async Task AceptarPresupuesto(int idPresupuesto)
+        {
+            var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
+            presupuesto.AceptarPresupuesto();
+
+            await _administrarTrabajos.CrearDesdePresupuestoAsync(idPresupuesto);
+            await _presupuestoRepositorio.ActualizarAsync(presupuesto);
+        }
+
+        public async Task RechazarPresupuesto(int idPresupuesto)
+        {
+            var presupuesto = await _presupuestoRepositorio.ObtenerPorIdAsync(idPresupuesto);
+            presupuesto.RechazarPresupuesto();
+
+            await _presupuestoRepositorio.ActualizarAsync(presupuesto);
         }
 
         public async Task EliminarAsync(int idPresupuesto)
@@ -111,21 +119,6 @@ namespace ShopMGR.Aplicacion.Servicios
         public async Task<decimal> ObtenerCostoHoraDeTrabajo()
         {
             return await _presupuestoRepositorio.ObtenerCostoHoraDeTrabajo();
-        }
-
-        //Método local para calcular los costos del presupuesto
-        private async Task<Presupuesto> CalcularCostos(Presupuesto presupuesto)
-        {
-            var valorHoraDeTrabajo = await ObtenerCostoHoraDeTrabajo();
-            presupuesto.CostoMateriales =
-                presupuesto.Materiales.Count > 0
-                    ? presupuesto.Materiales.Sum(m => (decimal)m.Cantidad * m.Precio)
-                    : 0;
-            presupuesto.CostoLabor = (decimal)presupuesto.HorasEstimadas * valorHoraDeTrabajo;
-            presupuesto.CostoInsumos = presupuesto.CostoLabor * 0.1m;
-            presupuesto.Total =
-                presupuesto.CostoMateriales + presupuesto.CostoLabor + presupuesto.CostoInsumos;
-            return presupuesto;
         }
     }
 }

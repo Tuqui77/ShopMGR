@@ -13,5 +13,6 @@ namespace ShopMGR.Dominio.Abstracciones
         Task AgregarHorasAsync(HorasYDescripcion horas);
         Task<List<Trabajo>> ListarTodosAsync();
         Task<Trabajo> ObtenerPorIdConFotoAsync(int id);
+        Task<Trabajo?> ObtenerPorIdPresupuesto(int idPresupuesto);
     }
 }
