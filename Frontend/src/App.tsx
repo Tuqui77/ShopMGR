@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BottomNav } from './components/BottomNav';
@@ -39,6 +39,28 @@ function ProtectedLayout() {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
   
+  // Body scroll lock when any modal is open
+  const isModalOpen = useStore(s =>
+    s.showHoursModal || s.showClienteForm || s.showPresupuestoForm || s.showTrabajoForm || s.showMovimientoModal
+  );
+
+  useEffect(() => {
+    if (isModalOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      return () => {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isModalOpen]);
+
   const handleFabAction = (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto' | 'movimiento') => {
     setFabOpen(false); // Close FAB first
     if (action === 'hours') {
