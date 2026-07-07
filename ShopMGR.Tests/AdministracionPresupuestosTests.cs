@@ -32,11 +32,13 @@ public class MaterialDTOtoMaterialMapper : IMapper<MaterialDTO, Material>
 public class AdministracionPresupuestosTests
 {
     private readonly Mock<IRepositorioConValorHora> _presupuestoRepositorioMock;
+    private readonly Mock<IAdministrarTrabajos> _administrarTrabajosMock;
     private readonly AdministracionPresupuestos _servicio;
 
     public AdministracionPresupuestosTests()
     {
         _presupuestoRepositorioMock = new Mock<IRepositorioConValorHora>();
+        _administrarTrabajosMock = new Mock<IAdministrarTrabajos>();
 
         // Configurar ServiceProvider con los mappers necesarios
         var services = new ServiceCollection();
@@ -44,7 +46,7 @@ public class AdministracionPresupuestosTests
         var serviceProvider = services.BuildServiceProvider();
         var mapperRegistry = new MapperRegistry(serviceProvider);
 
-        _servicio = new AdministracionPresupuestos(_presupuestoRepositorioMock.Object, mapperRegistry);
+        _servicio = new AdministracionPresupuestos(_presupuestoRepositorioMock.Object, mapperRegistry, _administrarTrabajosMock.Object);
     }
 
     /// <summary>
