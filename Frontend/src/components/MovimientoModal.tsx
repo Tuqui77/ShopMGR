@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useTrabajosPorCliente } from '../hooks/useTrabajos';
@@ -57,7 +57,7 @@ export function MovimientoModal() {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setIdCliente(null);
     setIdTrabajo(null);
     setTipo('Pago');
@@ -65,12 +65,12 @@ export function MovimientoModal() {
     setDescripcion('');
     setFecha(todayString());
     setError(null);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setShowMovimientoModal(false);
     resetForm();
-  };
+  }, [setShowMovimientoModal, resetForm]);
 
   const handleClienteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value ? parseInt(e.target.value, 10) : null;
@@ -86,7 +86,7 @@ export function MovimientoModal() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showMovimientoModal]);
+  }, [showMovimientoModal, handleClose]);
 
   if (!showMovimientoModal) return null;
 

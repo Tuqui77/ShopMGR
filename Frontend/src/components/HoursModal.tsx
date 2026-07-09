@@ -31,12 +31,14 @@ export function HoursModal() {
   const [hours, setHours] = useState(0.5);
   const [description, setDescription] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const handleClose = useCallback(() => {
     setShowHoursModal(false);
     setHours(0.5);
     setDescription('');
     setShowSuccess(false);
+    setSelectedDate(new Date().toISOString().split('T')[0]);
     // Limpiar selectedTrabajo para que la próxima apertura sea limpia
     setSelectedTrabajo(null);
   }, [setShowHoursModal, setHours, setDescription, setShowSuccess, setSelectedTrabajo]);
@@ -65,7 +67,7 @@ export function HoursModal() {
           idTrabajo: selectedTrabajo.id,
           horas: hours,
           descripcion: description,
-          fecha: new Date().toISOString().split('T')[0],
+          fecha: selectedDate,
         });
         setShowSuccess(true);
         setTimeout(() => {
@@ -108,6 +110,7 @@ export function HoursModal() {
               hours={hours} 
               valor={costoHora ? hours * costoHora : undefined}
               trabajo={selectedTrabajo!}
+              fecha={selectedDate}
               totalAcumulado={selectedTrabajo!.horasRegistradas + hours}
               totalEstimado={selectedTrabajo!.horasEstimadas || 0}
             />
@@ -123,11 +126,13 @@ export function HoursModal() {
               trabajo={selectedTrabajo!}
               hours={hours}
               description={description}
+              selectedDate={selectedDate}
               valorHora={costoHora}
               isLoading={costoHoraLoading}
               isSubmitting={agregarHorasMutation.isPending}
               onHoursChange={setHours}
               onDescriptionChange={setDescription}
+              onDateChange={setSelectedDate}
               onSubmit={handleAddHours}
             />
           )}
@@ -235,21 +240,25 @@ function HoursInputView({
   trabajo,
   hours,
   description,
+  selectedDate,
   valorHora,
   isLoading,
   isSubmitting,
   onHoursChange,
   onDescriptionChange,
+  onDateChange,
   onSubmit,
 }: {
   trabajo: Trabajo;
   hours: number;
   description: string;
+  selectedDate: string;
   valorHora: number | undefined;
   isLoading: boolean;
   isSubmitting: boolean;
   onHoursChange: (h: number) => void;
   onDescriptionChange: (d: string) => void;
+  onDateChange: (d: string) => void;
   onSubmit: () => void;
 }) {
   const costoNoConfigurado = !isLoading && (valorHora === undefined || valorHora === 0);
@@ -358,6 +367,17 @@ function HoursInputView({
       </div>
       
       <div className="mb-6">
+        <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>Fecha</label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => onDateChange(e.target.value)}
+          max={new Date().toISOString().split('T')[0]}
+          className="input w-full"
+        />
+      </div>
+
+      <div className="mb-6">
         <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>Descripción (opcional)</label>
         <textarea
           value={description}
@@ -390,12 +410,14 @@ function SuccessView({
   hours, 
   valor, 
   trabajo, 
+  fecha, 
   totalAcumulado, 
   totalEstimado 
 }: { 
   hours: number;
   valor: number | undefined;
   trabajo: Trabajo;
+  fecha: string;
   totalAcumulado: number;
   totalEstimado: number;
 }) {
@@ -419,7 +441,7 @@ function SuccessView({
         <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
         <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
         <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
-          {new Date().toLocaleDateString('es-AR')}
+          {new Date(fecha + 'T12:00:00').toLocaleDateString('es-AR')}
         </p>
       </div>
       
