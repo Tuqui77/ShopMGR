@@ -34,12 +34,7 @@ function ProtectedLayout() {
   const { isAuthenticated, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen } = useStore();
   const location = useLocation();
   
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
-  
-  // Body scroll lock when any modal is open
+  // Body scroll lock when any modal is open (must be before early return for hooks rule)
   const isModalOpen = useStore(s =>
     s.showHoursModal || s.showClienteForm || s.showPresupuestoForm || s.showTrabajoForm || s.showMovimientoModal
   );
@@ -60,6 +55,11 @@ function ProtectedLayout() {
       };
     }
   }, [isModalOpen]);
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />
+  }
 
   const handleFabAction = (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto' | 'movimiento') => {
     setFabOpen(false); // Close FAB first

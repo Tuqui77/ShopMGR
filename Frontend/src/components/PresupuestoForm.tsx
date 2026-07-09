@@ -97,6 +97,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   // Cuando se edita y los datos del presupuesto cargan, poblar el formulario
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (isEditing && presupuestoOriginal?.cliente) {
       setClienteSeleccionado(presupuestoOriginal.cliente);
       setTitulo(presupuestoOriginal.titulo);
@@ -111,6 +112,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
       );
       setStep('datos');
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [isEditing, presupuestoOriginal]);
 
   // Estado para la calculadora

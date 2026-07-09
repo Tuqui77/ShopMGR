@@ -44,6 +44,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
 
   // Sincronizar estado del formulario cuando los datos del trabajo se cargan (edición)
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (isEditing && trabajoOriginal) {
       setTitulo(trabajoOriginal.titulo);
       setDescripcion(trabajoOriginal.descripcion ?? '');
@@ -51,6 +52,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       setPresupuestoId(trabajoOriginal.idPresupuesto ?? null);
       setEstado(trabajoOriginal.estado);
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [isEditing, trabajoOriginal]);
 
   // Anticipo

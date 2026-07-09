@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { Check, X } from 'lucide-react';
 import { useCalculator } from '../hooks/useCalculator';
 
@@ -28,38 +28,37 @@ export function CalculatorModal({ position, onResult, onClose }: CalculatorModal
   } = useCalculator();
 
   const modalRef = useRef<HTMLDivElement>(null);
-  const [clampedPosition, setClampedPosition] = useState({ x: 0, y: 0 });
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Determinar si es mobile y calcular posición al montar
-  useEffect(() => {
+  // Derivar isMobile y clampedPosition desde props y viewport (sin setState en effect)
+  const { isMobile, clampedPosition } = useMemo(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const mobile = vw < 640;
-    setIsMobile(mobile);
 
-    if (!mobile) {
-      let x = position.x;
-      let y = position.y;
-
-      // Clamp horizontal
-      if (x + MODAL_WIDTH > vw - PADDING) {
-        x = vw - MODAL_WIDTH - PADDING;
-      }
-      if (x < PADDING) {
-        x = PADDING;
-      }
-
-      // Clamp vertical
-      if (y + MODAL_HEIGHT_ESTIMATE > vh - PADDING) {
-        y = vh - MODAL_HEIGHT_ESTIMATE - PADDING;
-      }
-      if (y < PADDING) {
-        y = PADDING;
-      }
-
-      setClampedPosition({ x, y });
+    if (mobile) {
+      return { isMobile: true, clampedPosition: { x: 0, y: 0 } };
     }
+
+    let x = position.x;
+    let y = position.y;
+
+    // Clamp horizontal
+    if (x + MODAL_WIDTH > vw - PADDING) {
+      x = vw - MODAL_WIDTH - PADDING;
+    }
+    if (x < PADDING) {
+      x = PADDING;
+    }
+
+    // Clamp vertical
+    if (y + MODAL_HEIGHT_ESTIMATE > vh - PADDING) {
+      y = vh - MODAL_HEIGHT_ESTIMATE - PADDING;
+    }
+    if (y < PADDING) {
+      y = PADDING;
+    }
+
+    return { isMobile: false, clampedPosition: { x, y } };
   }, [position.x, position.y]);
 
   // Cerrar con Escape
