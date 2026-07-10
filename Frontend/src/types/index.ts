@@ -149,6 +149,7 @@ export interface Trabajo {
   totalLabor?: number;
   fotosCount: number;
   fotos?: Foto[];
+  horasDeTrabajo?: HorasDeTrabajo[];
   cliente: Cliente | null;
   clienteId: number;
   idPresupuesto?: number;

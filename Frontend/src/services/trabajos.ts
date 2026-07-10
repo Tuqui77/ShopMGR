@@ -6,6 +6,7 @@ import type {
   ClienteBackendDTO,
   CrearTrabajoRequest,
   RegistrarHorasRequest,
+  HorasDeTrabajo,
   EstadoTrabajo,
 } from '../types';
 
@@ -81,6 +82,14 @@ function mapTrabajoBackend(dto: TrabajoBackendDTO): Trabajo {
     enlace: `/app/imagenes/${f.rutaRelativa}`,
     idTrabajo: f.idTrabajo,
   }));
+
+  const horasDeTrabajo: HorasDeTrabajo[] = horasValues.map(h => ({
+    id: h.id,
+    idTrabajo: h.idTrabajo,
+    horas: h.horas,
+    descripcion: h.descripcion,
+    fecha: h.fecha,
+  }));
   
   return {
     id: dto.id,
@@ -94,6 +103,7 @@ function mapTrabajoBackend(dto: TrabajoBackendDTO): Trabajo {
     horasEstimadas: dto.horasEstimadas ?? dto.presupuesto?.horasEstimadas,
     fotosCount: fotosValues.length,
     fotos,
+    horasDeTrabajo,
     cliente: mapClienteFull(dto.cliente),
     clienteId: dto.idCliente,
     idPresupuesto: dto.idPresupuesto,
