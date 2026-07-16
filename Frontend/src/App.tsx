@@ -79,7 +79,7 @@ function ProtectedLayout() {
   return (
     <div className="main-content with-sidebar">
       <Sidebar />
-      <div className="flex-1 min-h-screen pb-24 lg:pb-8">
+      <div className="flex-1 min-h-screen min-w-0 pb-24 lg:pb-8">
         <Outlet />
       </div>
       <BottomNav />

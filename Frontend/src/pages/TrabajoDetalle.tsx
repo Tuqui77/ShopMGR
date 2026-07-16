@@ -506,7 +506,7 @@ useEffect(() => {
             </div>
             
             {/* Miniaturas clickeables */}
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {trabajo.fotos?.map((foto) => (
                 <div
                   key={foto.id}
