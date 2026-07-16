@@ -6,6 +6,7 @@ import type {
   ClienteBackendDTO,
   CrearTrabajoRequest,
   RegistrarHorasRequest,
+  ModificarHorasRequest,
   HorasDeTrabajo,
   EstadoTrabajo,
 } from '../types';
@@ -238,6 +239,20 @@ export const trabajosService = {
   },
 
   /**
+   * Modifica horas registradas en un trabajo
+   */
+  async modificarHoras(data: ModificarHorasRequest): Promise<void> {
+    await apiClient.patch('/Trabajos/EditarHorasDeTrabajo', data);
+  },
+
+  /**
+   * Elimina horas registradas de un trabajo
+   */
+  async eliminarHoras(idTrabajo: number, idHoras: number): Promise<void> {
+    await apiClient.patch(`/Trabajos/EliminarHorasDeTrabajo?idTrabajo=${idTrabajo}&idHoras=${idHoras}`);
+  },
+
+  /**
    * Crea un trabajo a partir de un presupuesto aceptado
    * (endpoint dedicado en TrabajosController)
    */
@@ -279,4 +294,4 @@ export const trabajosService = {
 // Exports de tipos para uso en hooks
 // ============================================================================
 
-export type { CrearTrabajoRequest, RegistrarHorasRequest };
+export type { CrearTrabajoRequest, RegistrarHorasRequest, ModificarHorasRequest };

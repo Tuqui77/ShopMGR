@@ -220,6 +220,14 @@ export interface RegistrarHorasRequest {
   fecha?: string;
 }
 
+export interface ModificarHorasRequest {
+  id: number;
+  horas: number;
+  descripcion: string;
+  fecha: string;
+  idTrabajo: number;
+}
+
 // ============================================================================
 // FOTOS
 // ============================================================================
