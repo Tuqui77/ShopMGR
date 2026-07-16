@@ -506,8 +506,8 @@ useEffect(() => {
             </div>
             
             {/* Miniaturas clickeables */}
-            <div className="flex gap-2">
-              {trabajo.fotos?.slice(0, 4).map((foto) => (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {trabajo.fotos?.map((foto) => (
                 <div
                   key={foto.id}
                   className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
