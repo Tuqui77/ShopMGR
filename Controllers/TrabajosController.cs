@@ -83,6 +83,23 @@ namespace ShopMGR.WebApi.Controllers
             );
         }
 
+        [HttpPatch]
+        [Route("EditarHorasDeTrabajo")]
+        public async Task<IActionResult> EditarHorasDeTrabajo(ModificarHorasYDescripcion horas)
+        {
+            await administrarTrabajos.EditarHorasDeTrabajo(horas);
+            return Ok();
+        }
+
+
+        [HttpPatch]
+        [Route("EliminarHorasDeTrabajo")]
+        public async Task<IActionResult> EliminarHorasDeTrabajo(int idTrabajo, int idHoras)
+        {
+            await administrarTrabajos.EliminarHorasDeTrabajo(idTrabajo, idHoras);
+            return Ok();
+        }
+
         [HttpGet]
         [Route("ObtenerTrabajoPorId")]
         public async Task<IActionResult> ObtenerTrabajoPorId(int idTrabajo)

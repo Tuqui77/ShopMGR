@@ -91,6 +91,21 @@ namespace ShopMGR.Dominio.Modelo
                 TotalLabor = costoHora * (decimal)TotalHoras;
         }
 
+        public void EditarHoras(int id, float horas, string descripcion, DateOnly fecha)
+        {
+            var horasTrabajo = _horasDeTrabajo.FirstOrDefault(h => h.Id == id)
+                ?? throw new KeyNotFoundException();
+
+            horasTrabajo.Editar(horas, descripcion, fecha);
+        }
+
+        public void EliminarHoras(int idHoras)
+        {
+            var horasTrabajo = _horasDeTrabajo.FirstOrDefault(h => h.Id == idHoras)
+                ?? throw new KeyNotFoundException();
+            _horasDeTrabajo.Remove(horasTrabajo);
+        }
+
         public void AgregarFotos(List<Foto> fotos)
         {
             _fotos.AddRange(fotos);

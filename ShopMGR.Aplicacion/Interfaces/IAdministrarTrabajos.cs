@@ -18,5 +18,7 @@ namespace ShopMGR.Aplicacion.Interfaces
         Task TerminarTrabajo(int idTrabajo);
         Task EliminarPresupuesto(int idTrabajo);
         Task CambiarPresupuesto(int idTrabajo, int idPresupuesto);
+        Task EditarHorasDeTrabajo (ModificarHorasYDescripcion horasModificadas);
+        Task EliminarHorasDeTrabajo (int idTrabajo, int idHoras);
     }
 }
