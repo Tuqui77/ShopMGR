@@ -24,6 +24,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { TrabajoForm } from '../components/TrabajoForm';
 import { ImageUpload } from '../components/ImageUpload';
+import { HorasTrabajoModal } from '../components/HorasTrabajoModal';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +41,7 @@ export function TrabajoDetalle() {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showHorasModal, setShowHorasModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<number | null>(null);
   const [showDeletePhotoConfirm, setShowDeletePhotoConfirm] = useState(false);
@@ -442,7 +444,17 @@ useEffect(() => {
 
         {/* Progreso */}
         {trabajo.estado !== 'Pendiente' && (
-          <div className="card">
+          <div
+            className={clsx(
+              'card',
+              trabajo.horasRegistradas > 0 && 'cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)]'
+            )}
+            onClick={() => {
+              if (trabajo.horasRegistradas > 0) {
+                setShowHorasModal(true);
+              }
+            }}
+          >
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Progreso</span>
@@ -494,8 +506,8 @@ useEffect(() => {
             </div>
             
             {/* Miniaturas clickeables */}
-            <div className="flex gap-2">
-              {trabajo.fotos?.slice(0, 4).map((foto) => (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {trabajo.fotos?.map((foto) => (
                 <div
                   key={foto.id}
                   className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
@@ -821,6 +833,18 @@ useEffect(() => {
         {/* Spacer para dar aire antes del modal de eliminación */}
         <div className="h-4" />
       </section>
+
+      {/* Modal de horas registradas */}
+      <HorasTrabajoModal
+        trabajoId={trabajo.id}
+        nombreTrabajo={trabajo.titulo}
+        horas={trabajo.horasDeTrabajo}
+        isLoading={false}
+        totalHoras={trabajo.horasRegistradas}
+        horasEstimadas={trabajo.horasEstimadas}
+        isOpen={showHorasModal}
+        onClose={() => setShowHorasModal(false)}
+      />
 
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (

@@ -5,6 +5,7 @@ import {
   type CrearTrabajoRequest,
   type ModificarTrabajoRequest,
   type RegistrarHorasRequest,
+  type ModificarHorasRequest,
 } from '../services/trabajos';
 import type { EstadoTrabajo } from '../types';
 
@@ -194,6 +195,39 @@ export function useAgregarHoras() {
   
   return useMutation({
     mutationFn: (horas: RegistrarHorasRequest) => trabajosService.agregarHoras(horas),
+    onSuccess: (_, { idTrabajo }) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo, 'detalle'] });
+    },
+  });
+}
+
+/**
+ * Modifica horas registradas en un trabajo
+ */
+export function useModificarHoras() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ModificarHorasRequest) => trabajosService.modificarHoras(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['trabajos'] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', variables.idTrabajo] });
+      queryClient.invalidateQueries({ queryKey: ['trabajos', variables.idTrabajo, 'detalle'] });
+    },
+  });
+}
+
+/**
+ * Elimina horas registradas de un trabajo
+ */
+export function useEliminarHoras() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ idTrabajo, idHoras }: { idTrabajo: number; idHoras: number }) =>
+      trabajosService.eliminarHoras(idTrabajo, idHoras),
     onSuccess: (_, { idTrabajo }) => {
       queryClient.invalidateQueries({ queryKey: ['trabajos'] });
       queryClient.invalidateQueries({ queryKey: ['trabajos', idTrabajo] });

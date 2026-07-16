@@ -149,6 +149,7 @@ export interface Trabajo {
   totalLabor?: number;
   fotosCount: number;
   fotos?: Foto[];
+  horasDeTrabajo?: HorasDeTrabajo[];
   cliente: Cliente | null;
   clienteId: number;
   idPresupuesto?: number;
@@ -217,6 +218,14 @@ export interface RegistrarHorasRequest {
   horas: number;
   descripcion: string;
   fecha?: string;
+}
+
+export interface ModificarHorasRequest {
+  id: number;
+  horas: number;
+  descripcion: string;
+  fecha: string;
+  idTrabajo: number;
 }
 
 // ============================================================================

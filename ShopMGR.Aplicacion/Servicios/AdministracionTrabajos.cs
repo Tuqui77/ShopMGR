@@ -116,6 +116,27 @@ namespace ShopMGR.Aplicacion.Servicios
             await _repositorio.ActualizarAsync(trabajo);
         }
 
+        public async Task EditarHorasDeTrabajo(ModificarHorasYDescripcion horasModificadas)
+        {
+            var trabajo = await ObtenerPorIdAsync(horasModificadas.IdTrabajo);
+            trabajo.EditarHoras(
+                horasModificadas.Id,
+                horasModificadas.Horas,
+                horasModificadas.Descripcion,
+                horasModificadas.Fecha
+            );
+
+            await _repositorio.ActualizarAsync(trabajo);
+        }
+
+        public async Task EliminarHorasDeTrabajo(int idTrabajo, int idHoras)
+        {
+            var trabajo = await ObtenerPorIdAsync(idTrabajo);
+            trabajo.EliminarHoras(idHoras);
+
+            await _repositorio.ActualizarAsync(trabajo);
+        }
+
         public async Task<Trabajo> ObtenerPorIdAsync(int id)
         {
             return await _repositorio.ObtenerPorIdAsync(id);
