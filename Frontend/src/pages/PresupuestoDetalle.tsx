@@ -468,23 +468,8 @@ export function PresupuestoDetalle() {
               <span style={{ color: 'var(--color-text)' }}>{presupuesto.horasEstimadas}h</span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: 'var(--color-muted)' }}>Costo materiales</span>
+              <span style={{ color: 'var(--color-muted)' }}>Costo materiales + insumos</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                {formatCurrency(presupuesto.costoMateriales || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span style={{ color: 'var(--color-muted)' }}>Costo insumos</span>
-              <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                {formatCurrency(presupuesto.costoInsumos || 0)}
-              </span>
-            </div>
-            <div
-              className="flex justify-between pt-2 border-t"
-              style={{ borderColor: 'var(--color-border)' }}
-            >
-              <span className="text-sm" style={{ color: 'var(--color-muted)' }}>Subtotal</span>
-              <span className="font-mono font-semibold" style={{ color: 'var(--color-accent)' }}>
                 {formatCurrency((presupuesto.costoMateriales || 0) + (presupuesto.costoInsumos || 0))}
               </span>
             </div>
