@@ -4,7 +4,7 @@ import { useTrabajos, useAgregarHoras } from '../hooks/useTrabajos';
 import { useCostoHora } from '../hooks/useCostoHora';
 import clsx from 'clsx';
 import type { Trabajo } from '../types';
-import { X, ArrowLeft, Search, Star, CheckCircle, Loader2 } from 'lucide-react';
+import { X, ArrowLeft, Search, CheckCircle, Loader2 } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
 
 export function HoursModal() {
@@ -173,23 +173,6 @@ function SelectTrabajoView({
         />
       </div>
       
-      {lastTrabajo && (
-        <button
-          onClick={() => onSelect(lastTrabajo)}
-          className="w-full card mb-3"
-          style={{ borderColor: 'var(--color-accent)', backgroundColor: 'color-mix(in srgb, var(--color-accent) 5%, transparent)' }}
-        >
-          <div className="flex items-center gap-3">
-            <Star className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-            <div className="flex-1 text-left">
-              <p className="font-medium" style={{ color: 'var(--color-text)' }}>{lastTrabajo.titulo}</p>
-              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{lastTrabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
-            </div>
-            <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Usado recientemente</span>
-          </div>
-        </button>
-      )}
-      
       <div className="space-y-2">
         {filtered.map(trabajo => (
           <button
@@ -203,7 +186,7 @@ function SelectTrabajoView({
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {trabajo.cliente?.nombreCompleto || 'Sin cliente'} · {trabajo.horasRegistradas}h registradas
+                  {trabajo.cliente?.nombreCompleto || 'Sin cliente'}
                 </p>
               </div>
             </div>
