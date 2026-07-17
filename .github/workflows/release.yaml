@@ -11,8 +11,8 @@ jobs:
     permissions:
       contents: write
     outputs:
-      release: $ {{ steps.check.outputs.release }}
-      version: $ {{ steps.check.outputs.version }}
+      release: ${{ steps.check.outputs.release }}
+      version: ${{ steps.check.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
