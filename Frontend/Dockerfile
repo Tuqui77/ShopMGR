@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM node:22-alpine AS build
 
 WORKDIR /app
@@ -6,8 +7,8 @@ WORKDIR /app
 COPY Frontend/package*.json ./
 COPY Frontend/package-lock*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with cache
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # Copy source
 COPY Frontend/ .

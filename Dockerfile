@@ -1,15 +1,12 @@
-#Start with the base .NET SDK Image
+# syntax=docker/dockerfile:1
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
 
 #Definir el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# #Copiar DBSeeder
-# COPY DBSeeder/ ./DBSeeder/
-
 #Copia los archivos de proyecto y restaura las dependencias
 COPY *.csproj ./
-RUN dotnet restore
+RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore
 
 #Copia los archivos restantes y construye la imagen
 COPY . ./
@@ -19,7 +16,6 @@ RUN dotnet publish DBSeeder/DBSeeder.csproj -c Release -o dbseed-out
 #Construye la imagen de runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime-env
 WORKDIR /app
-# COPY --from=build-env /app/dbseed-out .
 COPY --from=build-env /app/out .
 
 #Configura el punto de entrada
