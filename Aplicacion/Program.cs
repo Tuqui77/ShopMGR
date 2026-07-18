@@ -101,6 +101,8 @@ namespace ShopMGR.WebApi.Aplicacion
                     "imagenes");
             Directory.CreateDirectory(rutaImagenes);
 
+            app.UseDefaultFiles();
+            app.UseStaticFiles(); //para servir desde wwwroot
             app.UseStaticFiles(
                 new StaticFileOptions
                 {
@@ -131,6 +133,7 @@ namespace ShopMGR.WebApi.Aplicacion
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.MapControllers();
+            app.MapFallbackToFile("index.html");
 
             using (var scope = app.Services.CreateScope())
             {
