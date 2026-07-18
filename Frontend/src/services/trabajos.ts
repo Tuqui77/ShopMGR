@@ -80,7 +80,7 @@ function mapTrabajoBackend(dto: TrabajoBackendDTO): Trabajo {
   
   const fotos: Trabajo['fotos'] = fotosValues.map(f => ({
     id: f.id,
-    enlace: `/app/imagenes/${f.rutaRelativa}`,
+    enlace: `/imagenes/${f.rutaRelativa}`,
     idTrabajo: f.idTrabajo,
   }));
 
