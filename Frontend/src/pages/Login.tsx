@@ -48,12 +48,12 @@ export function Login() {
         navigate('/');
       }
     } catch (err: unknown) {
-      const message =
-        (err instanceof Error && err.message) ||
-        (typeof err === 'object' && err !== null && 'response' in err
-          ? (err as { response?: { data?: string } }).response?.data
-          : null) ||
-        'Error al conectar con el servidor';
+      const axiosData = typeof err === 'object' && err !== null && 'response' in err
+        ? (err as { response?: { data?: unknown } }).response?.data
+        : null;
+      const message = typeof axiosData === 'string'
+        ? axiosData
+        : 'Error al conectar con el servidor';
       setErrors(prev => ({ ...prev, general: message }));
     } finally {
       setIsLoading(false);
