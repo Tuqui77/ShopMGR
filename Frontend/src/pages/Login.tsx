@@ -106,7 +106,7 @@ export function Login() {
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 placeholder="Tu usuario"
-                className="input pl-11"
+                className="input !pl-11"
                 autoFocus
               />
             </div>
@@ -127,7 +127,7 @@ export function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="input pl-11"
+                className="input !pl-11"
               />
             </div>
             {errors.password && (
