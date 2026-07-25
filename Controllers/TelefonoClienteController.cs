@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Newtonsoft.Json.Linq;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
@@ -12,6 +13,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class TelefonoClienteController(IAdministrarTelefonoCliente administracionTelefono) : ControllerBase
     {
+        [Authorize]
         [HttpPost]
         [Route("CrearTelefonoCliente")]
         public async Task<IActionResult> CrearTelefonoClienteAsync(TelefonoClienteDTO nuevoTelefono)
@@ -25,6 +27,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(nuevoTelefono);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idTelefono)
@@ -33,6 +36,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(telefono);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerTelefonosCliente")]
         public async Task<IActionResult> ObtenerTelefonosClienteAsync(int idCliente)
@@ -46,6 +50,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(telefonos);
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("ModificarTelefonoCliente")]
         public async Task<IActionResult> ModificarTelefonoClienteAsync(int idTelefono,
@@ -60,6 +65,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Teléfono modificado con éxito.");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("EliminarTelefonoCliente")]
         public async Task<IActionResult> EliminarTelefonoClienteAsync(int idTelefono)

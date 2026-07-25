@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
@@ -13,6 +14,7 @@ namespace ShopMGR.WebApi.Controllers
     public class PresupuestosController(IAdministrarPresupuestos administracionPresupuestos)
         : ControllerBase
     {
+        [Authorize]
         [HttpPost]
         [Route("CrearPresupuesto")]
         public async Task<IActionResult> CrearPresupuesto(PresupuestoDTOcreacion nuevoPresupuesto)
@@ -26,6 +28,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(presupuesto);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerPresupuestoPorId")]
         public async Task<IActionResult> ObtenerPorId(int idPresupuesto)
@@ -34,6 +37,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(presupuesto);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerDetallePresupuesto")]
         public async Task<IActionResult> ObtenerDetallePorId(int idPresupuesto)
@@ -44,6 +48,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(presupuesto);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ListarPresupuestos")]
         public async Task<IActionResult> ListarPresupuestos()
@@ -53,6 +58,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(presupuestos);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerPresupuestosPorCliente")]
         public async Task<IActionResult> ObtenerPorCliente(int idCliente)
@@ -69,6 +75,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(presupuestos);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerPresupuestosEstado")]
         public async Task<IActionResult> ObtenerPorEstado(EstadoPresupuesto estado)
@@ -83,6 +90,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(presupuestos);
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("ActualizarPresupuesto")]
         public async Task<IActionResult> ActualizarPresupuesto(
@@ -99,6 +107,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Presupuesto modificado correctamente");
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("AceptarPresupuesto")]
         public async Task<IActionResult> AceptarPresupuesto(int idPresupuesto)
@@ -108,6 +117,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("RechazarPresupuesto")]
         public async Task<IActionResult> RechazarPresupuesto(int idPresupuesto)
@@ -117,6 +127,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("EliminarPresupuesto")]
         public async Task<IActionResult> EliminarPresupuesto(int idPresupuesto)
@@ -125,6 +136,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Presupuesto eliminado correctamente.");
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("ActualizarCostoHoraDeTrabajo")]
         public async Task<IActionResult> ActualizarCostoHora(decimal nuevoCosto)
@@ -133,6 +145,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(nuevoCosto);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerCostoHoraDeTrabajo")]
         public async Task<IActionResult> ObtenerCostoHora()
