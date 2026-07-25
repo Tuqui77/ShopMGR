@@ -9,4 +9,12 @@ export const authService = {
     );
     return response.data;
   },
+
+  async register(data: LoginRequest): Promise<string> {
+    const response = await apiClient.post<string>(
+      '/Auth/RegistrarUsuario',
+      data,
+    );
+    return response.data;
+  },
 };

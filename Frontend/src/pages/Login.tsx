@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, LogIn, Loader2 } from 'lucide-react';
+import { User, Lock, LogIn, Loader2, UserPlus } from 'lucide-react';
 import { useStore } from '../store';
 import { authService } from '../services/auth';
 
@@ -8,16 +8,17 @@ export function Login() {
   const navigate = useNavigate();
   const { setToken } = useStore();
   
+  const [isRegistering, setIsRegistering] = useState(false);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({ userName: '', password: '', general: '' });
+  const [errors, setErrors] = useState({ userName: '', password: '', general: '', success: '' });
   const [isLoading, setIsLoading] = useState(false);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate
-    const newErrors = { userName: '', password: '', general: '' };
+    const newErrors = { userName: '', password: '', general: '', success: '' };
     let hasError = false;
     
     if (!userName.trim()) {
@@ -34,12 +35,18 @@ export function Login() {
     
     if (hasError) return;
     
-    // Call real API
     setIsLoading(true);
     try {
-      const token = await authService.login({ userName: userName.trim(), password });
-      setToken(token);
-      navigate('/');
+      if (isRegistering) {
+        await authService.register({ userName: userName.trim(), password });
+        setErrors(prev => ({ ...prev, success: 'Usuario creado. Ahora podés iniciar sesión.' }));
+        setIsRegistering(false);
+        setPassword('');
+      } else {
+        const token = await authService.login({ userName: userName.trim(), password });
+        setToken(token);
+        navigate('/');
+      }
     } catch (err: unknown) {
       const message =
         (err instanceof Error && err.message) ||
@@ -51,6 +58,11 @@ export function Login() {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const toggleMode = () => {
+    setIsRegistering(!isRegistering);
+    setErrors({ userName: '', password: '', general: '', success: '' });
   };
   
   return (
@@ -66,12 +78,19 @@ export function Login() {
           </p>
         </div>
         
-        {/* Login Form */}
+        {/* Login/Register Form */}
         <form onSubmit={handleSubmit} className="card space-y-4">
           {/* General error */}
           {errors.general && (
             <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
               <p className="text-sm text-[var(--color-danger)] text-center">{errors.general}</p>
+            </div>
+          )}
+          
+          {/* Success message */}
+          {errors.success && (
+            <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
+              <p className="text-sm text-[var(--color-success)] text-center">{errors.success}</p>
             </div>
           )}
           
@@ -124,11 +143,28 @@ export function Login() {
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
+            ) : isRegistering ? (
+              <UserPlus className="w-5 h-5" />
             ) : (
               <LogIn className="w-5 h-5" />
             )}
-            {isLoading ? 'Ingresando...' : 'Iniciar Sesión'}
+            {isLoading
+              ? (isRegistering ? 'Creando...' : 'Ingresando...')
+              : (isRegistering ? 'Crear Usuario' : 'Iniciar Sesión')
+            }
           </button>
+          
+          {/* Toggle Login/Register */}
+          <p className="text-center text-sm text-[var(--color-muted)]">
+            {isRegistering ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?'}{' '}
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
+            >
+              {isRegistering ? 'Iniciar Sesión' : 'Crear Usuario'}
+            </button>
+          </p>
         </form>
       </div>
     </div>
