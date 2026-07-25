@@ -18,10 +18,10 @@ function isActivePath(currentPath: string, itemPath: string) {
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useStore();
+  const { logout } = useStore();
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    logout();
     navigate('/login');
   };
 

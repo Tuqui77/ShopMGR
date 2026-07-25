@@ -1,25 +1,27 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, LogIn } from 'lucide-react';
+import { User, Lock, LogIn, Loader2 } from 'lucide-react';
 import { useStore } from '../store';
+import { authService } from '../services/auth';
 
 export function Login() {
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useStore();
+  const { setToken } = useStore();
   
-  const [email, setEmail] = useState('');
+  const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ userName: '', password: '', general: '' });
+  const [isLoading, setIsLoading] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate
-    const newErrors = { email: '', password: '' };
+    const newErrors = { userName: '', password: '', general: '' };
     let hasError = false;
     
-    if (!email.trim()) {
-      newErrors.email = 'El email es requerido';
+    if (!userName.trim()) {
+      newErrors.userName = 'El usuario es requerido';
       hasError = true;
     }
     
@@ -32,9 +34,23 @@ export function Login() {
     
     if (hasError) return;
     
-    // Mock login - accept any valid input
-    setIsAuthenticated(true);
-    navigate('/');
+    // Call real API
+    setIsLoading(true);
+    try {
+      const token = await authService.login({ userName: userName.trim(), password });
+      setToken(token);
+      navigate('/');
+    } catch (err: unknown) {
+      const message =
+        (err instanceof Error && err.message) ||
+        (typeof err === 'object' && err !== null && 'response' in err
+          ? (err as { response?: { data?: string } }).response?.data
+          : null) ||
+        'Error al conectar con el servidor';
+      setErrors(prev => ({ ...prev, general: message }));
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -52,23 +68,31 @@ export function Login() {
         
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="card space-y-4">
-          {/* Email Field */}
+          {/* General error */}
+          {errors.general && (
+            <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
+              <p className="text-sm text-[var(--color-danger)] text-center">{errors.general}</p>
+            </div>
+          )}
+          
+          {/* UserName Field */}
           <div>
             <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
-              Email
+              Usuario
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="Tu usuario"
                 className="input pl-11"
+                autoFocus
               />
             </div>
-            {errors.email && (
-              <p className="text-sm text-[var(--color-danger)] mt-1">{errors.email}</p>
+            {errors.userName && (
+              <p className="text-sm text-[var(--color-danger)] mt-1">{errors.userName}</p>
             )}
           </div>
           
@@ -93,18 +117,18 @@ export function Login() {
           </div>
           
           {/* Submit Button */}
-          <button type="submit" className="btn-primary flex items-center justify-center gap-2">
-            <LogIn className="w-5 h-5" />
-            Iniciar Sesión
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn-primary flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <LogIn className="w-5 h-5" />
+            )}
+            {isLoading ? 'Ingresando...' : 'Iniciar Sesión'}
           </button>
-          
-          {/* Forgot Password Link (decorative) */}
-          <p className="text-center text-sm text-[var(--color-muted)]">
-            ¿Olvidaste tu contraseña?{' '}
-            <button type="button" className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200">
-              Recuperar
-            </button>
-          </p>
         </form>
       </div>
     </div>

@@ -4,6 +4,18 @@ export type EstadoPresupuesto = 'Pendiente' | 'Aceptado' | 'Rechazado';
 export type TipoMovimiento = 'Pago' | 'Cargo' | 'Anticipo' | 'Compra' | 'Ajuste';
 
 // ============================================================================
+// AUTH
+// ============================================================================
+
+export interface LoginRequest {
+  userName: string;
+  password: string;
+}
+
+// Backend returns raw JWT string, not JSON
+export type LoginResponse = string;
+
+// ============================================================================
 // CLIENTE
 // ============================================================================
 
