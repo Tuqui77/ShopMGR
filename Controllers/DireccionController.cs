@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
@@ -10,6 +11,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class DireccionController(IAdministrarDireccion administracionDirecciones) : ControllerBase
     {
+        [Authorize]
         [HttpPost]
         [Route("CrearDireccion")]
         public async Task<IActionResult> CrearDireccion(DireccionDTO direccion)
@@ -23,6 +25,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(direccion);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("Obtener detalle por id")]
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idDireccion)
@@ -31,6 +34,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(direccion);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerDireccionesCliente")]
         public async Task<IActionResult> ObtenerDireccionesCliente(int idCliente)
@@ -45,6 +49,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(direcciones);
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("ActualizarDireccion")]
         public async Task<IActionResult> ActualizarDireccion(int idDireccion, ModificarDireccion direccion)
@@ -58,6 +63,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Direccion actualizada correctamente.");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("EliminarDireccion")] //Aca
         public async Task<IActionResult> EliminarDireccion(int idDireccion)

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Interfaces;
 
@@ -7,6 +8,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class MetricasController(IAdministracionMetricas administracionMetricas) : ControllerBase
     {
+        [Authorize]
         [HttpGet]
         [Route("ObtenerIngresos")]
         public async Task<IActionResult> ObtenerIngresosAsync(DateOnly fecha)
@@ -16,6 +18,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(ingresosMes);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerHoras")]
         public async Task<IActionResult> ObtenerHorasAsync(DateOnly fecha)
@@ -25,6 +28,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(horasTrabajadasMes);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerTrabajosTerminados")]
         public async Task<IActionResult> ObtenerTrabajosTerminadosAsync(DateOnly fecha)
@@ -34,6 +38,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajosTerminadosMes);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerPresupuestosEntregados")]
         public async Task<IActionResult> ObtenerPresupuestosCreadosAsync(DateOnly fecha)
@@ -43,6 +48,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(presupuestosCreadosMes);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerPresupuestosAceptados")]
         public async Task<IActionResult> ObtenerPresupuestosAceptadosAsync(DateOnly fecha)

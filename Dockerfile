@@ -27,5 +27,4 @@ COPY --from=build-frontend /app/dist ./wwwroot
 
 #Configura el punto de entrada
 ENV ASPNETCORE_URLS=http://+:80
-ENV ASPNETCORE_ENVIRONMENT=Development
 ENTRYPOINT ["dotnet", "ShopMGR.WebApi.dll"]

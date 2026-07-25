@@ -192,7 +192,7 @@ export function MovimientoModal() {
                 <input
                   type="number"
                   step="0.01"
-                  min="0"
+                  {...(tipo !== 'Ajuste' && { min: '0' })}
                   value={monto}
                   onChange={(e) => setMonto(e.target.value)}
                   className="search-input"
