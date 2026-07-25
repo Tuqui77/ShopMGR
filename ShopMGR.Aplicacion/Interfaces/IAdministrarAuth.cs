@@ -6,5 +6,7 @@ namespace ShopMGR.Aplicacion.Interfaces;
 public interface IAdministrarAuth
 {
     public Task<Usuario?> RegistrarUsuarioAsync(UsuarioDTO request);
-    public Task<string?> IniciarSesion(UsuarioDTO request);
+    public Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request);
+    public Task<RespuestaLogin?> Refrescar(int idUsuario, string refreshToken);
+    public Task CerrarSesion(int idUsuario, string refreshTokenRequest);
 }

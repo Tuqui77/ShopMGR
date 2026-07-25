@@ -33,7 +33,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         return usuario;
     }
 
-    public async Task<string?> IniciarSesion(UsuarioDTO request)
+    public async Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request)
     {
         var usuarioDb = await _contexto.Usuarios.FirstOrDefaultAsync(u =>
             u.UserName == request.UserName
@@ -49,9 +49,46 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         )
             return null;
 
-        var token = CrearToken(usuarioDb);
+        var accessToken = CrearToken(usuarioDb);
+        var refreshToken = usuarioDb.CrearRefreshToken(TimeSpan.FromDays(30));
+        await _contexto.SaveChangesAsync();
 
-        return token;
+        return new RespuestaLogin(accessToken, refreshToken.Token.ToString());
+    }
+
+    public async Task<RespuestaLogin?> Refrescar(int idUsuario, string refreshTokenRequest)
+    {
+        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == idUsuario) 
+            ?? throw new KeyNotFoundException();
+
+        var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Token.ToString() == refreshTokenRequest);
+        var esValido = token != null 
+            && !token.EstaExpirado
+            && !token.EstaRevocado;
+
+        if (esValido)
+        {
+            var nuevoAccessToken = CrearToken(usuario);
+            var nuevoRefreshToken = usuario.CrearRefreshToken(TimeSpan.FromDays(30));
+            usuario.RevocarRefreshToken(token!.Token);
+            await _contexto.SaveChangesAsync();
+
+            return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken.Token.ToString());
+        }
+
+        return null;
+
+    }
+
+    public async Task CerrarSesion(int idUsuario, string refreshTokenRequest)
+    {
+        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == idUsuario) 
+            ?? throw new KeyNotFoundException();
+        var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Token.ToString() == refreshTokenRequest)
+            ?? throw new KeyNotFoundException();
+
+        usuario.RevocarRefreshToken(token.Token);
+        await _contexto.SaveChangesAsync();
     }
 
     private string CrearToken(Usuario usuario)

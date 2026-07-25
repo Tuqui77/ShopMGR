@@ -28,14 +28,35 @@ public class AuthController(IAdministrarAuth administrarAuth) : ControllerBase
     [Route("IniciarSesion")]
     public async Task<IActionResult> IniciarSesion(UsuarioDTO request)
     {
-        var token = await _administrarAuth.IniciarSesion(request);
+        var respuestaLogin = await _administrarAuth.IniciarSesion(request);
 
-        if (token == null)
+        if (respuestaLogin == null)
         {
             return BadRequest("Nombre de usuario o contraseña incorrectos");
         }
 
-        return Ok(token);
+        return Ok(respuestaLogin);
+    }
+
+    [HttpPost]
+    [Route("Refrescar")]
+    public async Task<IActionResult> Refrescar(int idUsuario, string refreshTokenRequest)
+    {
+        var respuestaLogin = await _administrarAuth.Refrescar(idUsuario, refreshTokenRequest);
+
+        if (respuestaLogin == null)
+            return BadRequest("Refresh Token inválido");
+
+        return Ok(respuestaLogin);
+    }
+
+    [HttpPost]
+    [Route("CerrarSesion")]
+    public async Task<IActionResult> CerrarSesion(int idUsuario, string refreshTokenRequest)
+    {
+        await _administrarAuth.CerrarSesion(idUsuario, refreshTokenRequest);
+
+        return Ok("Sesión cerrada correctamente");
     }
 
     [Authorize]
