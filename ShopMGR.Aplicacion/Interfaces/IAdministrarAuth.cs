@@ -7,6 +7,6 @@ public interface IAdministrarAuth
 {
     public Task<Usuario?> RegistrarUsuarioAsync(UsuarioDTO request);
     public Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request);
-    public Task<RespuestaLogin?> Refrescar(int idUsuario, string refreshToken);
-    public Task CerrarSesion(int idUsuario, string refreshTokenRequest);
+    public Task<RespuestaLogin?> Refrescar(string refreshToken);
+    public Task CerrarSesion(string refreshTokenRequest);
 }

@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Org.BouncyCastle.Utilities;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Contexto;
@@ -12,8 +14,7 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios;
 
-public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion)
-    : IAdministrarAuth
+public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion) : IAdministrarAuth
 {
     private readonly ShopMGRDbContexto _contexto = contexto;
     private readonly IConfiguration _configuracion = configuracion;
@@ -35,59 +36,57 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
 
     public async Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request)
     {
-        var usuarioDb = await _contexto.Usuarios.FirstOrDefaultAsync(u =>
-            u.UserName == request.UserName
-        );
+        var usuarioDb = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.UserName == request.UserName);
 
         if (
             usuarioDb == null
-            || new PasswordHasher<Usuario>().VerifyHashedPassword(
-                usuarioDb,
-                usuarioDb.PasswordHash,
-                request.Password
-            ) == PasswordVerificationResult.Failed
+            || new PasswordHasher<Usuario>().VerifyHashedPassword(usuarioDb, usuarioDb.PasswordHash, request.Password)
+                == PasswordVerificationResult.Failed
         )
             return null;
 
         var accessToken = CrearToken(usuarioDb);
-        var refreshToken = usuarioDb.CrearRefreshToken(TimeSpan.FromDays(30));
+        var refreshToken = GenerarRefreshToken();
+        var hash = CalcularHash(refreshToken);
+        usuarioDb.CrearRefreshToken(hash, TimeSpan.FromDays(30));
         await _contexto.SaveChangesAsync();
 
-        return new RespuestaLogin(accessToken, refreshToken.Token.ToString());
+        return new RespuestaLogin(accessToken, refreshToken);
     }
 
-    public async Task<RespuestaLogin?> Refrescar(int idUsuario, string refreshTokenRequest)
+    public async Task<RespuestaLogin?> Refrescar(string refreshTokenRequest)
     {
-        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == idUsuario) 
-            ?? throw new KeyNotFoundException();
+        var hashRequest = CalcularHash(refreshTokenRequest);
+        var token = await _contexto.RefreshTokens.FirstOrDefaultAsync(rt => rt.Hash == hashRequest);
 
-        var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Token.ToString() == refreshTokenRequest);
-        var esValido = token != null 
-            && !token.EstaExpirado
-            && !token.EstaRevocado;
+        var esValido = token != null && !token.EstaExpirado && !token.EstaRevocado;
 
         if (esValido)
         {
+            var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token!.IdUsuario)
+                ?? throw new KeyNotFoundException();
             var nuevoAccessToken = CrearToken(usuario);
-            var nuevoRefreshToken = usuario.CrearRefreshToken(TimeSpan.FromDays(30));
-            usuario.RevocarRefreshToken(token!.Token);
+            var nuevoRefreshToken = GenerarRefreshToken();
+            var hash = CalcularHash(nuevoRefreshToken);
+            usuario.CrearRefreshToken(hash, TimeSpan.FromDays(30));
+            usuario.RevocarRefreshToken(token!.Hash);
             await _contexto.SaveChangesAsync();
 
-            return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken.Token.ToString());
+            return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken);
         }
 
         return null;
-
     }
 
-    public async Task CerrarSesion(int idUsuario, string refreshTokenRequest)
+    public async Task CerrarSesion(string refreshTokenRequest)
     {
-        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == idUsuario) 
+        var hash = CalcularHash(refreshTokenRequest);
+        var token = await _contexto.RefreshTokens.FirstOrDefaultAsync(rt => rt.Hash == hash)
             ?? throw new KeyNotFoundException();
-        var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Token.ToString() == refreshTokenRequest)
+        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token.IdUsuario)
             ?? throw new KeyNotFoundException();
 
-        usuario.RevocarRefreshToken(token.Token);
+        usuario.RevocarRefreshToken(token.Hash);
         await _contexto.SaveChangesAsync();
     }
 
@@ -99,9 +98,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
             new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
         };
 
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuracion.GetSection("Jwt:Token").Value!)
-        );
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuracion.GetSection("Jwt:Token").Value!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
         var tokenDescriptor = new JwtSecurityToken(
@@ -115,5 +112,24 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         );
 
         return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+    }
+
+    private string GenerarRefreshToken()
+    {
+        byte[] bytes = RandomNumberGenerator.GetBytes(64);
+        var refreshToken = Convert.ToBase64String(bytes);
+
+        return refreshToken;
+    }
+
+    private string CalcularHash(string refreshToken)
+    {
+        using (SHA256 sha256 = SHA256.Create())
+        {
+            var bytes = Encoding.UTF8.GetBytes(refreshToken);
+            var hashBytes = sha256.ComputeHash(bytes);
+
+            return BitConverter.ToString(hashBytes).Replace("-", "");
+        }
     }
 }

@@ -42,7 +42,7 @@ public class AuthController(IAdministrarAuth administrarAuth) : ControllerBase
     [Route("Refrescar")]
     public async Task<IActionResult> Refrescar(int idUsuario, string refreshTokenRequest)
     {
-        var respuestaLogin = await _administrarAuth.Refrescar(idUsuario, refreshTokenRequest);
+        var respuestaLogin = await _administrarAuth.Refrescar(refreshTokenRequest);
 
         if (respuestaLogin == null)
             return BadRequest("Refresh Token inválido");
@@ -54,7 +54,7 @@ public class AuthController(IAdministrarAuth administrarAuth) : ControllerBase
     [Route("CerrarSesion")]
     public async Task<IActionResult> CerrarSesion(int idUsuario, string refreshTokenRequest)
     {
-        await _administrarAuth.CerrarSesion(idUsuario, refreshTokenRequest);
+        await _administrarAuth.CerrarSesion(refreshTokenRequest);
 
         return Ok("Sesión cerrada correctamente");
     }

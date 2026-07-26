@@ -9,17 +9,17 @@ public class Usuario
     public string PasswordHash { get; set; } = string.Empty;
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens;
 
-    public RefreshToken CrearRefreshToken(TimeSpan duracion)
+    public RefreshToken CrearRefreshToken(string hash, TimeSpan duracion)
     {
-        var token = new RefreshToken(Id, duracion);
+        var token = new RefreshToken(Id, hash, duracion);
         _refreshTokens.Add(token);
 
         return token;
     }
     
-    public void RevocarRefreshToken(Guid token)
+    public void RevocarRefreshToken(string hash)
     {
-        var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Token == token)
+        var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Hash == hash)
             ?? throw new KeyNotFoundException();
 
         refreshToken.Revocar();
