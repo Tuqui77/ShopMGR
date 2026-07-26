@@ -31,7 +31,7 @@ const queryClient = new QueryClient({
 
 function ProtectedLayout() {
   const [fabOpen, setFabOpen] = useState(false);
-  const { token, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen } = useStore();
+  const { accessToken, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen } = useStore();
   const location = useLocation();
   
   // Body scroll lock when any modal is open (must be before early return for hooks rule)
@@ -57,7 +57,7 @@ function ProtectedLayout() {
   }, [isModalOpen]);
   
   // Redirect to login if not authenticated
-  if (!token) {
+  if (!accessToken) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
@@ -96,12 +96,12 @@ function ProtectedLayout() {
 }
 
 function LoginPage() {
-  const { token } = useStore();
+  const { accessToken } = useStore();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
   
   // If already authenticated, redirect to dashboard
-  if (token) {
+  if (accessToken) {
     return <Navigate to={from} replace />
   }
   

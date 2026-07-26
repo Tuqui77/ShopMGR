@@ -6,7 +6,7 @@ import { authService } from '../services/auth';
 
 export function Login() {
   const navigate = useNavigate();
-  const { setToken } = useStore();
+  const { setTokens } = useStore();
   
   const [isRegistering, setIsRegistering] = useState(false);
   const [userName, setUserName] = useState('');
@@ -43,8 +43,8 @@ export function Login() {
         setIsRegistering(false);
         setPassword('');
       } else {
-        const token = await authService.login({ userName: userName.trim(), password });
-        setToken(token);
+        const { accessToken, refreshToken } = await authService.login({ userName: userName.trim(), password });
+        setTokens(accessToken, refreshToken);
         navigate('/');
       }
     } catch (err: unknown) {

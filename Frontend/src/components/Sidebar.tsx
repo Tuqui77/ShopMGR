@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { Home, Users, Wrench, Clipboard, Settings, LogOut } from 'lucide-react';
 import { useStore } from '../store';
+import { authService } from '../services/auth';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
@@ -18,9 +19,16 @@ function isActivePath(currentPath: string, itemPath: string) {
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useStore();
+  const { logout, refreshToken } = useStore();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (refreshToken) {
+        await authService.cerrarSesion(refreshToken);
+      }
+    } catch {
+      // Ignore errors — always clear local state
+    }
     logout();
     navigate('/login');
   };

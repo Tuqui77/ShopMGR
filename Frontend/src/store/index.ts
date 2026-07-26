@@ -20,8 +20,9 @@ interface AppState {
   presupuestos: Presupuesto[];
   valorHora: number;
   
-  // Auth State (JWT token)
-  token: string | null;
+  // Auth State (JWT tokens)
+  accessToken: string | null;
+  refreshToken: string | null;
   
   // UI State
   showHoursModal: boolean;
@@ -42,7 +43,7 @@ interface AppState {
   datosDuplicarPresupuesto: DatosDuplicarPresupuesto | null;
   
   // Auth Actions
-  setToken: (token: string | null) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   
   // UI Actions
@@ -72,7 +73,8 @@ export const useStore = create<AppState>()(
       valorHora: 0,
       
       // Initial auth state
-      token: null,
+      accessToken: null,
+      refreshToken: null,
       
       // Initial UI state
       showHoursModal: false,
@@ -89,10 +91,10 @@ export const useStore = create<AppState>()(
       datosDuplicarPresupuesto: null,
       
       // Auth Actions
-      setToken: (token) => set({ token }),
+      setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
       
       logout: () => {
-        set({ token: null });
+        set({ accessToken: null, refreshToken: null });
       },
       
       // UI Actions
@@ -166,7 +168,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'shopmgr-storage',
-      partialize: (state) => ({ token: state.token }),
+      partialize: (state) => ({ accessToken: state.accessToken, refreshToken: state.refreshToken }),
     }
   )
 );

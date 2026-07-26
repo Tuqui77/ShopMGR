@@ -2,13 +2,13 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-// Read token from Zustand persist storage (avoids circular dependency with store)
+// Read access token from Zustand persist storage (avoids circular dependency with store)
 function getToken(): string | null {
   try {
     const raw = localStorage.getItem('shopmgr-storage');
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    return parsed?.state?.token ?? null;
+    return parsed?.state?.accessToken ?? null;
   } catch {
     return null;
   }
@@ -43,7 +43,7 @@ apiClient.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
-      // Clear token from persist storage
+      // Clear tokens from persist storage
       localStorage.removeItem('shopmgr-storage');
       // Redirect to login (use replace to avoid back-button loop)
       window.location.replace('/login');

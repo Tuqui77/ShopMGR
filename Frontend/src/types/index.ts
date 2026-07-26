@@ -12,8 +12,10 @@ export interface LoginRequest {
   password: string;
 }
 
-// Backend returns raw JWT string, not JSON
-export type LoginResponse = string;
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+}
 
 // ============================================================================
 // CLIENTE
