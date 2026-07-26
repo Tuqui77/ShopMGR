@@ -53,7 +53,9 @@ export function Login() {
         : null;
       const message = typeof axiosData === 'string'
         ? axiosData
-        : 'Error al conectar con el servidor';
+        : typeof axiosData === 'object' && axiosData !== null && 'error' in axiosData
+          ? String((axiosData as { error: unknown }).error)
+          : 'Error al conectar con el servidor';
       setErrors(prev => ({ ...prev, general: message }));
     } finally {
       setIsLoading(false);
