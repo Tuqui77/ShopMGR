@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { FAB } from './components/FAB';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { HoursModal } from './components/HoursModal';
 import { ClienteForm } from './components/ClienteForm';
 import { PresupuestoForm } from './components/PresupuestoForm';
@@ -111,21 +112,23 @@ function LoginPage() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route element={<ProtectedLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/clientes" element={<Clientes />} />
-            <Route path="/clientes/:id" element={<ClienteDetalle />} />
-            <Route path="/trabajos" element={<Trabajos />} />
-            <Route path="/trabajos/:id" element={<TrabajoDetalle />} />
-            <Route path="/presupuestos" element={<Presupuestos />} />
-            <Route path="/presupuestos/:id" element={<PresupuestoDetalle />} />
-            <Route path="/configuracion" element={<Configuracion />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <ErrorBoundary pageName="Aplicación">
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route element={<ProtectedLayout />}>
+              <Route path="/" element={<ErrorBoundary pageName="Dashboard"><Dashboard /></ErrorBoundary>} />
+              <Route path="/clientes" element={<ErrorBoundary pageName="Clientes"><Clientes /></ErrorBoundary>} />
+              <Route path="/clientes/:id" element={<ErrorBoundary pageName="Detalle de Cliente"><ClienteDetalle /></ErrorBoundary>} />
+              <Route path="/trabajos" element={<ErrorBoundary pageName="Trabajos"><Trabajos /></ErrorBoundary>} />
+              <Route path="/trabajos/:id" element={<ErrorBoundary pageName="Detalle de Trabajo"><TrabajoDetalle /></ErrorBoundary>} />
+              <Route path="/presupuestos" element={<ErrorBoundary pageName="Presupuestos"><Presupuestos /></ErrorBoundary>} />
+              <Route path="/presupuestos/:id" element={<ErrorBoundary pageName="Detalle de Presupuesto"><PresupuestoDetalle /></ErrorBoundary>} />
+              <Route path="/configuracion" element={<ErrorBoundary pageName="Configuración"><Configuracion /></ErrorBoundary>} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ErrorBoundary>
     </QueryClientProvider>
   );
 }
