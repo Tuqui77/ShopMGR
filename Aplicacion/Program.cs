@@ -60,6 +60,18 @@ namespace ShopMGR.WebApi.Aplicacion
             builder.Services.AddRateLimiter(options =>
             {
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.OnRejected = async (context, CancellationToken) =>
+                {
+                    context.HttpContext.Response.ContentType = "application/json";
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(
+                            new
+                            {
+                                error = "Demasiados intentos de inicio de sesión. Inténtelo nuevamente en unos minutos"
+                            },
+                            CancellationToken);
+                };
+
                 options.AddPolicy(
                     "login",
                     HttpContext =>
@@ -68,7 +80,7 @@ namespace ShopMGR.WebApi.Aplicacion
                             factory: _ => new FixedWindowRateLimiterOptions
                             {
                                 PermitLimit = 5,
-                                Window = TimeSpan.FromMinutes(5),
+                                Window = TimeSpan.FromMinutes(1),
                                 QueueLimit = 0,
                             }
                         )
