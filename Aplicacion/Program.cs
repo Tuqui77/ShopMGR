@@ -3,7 +3,9 @@ using System.Configuration;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using AspNetCore.Scalar;
+using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -31,12 +33,13 @@ namespace ShopMGR.WebApi.Aplicacion
                     builder.Configuration.GetConnectionString("ShopMGRDbContexto"),
                     sqlOptions =>
                     {
-                        sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
-                            maxRetryDelay: TimeSpan.FromSeconds(10),
-                            errorNumbersToAdd: null
-                        )
-                        .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        sqlOptions
+                            .EnableRetryOnFailure(
+                                maxRetryCount: 5,
+                                maxRetryDelay: TimeSpan.FromSeconds(10),
+                                errorNumbersToAdd: null
+                            )
+                            .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     }
                 );
             });
@@ -52,6 +55,25 @@ namespace ShopMGR.WebApi.Aplicacion
                         .ReferenceHandler
                         .IgnoreCycles;
                 });
+
+            //Rate limiter
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.AddPolicy(
+                    "login",
+                    HttpContext =>
+                        RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = 5,
+                                Window = TimeSpan.FromMinutes(5),
+                                QueueLimit = 0,
+                            }
+                        )
+                );
+            });
 
             //servicios del contenedor
             builder.Services.AddControllers();
@@ -96,9 +118,7 @@ namespace ShopMGR.WebApi.Aplicacion
                 });
             var app = builder.Build();
 
-            var rutaImagenes = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "imagenes");
+            var rutaImagenes = Path.Combine(Directory.GetCurrentDirectory(), "imagenes");
             Directory.CreateDirectory(rutaImagenes);
 
             app.UseDefaultFiles();
@@ -128,6 +148,7 @@ namespace ShopMGR.WebApi.Aplicacion
 
             // app.UseHttpsRedirection();
 
+            app.UseRateLimiter();
             app.UseAuthorization();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();

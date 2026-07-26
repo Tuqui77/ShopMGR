@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Modelo;
@@ -24,6 +25,7 @@ public class AuthController(IAdministrarAuth administrarAuth) : ControllerBase
         return Ok("Usuario creado con exito");
     }
 
+    [EnableRateLimiting("login")]
     [HttpPost]
     [Route("IniciarSesion")]
     public async Task<IActionResult> IniciarSesion(UsuarioDTO request)
