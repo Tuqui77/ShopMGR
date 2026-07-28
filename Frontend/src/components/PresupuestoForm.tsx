@@ -271,6 +271,7 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
             titulo: titulo.trim(),
             descripcion: descripcion.trim() || null,
             horasEstimadas: parseFloat(horasEstimadas) || 0,
+            idCliente: clienteSeleccionado.id,
             materiales: materiales.length > 0 ? materiales : [],
           },
         });
