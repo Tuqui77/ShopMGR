@@ -10,11 +10,11 @@ services:
     volumes:
       - mssql_data:/var/opt/mssql
 
-  backend:
+  app:
     build: .
-    image: shopmgr-backend:latest
-    expose:
-      - "80"
+    image: shopmgr:latest
+    ports:
+      - "3000:80"
     env_file:
       - environment.env
     volumes:
@@ -33,16 +33,6 @@ services:
       - db
     profiles:
       - tools
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Frontend/Dockerfile
-    image: localhost/shopmgr_frontend:latest
-    ports:
-      - "3000:80"
-    depends_on:
-      - backend
 
 volumes:
   mssql_data:

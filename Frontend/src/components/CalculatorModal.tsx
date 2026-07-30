@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { Check, X } from 'lucide-react';
 import { useCalculator } from '../hooks/useCalculator';
 
@@ -28,38 +28,37 @@ export function CalculatorModal({ position, onResult, onClose }: CalculatorModal
   } = useCalculator();
 
   const modalRef = useRef<HTMLDivElement>(null);
-  const [clampedPosition, setClampedPosition] = useState({ x: 0, y: 0 });
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Determinar si es mobile y calcular posición al montar
-  useEffect(() => {
+  // Derivar isMobile y clampedPosition desde props y viewport (sin setState en effect)
+  const { isMobile, clampedPosition } = useMemo(() => {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const mobile = vw < 640;
-    setIsMobile(mobile);
 
-    if (!mobile) {
-      let x = position.x;
-      let y = position.y;
-
-      // Clamp horizontal
-      if (x + MODAL_WIDTH > vw - PADDING) {
-        x = vw - MODAL_WIDTH - PADDING;
-      }
-      if (x < PADDING) {
-        x = PADDING;
-      }
-
-      // Clamp vertical
-      if (y + MODAL_HEIGHT_ESTIMATE > vh - PADDING) {
-        y = vh - MODAL_HEIGHT_ESTIMATE - PADDING;
-      }
-      if (y < PADDING) {
-        y = PADDING;
-      }
-
-      setClampedPosition({ x, y });
+    if (mobile) {
+      return { isMobile: true, clampedPosition: { x: 0, y: 0 } };
     }
+
+    let x = position.x;
+    let y = position.y;
+
+    // Clamp horizontal
+    if (x + MODAL_WIDTH > vw - PADDING) {
+      x = vw - MODAL_WIDTH - PADDING;
+    }
+    if (x < PADDING) {
+      x = PADDING;
+    }
+
+    // Clamp vertical
+    if (y + MODAL_HEIGHT_ESTIMATE > vh - PADDING) {
+      y = vh - MODAL_HEIGHT_ESTIMATE - PADDING;
+    }
+    if (y < PADDING) {
+      y = PADDING;
+    }
+
+    return { isMobile: false, clampedPosition: { x, y } };
   }, [position.x, position.y]);
 
   // Cerrar con Escape
@@ -132,7 +131,7 @@ export function CalculatorModal({ position, onResult, onClose }: CalculatorModal
 
   // Botón base
   const baseBtn =
-    "flex items-center justify-center rounded-[var(--radius-md)] font-medium text-sm transition-all duration-100 select-none active:scale-95";
+    "flex items-center justify-center rounded-[var(--radius-md)] font-medium text-sm transition-transform duration-100 select-none active:scale-95";
 
   const numberBtn = `${baseBtn} bg-[var(--color-card)] hover:bg-white/10 active:bg-white/15 text-[var(--color-text)] border border-white/10`;
 
@@ -225,7 +224,7 @@ export function CalculatorModal({ position, onResult, onClose }: CalculatorModal
         {/* Apply button */}
         <button
           onClick={handleApply}
-          className="flex items-center justify-center gap-1.5 h-[44px] rounded-[var(--radius-md)] font-medium text-sm transition-all duration-100 active:scale-95 mt-0.5"
+          className="flex items-center justify-center gap-1.5 h-[44px] rounded-[var(--radius-md)] font-medium text-sm transition-transform duration-100 active:scale-95 mt-0.5"
           style={{
             backgroundColor: 'var(--color-accent)',
             color: 'white',

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useTrabajos } from '../hooks/useTrabajos';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useTrabajos, useTrabajosPorCliente } from '../hooks/useTrabajos';
+import { useCliente } from '../hooks/useClientes';
 import { TrabajoCard } from '../components/TrabajoCard';
 import clsx from 'clsx';
 import { Wrench, Loader2, ArrowLeft } from 'lucide-react';
@@ -8,19 +9,21 @@ import { Wrench, Loader2, ArrowLeft } from 'lucide-react';
 type FilterType = 'todos' | 'activos' | 'pendientes' | 'terminados';
 
 export function Trabajos() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const clienteIdParam = searchParams.get('cliente');
   const clienteId = clienteIdParam ? parseInt(clienteIdParam, 10) : undefined;
   
-  const { data: trabajos = [], isLoading, error } = useTrabajos();
+  const allTrabajosQuery = useTrabajos();
+  const clientTrabajosQuery = useTrabajosPorCliente(clienteId);
+  const { data: clienteData } = useCliente(clienteId);
+  const trabajos = clienteId !== undefined ? clientTrabajosQuery.data ?? [] : allTrabajosQuery.data ?? [];
+  const isLoading = clienteId !== undefined ? clientTrabajosQuery.isLoading : allTrabajosQuery.isLoading;
+  const error = clienteId !== undefined ? clientTrabajosQuery.error : allTrabajosQuery.error;
+  
   const [filter, setFilter] = useState<FilterType>('todos');
   
-  // Filter by client if provided
+  // Apply status filter only (backend already filters by client when clienteId is set)
   const filtered = trabajos.filter(t => {
-    // Filter by client first
-    if (clienteId !== undefined && t.clienteId !== clienteId) return false;
-    
-    // Then apply status filter
     if (filter === 'activos') return t.estado === 'Iniciado';
     if (filter === 'pendientes') return t.estado === 'Pendiente';
     if (filter === 'terminados') return t.estado === 'Terminado';
@@ -28,25 +31,10 @@ export function Trabajos() {
   });
   
   const counts = {
-    todos: clienteId !== undefined 
-      ? filtered.length 
-      : trabajos.length,
-    activos: trabajos.filter(t => 
-      (clienteId === undefined || t.clienteId === clienteId) && 
-      t.estado === 'Iniciado'
-    ).length,
-    pendientes: trabajos.filter(t => 
-      (clienteId === undefined || t.clienteId === clienteId) && 
-      t.estado === 'Pendiente'
-    ).length,
-    terminados: trabajos.filter(t => 
-      (clienteId === undefined || t.clienteId === clienteId) && 
-      t.estado === 'Terminado'
-    ).length,
-  };
-  
-  const handleClearClientFilter = () => {
-    setSearchParams({});
+    todos: trabajos.length,
+    activos: trabajos.filter(t => t.estado === 'Iniciado').length,
+    pendientes: trabajos.filter(t => t.estado === 'Pendiente').length,
+    terminados: trabajos.filter(t => t.estado === 'Terminado').length,
   };
   
   const activeTrabajos = filtered.filter(t => t.estado === 'Iniciado');
@@ -81,19 +69,18 @@ export function Trabajos() {
     <div className="min-h-screen pb-24 lg:pb-8">
       {/* Header */}
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
-        {/* Client filter indicator */}
-        {clienteId !== undefined && (
-          <button
-            onClick={handleClearClientFilter}
-            className="flex items-center gap-1 text-sm mb-3 hover:opacity-80 transition-opacity"
-            style={{ color: 'var(--color-accent)' }}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Ver todos los trabajos
-          </button>
-        )}
-        
-        <h1 className="text-xl font-bold font-display mb-4">Trabajos</h1>
+        <div className="flex items-center gap-3 mb-4">
+          {clienteId !== undefined ? (
+            <Link to={`/clientes/${clienteId}`} className="p-2 -ml-2 rounded-lg hover:bg-[var(--color-surface)] transition-colors">
+              <ArrowLeft className="w-5 h-5" style={{ color: 'var(--color-text)' }} />
+            </Link>
+          ) : (
+            <div className="p-2 -ml-2" />
+          )}
+          <h1 className="text-xl font-bold font-display flex-1">
+            {clienteId !== undefined && clienteData ? `Trabajos · ${clienteData.nombreCompleto}` : 'Trabajos'}
+          </h1>
+        </div>
         
         {/* Filters */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -121,13 +108,14 @@ export function Trabajos() {
             {activeTrabajos.length > 0 && (
               <>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>EN CURSO</h2>
+                  <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>En curso</h2>
                 </div>
                 <div className="space-y-3">
                   {activeTrabajos.map(trabajo => (
                     <TrabajoCard 
                       key={trabajo.id} 
                       trabajo={trabajo}
+                      hideClientName={clienteId !== undefined}
                     />
                   ))}
                 </div>
@@ -137,13 +125,14 @@ export function Trabajos() {
             {pendingTrabajos.length > 0 && (
               <>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>PENDIENTES</h2>
+                  <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Pendientes</h2>
                 </div>
                 <div className="space-y-3">
                   {pendingTrabajos.map(trabajo => (
                     <TrabajoCard 
                       key={trabajo.id} 
                       trabajo={trabajo}
+                      hideClientName={clienteId !== undefined}
                     />
                   ))}
                 </div>
@@ -153,13 +142,14 @@ export function Trabajos() {
             {completedTrabajos.length > 0 && (
               <>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>TERMINADOS</h2>
+                  <h2 className="text-sm font-medium" style={{ color: 'var(--color-muted)' }}>Terminados</h2>
                 </div>
                 <div className="space-y-3">
                   {completedTrabajos.map(trabajo => (
                     <TrabajoCard 
                       key={trabajo.id} 
                       trabajo={trabajo}
+                      hideClientName={clienteId !== undefined}
                     />
                   ))}
                 </div>
@@ -173,7 +163,7 @@ export function Trabajos() {
               </div>
             )}
             
-            {trabajos.length === 0 && (
+            {trabajos.length === 0 && clienteId === undefined && (
               <div className="text-center py-12">
                 <Wrench className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
                 <p style={{ color: 'var(--color-muted)' }}>No hay trabajos</p>
@@ -189,6 +179,7 @@ export function Trabajos() {
               <TrabajoCard 
                 key={trabajo.id} 
                 trabajo={trabajo}
+                hideClientName={clienteId !== undefined}
               />
             ))}
             

@@ -292,6 +292,9 @@ namespace ShopMGR.Contexto.Migrations
                     b.Property<DateOnly>("Fecha")
                         .HasColumnType("date");
 
+                    b.Property<DateOnly?>("FechaAceptado")
+                        .HasColumnType("date");
+
                     b.Property<double>("HorasEstimadas")
                         .HasColumnType("float");
 
@@ -356,8 +359,8 @@ namespace ShopMGR.Contexto.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Descripcion")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Estado")
                         .IsRequired()
@@ -369,6 +372,9 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.Property<DateOnly?>("FechaInicio")
                         .HasColumnType("date");
+
+                    b.Property<double?>("HorasEstimadas")
+                        .HasColumnType("float");
 
                     b.Property<int>("IdCliente")
                         .HasColumnType("int");

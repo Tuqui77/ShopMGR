@@ -4,7 +4,7 @@ import { useTrabajos, useAgregarHoras } from '../hooks/useTrabajos';
 import { useCostoHora } from '../hooks/useCostoHora';
 import clsx from 'clsx';
 import type { Trabajo } from '../types';
-import { X, ArrowLeft, Search, Star, CheckCircle, Loader2 } from 'lucide-react';
+import { X, ArrowLeft, Search, CheckCircle, Loader2 } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
 
 export function HoursModal() {
@@ -31,12 +31,14 @@ export function HoursModal() {
   const [hours, setHours] = useState(0.5);
   const [description, setDescription] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   const handleClose = useCallback(() => {
     setShowHoursModal(false);
     setHours(0.5);
     setDescription('');
     setShowSuccess(false);
+    setSelectedDate(new Date().toISOString().split('T')[0]);
     // Limpiar selectedTrabajo para que la próxima apertura sea limpia
     setSelectedTrabajo(null);
   }, [setShowHoursModal, setHours, setDescription, setShowSuccess, setSelectedTrabajo]);
@@ -65,7 +67,7 @@ export function HoursModal() {
           idTrabajo: selectedTrabajo.id,
           horas: hours,
           descripcion: description,
-          fecha: new Date().toISOString().split('T')[0],
+          fecha: selectedDate,
         });
         setShowSuccess(true);
         setTimeout(() => {
@@ -108,6 +110,7 @@ export function HoursModal() {
               hours={hours} 
               valor={costoHora ? hours * costoHora : undefined}
               trabajo={selectedTrabajo!}
+              fecha={selectedDate}
               totalAcumulado={selectedTrabajo!.horasRegistradas + hours}
               totalEstimado={selectedTrabajo!.horasEstimadas || 0}
             />
@@ -123,11 +126,13 @@ export function HoursModal() {
               trabajo={selectedTrabajo!}
               hours={hours}
               description={description}
+              selectedDate={selectedDate}
               valorHora={costoHora}
               isLoading={costoHoraLoading}
               isSubmitting={agregarHorasMutation.isPending}
               onHoursChange={setHours}
               onDescriptionChange={setDescription}
+              onDateChange={setSelectedDate}
               onSubmit={handleAddHours}
             />
           )}
@@ -168,29 +173,12 @@ function SelectTrabajoView({
         />
       </div>
       
-      {lastTrabajo && (
-        <button
-          onClick={() => onSelect(lastTrabajo)}
-          className="w-full card mb-3"
-          style={{ borderColor: 'var(--color-accent)', backgroundColor: 'color-mix(in srgb, var(--color-accent) 5%, transparent)' }}
-        >
-          <div className="flex items-center gap-3">
-            <Star className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
-            <div className="flex-1 text-left">
-              <p className="font-medium" style={{ color: 'var(--color-text)' }}>{lastTrabajo.titulo}</p>
-              <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{lastTrabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
-            </div>
-            <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Usado recientemente</span>
-          </div>
-        </button>
-      )}
-      
       <div className="space-y-2">
         {filtered.map(trabajo => (
           <button
             key={trabajo.id}
             onClick={() => onSelect(trabajo)}
-            className="w-full p-3 rounded-lg text-left transition-colors"
+            className="w-full p-3 rounded-lg text-left transition-colors duration-200 hover:bg-[var(--color-hover)]"
             style={{ backgroundColor: 'var(--color-surface)' }}
           >
             <div className="flex items-center gap-3">
@@ -198,7 +186,7 @@ function SelectTrabajoView({
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
                 <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  {trabajo.cliente?.nombreCompleto || 'Sin cliente'} · {trabajo.horasRegistradas}h registradas
+                  {trabajo.cliente?.nombreCompleto || 'Sin cliente'}
                 </p>
               </div>
             </div>
@@ -235,35 +223,62 @@ function HoursInputView({
   trabajo,
   hours,
   description,
+  selectedDate,
   valorHora,
   isLoading,
   isSubmitting,
   onHoursChange,
   onDescriptionChange,
+  onDateChange,
   onSubmit,
 }: {
   trabajo: Trabajo;
   hours: number;
   description: string;
+  selectedDate: string;
   valorHora: number | undefined;
   isLoading: boolean;
   isSubmitting: boolean;
   onHoursChange: (h: number) => void;
   onDescriptionChange: (d: string) => void;
+  onDateChange: (d: string) => void;
   onSubmit: () => void;
 }) {
   const costoNoConfigurado = !isLoading && (valorHora === undefined || valorHora === 0);
   
   const presetValues = [0.5, 1, 2, 4, 8];
   
+  // Local string state for the input to allow clearing and typing partial numbers.
+  // Syncs with the canonical `hours` prop on init, preset clicks, and blur.
+  const [inputValue, setInputValue] = useState(() => hours.toString());
+  
   const handlePresetClick = (value: number) => {
-    onHoursChange(Math.min(value, 24));
+    const clamped = Math.min(value, 24);
+    setInputValue(clamped.toString());
+    onHoursChange(clamped);
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    if (!isNaN(value)) {
-      onHoursChange(Math.min(Math.max(value, 0), 24));
+    const raw = e.target.value;
+    setInputValue(raw);
+    
+    if (raw === '') return;
+    
+    const parsed = parseFloat(raw);
+    if (!isNaN(parsed) && parsed >= 0) {
+      onHoursChange(Math.min(parsed, 24));
+    }
+  };
+  
+  const handleBlur = () => {
+    const parsed = parseFloat(inputValue);
+    if (isNaN(parsed) || parsed < 0) {
+      // Invalid or empty → reset to current canonical hours
+      setInputValue(hours.toString());
+    } else {
+      const clamped = Math.min(parsed, 24);
+      setInputValue(clamped.toString());
+      onHoursChange(clamped);
     }
   };
   
@@ -275,14 +290,15 @@ function HoursInputView({
       </div>
       
       <div className="mb-6">
-        <label className="text-sm mb-3 block" style={{ color: 'var(--color-muted)' }}>HORAS TRABAJADAS</label>
+        <label className="text-sm mb-3 block" style={{ color: 'var(--color-muted)' }}>Horas trabajadas</label>
         
         {/* Big number input – the hero */}
         <div className="text-center mb-3">
           <input
             type="number"
-            value={hours}
+            value={inputValue}
             onChange={handleInputChange}
+            onBlur={handleBlur}
             min="0"
             max="24"
             step="0.25"
@@ -303,10 +319,8 @@ function HoursInputView({
                 key={value}
                 onClick={() => handlePresetClick(value)}
                 className={clsx(
-                  'px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer',
-                  isActive
-                    ? 'text-white'
-                    : 'hover:text-white'
+                  'px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer',
+                  isActive && 'text-white'
                 )}
                 style={{
                   backgroundColor: isActive ? 'var(--color-accent)' : 'var(--color-surface)',
@@ -336,7 +350,18 @@ function HoursInputView({
       </div>
       
       <div className="mb-6">
-        <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>DESCRIPCIÓN (opcional)</label>
+        <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>Fecha</label>
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => onDateChange(e.target.value)}
+          max={new Date().toISOString().split('T')[0]}
+          className="input w-full"
+        />
+      </div>
+
+      <div className="mb-6">
+        <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>Descripción (opcional)</label>
         <textarea
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
@@ -368,12 +393,14 @@ function SuccessView({
   hours, 
   valor, 
   trabajo, 
+  fecha, 
   totalAcumulado, 
   totalEstimado 
 }: { 
   hours: number;
   valor: number | undefined;
   trabajo: Trabajo;
+  fecha: string;
   totalAcumulado: number;
   totalEstimado: number;
 }) {
@@ -385,7 +412,7 @@ function SuccessView({
         <CheckCircle className="w-10 h-10" style={{ color: 'var(--color-success)' }} />
       </div>
       
-      <p className="text-sm mb-1" style={{ color: 'var(--color-muted)' }}>HORAS REGISTRADAS</p>
+      <p className="text-sm mb-1" style={{ color: 'var(--color-muted)' }}>Horas registradas</p>
       <p className="text-4xl font-bold font-mono mb-1" style={{ color: 'var(--color-text)' }}>{hours}h</p>
       {valor !== undefined ? (
         <p className="text-xl font-mono" style={{ color: 'var(--color-success)' }}>{formatCurrency(valor)}</p>
@@ -397,7 +424,7 @@ function SuccessView({
         <p className="font-medium" style={{ color: 'var(--color-text)' }}>{trabajo.titulo}</p>
         <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{trabajo.cliente?.nombreCompleto || 'Sin cliente'}</p>
         <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
-          {new Date().toLocaleDateString('es-AR')}
+          {new Date(fecha + 'T12:00:00').toLocaleDateString('es-AR')}
         </p>
       </div>
       

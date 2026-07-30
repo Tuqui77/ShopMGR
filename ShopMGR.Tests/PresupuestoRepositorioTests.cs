@@ -32,13 +32,7 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto
-        {
-            Titulo = "Reparación",
-            IdCliente = cliente.Id,
-            Fecha = DateOnly.FromDateTime(DateTime.Now),
-            Estado = EstadoPresupuesto.Pendiente
-        };
+        var presupuesto = new Presupuesto("Reparación", null, [], 0, cliente.Id);
 
         // Act
         var resultado = await repositorio.CrearAsync(presupuesto);
@@ -63,18 +57,15 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto
-        {
-            Titulo = "Reparación",
-            IdCliente = cliente.Id,
-            Fecha = DateOnly.FromDateTime(DateTime.Now),
-            Estado = EstadoPresupuesto.Pendiente,
-            Materiales = new List<Material>
-            {
+        var presupuesto = new Presupuesto(
+            "Reparación", null,
+            [
                 new Material { Descripcion = "Tornillos", Precio = 100, Cantidad = 5 },
                 new Material { Descripcion = "Clavos", Precio = 50, Cantidad = 10 }
-            }
-        };
+            ],
+            0,
+            cliente.Id
+        );
 
         // Act
         var resultado = await repositorio.CrearAsync(presupuesto);
@@ -102,13 +93,7 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto
-        {
-            Titulo = "Reparación",
-            IdCliente = cliente.Id,
-            Fecha = DateOnly.FromDateTime(DateTime.Now),
-            Estado = EstadoPresupuesto.Pendiente
-        };
+        var presupuesto = new Presupuesto("Reparación", null, [], 0, cliente.Id);
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 
@@ -147,17 +132,12 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto
-        {
-            Titulo = "Reparación",
-            IdCliente = cliente.Id,
-            Fecha = DateOnly.FromDateTime(DateTime.Now),
-            Estado = EstadoPresupuesto.Pendiente,
-            Materiales = new List<Material>
-            {
-                new Material { Descripcion = "Tornillos", Precio = 100, Cantidad = 5 }
-            }
-        };
+        var presupuesto = new Presupuesto(
+            "Reparación", null,
+            [new Material { Descripcion = "Tornillos", Precio = 100, Cantidad = 5 }],
+            0,
+            cliente.Id
+        );
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 
@@ -187,9 +167,9 @@ public class PresupuestoRepositorioTests
         await contexto.SaveChangesAsync();
 
         await contexto.Presupuestos.AddRangeAsync(
-            new Presupuesto { Titulo = "Presupuesto 1", IdCliente = cliente1.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Pendiente },
-            new Presupuesto { Titulo = "Presupuesto 2", IdCliente = cliente1.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Pendiente },
-            new Presupuesto { Titulo = "Presupuesto 3", IdCliente = cliente2.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Pendiente }
+            new Presupuesto("Presupuesto 1", null, [], 0, cliente1.Id),
+            new Presupuesto("Presupuesto 2", null, [], 0, cliente1.Id),
+            new Presupuesto("Presupuesto 3", null, [], 0, cliente2.Id)
         );
         await contexto.SaveChangesAsync();
 
@@ -215,11 +195,15 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        await contexto.Presupuestos.AddRangeAsync(
-            new Presupuesto { Titulo = "Presupuesto 1", IdCliente = cliente.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Pendiente },
-            new Presupuesto { Titulo = "Presupuesto 2", IdCliente = cliente.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Aceptado },
-            new Presupuesto { Titulo = "Presupuesto 3", IdCliente = cliente.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Aceptado }
-        );
+        var pendiente = new Presupuesto("Presupuesto 1", null, [], 0, cliente.Id);
+
+        var aceptado1 = new Presupuesto("Presupuesto 2", null, [], 0, cliente.Id);
+        aceptado1.AceptarPresupuesto();
+
+        var aceptado2 = new Presupuesto("Presupuesto 3", null, [], 0, cliente.Id);
+        aceptado2.AceptarPresupuesto();
+
+        await contexto.Presupuestos.AddRangeAsync(pendiente, aceptado1, aceptado2);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -245,10 +229,12 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        await contexto.Presupuestos.AddRangeAsync(
-            new Presupuesto { Titulo = "Presupuesto 1", IdCliente = cliente.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Pendiente },
-            new Presupuesto { Titulo = "Presupuesto 2", IdCliente = cliente.Id, Fecha = DateOnly.FromDateTime(DateTime.Now), Estado = EstadoPresupuesto.Aceptado }
-        );
+        var p1 = new Presupuesto("Presupuesto 1", null, [], 0, cliente.Id);
+
+        var p2 = new Presupuesto("Presupuesto 2", null, [], 0, cliente.Id);
+        p2.AceptarPresupuesto();
+
+        await contexto.Presupuestos.AddRangeAsync(p1, p2);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -273,19 +259,13 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto
-        {
-            Titulo = "Reparación",
-            IdCliente = cliente.Id,
-            Fecha = DateOnly.FromDateTime(DateTime.Now),
-            Estado = EstadoPresupuesto.Pendiente,
-            Materiales = new List<Material>()
-        };
+        var presupuesto = new Presupuesto("Reparación", null, [], 0, cliente.Id);
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 
-        presupuesto.Titulo = "Título Actualizado";
-        presupuesto.Estado = EstadoPresupuesto.Aceptado;
+        // Usar métodos de dominio en lugar de asignación directa
+        presupuesto.Editar(cliente.Id, "Título Actualizado", "", 0, [], 0);
+        presupuesto.AceptarPresupuesto();
 
         // Act
         await repositorio.ActualizarAsync(presupuesto);
@@ -312,13 +292,7 @@ public class PresupuestoRepositorioTests
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto
-        {
-            Titulo = "Para Eliminar",
-            IdCliente = cliente.Id,
-            Fecha = DateOnly.FromDateTime(DateTime.Now),
-            Estado = EstadoPresupuesto.Pendiente
-        };
+        var presupuesto = new Presupuesto("Para Eliminar", null, [], 0, cliente.Id);
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 

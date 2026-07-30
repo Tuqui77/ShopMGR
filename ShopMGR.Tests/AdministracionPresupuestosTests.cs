@@ -1,4 +1,6 @@
+using System.Reflection;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
@@ -11,18 +13,65 @@ using Xunit;
 
 namespace ShopMGR.Tests;
 
+/// <summary>
+/// Stub mapper para MaterialDTO -> Material usado en los tests
+/// </summary>
+public class MaterialDTOtoMaterialMapper : IMapper<MaterialDTO, Material>
+{
+    public Material Map(MaterialDTO origen) => new()
+    {
+        Descripcion = origen.Descripcion,
+        Cantidad = origen.Cantidad,
+        Precio = origen.Precio,
+    };
+
+    public IEnumerable<Material> Map(IEnumerable<MaterialDTO> origen) =>
+        origen.Select(Map);
+}
+
 public class AdministracionPresupuestosTests
 {
     private readonly Mock<IRepositorioConValorHora> _presupuestoRepositorioMock;
+    private readonly Mock<IAdministrarTrabajos> _administrarTrabajosMock;
     private readonly AdministracionPresupuestos _servicio;
 
     public AdministracionPresupuestosTests()
     {
         _presupuestoRepositorioMock = new Mock<IRepositorioConValorHora>();
+        _administrarTrabajosMock = new Mock<IAdministrarTrabajos>();
 
-        // MapperRegistry no puede ser mockeado - pasamos null!
-        // Los métodos testados no usan el mapper
-        _servicio = new AdministracionPresupuestos(_presupuestoRepositorioMock.Object, null!);
+        // Configurar ServiceProvider con los mappers necesarios
+        var services = new ServiceCollection();
+        services.AddSingleton<IMapper<MaterialDTO, Material>, MaterialDTOtoMaterialMapper>();
+        var serviceProvider = services.BuildServiceProvider();
+        var mapperRegistry = new MapperRegistry(serviceProvider);
+
+        _servicio = new AdministracionPresupuestos(_presupuestoRepositorioMock.Object, mapperRegistry, _administrarTrabajosMock.Object);
+    }
+
+    /// <summary>
+    /// Helper para crear Presupuesto con Id y Cliente (setters privados, necesario para mocks)
+    /// </summary>
+    private static Presupuesto CrearPresupuestoConId(int id, string titulo, int idCliente = 0, EstadoPresupuesto? estado = null, Cliente? cliente = null, List<Material>? materiales = null)
+    {
+        var p = new Presupuesto(titulo, null, materiales ?? [], 0, idCliente);
+        SetPrivateProperty(p, nameof(Presupuesto.Id), id);
+
+        if (cliente != null)
+            SetPrivateProperty(p, nameof(Presupuesto.Cliente), cliente);
+
+        if (estado == EstadoPresupuesto.Aceptado)
+            p.AceptarPresupuesto();
+        else if (estado == EstadoPresupuesto.Rechazado)
+            p.RechazarPresupuesto();
+
+        return p;
+    }
+
+    private static void SetPrivateProperty<T, TValue>(T obj, string propertyName, TValue value)
+    {
+        typeof(T).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)!
+            .SetValue(obj, value);
     }
 
     #region ObtenerPorIdAsync
@@ -31,12 +80,7 @@ public class AdministracionPresupuestosTests
     public async Task ObtenerPorIdAsync_DeberiaRetornarPresupuestoCuandoExiste()
     {
         // Arrange
-        var presupuestoEsperado = new Presupuesto
-        {
-            Id = 1,
-            Titulo = "Presupuesto de reparación",
-            Estado = EstadoPresupuesto.Pendiente,
-        };
+        var presupuestoEsperado = CrearPresupuestoConId(1, "Presupuesto de reparación");
 
         _presupuestoRepositorioMock
             .Setup(x => x.ObtenerPorIdAsync(1))
@@ -59,21 +103,11 @@ public class AdministracionPresupuestosTests
     public async Task ObtenerDetallePorIdAsync_DeberiaRetornarPresupuestoCompleto()
     {
         // Arrange
-        var presupuestoDetalle = new Presupuesto
-        {
-            Id = 1,
-            Titulo = "Presupuesto detallado",
-            Cliente = new Cliente { Id = 5, NombreCompleto = "Cliente X" },
-            Materiales =
-            [
-                new Material
-                {
-                    Descripcion = "Aceite",
-                    Cantidad = 2,
-                    Precio = 50,
-                },
-            ],
-        };
+        var presupuestoDetalle = CrearPresupuestoConId(
+            1, "Presupuesto detallado", idCliente: 5,
+            cliente: new Cliente { Id = 5, NombreCompleto = "Cliente X" },
+            materiales: [new Material { Descripcion = "Aceite", Cantidad = 2, Precio = 50 }]
+        );
 
         _presupuestoRepositorioMock
             .Setup(x => x.ObtenerDetallePorIdAsync(1))
@@ -98,18 +132,8 @@ public class AdministracionPresupuestosTests
         // Arrange
         var presupuestosCliente = new List<Presupuesto>
         {
-            new()
-            {
-                Id = 1,
-                IdCliente = 5,
-                Titulo = "Presupuesto 1 Cliente 5",
-            },
-            new()
-            {
-                Id = 2,
-                IdCliente = 5,
-                Titulo = "Presupuesto 2 Cliente 5",
-            },
+            CrearPresupuestoConId(1, "Presupuesto 1 Cliente 5", idCliente: 5),
+            CrearPresupuestoConId(2, "Presupuesto 2 Cliente 5", idCliente: 5),
         };
 
         _presupuestoRepositorioMock
@@ -135,18 +159,8 @@ public class AdministracionPresupuestosTests
         // Arrange
         var presupuestosAprobados = new List<Presupuesto>
         {
-            new()
-            {
-                Id = 1,
-                Titulo = "Presupuesto Aprobado 1",
-                Estado = EstadoPresupuesto.Aceptado,
-            },
-            new()
-            {
-                Id = 2,
-                Titulo = "Presupuesto Aprobado 2",
-                Estado = EstadoPresupuesto.Aceptado,
-            },
+            CrearPresupuestoConId(1, "Presupuesto Aprobado 1", estado: EstadoPresupuesto.Aceptado),
+            CrearPresupuestoConId(2, "Presupuesto Aprobado 2", estado: EstadoPresupuesto.Aceptado),
         };
 
         _presupuestoRepositorioMock
@@ -172,9 +186,9 @@ public class AdministracionPresupuestosTests
         // Arrange
         var todosPresupuestos = new List<Presupuesto>
         {
-            new() { Id = 1, Titulo = "Presupuesto 1", Cliente = new Cliente { Id = 1, NombreCompleto = "Cliente 1" } },
-            new() { Id = 2, Titulo = "Presupuesto 2", Cliente = new Cliente { Id = 2, NombreCompleto = "Cliente 2" } },
-            new() { Id = 3, Titulo = "Presupuesto 3", Cliente = new Cliente { Id = 3, NombreCompleto = "Cliente 3" } },
+            CrearPresupuestoConId(1, "Presupuesto 1", cliente: new Cliente { Id = 1, NombreCompleto = "Cliente 1" }),
+            CrearPresupuestoConId(2, "Presupuesto 2", cliente: new Cliente { Id = 2, NombreCompleto = "Cliente 2" }),
+            CrearPresupuestoConId(3, "Presupuesto 3", cliente: new Cliente { Id = 3, NombreCompleto = "Cliente 3" }),
         };
 
         _presupuestoRepositorioMock
@@ -199,24 +213,22 @@ public class AdministracionPresupuestosTests
         // Arrange
         var presupuestoModificado = new ModificarPresupuesto
         {
+            IdCliente = 5,
             Titulo = "Título Modificado",
-            Estado = EstadoPresupuesto.Aceptado,
+            Descripcion = "",
             HorasEstimadas = 15,
+            Materiales = [],
         };
 
-        var presupuestoExistente = new Presupuesto
-        {
-            Id = 1,
-            Titulo = "Título Original",
-            Estado = EstadoPresupuesto.Pendiente,
-            HorasEstimadas = 10,
-            IdCliente = 5,
-            Materiales = new List<Material>(),
-        };
+        var presupuestoExistente = CrearPresupuestoConId(1, "Título Original", idCliente: 5);
 
         _presupuestoRepositorioMock
             .Setup(x => x.ObtenerDetallePorIdAsync(1))
             .ReturnsAsync(presupuestoExistente);
+
+        _presupuestoRepositorioMock
+            .Setup(x => x.ObtenerCostoHoraDeTrabajo())
+            .ReturnsAsync(0m);
 
         _presupuestoRepositorioMock
             .Setup(x => x.ActualizarAsync(It.IsAny<Presupuesto>()))
@@ -231,7 +243,7 @@ public class AdministracionPresupuestosTests
             x =>
                 x.ActualizarAsync(
                     It.Is<Presupuesto>(p =>
-                        p.Titulo == "Título Modificado" && p.Estado == EstadoPresupuesto.Aceptado
+                        p.Titulo == "Título Modificado"
                     )
                 ),
             Times.Once

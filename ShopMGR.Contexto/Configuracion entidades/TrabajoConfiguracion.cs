@@ -25,7 +25,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
 
             builder.Property(t => t.Descripcion)
                 .IsRequired(false)
-                .HasMaxLength(100);
+                .HasMaxLength(500);
 
             builder.Property(t => t.Estado)
                 .IsRequired(true)
@@ -43,6 +43,9 @@ namespace ShopMGR.Contexto.Configuracion_entidades
             builder.Property(t => t.TotalLabor)
                 .IsRequired(false)
                 .HasColumnType("decimal(18,2)");
+
+            builder.Property(t => t.HorasEstimadas)
+                .IsRequired(false);
 
             //Relaciones
             builder.HasOne(t => t.Cliente)

@@ -25,14 +25,14 @@ public class TrabajoDTOMapper : IMapper<TrabajoDTO, Trabajo>
 {
     public Trabajo Map(TrabajoDTO trabajoDTO)
     {
-        return new Trabajo
-        {
-            Titulo = trabajoDTO.Titulo,
-            Descripcion = trabajoDTO.Descripcion,
-            IdCliente = trabajoDTO.IdCliente,
-            IdPresupuesto = trabajoDTO.IdPresupuesto,
-            Estado = trabajoDTO.Estado ?? EstadoTrabajo.Pendiente
-        };
+        return new Trabajo(
+            trabajoDTO.Titulo,
+            trabajoDTO.Descripcion,
+            trabajoDTO.IdCliente,
+            trabajoDTO.Estado,
+            trabajoDTO.IdPresupuesto,
+            trabajoDTO.HorasEstimadas,
+            trabajoDTO.TotalLabor
+        );
     }
 }
-

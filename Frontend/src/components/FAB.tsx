@@ -37,27 +37,27 @@ export function FAB({ isOpen, onToggle, onAction }: Props) {
         )}
       >
         <MenuButton 
+          label="Crear Trabajo" 
+          icon={Wrench} 
+          onClick={() => onAction('trabajo')}
+        />
+        <MenuButton 
+          label="Crear Cliente" 
+          icon={User} 
+          onClick={() => onAction('cliente')}
+        />
+        <MenuButton 
+          label="Crear Presupuesto" 
+          icon={Clipboard} 
+          onClick={() => onAction('presupuesto')}
+        />
+        <MenuButton 
           label="Registrar Horas" 
           icon={Clock} 
           onClick={() => onAction('hours')}
         />
         <MenuButton 
-          label="Trabajo" 
-          icon={Wrench} 
-          onClick={() => onAction('trabajo')}
-        />
-        <MenuButton 
-          label="Cliente" 
-          icon={User} 
-          onClick={() => onAction('cliente')}
-        />
-        <MenuButton 
-          label="Presupuesto" 
-          icon={Clipboard} 
-          onClick={() => onAction('presupuesto')}
-        />
-        <MenuButton 
-          label="Movimiento" 
+          label="Registrar Movimiento" 
           icon={DollarSign} 
           onClick={() => onAction('movimiento')}
         />

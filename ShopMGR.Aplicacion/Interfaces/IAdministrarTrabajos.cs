@@ -14,6 +14,11 @@ namespace ShopMGR.Aplicacion.Interfaces
         Task AgregarFotosAsync(int idTrabajo, IFormFileCollection fotos);
         Task EliminarFotoAsync(int idTrabajo, int idImagen);
         Task AgregarHorasAsync(HorasYDescripcionDTO horas);
-        public Task TerminarTrabajo(int idTrabajo);
+        Task IniciarTrabajo(int idTrabajo);
+        Task TerminarTrabajo(int idTrabajo);
+        Task EliminarPresupuesto(int idTrabajo);
+        Task CambiarPresupuesto(int idTrabajo, int idPresupuesto);
+        Task EditarHorasDeTrabajo(ModificarHorasYDescripcion horasModificadas);
+        Task EliminarHorasDeTrabajo(int idTrabajo, int idHoras);
     }
 }

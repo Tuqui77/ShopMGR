@@ -56,6 +56,7 @@ namespace ShopMGR.Repositorios
         {
             var presupuestos = await _contexto
                 .Presupuestos.Where(p => p.Estado == estado)
+                .Include(p => p.Cliente)
                 .ToListAsync();
 
             return presupuestos;

@@ -1,16 +1,32 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "main"
+  ],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
       {
         "preset": "conventionalcommits",
         "releaseRules": [
-          { "breaking": true, "release": "minor" }
+          { "breaking": true, "release": "minor" },
+          { "type": "hotfix", "release": "patch" }
         ]
       }
     ],
-    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "fix", "section": "Bug Fixes", "hidden": false },
+            { "type": "hotfix", "section": "Bug Fixes", "hidden": false },
+            { "type": "feat", "section": "Features", "hidden": false },
+            { "type": "chore", "section": "Misc", "hidden": false }
+          ]
+        }
+      }
+    ],
     [
       "@semantic-release/exec",
       {

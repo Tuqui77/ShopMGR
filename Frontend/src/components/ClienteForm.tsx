@@ -12,16 +12,16 @@ interface ClienteFormProps {
 export function ClienteForm({ cliente }: ClienteFormProps) {
   // ALL hooks must be called unconditionally - no early returns allowed!
   // Use conditional rendering in JSX instead
-  
+
   const isEditing = !!cliente;
   const { showClienteForm, setShowClienteForm, setEditingCliente } = useStore();
   const crearCliente = useCrearCliente();
   const modificarCliente = useModificarCliente();
-  
+
   // Initialize state with cliente data if editing
   const [nombre, setNombre] = useState(cliente?.nombreCompleto || '');
   const [cuit, setCuit] = useState(cliente?.cuit || '');
-  
+
   // Only needed for create mode
   const [telefonoInput, setTelefonoInput] = useState('');
   const [telefonoDesc, setTelefonoDesc] = useState('');
@@ -51,15 +51,14 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const [departamento, setDepartamento] = useState(cliente?.direccionesCompletas?.[0]?.departamento || '');
   const [descripcion, setDescripcion] = useState(cliente?.direccionesCompletas?.[0]?.descripcion || '');
   const [codigoPostal, setCodigoPostal] = useState(cliente?.direccionesCompletas?.[0]?.codigoPostal || '');
-  
+
   const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
 
   const formVisible = isEditing || showClienteForm;
- 
-  // useCallback needs to be at top level, before any conditionals
+
   const handleClose = useCallback(() => {
     if (isEditing) {
       setEditingCliente(null);
@@ -82,7 +81,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     setShowSuccess(false);
     setEditingTelefonoIndex(null);
   }, [isEditing, setEditingCliente, setShowClienteForm]);
-  
+
   // Cerrar con ESC
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -94,28 +93,24 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [formVisible, handleClose]);
 
-  // NO early return here - use conditional rendering in JSX instead
-
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!nombre.trim()) {
       newErrors.nombre = 'El nombre es requerido';
     } else if (nombre.length > 100) {
       newErrors.nombre = 'Máximo 100 caracteres';
     }
-    
+
     if (cuit && !/^\d{11}$/.test(cuit.replace(/[-\s]/g, ''))) {
       newErrors.cuit = 'CUIT debe tener 11 dígitos';
     }
-    
-    // Validar dirección (si se ingresa algo)
+
     const tieneCalle = calle.trim().length > 0;
     const tieneAltura = altura.trim().length > 0;
     const tieneCiudad = ciudad.trim().length > 0;
-    
+
     if (tieneCalle || tieneAltura || tieneCiudad || tienePiso || tieneDepartamento || tieneDescripcion || tieneCodigoPostal) {
-      // Si se ingresa cualquier campo de dirección, los obligatorios deben estar presentes
       if (!tieneCalle) {
         newErrors.calle = 'La calle es requerida';
       }
@@ -126,12 +121,11 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
         newErrors.ciudad = 'La ciudad es requerida';
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
-  // Helper para validar individualmente (para validación en tiempo real)
+
   const tieneCalle = calle.trim().length > 0;
   const tieneAltura = altura.trim().length > 0;
   const tieneCiudad = ciudad.trim().length > 0;
@@ -154,9 +148,8 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
 
   const handleAddTelefono = () => {
     if (!telefonoInput.trim()) return;
-    
+
     if (editingTelefonoIndex !== null) {
-      // Editando teléfono existente
       const nuevosTelefonos = [...telefonos];
       nuevosTelefonos[editingTelefonoIndex] = {
         id: telefonos[editingTelefonoIndex].id,
@@ -166,11 +159,10 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       setTelefonos(nuevosTelefonos);
       setEditingTelefonoIndex(null);
     } else {
-      // Agregando nuevo teléfono
-      const telefonoObj = { 
-        id: 0, // ID 0 indica que es nuevo
-        telefono: telefonoInput.trim(), 
-        descripcion: telefonoDesc.trim() || 'Principal' 
+      const telefonoObj = {
+        id: 0,
+        telefono: telefonoInput.trim(),
+        descripcion: telefonoDesc.trim() || 'Principal'
       };
       if (!telefonos.some(t => t.telefono === telefonoObj.telefono)) {
         setTelefonos([...telefonos, telefonoObj]);
@@ -188,10 +180,9 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    
+
     try {
       if (isEditing && cliente) {
-        // Enviar solo los campos que se modificaron
         await modificarCliente.mutateAsync({
           id: cliente.id,
           cliente: {
@@ -200,19 +191,19 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
           },
         });
       } else {
-        const direccionData = tieneDireccion 
-          ? [{ 
-              calle: calle.trim(), 
+        const direccionData = tieneDireccion
+          ? [{
+              calle: calle.trim(),
               altura: altura.trim(),
               ciudad: ciudad.trim() || null,
               codigoPostal: codigoPostal.trim() || null,
               descripcion: descripcion.trim() || null,
               piso: piso.trim() || null,
               departamento: departamento.trim() || null,
-              mapsID: null
-            }] 
+              mapsID: null,
+            }]
           : undefined;
-          
+
         await crearCliente.mutateAsync({
           nombreCompleto: nombre.trim(),
           telefono: telefonos,
@@ -223,10 +214,9 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       setTimeout(handleClose, 1500);
     } catch (error) {
       console.error('Error al guardar cliente:', error);
-      
-      // Extraer mensaje de error del backend
+
       let errorMessage = isEditing ? 'Error al modificar el cliente' : 'Error al crear el cliente';
-      
+
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
         if (axiosError.response?.data?.error) {
@@ -239,32 +229,34 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }
-      
+
       setErrors({ submit: errorMessage });
     }
   };
 
-  // Use conditional rendering in JSX instead of early return
-  // to satisfy React's Rules of Hooks
   return formVisible ? (
     <>
       <div className="modal-backdrop" onClick={handleClose} />
       <div className="modal-content">
-        <div className="p-4">
+        <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <div className="w-11" />
-            <h2 className="font-semibold text-lg">
+            <h2 className="text-lg font-semibold">
               {showSuccess ? '¡Listo!' : isEditing ? 'Editar Cliente' : 'Nuevo Cliente'}
             </h2>
-            <button onClick={handleClose} className="btn-icon">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="btn-icon"
+              aria-label="Cerrar"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           {showSuccess ? (
             <div className="animate-scale-in text-center py-8">
-              <div 
+              <div
                 className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: 'color-mix(in srgb, var(--color-success) 20%, transparent)' }}
               >
@@ -278,18 +270,18 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Nombre */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                  NOMBRE *
+                  Nombre completo *
                 </label>
                 <input
                   type="text"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   placeholder="Juan Pérez"
-                  className="input"
+                  className={clsx('input', errors.nombre && 'input-error')}
                   maxLength={100}
                 />
                 {errors.nombre && (
@@ -298,7 +290,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                   </p>
                 )}
               </div>
-              
+
               {/* CUIT */}
               <div>
                 <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
@@ -317,8 +309,8 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                   </p>
                 )}
               </div>
-              
-              {/* Edit mode: show note about phones/addresses | Create mode: show phone/address fields */}
+
+              {/* Edit mode: note about phones/addresses | Create mode: show phone/address fields */}
               {isEditing ? (
                 <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-surface)' }}>
                   <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
@@ -330,7 +322,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                   {/* Teléfonos (create mode only) */}
                   <div>
                     <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                      TELÉFONOS
+                      Teléfonos
                     </label>
                     <div className="space-y-2">
                       <div className="flex gap-2">
@@ -341,11 +333,12 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                           placeholder="Número de teléfono"
                           className="input flex-1"
                         />
-                        <button 
+                        <button
                           type="button"
                           onClick={handleAddTelefono}
                           className="btn-secondary"
                           disabled={!telefonoInput.trim()}
+                          aria-label={editingTelefonoIndex !== null ? 'Guardar teléfono' : 'Agregar teléfono'}
                         >
                           {editingTelefonoIndex !== null ? (
                             <Check className="w-5 h-5" />
@@ -354,11 +347,12 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                           )}
                         </button>
                         {editingTelefonoIndex !== null && (
-                          <button 
+                          <button
                             type="button"
                             onClick={handleCancelEditTelefono}
                             className="btn-secondary"
                             style={{ color: 'var(--color-danger)' }}
+                            aria-label="Cancelar edición"
                           >
                             <X className="w-5 h-5" />
                           </button>
@@ -377,13 +371,13 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                           }
                         }}
                       />
-                      
+
                       {telefonos.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {telefonos.map((tel, index) => (
-                            <div 
+                            <div
                               key={index}
-                              className="flex items-center justify-between p-2 rounded"
+                              className="flex items-center justify-between p-2 rounded-lg transition-colors duration-200 hover:bg-[var(--color-hover)]"
                               style={{ backgroundColor: 'var(--color-surface)' }}
                             >
                               <div>
@@ -397,6 +391,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                                   type="button"
                                   onClick={() => handleEditTelefono(index)}
                                   className="btn-icon p-1"
+                                  aria-label="Editar teléfono"
                                 >
                                   <Pencil className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
                                 </button>
@@ -404,6 +399,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                                   type="button"
                                   onClick={() => handleRemoveTelefono(index)}
                                   className="btn-icon p-1"
+                                  aria-label="Eliminar teléfono"
                                 >
                                   <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
                                 </button>
@@ -414,14 +410,14 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Dirección (create mode only) */}
                   <div>
                     <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                      DIRECCIÓN (opcional)
+                      Dirección (opcional)
                     </label>
                     <div className="space-y-2">
-                      {/* Calle y Altura - Obligatorios */}
+                      {/* Calle y Altura */}
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <input
@@ -452,8 +448,8 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                           )}
                         </div>
                       </div>
-                      
-                      {/* Ciudad - Obligatorio */}
+
+                      {/* Ciudad */}
                       <div>
                         <input
                           type="text"
@@ -468,8 +464,8 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                           </p>
                         )}
                       </div>
-                      
-                      {/* Piso y Departamento - Opcionales */}
+
+                      {/* Piso y Departamento */}
                       <div className="grid grid-cols-2 gap-2">
                         <input
                           type="text"
@@ -486,8 +482,8 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                           className="input"
                         />
                       </div>
-                      
-                      {/* Código Postal - Opcional */}
+
+                      {/* Código Postal */}
                       <input
                         type="text"
                         value={codigoPostal}
@@ -495,8 +491,8 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                         placeholder="Código Postal"
                         className="input"
                       />
-                      
-                      {/* Descripción - Opcional */}
+
+                      {/* Descripción */}
                       <input
                         type="text"
                         value={descripcion}
@@ -508,17 +504,19 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                   </div>
                 </>
               )}
-              
-              {/* Submit */}
+
+              {/* Submit error */}
               {errors.submit && (
                 <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
                   {errors.submit}
                 </p>
               )}
+
+              {/* Submit button */}
               <button
                 onClick={handleSubmit}
                 disabled={crearCliente.isPending || modificarCliente.isPending}
-                className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
+                className="btn-primary w-full flex items-center justify-center gap-2"
               >
                 {crearCliente.isPending || modificarCliente.isPending ? (
                   <>

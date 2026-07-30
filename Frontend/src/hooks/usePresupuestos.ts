@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { presupuestosService, type CrearPresupuestoRequest, type ModificarPresupuestoRequest } from '../services/presupuestos';
-import { trabajosService } from '../services/trabajos';
 import type { EstadoPresupuesto } from '../types';
 
 // ============================================================================
@@ -125,19 +124,14 @@ export function useEliminarPresupuesto() {
 
 /**
  * Acepta un presupuesto:
- * 1. Crea un trabajo a partir del presupuesto (POST /Trabajos/CrearTrabajoDePresupuesto)
- * 2. Marca el presupuesto como Aceptado (PATCH /Presupuestos/ActualizarPresupuesto)
+ * El backend se encarga de marcar el presupuesto como Aceptado
+ * y crear el trabajo asociado (con validación de duplicados).
  */
 export function useAceptarPresupuesto(options?: { onError?: (error: Error) => void; onSuccess?: () => void }) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (id: number) => {
-      // Primero crear el trabajo desde el presupuesto
-      await trabajosService.crearDesdePresupuesto(id);
-      // Luego marcar el presupuesto como aceptado
-      await presupuestosService.aceptar(id);
-    },
+    mutationFn: (id: number) => presupuestosService.aceptar(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
       queryClient.invalidateQueries({ queryKey: ['presupuestos', id] });

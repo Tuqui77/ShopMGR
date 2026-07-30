@@ -10,5 +10,17 @@
         //relaciones
         public Trabajo Trabajo { get; set; }
         public int IdTrabajo { get; set; }
+
+
+        public void Editar(
+                float horas,
+                string descripcion,
+                DateOnly fecha
+                )
+        {
+            Horas = horas;
+            Descripcion = descripcion;
+            Fecha = fecha;
+        }
     }
 }

@@ -188,8 +188,8 @@ export function Configuracion() {
                 <button
                   key={value}
                   onClick={() => setTheme(value)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
-                    theme === value ? '' : 'hover:opacity-80'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors duration-200 ${
+                    theme === value ? '' : 'hover:bg-[var(--color-hover)]'
                   }`}
                   style={{ 
                     backgroundColor: theme === value ? 'var(--color-accent)' : 'transparent',
@@ -222,7 +222,7 @@ export function Configuracion() {
                 type="text"
                 value={costoHoraInput}
                 onChange={(e) => setCostoHoraInput(e.target.value)}
-                className="w-24 px-2 py-1 rounded-lg border text-sm text-right"
+                className="w-24 px-2 py-1 rounded-lg border text-sm text-right focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
                 style={{ 
                   backgroundColor: 'var(--color-surface)',
                   borderColor: 'var(--color-surface)',
@@ -233,7 +233,7 @@ export function Configuracion() {
               <button
                 onClick={handleCostoHoraSave}
                 disabled={updateCostoHoraMutation.isPending || showCostoHoraSuccess}
-                className="px-3 py-1.5 rounded-lg text-sm"
+                className="px-3 py-1.5 rounded-lg text-sm transition-colors duration-200 hover:opacity-90"
                 style={{ 
                   backgroundColor: showCostoHoraSuccess ? 'var(--color-success)' : 'var(--color-accent)', 
                   color: 'white' 
@@ -263,7 +263,7 @@ export function Configuracion() {
             <select
               value={dateFormat}
               onChange={(e) => handleDateFormatChange(e.target.value as DateFormat)}
-              className="text-sm rounded-lg px-3 py-2"
+              className="text-sm rounded-lg px-3 py-2 cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)]"
               style={{ 
                 backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-text)',
@@ -289,7 +289,7 @@ export function Configuracion() {
             <select
               value={timeFormat}
               onChange={(e) => handleTimeFormatChange(e.target.value as TimeFormat)}
-              className="text-sm rounded-lg px-3 py-2"
+              className="text-sm rounded-lg px-3 py-2 cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)]"
               style={{ 
                 backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-text)',
@@ -315,7 +315,7 @@ export function Configuracion() {
             <select
               value={currencySymbol}
               onChange={(e) => handleCurrencySymbolChange(e.target.value as CurrencySymbol)}
-              className="text-sm rounded-lg px-3 py-2"
+              className="text-sm rounded-lg px-3 py-2 cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)]"
               style={{ 
                 backgroundColor: 'var(--color-surface)',
                 color: 'var(--color-text)',

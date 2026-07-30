@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Servicios;
@@ -10,6 +11,7 @@ namespace ShopMGR.WebApi.Controllers
     [ApiController]
     public class ClienteController(IAdministrarClientes administracionClientes) : ControllerBase
     {
+        [Authorize]
         [HttpPost]
         [Route("CrearCliente")]
         public async Task<IActionResult> CrearCliente(ClienteDTO cliente)
@@ -23,6 +25,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(cliente);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerListaClientes")]
         public async Task<IActionResult> ObtenerClientesAsync()
@@ -37,6 +40,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(clientes);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerClientePorId")]
         public async Task<IActionResult> ObtenerClientePorIdAsync(int idCliente)
@@ -45,6 +49,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(cliente);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idCliente)
@@ -53,6 +58,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(cliente);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("BuscarSaldosNegativos")]
         public async Task<IActionResult> BuscarSaldosNegativos()
@@ -64,6 +70,7 @@ namespace ShopMGR.WebApi.Controllers
                 : Ok($"No hay clientes con saldo negativo.");
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerClientePorNombre")]
         public async Task<IActionResult> ObtenerClientePorNombreAsync(string nombre)
@@ -77,6 +84,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(cliente);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerMovimientosPorId")]
         public async Task<IActionResult> ObtenerMovimientosPorId(int idCliente)
@@ -88,6 +96,7 @@ namespace ShopMGR.WebApi.Controllers
                 : Ok($"No hay movimientos asociados al cliente");
         }
 
+        [Authorize]
         [HttpPost]
         [Route("CrearMovimiento")]
         public async Task<IActionResult> CrearMovimiento(MovimientoBalanceDTO movimiento)
@@ -97,6 +106,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(movimiento);
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("EliminarMovimiento")]
         public async Task<IActionResult> EliminarMovimiento(int idMovimiento, int idCliente)
@@ -106,6 +116,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("EditarMovimiento")]
         public async Task<IActionResult> EditarMovimiento(ModificarMovimientoBalance movimientoModificado)
@@ -115,6 +126,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("ModificarCliente")]
         public async Task<IActionResult> ActualizarCliente(
@@ -131,6 +143,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok($"Cliente actualizado correctamente.");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("EliminarCliente")]
         public async Task<IActionResult> EliminarCliente(int idCliente)

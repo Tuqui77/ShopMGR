@@ -13,14 +13,13 @@ public class PresupuestoMapper(MapperRegistry mapper) : IMapper<PresupuestoDTOcr
 
     public Presupuesto Map(PresupuestoDTOcreacion presupuestoDTO)
     {
-        return new Presupuesto
-        {
-            IdCliente = presupuestoDTO.IdCliente,
-            Titulo = presupuestoDTO.Titulo,
-            Descripcion = presupuestoDTO.Descripcion,
-            Materiales = _mapper.Map<MaterialDTO, Material>(presupuestoDTO.Materiales).ToList(),
-            HorasEstimadas = presupuestoDTO.HorasEstimadas,
-        };
+        return new Presupuesto(
+            presupuestoDTO.Titulo,
+            presupuestoDTO.Descripcion,
+            _mapper.Map<MaterialDTO, Material>(presupuestoDTO.Materiales).ToList(),
+            presupuestoDTO.HorasEstimadas,
+            presupuestoDTO.IdCliente
+        );
     }
 }
 

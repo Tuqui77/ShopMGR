@@ -1,6 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Cliente, Trabajo, HorasRegistradas, Presupuesto, MaterialRequest } from '../types';
-import { clientesMock, trabajosMock, horasMock, valorHoraMock, presupuestosMock } from '../data/mock';
 
 // Type for duplicating a presupuesto
 interface DatosDuplicarPresupuesto {
@@ -20,8 +20,8 @@ interface AppState {
   presupuestos: Presupuesto[];
   valorHora: number;
   
-  // Auth State
-  isAuthenticated: boolean;
+  // Auth State (JWT token)
+  token: string | null;
   
   // UI State
   showHoursModal: boolean;
@@ -41,8 +41,11 @@ interface AppState {
   // Duplicar presupuesto state
   datosDuplicarPresupuesto: DatosDuplicarPresupuesto | null;
   
-  // Actions
-  setIsAuthenticated: (authenticated: boolean) => void;
+  // Auth Actions
+  setToken: (token: string | null) => void;
+  logout: () => void;
+  
+  // UI Actions
   setShowHoursModal: (show: boolean) => void;
   setShowClienteForm: (show: boolean) => void;
   setShowPresupuestoForm: (show: boolean) => void;
@@ -58,102 +61,112 @@ interface AppState {
   updateTrabajoEstado: (idTrabajo: number, estado: Trabajo['estado']) => void;
 }
 
-export const useStore = create<AppState>((set, get) => ({
-  // Initial data
-  clientes: clientesMock,
-  trabajos: trabajosMock,
-  horas: horasMock,
-  presupuestos: presupuestosMock,
-  valorHora: valorHoraMock,
-  
-  // Initial UI state
-  showHoursModal: false,
-  showClienteForm: false,
-  showPresupuestoForm: false,
-  showTrabajoForm: false,
-  showMovimientoModal: false,
-  imageFullscreenOpen: false,
-  selectedTrabajo: null,
-  lastTrabajoId: null,
-  editingCliente: null,
-  editingTrabajoId: null,
-  editingPresupuestoId: null,
-  datosDuplicarPresupuesto: null,
-  
-  // Initial auth state (check localStorage)
-  isAuthenticated: localStorage.getItem('isAuthenticated') === 'true',
-  
-  // Actions
-  setIsAuthenticated: (authenticated) => {
-    localStorage.setItem('isAuthenticated', String(authenticated));
-    set({ isAuthenticated: authenticated });
-  },
-  
-  setShowHoursModal: (show) => set({ showHoursModal: show }),
-  
-  setShowClienteForm: (show) => set({ showClienteForm: show }),
-  
-  setShowPresupuestoForm: (show) => set({ showPresupuestoForm: show }),
-  
-  setShowTrabajoForm: (show) => set({ showTrabajoForm: show }),
-  
-  setShowMovimientoModal: (show) => set({ showMovimientoModal: show }),
-  
-  setImageFullscreenOpen: (open) => set({ imageFullscreenOpen: open }),
-  
-  setSelectedTrabajo: (trabajo) => {
-    set({ selectedTrabajo: trabajo });
-    if (trabajo) {
-      set({ lastTrabajoId: trabajo.id });
-    }
-  },
-  
-  setEditingCliente: (cliente) => set({ editingCliente: cliente }),
-  
-  setEditingTrabajoId: (id) => set({ editingTrabajoId: id }),
-  
-  setEditingPresupuestoId: (id) => set({ editingPresupuestoId: id }),
-  
-  setDatosDuplicarPresupuesto: (datos) => set({ datosDuplicarPresupuesto: datos }),
-  
-  addHoras: (idTrabajo, horas, descripcion) => {
-    const { valorHora, horas: existingHoras, trabajos } = get();
-    const today = new Date().toISOString().split('T')[0];
-    
-    const newHoras: HorasRegistradas = {
-      id: Math.max(...existingHoras.map(h => h.id), 0) + 1,
-      idTrabajo,
-      horas,
-      descripcion,
-      fecha: today,
-      valor: horas * valorHora,
-    };
-    
-    // Update trabajo hours
-    const updatedTrabajos = trabajos.map(t => {
-      if (t.id === idTrabajo) {
-        return {
-          ...t,
-          horasRegistradas: t.horasRegistradas + horas,
-          estado: 'Iniciado' as const,
-        };
-      }
-      return t;
-    });
-    
-    set(state => ({
-      horas: [...state.horas, newHoras],
-      trabajos: updatedTrabajos,
+export const useStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      // Initial data (empty — server state managed by React Query)
+      clientes: [],
+      trabajos: [],
+      horas: [],
+      presupuestos: [],
+      valorHora: 0,
+      
+      // Initial auth state
+      token: null,
+      
+      // Initial UI state
       showHoursModal: false,
+      showClienteForm: false,
+      showPresupuestoForm: false,
+      showTrabajoForm: false,
+      showMovimientoModal: false,
+      imageFullscreenOpen: false,
       selectedTrabajo: null,
-    }));
-  },
-  
-  updateTrabajoEstado: (idTrabajo, estado) => {
-    set(state => ({
-      trabajos: state.trabajos.map(t => 
-        t.id === idTrabajo ? { ...t, estado } : t
-      ),
-    }));
-  },
-}));
+      lastTrabajoId: null,
+      editingCliente: null,
+      editingTrabajoId: null,
+      editingPresupuestoId: null,
+      datosDuplicarPresupuesto: null,
+      
+      // Auth Actions
+      setToken: (token) => set({ token }),
+      
+      logout: () => {
+        set({ token: null });
+      },
+      
+      // UI Actions
+      setShowHoursModal: (show) => set({ showHoursModal: show }),
+      
+      setShowClienteForm: (show) => set({ showClienteForm: show }),
+      
+      setShowPresupuestoForm: (show) => set({ showPresupuestoForm: show }),
+      
+      setShowTrabajoForm: (show) => set({ showTrabajoForm: show }),
+      
+      setShowMovimientoModal: (show) => set({ showMovimientoModal: show }),
+      
+      setImageFullscreenOpen: (open) => set({ imageFullscreenOpen: open }),
+      
+      setSelectedTrabajo: (trabajo) => {
+        set({ selectedTrabajo: trabajo });
+        if (trabajo) {
+          set({ lastTrabajoId: trabajo.id });
+        }
+      },
+      
+      setEditingCliente: (cliente) => set({ editingCliente: cliente }),
+      
+      setEditingTrabajoId: (id) => set({ editingTrabajoId: id }),
+      
+      setEditingPresupuestoId: (id) => set({ editingPresupuestoId: id }),
+      
+      setDatosDuplicarPresupuesto: (datos) => set({ datosDuplicarPresupuesto: datos }),
+      
+      addHoras: (idTrabajo, horas, descripcion) => {
+        const { valorHora, horas: existingHoras, trabajos } = get();
+        const today = new Date().toISOString().split('T')[0];
+        
+        const newHoras: HorasRegistradas = {
+          id: Math.max(...existingHoras.map(h => h.id), 0) + 1,
+          idTrabajo,
+          horas,
+          descripcion,
+          fecha: today,
+          valor: horas * valorHora,
+        };
+        
+        // Update trabajo hours
+        const updatedTrabajos = trabajos.map(t => {
+          if (t.id === idTrabajo) {
+            return {
+              ...t,
+              horasRegistradas: t.horasRegistradas + horas,
+              estado: 'Iniciado' as const,
+            };
+          }
+          return t;
+        });
+        
+        set(state => ({
+          horas: [...state.horas, newHoras],
+          trabajos: updatedTrabajos,
+          showHoursModal: false,
+          selectedTrabajo: null,
+        }));
+      },
+      
+      updateTrabajoEstado: (idTrabajo, estado) => {
+        set(state => ({
+          trabajos: state.trabajos.map(t => 
+            t.id === idTrabajo ? { ...t, estado } : t
+          ),
+        }));
+      },
+    }),
+    {
+      name: 'shopmgr-storage',
+      partialize: (state) => ({ token: state.token }),
+    }
+  )
+);

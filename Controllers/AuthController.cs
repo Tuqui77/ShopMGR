@@ -19,7 +19,7 @@ public class AuthController(IAdministrarAuth administrarAuth) : ControllerBase
         var usuario = await _administrarAuth.RegistrarUsuarioAsync(request);
 
         if (usuario == null)
-            return BadRequest("El nombre de usuiario ya esta en uso");
+            return BadRequest("El nombre de usuario ya esta en uso");
 
         return Ok("Usuario creado con exito");
     }

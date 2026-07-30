@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
+
 
 namespace ShopMGR.WebApi.Controllers
 {
@@ -13,6 +15,7 @@ namespace ShopMGR.WebApi.Controllers
         IAdministrarTrabajos administrarTrabajos
     ) : ControllerBase
     {
+        [Authorize]
         [HttpPost]
         [Route("CrearTrabajo")]
         public async Task<IActionResult> CrearTrabajo([FromBody] TrabajoDTO trabajo)
@@ -26,6 +29,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajo);
         }
 
+        [Authorize]
         [HttpPost]
         [Route("CrearTrabajoDePresupuesto")]
         public async Task<IActionResult> CrearTrabajoDePresupuesto(int idPresupuesto)
@@ -34,6 +38,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerListaTrabajos")]
         public async Task<IActionResult> ObtenerListaTrabajos()
@@ -42,6 +47,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajos);
         }
 
+        [Authorize]
         [HttpPost]
         [Route("AgregarFotosTrabajo")]
         public async Task<IActionResult> AgregarFotosTrabajo(
@@ -59,6 +65,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok($"Fotos agregadas al trabajo con ID {idTrabajo} correctamente.");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("EliminarFotoTrabajo")]
         public async Task<IActionResult> EliminarFotoTrabajo(int idTrabajo, int idImagen)
@@ -68,6 +75,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Imagen eliminada");
         }
 
+        [Authorize]
         [HttpPost]
         [Route("AgregarHorasDeTrabajo")]
         public async Task<IActionResult> AgregarHorasDeTrabajo(HorasYDescripcionDTO horas)
@@ -83,6 +91,7 @@ namespace ShopMGR.WebApi.Controllers
             );
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerTrabajoPorId")]
         public async Task<IActionResult> ObtenerTrabajoPorId(int idTrabajo)
@@ -91,6 +100,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajo);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorId(int idTrabajo)
@@ -99,6 +109,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajo);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerTrabajosPorCliente")]
         public async Task<IActionResult> ObtenerTrabajosPorCliente(int idCliente)
@@ -113,6 +124,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajos);
         }
 
+        [Authorize]
         [HttpGet]
         [Route("ObtenerTrabajosPorEstado")]
         public async Task<IActionResult> ObtenerTrabajosPorEstado(EstadoTrabajo estado)
@@ -127,6 +139,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok(trabajos);
         }
 
+        [Authorize]
         [HttpPatch]
         [Route("ModificarTrabajo")]
         public async Task<IActionResult> ModificarTrabajo(
@@ -143,6 +156,34 @@ namespace ShopMGR.WebApi.Controllers
             return Ok("Trabajo actualizado correctamente.");
         }
 
+        [Authorize]
+        [HttpPatch]
+        [Route("EliminarPresupuesto")]
+        public async Task<IActionResult> EliminarPresupuesto(int idTrabajo)
+        {
+            await administrarTrabajos.EliminarPresupuesto(idTrabajo);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPatch]
+        [Route("CambiarPresupuesto")]
+        public async Task<IActionResult> CambiarPresupuesto(int idTrabajo, int idPresupuesto)
+        {
+            await administrarTrabajos.CambiarPresupuesto(idTrabajo, idPresupuesto);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPatch]
+        [Route("IniciarTrabajo")]
+        public async Task<IActionResult> IniciarTrabajo(int idTrabajo)
+        {
+            await administrarTrabajos.IniciarTrabajo(idTrabajo);
+            return Ok($"Trabajo #{idTrabajo} marcado como iniciado.");
+        }
+
+        [Authorize]
         [HttpPatch]
         [Route("TerminarTrabajo")]
         public async Task<IActionResult> TerminarTrabajo(int idTrabajo)
@@ -151,6 +192,7 @@ namespace ShopMGR.WebApi.Controllers
             return Ok($"Trabajo #{idTrabajo} marcado como terminado.");
         }
 
+        [Authorize]
         [HttpDelete]
         [Route("EliminarTrabajo")]
         public async Task<IActionResult> EliminarTrabajo(int idTrabajo)

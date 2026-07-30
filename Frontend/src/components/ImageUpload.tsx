@@ -204,7 +204,7 @@ export function ImageUpload({
           <button
             type="button"
             onClick={handleClearAll}
-            className="text-xs"
+            className="text-xs cursor-pointer transition-colors duration-200 hover:opacity-80"
             style={{ color: 'var(--color-danger)' }}
           >
             Borrar todas las fotos
