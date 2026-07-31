@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock, LogIn, Loader2, UserPlus } from 'lucide-react';
 import { useStore } from '../store';
 import { authService } from '../services/auth';
+import { PasskeyButton } from '../components/PasskeyButton';
+import { usePasskeyLogin } from '../hooks/usePasskeyLogin';
 
 export function Login() {
   const navigate = useNavigate();
@@ -13,6 +15,9 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ userName: '', password: '', general: '', success: '' });
   const [isLoading, setIsLoading] = useState(false);
+  
+  const passkey = usePasskeyLogin();
+  const passkeysSoportados = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,7 +157,7 @@ export function Login() {
             )}
             {isLoading
               ? (isRegistering ? 'Creando...' : 'Ingresando...')
-              : (isRegistering ? 'Crear Usuario' : 'Iniciar Sesión')
+              : (isRegistering ? 'Crear Usuario' : 'Iniciar sesión')
             }
           </button>
           
@@ -164,10 +169,27 @@ export function Login() {
               onClick={toggleMode}
               className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
             >
-              {isRegistering ? 'Iniciar Sesión' : 'Crear Usuario'}
+              {isRegistering ? 'Iniciar sesión' : 'Crear Usuario'}
             </button>
           </p>
         </form>
+
+        {/* Passkey login (fuera del form: no debe enviarse como submit) */}
+        {!isRegistering && passkeysSoportados && (
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1" style={{ backgroundColor: 'var(--color-border)' }} />
+              <span className="text-sm text-[var(--color-muted)]">o</span>
+              <div className="h-px flex-1" style={{ backgroundColor: 'var(--color-border)' }} />
+            </div>
+            <PasskeyButton onClick={passkey.iniciarConPasskey} isLoading={passkey.isLoading} />
+            {passkey.error && (
+              <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
+                <p className="text-sm text-[var(--color-danger)] text-center">{passkey.error}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
