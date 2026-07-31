@@ -22,6 +22,8 @@ namespace ShopMGR.Contexto
         public DbSet<MovimientoBalance> MovimientoBalance { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<Passkey> Passkeys { get; set; }
+        public DbSet<PasskeyChallenge> Challenges { get; set; }
 
         //Persistencia de configuraciones de la aplicación.
         public DbSet<ConfiguracionGlobal> Configuraciones { get; set; }

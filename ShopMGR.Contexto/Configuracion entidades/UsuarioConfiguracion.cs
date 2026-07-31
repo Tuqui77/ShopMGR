@@ -20,10 +20,19 @@ public class UsuarioConfiguracion : IEntityTypeConfiguration<Usuario>
             .WithOne(rt => rt.Usuario)
             .HasForeignKey(rt => rt.IdUsuario)
             .OnDelete(DeleteBehavior.Cascade);
-
         builder
             .Navigation(u => u.RefreshTokens)
             .HasField("_refreshTokens")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder
+            .HasMany(u => u.PassKeys)
+            .WithOne(pk => pk.Usuario)
+            .HasForeignKey(pk => pk.IdUsuario)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder
+            .Navigation(u => u.PassKeys)
+            .HasField("_passKeys")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
