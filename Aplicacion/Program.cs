@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using AspNetCore.Scalar;
 using AspNetCoreRateLimit;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -65,11 +66,9 @@ namespace ShopMGR.WebApi.Aplicacion
                     context.HttpContext.Response.ContentType = "application/json";
 
                     await context.HttpContext.Response.WriteAsJsonAsync(
-                            new
-                            {
-                                error = "Demasiados intentos de inicio de sesión. Inténtelo nuevamente en unos minutos"
-                            },
-                            CancellationToken);
+                        new { error = "Demasiados intentos de inicio de sesión. Inténtelo nuevamente en unos minutos" },
+                        CancellationToken
+                    );
                 };
 
                 options.AddPolicy(
@@ -128,6 +127,14 @@ namespace ShopMGR.WebApi.Aplicacion
                         ),
                     };
                 });
+
+            builder.Services.AddFido2(options =>
+            {
+                options.ServerDomain = builder.Configuration["fido2:serverDomain"];
+                options.ServerName = "ShopMGR";
+                options.Origins = builder.Configuration.GetSection("fido2:origins").Get<HashSet<string>>();
+            });
+
             var app = builder.Build();
 
             var rutaImagenes = Path.Combine(Directory.GetCurrentDirectory(), "imagenes");
