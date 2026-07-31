@@ -36,6 +36,9 @@ namespace ShopMGR.Aplicacion
 
             services.AddScoped<IAlmacenamientoServicio, AlmacenamientoServicio>();
 
+            services.AddScoped<IAdministracionPasskeys, AdministracionPasskeys>();
+            services.AddScoped<IRepositorioPasskeys, PasskeysRepositorio>();
+
             //Herramientas adicionales
             // Mapeadores manuales
             services.AddMappersFromAssembly(typeof(ClienteMapper));

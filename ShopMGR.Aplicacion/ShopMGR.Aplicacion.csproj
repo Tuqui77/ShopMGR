@@ -34,9 +34,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="AspNetCoreRateLimit">
-      <HintPath>..\..\..\..\.nuget\packages\aspnetcoreratelimit\5.0.0\lib\net6.0\AspNetCoreRateLimit.dll</HintPath>
-    </Reference>
+    <PackageReference Include="AspNetCoreRateLimit" version="5.0.0" /> 
+    <PackageReference Include="Fido2" version="4.0.1" />
+    <PackageReference Include="Fido2.Models" version="4.0.1" />
   </ItemGroup>
 
 </Project>

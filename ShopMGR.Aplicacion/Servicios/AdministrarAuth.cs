@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Org.BouncyCastle.Utilities;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Contexto;
@@ -14,9 +13,12 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios;
 
-public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion) : IAdministrarAuth
+public class AdministrarAuth(
+        ShopMGRDbContexto contexto,
+        IConfiguration configuracion) 
+    : IAdministrarAuth
 {
-    private readonly ShopMGRDbContexto _contexto = contexto;
+    private readonly ShopMGRDbContexto _contexto = contexto; // TODO(#100): Implementar un repositorio para no acceder a datos directamente, SRP!
     private readonly IConfiguration _configuracion = configuracion;
 
     public async Task<Usuario?> RegistrarUsuarioAsync(UsuarioDTO request)
@@ -49,6 +51,17 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         var refreshToken = GenerarRefreshToken();
         var hash = CalcularHash(refreshToken);
         usuarioDb.CrearRefreshToken(hash, TimeSpan.FromDays(30));
+        await _contexto.SaveChangesAsync();
+
+        return new RespuestaLogin(accessToken, refreshToken);
+    }
+
+    public async Task<RespuestaLogin?> FinalizarAuthPasskey(Usuario usuario)
+    {
+        var accessToken = CrearToken(usuario);
+        var refreshToken = GenerarRefreshToken();
+        var hash = CalcularHash(refreshToken);
+        usuario.CrearRefreshToken(hash, TimeSpan.FromDays(30));
         await _contexto.SaveChangesAsync();
 
         return new RespuestaLogin(accessToken, refreshToken);
@@ -90,6 +103,14 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         await _contexto.SaveChangesAsync();
     }
 
+    // Métodos que se van a mover a un repositorio
+
+    public async Task<Usuario?> ObtenerUsuarioPorIdAsync(int idUsuario)
+    {
+        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == idUsuario);
+
+        return usuario;
+    }
     private string CrearToken(Usuario usuario)
     {
         var claims = new List<Claim>
