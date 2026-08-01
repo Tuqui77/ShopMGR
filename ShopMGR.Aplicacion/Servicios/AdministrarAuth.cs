@@ -53,7 +53,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         return new RespuestaLogin(accessToken, refreshToken);
     }
 
-    public async Task<RespuestaLogin?> FinalizarAuthPasskey(Usuario usuario)
+    public async Task<RespuestaLogin> FinalizarAuthPasskey(Usuario usuario)
     {
         var accessToken = CrearToken(usuario);
         var refreshToken = GenerarRefreshToken();

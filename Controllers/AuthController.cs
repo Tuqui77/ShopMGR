@@ -18,12 +18,14 @@ namespace ShopMGR.WebApi.Controllers;
 public class AuthController(
     IAdministrarAuth administrarAuth,
     IAdministracionPasskeys administracionPasskeys,
-    IFido2 fido2
+    IFido2 fido2,
+    IConfiguration configuracion
 ) : ControllerBase
 {
     private readonly IAdministrarAuth _administrarAuth = administrarAuth;
     private readonly IAdministracionPasskeys _administracionPasskeys = administracionPasskeys;
     private readonly IFido2 _fido2 = fido2;
+    private readonly IConfiguration _configuracion = configuracion;
 
     [HttpPost]
     [Route("RegistrarUsuario")]
@@ -49,26 +51,38 @@ public class AuthController(
             return BadRequest("Nombre de usuario o contraseña incorrectos");
         }
 
+        GuardarRefreshTokenCookie(respuestaLogin.RefreshToken);
+
         return Ok(respuestaLogin);
     }
 
     [HttpPost]
     [Route("Refrescar")]
-    public async Task<IActionResult> Refrescar([FromBody] string refreshTokenRequest)
+    public async Task<IActionResult> Refrescar()
     {
+        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshTokenRequest))
+            return Unauthorized();
+
         var respuestaLogin = await _administrarAuth.Refrescar(refreshTokenRequest);
 
         if (respuestaLogin == null)
-            return BadRequest("Refresh Token inválido");
+            return Unauthorized("Refresh Token inválido");
+
+        GuardarRefreshTokenCookie(respuestaLogin.RefreshToken);
 
         return Ok(respuestaLogin);
     }
 
     [HttpPost]
     [Route("CerrarSesion")]
-    public async Task<IActionResult> CerrarSesion([FromBody] string refreshTokenRequest)
+    public async Task<IActionResult> CerrarSesion()
     {
-        await _administrarAuth.CerrarSesion(refreshTokenRequest);
+        if (Request.Cookies.TryGetValue("refreshToken", out var refreshTokenRequest))
+        {
+            await _administrarAuth.CerrarSesion(refreshTokenRequest);
+        }
+
+        BorrarRefreshTokenCookie();
 
         return Ok("Sesión cerrada correctamente");
     }
@@ -143,6 +157,7 @@ public class AuthController(
     [Route("passkeys/auth")]
     public async Task<IActionResult> IniciarSesionConPasskey(IniciarSesionPasskeyRequest request)
     {
+
         var respuestaAssertion = new AuthenticatorAssertionRawResponse
         {
             Id = request.Id,
@@ -164,6 +179,8 @@ public class AuthController(
 
             //Generar datos de inicio de sesión normal:
             var respuestaLogin = await _administrarAuth.FinalizarAuthPasskey(usuario);
+
+            GuardarRefreshTokenCookie(respuestaLogin.RefreshToken);
 
             return Ok(respuestaLogin);
         }
@@ -240,6 +257,32 @@ public class AuthController(
         }
 
         return Convert.FromBase64String(rawIdB64);
+    }
+
+    private void GuardarRefreshTokenCookie(string refreshToken)
+    {
+        var opciones = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = _configuracion.GetValue<bool>("Auth:RefreshTokenCookie.Secure"),
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/Auth",
+            Expires = DateTimeOffset.Now.AddDays(30),
+            IsEssential = true
+        };
+
+        Response.Cookies.Append("refreshToken", refreshToken, opciones);
+    }
+
+    private void BorrarRefreshTokenCookie()
+    {
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = _configuracion.GetValue<bool>("Auth:RefreshTokenCookie.Secure"),
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/Auth"
+        });
     }
 
     [Authorize]
