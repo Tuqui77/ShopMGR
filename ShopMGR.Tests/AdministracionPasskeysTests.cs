@@ -27,11 +27,12 @@ public class AdministracionPasskeysTests
         _servicio = new AdministracionPasskeys(null!, _repositorioMock.Object, null!, null!);
     }
 
-    private static Passkey CrearPasskey(int idUsuario, byte[]? idCredencial = null)
+    private static Passkey CrearPasskey(int idUsuario, byte[]? idCredencial = null, byte[]? userHandle = null)
     {
         return new Passkey(
             idCredencial ?? new byte[] { 1, 2, 3, 4 },
             new byte[] { 9, 8, 7, 6 },
+            userHandle ?? new byte[] { 5, 6, 7, 8 },
             "Dispositivo de prueba",
             idUsuario
         );
