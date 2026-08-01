@@ -41,14 +41,6 @@ export const apiClient = axios.create({
   },
 });
 
-// Separate client for file uploads (multipart/form-data)
-export const uploadClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
-});
-
 // Request interceptor: attach Bearer token to every request
 apiClient.interceptors.request.use((config) => {
   const { accessToken } = getStoredTokens();

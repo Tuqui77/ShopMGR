@@ -1,4 +1,4 @@
-import { apiClient, uploadClient } from './api';
+import { apiClient } from './api';
 import type {
   Trabajo,
   TrabajoBackendDTO,
@@ -273,9 +273,10 @@ export const trabajosService = {
       formData.append('fotos', file);
     });
 
-    const response = await uploadClient.post(
+    const response = await apiClient.post(
       `/Trabajos/AgregarFotosTrabajo?idTrabajo=${idTrabajo}`,
-      formData
+      formData,
+      { headers: { 'Content-Type': undefined } },
     );
     return response.data;
   },
