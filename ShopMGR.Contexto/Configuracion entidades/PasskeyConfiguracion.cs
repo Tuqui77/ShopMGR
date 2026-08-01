@@ -21,6 +21,11 @@ public class PasskeyConfiguracion : IEntityTypeConfiguration<Passkey>
             .HasMaxLength(512);
         
         builder
+            .Property(pk => pk.UserHandle)
+            .IsRequired(true)
+            .HasMaxLength(512);
+
+        builder
             .Property(pk => pk.ContadorLogin)
             .HasConversion<long>()
             .IsRequired(true);
