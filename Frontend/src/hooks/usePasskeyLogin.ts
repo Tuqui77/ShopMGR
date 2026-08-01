@@ -33,6 +33,16 @@ export function usePasskeyLogin() {
 
     try {
       const options = await passkeysService.obtenerOpcionesAuth(controller.signal);
+
+      // El backend arma allowCredentials con las credenciales de la BD. Si llega
+      // vacío/ausente (p. ej. se eliminó la única passkey), el diálogo nativo no
+      // tiene nada que ofrecer y el navegador falla en silencio con NotAllowedError
+      // (clasificado como 'canceled'). Mejor avisar al usuario.
+      if (!options.allowCredentials || options.allowCredentials.length === 0) {
+        setError('No hay passkeys registradas para esta cuenta. Probá con tu contraseña.');
+        return;
+      }
+
       const credential = await navigator.credentials.get({ publicKey: options });
 
       // credential === null: el usuario descartó el diálogo nativo sin elegir.
