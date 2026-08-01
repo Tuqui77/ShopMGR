@@ -1,38 +1,7 @@
 import axios from 'axios';
+import { useStore } from '../store';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
-
-// Read tokens from Zustand persist storage (avoids circular dependency with store)
-function getStoredTokens(): { accessToken: string | null; refreshToken: string | null } {
-  try {
-    const raw = localStorage.getItem('shopmgr-storage');
-    if (!raw) return { accessToken: null, refreshToken: null };
-    const parsed = JSON.parse(raw);
-    return {
-      accessToken: parsed?.state?.accessToken ?? null,
-      refreshToken: parsed?.state?.refreshToken ?? null,
-    };
-  } catch {
-    return { accessToken: null, refreshToken: null };
-  }
-}
-
-function updateStoredTokens(accessToken: string, refreshToken: string) {
-  try {
-    const raw = localStorage.getItem('shopmgr-storage');
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    parsed.state.accessToken = accessToken;
-    parsed.state.refreshToken = refreshToken;
-    localStorage.setItem('shopmgr-storage', JSON.stringify(parsed));
-  } catch {
-    // Ignore — will redirect to login on next request
-  }
-}
-
-function clearStoredTokens() {
-  localStorage.removeItem('shopmgr-storage');
-}
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -43,7 +12,7 @@ export const apiClient = axios.create({
 
 // Request interceptor: attach Bearer token to every request
 apiClient.interceptors.request.use((config) => {
-  const { accessToken } = getStoredTokens();
+  const { accessToken } = useStore.getState();
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
@@ -80,8 +49,11 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // If a refresh is already in progress, queue this request
+    // If a refresh is already in progress, queue this request. Se marca _retry
+    // para que un segundo 401 tras el reintento no dispare otro refresh con un
+    // refresh token ya rotado (issue #105).
     if (isRefreshing) {
+      originalRequest._retry = true;
       return new Promise<string>((resolve, reject) => {
         failedQueue.push({ resolve, reject });
       }).then(token => {
@@ -93,24 +65,29 @@ apiClient.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    const { refreshToken } = getStoredTokens();
+    const { refreshToken } = useStore.getState();
 
     if (!refreshToken) {
       isRefreshing = false;
-      clearStoredTokens();
+      useStore.getState().logout();
       window.location.replace('/login');
       return Promise.reject(error);
     }
 
     try {
-      // Call refresh endpoint with a plain axios instance (no interceptors)
+      // Call refresh endpoint with a plain axios instance (no interceptors).
+      // Issue #106: el refresh token viaja en el BODY como string JSON, nunca en
+      // query params. Content-Type explícito: sin él, axios enviaría el string
+      // crudo (sin comillas) y `[FromBody] string` del backend rechazaría.
       const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
         `${API_BASE_URL}/Auth/Refrescar`,
-        null,
-        { params: { refreshTokenRequest: refreshToken } },
+        refreshToken,
+        { headers: { 'Content-Type': 'application/json' } },
       );
 
-      updateStoredTokens(data.accessToken, data.refreshToken);
+      // Persistir tokens vía el store: el middleware persist escribe en
+      // localStorage, manteniendo memoria y storage consistentes (issue #105).
+      useStore.getState().setTokens(data.accessToken, data.refreshToken);
       processQueue(null, data.accessToken);
 
       // Retry original request with new token
@@ -118,7 +95,7 @@ apiClient.interceptors.response.use(
       return apiClient(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      clearStoredTokens();
+      useStore.getState().logout();
       window.location.replace('/login');
       return Promise.reject(refreshError);
     } finally {

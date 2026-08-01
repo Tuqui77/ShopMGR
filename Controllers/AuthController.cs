@@ -54,7 +54,7 @@ public class AuthController(
 
     [HttpPost]
     [Route("Refrescar")]
-    public async Task<IActionResult> Refrescar(int idUsuario, string refreshTokenRequest)
+    public async Task<IActionResult> Refrescar([FromBody] string refreshTokenRequest)
     {
         var respuestaLogin = await _administrarAuth.Refrescar(refreshTokenRequest);
 
@@ -66,7 +66,7 @@ public class AuthController(
 
     [HttpPost]
     [Route("CerrarSesion")]
-    public async Task<IActionResult> CerrarSesion(int idUsuario, string refreshTokenRequest)
+    public async Task<IActionResult> CerrarSesion([FromBody] string refreshTokenRequest)
     {
         await _administrarAuth.CerrarSesion(refreshTokenRequest);
 

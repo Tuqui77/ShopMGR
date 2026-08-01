@@ -25,6 +25,7 @@ Object.defineProperty(globalThis, 'location', {
   value: {
     href: 'http://localhost/',
     origin: 'http://localhost',
+    replace: vi.fn(),
   },
   writable: true,
 });
