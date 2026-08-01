@@ -13,10 +13,7 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios;
 
-public class AdministrarAuth(
-        ShopMGRDbContexto contexto,
-        IConfiguration configuracion) 
-    : IAdministrarAuth
+public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion) : IAdministrarAuth
 {
     private readonly ShopMGRDbContexto _contexto = contexto; // TODO(#100): Implementar un repositorio para no acceder a datos directamente, SRP!
     private readonly IConfiguration _configuracion = configuracion;
@@ -76,7 +73,8 @@ public class AdministrarAuth(
 
         if (esValido)
         {
-            var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token!.IdUsuario)
+            var usuario =
+                await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token!.IdUsuario)
                 ?? throw new KeyNotFoundException();
             var nuevoAccessToken = CrearToken(usuario);
             var nuevoRefreshToken = GenerarRefreshToken();
@@ -94,9 +92,11 @@ public class AdministrarAuth(
     public async Task CerrarSesion(string refreshTokenRequest)
     {
         var hash = CalcularHash(refreshTokenRequest);
-        var token = await _contexto.RefreshTokens.FirstOrDefaultAsync(rt => rt.Hash == hash)
+        var token =
+            await _contexto.RefreshTokens.FirstOrDefaultAsync(rt => rt.Hash == hash)
             ?? throw new KeyNotFoundException();
-        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token.IdUsuario)
+        var usuario =
+            await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token.IdUsuario)
             ?? throw new KeyNotFoundException();
 
         usuario.RevocarRefreshToken(token.Hash);
@@ -111,6 +111,7 @@ public class AdministrarAuth(
 
         return usuario;
     }
+
     private string CrearToken(Usuario usuario)
     {
         var claims = new List<Claim>

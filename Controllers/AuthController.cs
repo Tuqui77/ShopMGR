@@ -197,9 +197,9 @@ public class AuthController(
         var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         try
         {
-        await _administracionPasskeys.EditarNombrePasskey(idCredencial, idUsuario, nombreNuevo);
+            await _administracionPasskeys.EditarNombrePasskey(idCredencial, idUsuario, nombreNuevo);
 
-        return Ok("Nombre de la passkey modificado");
+            return Ok("Nombre de la passkey modificado");
         }
         catch (InvalidOperationException)
         {
@@ -215,9 +215,9 @@ public class AuthController(
         var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         try
         {
-        await _administracionPasskeys.EliminarPasskeyAsync(idCredencial, idUsuario);
+            await _administracionPasskeys.EliminarPasskeyAsync(idCredencial, idUsuario);
 
-        return Ok("Passkey eliminada correctamente");
+            return Ok("Passkey eliminada correctamente");
         }
         catch (InvalidOperationException)
         {

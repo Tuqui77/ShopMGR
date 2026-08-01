@@ -18,7 +18,7 @@ public class Usuario
 
         return token;
     }
-    
+
     public void RevocarRefreshToken(string hash)
     {
         var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Hash == hash)

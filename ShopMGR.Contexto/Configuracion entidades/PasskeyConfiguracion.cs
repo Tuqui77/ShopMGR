@@ -19,7 +19,7 @@ public class PasskeyConfiguracion : IEntityTypeConfiguration<Passkey>
             .Property(pk => pk.ClavePublica)
             .IsRequired(true)
             .HasMaxLength(512);
-        
+
         builder
             .Property(pk => pk.UserHandle)
             .IsRequired(true)
