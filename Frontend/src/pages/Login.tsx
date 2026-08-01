@@ -3,16 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock, LogIn, Loader2, UserPlus } from 'lucide-react';
 import { useStore } from '../store';
 import { authService } from '../services/auth';
+import { PasskeyButton } from '../components/PasskeyButton';
+import { usePasskeyLogin } from '../hooks/usePasskeyLogin';
 
 export function Login() {
   const navigate = useNavigate();
-  const { setToken } = useStore();
+  const { setTokens } = useStore();
   
   const [isRegistering, setIsRegistering] = useState(false);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ userName: '', password: '', general: '', success: '' });
   const [isLoading, setIsLoading] = useState(false);
+  
+  const passkey = usePasskeyLogin();
+  const passkeysSoportados = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +48,8 @@ export function Login() {
         setIsRegistering(false);
         setPassword('');
       } else {
-        const token = await authService.login({ userName: userName.trim(), password });
-        setToken(token);
+        const { accessToken, refreshToken } = await authService.login({ userName: userName.trim(), password });
+        setTokens(accessToken, refreshToken);
         navigate('/');
       }
     } catch (err: unknown) {
@@ -53,7 +58,9 @@ export function Login() {
         : null;
       const message = typeof axiosData === 'string'
         ? axiosData
-        : 'Error al conectar con el servidor';
+        : typeof axiosData === 'object' && axiosData !== null && 'error' in axiosData
+          ? String((axiosData as { error: unknown }).error)
+          : 'Error al conectar con el servidor';
       setErrors(prev => ({ ...prev, general: message }));
     } finally {
       setIsLoading(false);
@@ -150,7 +157,7 @@ export function Login() {
             )}
             {isLoading
               ? (isRegistering ? 'Creando...' : 'Ingresando...')
-              : (isRegistering ? 'Crear Usuario' : 'Iniciar Sesión')
+              : (isRegistering ? 'Crear Usuario' : 'Iniciar sesión')
             }
           </button>
           
@@ -162,10 +169,27 @@ export function Login() {
               onClick={toggleMode}
               className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
             >
-              {isRegistering ? 'Iniciar Sesión' : 'Crear Usuario'}
+              {isRegistering ? 'Iniciar sesión' : 'Crear Usuario'}
             </button>
           </p>
         </form>
+
+        {/* Passkey login (fuera del form: no debe enviarse como submit) */}
+        {!isRegistering && passkeysSoportados && (
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1" style={{ backgroundColor: 'var(--color-border)' }} />
+              <span className="text-sm text-[var(--color-muted)]">o</span>
+              <div className="h-px flex-1" style={{ backgroundColor: 'var(--color-border)' }} />
+            </div>
+            <PasskeyButton onClick={passkey.iniciarConPasskey} isLoading={passkey.isLoading} />
+            {passkey.error && (
+              <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
+                <p className="text-sm text-[var(--color-danger)] text-center">{passkey.error}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

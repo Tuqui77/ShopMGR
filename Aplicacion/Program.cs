@@ -3,7 +3,10 @@ using System.Configuration;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using AspNetCore.Scalar;
+using AspNetCoreRateLimit;
+using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -31,12 +34,13 @@ namespace ShopMGR.WebApi.Aplicacion
                     builder.Configuration.GetConnectionString("ShopMGRDbContexto"),
                     sqlOptions =>
                     {
-                        sqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 5,
-                            maxRetryDelay: TimeSpan.FromSeconds(10),
-                            errorNumbersToAdd: null
-                        )
-                        .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        sqlOptions
+                            .EnableRetryOnFailure(
+                                maxRetryCount: 5,
+                                maxRetryDelay: TimeSpan.FromSeconds(10),
+                                errorNumbersToAdd: null
+                            )
+                            .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     }
                 );
             });
@@ -52,6 +56,35 @@ namespace ShopMGR.WebApi.Aplicacion
                         .ReferenceHandler
                         .IgnoreCycles;
                 });
+
+            //Rate limiter
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.OnRejected = async (context, CancellationToken) =>
+                {
+                    context.HttpContext.Response.ContentType = "application/json";
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(
+                        new { error = "Demasiados intentos de inicio de sesión. Inténtelo nuevamente en unos minutos" },
+                        CancellationToken
+                    );
+                };
+
+                options.AddPolicy(
+                    "login",
+                    HttpContext =>
+                        RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = 5,
+                                Window = TimeSpan.FromMinutes(1),
+                                QueueLimit = 0,
+                            }
+                        )
+                );
+            });
 
             //servicios del contenedor
             builder.Services.AddControllers();
@@ -94,11 +127,17 @@ namespace ShopMGR.WebApi.Aplicacion
                         ),
                     };
                 });
+
+            builder.Services.AddFido2(options =>
+            {
+                options.ServerDomain = builder.Configuration["fido2:serverDomain"];
+                options.ServerName = "ShopMGR";
+                options.Origins = builder.Configuration.GetSection("fido2:origins").Get<HashSet<string>>();
+            });
+
             var app = builder.Build();
 
-            var rutaImagenes = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "imagenes");
+            var rutaImagenes = Path.Combine(Directory.GetCurrentDirectory(), "imagenes");
             Directory.CreateDirectory(rutaImagenes);
 
             app.UseDefaultFiles();
@@ -128,6 +167,7 @@ namespace ShopMGR.WebApi.Aplicacion
 
             // app.UseHttpsRedirection();
 
+            app.UseRateLimiter();
             app.UseAuthorization();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();

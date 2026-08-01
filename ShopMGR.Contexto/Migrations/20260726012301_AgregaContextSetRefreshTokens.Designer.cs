@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShopMGR.Contexto;
 
@@ -11,9 +12,11 @@ using ShopMGR.Contexto;
 namespace ShopMGR.Contexto.Migrations
 {
     [DbContext(typeof(ShopMGRDbContexto))]
-    partial class ShopMGRDbContextoModelSnapshot : ModelSnapshot
+    [Migration("20260726012301_AgregaContextSetRefreshTokens")]
+    partial class AgregaContextSetRefreshTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -258,94 +261,6 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("IdTrabajo");
 
                     b.ToTable("MovimientoBalance");
-                });
-
-            modelBuilder.Entity("ShopMGR.Dominio.Modelo.Passkey", b =>
-                {
-                    b.Property<byte[]>("IdCredencial")
-                        .HasMaxLength(1024)
-                        .HasColumnType("varbinary(1024)");
-
-                    b.Property<string>("Attestation")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<byte[]>("ClavePublica")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("varbinary(512)");
-
-                    b.Property<long>("ContadorLogin")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("date");
-
-                    b.Property<int>("IdUsuario")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("UltimoUso")
-                        .HasColumnType("date");
-
-                    b.Property<byte[]>("UserHandle")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("varbinary(512)");
-
-                    b.HasKey("IdCredencial");
-
-                    b.HasIndex("IdUsuario");
-
-                    b.ToTable("Passkeys");
-                });
-
-            modelBuilder.Entity("ShopMGR.Dominio.Modelo.PasskeyChallenge", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ChallengeBase64")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<DateTime>("FechaExpiracion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("IdUsuario")
-                        .HasColumnType("int");
-
-                    b.Property<string>("OpcionesJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.Property<int?>("UsuarioId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FechaExpiracion")
-                        .HasDatabaseName("PasskeyChallenges_FechaExpiracion");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.HasIndex("ChallengeBase64", "FechaExpiracion")
-                        .HasDatabaseName("PasskeyChallenges_ChallengeNoExpirado");
-
-                    b.ToTable("Challenges");
                 });
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Presupuesto", b =>
@@ -614,26 +529,6 @@ namespace ShopMGR.Contexto.Migrations
                     b.Navigation("Trabajo");
                 });
 
-            modelBuilder.Entity("ShopMGR.Dominio.Modelo.Passkey", b =>
-                {
-                    b.HasOne("ShopMGR.Dominio.Modelo.Usuario", "Usuario")
-                        .WithMany("PassKeys")
-                        .HasForeignKey("IdUsuario")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("ShopMGR.Dominio.Modelo.PasskeyChallenge", b =>
-                {
-                    b.HasOne("ShopMGR.Dominio.Modelo.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId");
-
-                    b.Navigation("Usuario");
-                });
-
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Presupuesto", b =>
                 {
                     b.HasOne("ShopMGR.Dominio.Modelo.Cliente", "Cliente")
@@ -713,8 +608,6 @@ namespace ShopMGR.Contexto.Migrations
 
             modelBuilder.Entity("ShopMGR.Dominio.Modelo.Usuario", b =>
                 {
-                    b.Navigation("PassKeys");
-
                     b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618

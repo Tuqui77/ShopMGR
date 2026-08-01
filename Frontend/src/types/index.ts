@@ -12,8 +12,17 @@ export interface LoginRequest {
   password: string;
 }
 
-// Backend returns raw JWT string, not JSON
-export type LoginResponse = string;
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface PasskeyCredencial {
+  idCredencial: string;      // base64 estándar (se reenvía tal cual al backend)
+  nombre: string;
+  fechaCreacion: string;     // ISO
+  ultimoUso: string | null;  // ISO | null
+}
 
 // ============================================================================
 // CLIENTE

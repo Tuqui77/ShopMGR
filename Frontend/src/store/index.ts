@@ -20,8 +20,9 @@ interface AppState {
   presupuestos: Presupuesto[];
   valorHora: number;
   
-  // Auth State (JWT token)
-  token: string | null;
+  // Auth State (JWT tokens)
+  accessToken: string | null;
+  refreshToken: string | null;
   
   // UI State
   showHoursModal: boolean;
@@ -30,6 +31,7 @@ interface AppState {
   showTrabajoForm: boolean;
   showMovimientoModal: boolean;
   imageFullscreenOpen: boolean;
+  isDetailModalOpen: boolean;
   selectedTrabajo: Trabajo | null;
   lastTrabajoId: number | null;
   
@@ -42,7 +44,7 @@ interface AppState {
   datosDuplicarPresupuesto: DatosDuplicarPresupuesto | null;
   
   // Auth Actions
-  setToken: (token: string | null) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
   
   // UI Actions
@@ -52,6 +54,7 @@ interface AppState {
   setShowTrabajoForm: (show: boolean) => void;
   setShowMovimientoModal: (show: boolean) => void;
   setImageFullscreenOpen: (open: boolean) => void;
+  setIsDetailModalOpen: (open: boolean) => void;
   setSelectedTrabajo: (trabajo: Trabajo | null) => void;
   setEditingCliente: (cliente: Cliente | null) => void;
   setEditingTrabajoId: (id: number | null) => void;
@@ -72,7 +75,8 @@ export const useStore = create<AppState>()(
       valorHora: 0,
       
       // Initial auth state
-      token: null,
+      accessToken: null,
+      refreshToken: null,
       
       // Initial UI state
       showHoursModal: false,
@@ -81,6 +85,7 @@ export const useStore = create<AppState>()(
       showTrabajoForm: false,
       showMovimientoModal: false,
       imageFullscreenOpen: false,
+      isDetailModalOpen: false,
       selectedTrabajo: null,
       lastTrabajoId: null,
       editingCliente: null,
@@ -89,10 +94,10 @@ export const useStore = create<AppState>()(
       datosDuplicarPresupuesto: null,
       
       // Auth Actions
-      setToken: (token) => set({ token }),
+      setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
       
       logout: () => {
-        set({ token: null });
+        set({ accessToken: null, refreshToken: null });
       },
       
       // UI Actions
@@ -107,6 +112,8 @@ export const useStore = create<AppState>()(
       setShowMovimientoModal: (show) => set({ showMovimientoModal: show }),
       
       setImageFullscreenOpen: (open) => set({ imageFullscreenOpen: open }),
+      
+      setIsDetailModalOpen: (open) => set({ isDetailModalOpen: open }),
       
       setSelectedTrabajo: (trabajo) => {
         set({ selectedTrabajo: trabajo });
@@ -166,7 +173,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'shopmgr-storage',
-      partialize: (state) => ({ token: state.token }),
+      partialize: (state) => ({ accessToken: state.accessToken, refreshToken: state.refreshToken }),
     }
   )
 );

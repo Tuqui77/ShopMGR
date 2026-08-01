@@ -2,6 +2,17 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useStore } from '../../store';
 import type { Trabajo } from '../../types';
 
+/** Lee los tokens persistidos por el middleware `persist` en localStorage. */
+function readPersistedTokens(): { accessToken: string | null; refreshToken: string | null } {
+  const raw = localStorage.getItem('shopmgr-storage');
+  if (!raw) return { accessToken: null, refreshToken: null };
+  const parsed = JSON.parse(raw) as { state?: { accessToken?: unknown; refreshToken?: unknown } };
+  return {
+    accessToken: typeof parsed.state?.accessToken === 'string' ? parsed.state.accessToken : null,
+    refreshToken: typeof parsed.state?.refreshToken === 'string' ? parsed.state.refreshToken : null,
+  };
+}
+
 describe('useStore', () => {
   beforeEach(() => {
     // Reset store state before each test
@@ -9,6 +20,7 @@ describe('useStore', () => {
       showHoursModal: false,
       selectedTrabajo: null,
       lastTrabajoId: null,
+      isDetailModalOpen: false,
     });
   });
 
@@ -87,6 +99,62 @@ describe('useStore', () => {
       const state = useStore.getState();
       expect(state.selectedTrabajo).toBe(null);
       expect(state.lastTrabajoId).toBe(1); // lastTrabajoId is not cleared
+    });
+  });
+
+  describe('setTokens (issue #105: consistencia memoria ↔ localStorage)', () => {
+    it('actualiza tokens en memoria y en localStorage', () => {
+      useStore.getState().setTokens('access-123', 'refresh-456');
+
+      const state = useStore.getState();
+      expect(state.accessToken).toBe('access-123');
+      expect(state.refreshToken).toBe('refresh-456');
+
+      // El middleware persist debe haber escrito los mismos tokens
+      expect(readPersistedTokens()).toEqual({
+        accessToken: 'access-123',
+        refreshToken: 'refresh-456',
+      });
+    });
+
+    it('reemplaza tokens previos en memoria y localStorage', () => {
+      useStore.getState().setTokens('access-old', 'refresh-old');
+      useStore.getState().setTokens('access-new', 'refresh-new');
+
+      expect(useStore.getState().accessToken).toBe('access-new');
+      expect(useStore.getState().refreshToken).toBe('refresh-new');
+      expect(readPersistedTokens()).toEqual({
+        accessToken: 'access-new',
+        refreshToken: 'refresh-new',
+      });
+    });
+  });
+
+  describe('logout (issue #105: limpieza explícita)', () => {
+    it('limpia tokens en memoria y en localStorage', () => {
+      useStore.getState().setTokens('access-123', 'refresh-456');
+      useStore.getState().logout();
+
+      expect(useStore.getState().accessToken).toBeNull();
+      expect(useStore.getState().refreshToken).toBeNull();
+      expect(readPersistedTokens()).toEqual({
+        accessToken: null,
+        refreshToken: null,
+      });
+    });
+  });
+
+  describe('setIsDetailModalOpen (issue #98: ocultar FAB en modales de detalle)', () => {
+    it('inicia en false', () => {
+      expect(useStore.getState().isDetailModalOpen).toBe(false);
+    });
+
+    it('setea el flag a true y de vuelta a false', () => {
+      useStore.getState().setIsDetailModalOpen(true);
+      expect(useStore.getState().isDetailModalOpen).toBe(true);
+
+      useStore.getState().setIsDetailModalOpen(false);
+      expect(useStore.getState().isDetailModalOpen).toBe(false);
     });
   });
 
