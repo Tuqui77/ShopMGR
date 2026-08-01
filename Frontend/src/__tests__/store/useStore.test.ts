@@ -20,6 +20,7 @@ describe('useStore', () => {
       showHoursModal: false,
       selectedTrabajo: null,
       lastTrabajoId: null,
+      isDetailModalOpen: false,
     });
   });
 
@@ -140,6 +141,20 @@ describe('useStore', () => {
         accessToken: null,
         refreshToken: null,
       });
+    });
+  });
+
+  describe('setIsDetailModalOpen (issue #98: ocultar FAB en modales de detalle)', () => {
+    it('inicia en false', () => {
+      expect(useStore.getState().isDetailModalOpen).toBe(false);
+    });
+
+    it('setea el flag a true y de vuelta a false', () => {
+      useStore.getState().setIsDetailModalOpen(true);
+      expect(useStore.getState().isDetailModalOpen).toBe(true);
+
+      useStore.getState().setIsDetailModalOpen(false);
+      expect(useStore.getState().isDetailModalOpen).toBe(false);
     });
   });
 

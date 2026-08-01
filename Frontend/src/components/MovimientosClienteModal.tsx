@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import type { MovimientoBalance, TipoMovimiento } from '../types';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { useMovimientosCliente, useModificarMovimiento, useEliminarMovimiento } from '../hooks/useMovimientosCliente';
+import { useStore } from '../store';
 
 interface Props {
   clienteId: number;
@@ -34,6 +35,13 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
   } | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<MovimientoBalance | null>(null);
+  const setIsDetailModalOpen = useStore((state) => state.setIsDetailModalOpen);
+
+  // Ocultar el FAB global mientras este modal está abierto (issue #98)
+  useEffect(() => {
+    setIsDetailModalOpen(isOpen);
+    return () => setIsDetailModalOpen(false);
+  }, [isOpen, setIsDetailModalOpen]);
 
   // Close on Escape key
   useEffect(() => {

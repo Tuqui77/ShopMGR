@@ -3,6 +3,7 @@ import { X, Loader2, Clock, Edit3, Trash2, Check, Ban } from 'lucide-react';
 import type { HorasDeTrabajo } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { useModificarHoras, useEliminarHoras } from '../hooks/useTrabajos';
+import { useStore } from '../store';
 
 interface Props {
   trabajoId: number;
@@ -35,6 +36,13 @@ export function HorasTrabajoModal({
   } | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<HorasDeTrabajo | null>(null);
+  const setIsDetailModalOpen = useStore((state) => state.setIsDetailModalOpen);
+
+  // Ocultar el FAB global mientras este modal está abierto (issue #98)
+  useEffect(() => {
+    setIsDetailModalOpen(isOpen);
+    return () => setIsDetailModalOpen(false);
+  }, [isOpen, setIsDetailModalOpen]);
 
   // Close on Escape key
   useEffect(() => {

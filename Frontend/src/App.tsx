@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
 
 function ProtectedLayout() {
   const [fabOpen, setFabOpen] = useState(false);
-  const { accessToken, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen } = useStore();
+  const { accessToken, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen, isDetailModalOpen } = useStore();
   const location = useLocation();
   
   // Body scroll lock when any modal is open (must be before early return for hooks rule)
@@ -84,7 +84,7 @@ function ProtectedLayout() {
         <Outlet />
       </div>
       <BottomNav />
-      {!imageFullscreenOpen && (
+      {!imageFullscreenOpen && !isDetailModalOpen && (
         <FAB isOpen={fabOpen} onToggle={() => setFabOpen(!fabOpen)} onAction={handleFabAction} />
       )}
       <HoursModal />
