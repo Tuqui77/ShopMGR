@@ -6,6 +6,7 @@ namespace ShopMGR.Dominio.Modelo
     {
         public byte[] IdCredencial { get; private set; }
         public byte[] ClavePublica { get; private set; }
+        public byte[] UserHandle { get; private set; }
         public uint ContadorLogin { get; private set; }
         public string Nombre { get; private set; }
         public DateTime FechaCreacion { get; private set; }
@@ -21,6 +22,7 @@ namespace ShopMGR.Dominio.Modelo
         public Passkey(
                 byte[] idCredencial,
                 byte[] clavePublica,
+                byte[] userHandle,
                 string nombre,
                 int idUsuario,
                 string? attestation = null)
@@ -28,6 +30,7 @@ namespace ShopMGR.Dominio.Modelo
 
             IdCredencial = idCredencial ?? throw new ArgumentNullException(nameof(idCredencial));
             ClavePublica = clavePublica ?? throw new ArgumentNullException(nameof(clavePublica));
+            UserHandle = userHandle;
             Nombre = nombre ?? throw new ArgumentNullException(nameof(nombre));
             IdUsuario = idUsuario;
             ContadorLogin = 0;

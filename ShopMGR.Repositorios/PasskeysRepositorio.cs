@@ -100,8 +100,16 @@ namespace ShopMGR.Repositorios
 
         public async Task<bool> ElUserHandleEsDuenoDeLaCredencial(byte[] userHandle, byte[] idCredencial)
         {
-            // TODO(#101): validar contra el userHandle
-            return await _contexto.Passkeys.AnyAsync(pk => pk.IdCredencial == idCredencial);
+            var passkey = await _contexto.Passkeys.Where(pk => pk.IdCredencial == idCredencial).FirstOrDefaultAsync();
+            if (passkey == null
+                    || userHandle == null
+                    || passkey.UserHandle == null
+                    || !passkey.UserHandle.SequenceEqual(userHandle))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public async Task ActualizarAsync(Passkey credencial)

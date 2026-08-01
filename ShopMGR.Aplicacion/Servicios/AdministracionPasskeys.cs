@@ -93,6 +93,8 @@ public class AdministracionPasskeys(
             _opcionesJson
         );
 
+        var userHandle = Encoding.UTF8.GetBytes(usuario.Id.ToString());
+
         var resultado = await _fido2.MakeNewCredentialAsync(
             new MakeNewCredentialParams
             {
@@ -105,7 +107,7 @@ public class AdministracionPasskeys(
 
         await _repositorio.EliminarChallengeUsado(challengeRegistro);
 
-        var passkey = new Passkey(resultado.Id, resultado.PublicKey, nombreDispositivo, usuario.Id);
+        var passkey = new Passkey(resultado.Id, resultado.PublicKey, userHandle, nombreDispositivo, usuario.Id);
 
         await _repositorio.GuardarPasskey(passkey);
         return passkey;
