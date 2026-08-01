@@ -20,9 +20,8 @@ interface AppState {
   presupuestos: Presupuesto[];
   valorHora: number;
   
-  // Auth State (JWT tokens)
+  // Auth State (JWT access token; el refresh token vive en cookie HttpOnly)
   accessToken: string | null;
-  refreshToken: string | null;
   
   // UI State
   showHoursModal: boolean;
@@ -44,7 +43,7 @@ interface AppState {
   datosDuplicarPresupuesto: DatosDuplicarPresupuesto | null;
   
   // Auth Actions
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string) => void;
   logout: () => void;
   
   // UI Actions
@@ -76,7 +75,6 @@ export const useStore = create<AppState>()(
       
       // Initial auth state
       accessToken: null,
-      refreshToken: null,
       
       // Initial UI state
       showHoursModal: false,
@@ -94,10 +92,10 @@ export const useStore = create<AppState>()(
       datosDuplicarPresupuesto: null,
       
       // Auth Actions
-      setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
-      
+      setTokens: (accessToken) => set({ accessToken }),
+
       logout: () => {
-        set({ accessToken: null, refreshToken: null });
+        set({ accessToken: null });
       },
       
       // UI Actions
@@ -173,7 +171,17 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'shopmgr-storage',
-      partialize: (state) => ({ accessToken: state.accessToken, refreshToken: state.refreshToken }),
+      version: 2,
+      // V1 persistía { accessToken, refreshToken }; V2 solo accessToken — el
+      // refresh token vive en cookie HttpOnly y ya no se persiste (issue #114).
+      // Se descarta el token residual y se conserva el accessToken.
+      migrate: (persistedState) => {
+        const legacy = persistedState as { accessToken?: unknown };
+        return {
+          accessToken: typeof legacy.accessToken === 'string' ? legacy.accessToken : null,
+        };
+      },
+      partialize: (state) => ({ accessToken: state.accessToken }),
     }
   )
 );

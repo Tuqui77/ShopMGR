@@ -65,29 +65,18 @@ apiClient.interceptors.response.use(
     originalRequest._retry = true;
     isRefreshing = true;
 
-    const { refreshToken } = useStore.getState();
-
-    if (!refreshToken) {
-      isRefreshing = false;
-      useStore.getState().logout();
-      window.location.replace('/login');
-      return Promise.reject(error);
-    }
-
     try {
-      // Call refresh endpoint with a plain axios instance (no interceptors).
-      // Issue #106: el refresh token viaja en el BODY como string JSON, nunca en
-      // query params. Content-Type explícito: sin él, axios enviaría el string
-      // crudo (sin comillas) y `[FromBody] string` del backend rechazaría.
-      const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
+      // El refresh token vive como cookie HttpOnly (issue #114): el navegador
+      // lo adjunta solo en cada request al mismo origen (proxy nginx /api). El
+      // endpoint ya no acepta body y no requiere withCredentials (mismo origen).
+      // El 401 dispara refresh siempre: el frontend no sabe si la cookie existe.
+      const { data } = await axios.post<{ accessToken: string }>(
         `${API_BASE_URL}/Auth/Refrescar`,
-        refreshToken,
-        { headers: { 'Content-Type': 'application/json' } },
       );
 
-      // Persistir tokens vía el store: el middleware persist escribe en
-      // localStorage, manteniendo memoria y storage consistentes (issue #105).
-      useStore.getState().setTokens(data.accessToken, data.refreshToken);
+      // Persistir el nuevo access token vía el store: el middleware persist
+      // escribe en localStorage, manteniendo memoria y storage consistentes.
+      useStore.getState().setTokens(data.accessToken);
       processQueue(null, data.accessToken);
 
       // Retry original request with new token

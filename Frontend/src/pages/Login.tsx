@@ -48,8 +48,8 @@ export function Login() {
         setIsRegistering(false);
         setPassword('');
       } else {
-        const { accessToken, refreshToken } = await authService.login({ userName: userName.trim(), password });
-        setTokens(accessToken, refreshToken);
+        const { accessToken } = await authService.login({ userName: userName.trim(), password });
+        setTokens(accessToken);
         navigate('/');
       }
     } catch (err: unknown) {

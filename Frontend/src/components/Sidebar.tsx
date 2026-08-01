@@ -19,13 +19,12 @@ function isActivePath(currentPath: string, itemPath: string) {
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, refreshToken } = useStore();
+  const { logout } = useStore();
 
   const handleLogout = async () => {
     try {
-      if (refreshToken) {
-        await authService.cerrarSesion(refreshToken);
-      }
+      // La cookie HttpOnly se borra server-side en /Auth/CerrarSesion (issue #114).
+      await authService.cerrarSesion();
     } catch {
       // Ignore errors — always clear local state
     }

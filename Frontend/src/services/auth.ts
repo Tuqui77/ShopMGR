@@ -18,15 +18,14 @@ export const authService = {
     return response.data;
   },
 
-  async refrescar(refreshToken: string): Promise<LoginResponse> {
-    const response = await apiClient.post<LoginResponse>(
-      '/Auth/Refrescar',
-      refreshToken,
-    );
+  async refrescar(): Promise<LoginResponse> {
+    // El refresh token viaja como cookie HttpOnly (issue #114): sin body.
+    const response = await apiClient.post<LoginResponse>('/Auth/Refrescar');
     return response.data;
   },
 
-  async cerrarSesion(refreshToken: string): Promise<void> {
-    await apiClient.post('/Auth/CerrarSesion', refreshToken);
+  async cerrarSesion(): Promise<void> {
+    // La cookie HttpOnly se borra server-side (issue #114): sin body.
+    await apiClient.post('/Auth/CerrarSesion');
   },
 };

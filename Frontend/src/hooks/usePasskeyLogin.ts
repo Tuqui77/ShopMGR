@@ -53,8 +53,8 @@ export function usePasskeyLogin() {
         return;
       }
 
-      const { accessToken, refreshToken } = await passkeysService.verificarAuth(credential);
-      setTokens(accessToken, refreshToken);
+      const { accessToken } = await passkeysService.verificarAuth(credential);
+      setTokens(accessToken);
       navigate('/');
     } catch (err: unknown) {
       const kind = classifyPasskeyError(err);
