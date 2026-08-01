@@ -1,4 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('../../services/api', () => ({
+  apiClient: {
+    get: vi.fn(),
+    patch: vi.fn(),
+    post: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
+
+import { apiClient } from '../../services/api';
 import {
   base64UrlToArrayBuffer,
   arrayBufferToBase64Url,
@@ -8,7 +19,12 @@ import {
   extractBackendMessage,
   normalizeAssertionOptions,
   normalizeCreationOptions,
+  passkeysService,
 } from '../../services/passkeys';
+
+const mockedGet = vi.mocked(apiClient.get);
+const mockedPatch = vi.mocked(apiClient.patch);
+const mockedDelete = vi.mocked(apiClient.delete);
 
 function bytesToBuffer(bytes: Uint8Array): ArrayBuffer {
   const buffer = new ArrayBuffer(bytes.byteLength);
@@ -158,5 +174,98 @@ describe('passkeys: normalizeCreationOptions', () => {
 
   it('lanza error con estructura inválida', () => {
     expect(() => normalizeCreationOptions({})).toThrow('Respuesta de opciones de registro inválida');
+  });
+});
+
+// ============================================================================
+// Service: listar / editarNombre / eliminar
+// ============================================================================
+
+const PASSKEY_VALIDA = {
+  idCredencial: 'aGVsbG8=',
+  nombre: 'iPhone de Juan',
+  fechaCreacion: '2026-07-01T10:00:00',
+  ultimoUso: '2026-07-02T10:00:00',
+};
+
+describe('passkeysService.listar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('devuelve las credenciales cuando el backend responde un array plano', async () => {
+    mockedGet.mockResolvedValue({ data: [PASSKEY_VALIDA] });
+    const result = await passkeysService.listar();
+    expect(mockedGet).toHaveBeenCalledWith('/Auth/passkeys/listar');
+    expect(result).toEqual([PASSKEY_VALIDA]);
+  });
+
+  it('devuelve las credenciales cuando el backend responde {$id, $values}', async () => {
+    mockedGet.mockResolvedValue({ data: { $id: '1', $values: [PASSKEY_VALIDA] } });
+    const result = await passkeysService.listar();
+    expect(result).toEqual([PASSKEY_VALIDA]);
+  });
+
+  it('acepta ultimoUso null (nunca usado)', async () => {
+    mockedGet.mockResolvedValue({
+      data: [{ idCredencial: 'aGVsbG8=', nombre: 'MacBook', fechaCreacion: '2026-07-01T10:00:00', ultimoUso: null }],
+    });
+    const [result] = await passkeysService.listar();
+    expect(result.ultimoUso).toBeNull();
+  });
+
+  it('devuelve [] cuando el backend responde null', async () => {
+    mockedGet.mockResolvedValue({ data: null });
+    expect(await passkeysService.listar()).toEqual([]);
+  });
+
+  it('filtra ítems que no cumplen el contrato', async () => {
+    mockedGet.mockResolvedValue({
+      data: [
+        PASSKEY_VALIDA,
+        { idCredencial: 123, nombre: 'Sin id válido', fechaCreacion: '2026-07-01T10:00:00', ultimoUso: null },
+        { idCredencial: 'YmFk', nombre: 'Sin fechaCreacion', ultimoUso: null },
+        { idCredencial: 'YmFk', nombre: 'ultimoUso numérico', fechaCreacion: '2026-07-01T10:00:00', ultimoUso: 5 },
+        null,
+      ],
+    });
+    const result = await passkeysService.listar();
+    expect(result).toEqual([PASSKEY_VALIDA]);
+  });
+});
+
+describe('passkeysService.editarNombre', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('envía PATCH con los params idCredencial y nombreNuevo', async () => {
+    mockedPatch.mockResolvedValue({ data: 'Nombre de la passkey modificado' });
+    await passkeysService.editarNombre('aGVsbG8=', 'MacBook Pro');
+    expect(mockedPatch).toHaveBeenCalledWith('/Auth/passkeys/editar', null, {
+      params: { idCredencial: 'aGVsbG8=', nombreNuevo: 'MacBook Pro' },
+    });
+  });
+
+  it('no transforma el idCredencial (se reenvía tal cual vino del listado)', async () => {
+    const idConSlash = 'ab+/cd==';
+    mockedPatch.mockResolvedValue({ data: 'Nombre de la passkey modificado' });
+    await passkeysService.editarNombre(idConSlash, 'Nuevo');
+    const params = vi.mocked(mockedPatch.mock.calls[0]?.[2])?.params;
+    expect(params).toEqual({ idCredencial: 'ab+/cd==', nombreNuevo: 'Nuevo' });
+  });
+});
+
+describe('passkeysService.eliminar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('envía DELETE con el param idCredencial', async () => {
+    mockedDelete.mockResolvedValue({ data: 'Passkey eliminada correctamente' });
+    await passkeysService.eliminar('aGVsbG8=');
+    expect(mockedDelete).toHaveBeenCalledWith('/Auth/passkeys/eliminar', {
+      params: { idCredencial: 'aGVsbG8=' },
+    });
   });
 });

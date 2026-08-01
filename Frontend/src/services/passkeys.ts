@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import type { LoginResponse } from '../types';
+import type { LoginResponse, PasskeyCredencial } from '../types';
 
 // ============================================================================
 // Passkeys (WebAuthn / FIDO2) — contrato con el backend .NET
@@ -132,6 +132,33 @@ function isLoginResponse(value: unknown): value is LoginResponse {
     typeof value.accessToken === 'string' &&
     typeof value.refreshToken === 'string'
   );
+}
+
+// ---- Listado de credenciales registradas -------------------------------------
+
+function isPasskeyCredencial(value: unknown): value is PasskeyCredencial {
+  if (!isRecord(value)) return false;
+  if (typeof value.idCredencial !== 'string' || value.idCredencial === '') return false;
+  if (typeof value.nombre !== 'string') return false;
+  if (typeof value.fechaCreacion !== 'string') return false;
+  if (value.ultimoUso !== null && typeof value.ultimoUso !== 'string') return false;
+  return true;
+}
+
+/**
+ * Extrae el listado de credenciales de /Auth/passkeys/listar. El backend usa
+ * ReferenceHandler.IgnoreCycles, así que la respuesta puede ser un array plano
+ * o un objeto {$id, $values} según el serializador (mismo patrón que
+ * extractMovimientos en movimientos.ts). Descarta ítems que no cumplan el contrato.
+ */
+function extractPasskeys(data: unknown): PasskeyCredencial[] {
+  if (!data) return [];
+  const items = Array.isArray(data)
+    ? data
+    : isRecord(data) && Array.isArray(data.$values)
+      ? data.$values
+      : [];
+  return items.filter(isPasskeyCredencial);
 }
 
 // ---- Credenciales del navegador ---------------------------------------------
@@ -441,5 +468,25 @@ export const passkeysService = {
   /** Verifica la attestation y registra el passkey con el nombre del dispositivo. */
   async verificarRegistro(credential: PublicKeyCredential, nombreDispositivo: string): Promise<void> {
     await apiClient.post('/Auth/passkeys/registrar', toRegistroRequest(credential, nombreDispositivo));
+  },
+
+  /** Lista las credenciales del usuario autenticado (el idUsuario sale del claim JWT). */
+  async listar(): Promise<PasskeyCredencial[]> {
+    const { data } = await apiClient.get<unknown>('/Auth/passkeys/listar');
+    return extractPasskeys(data);
+  },
+
+  /** Renombra una credencial; idCredencial se reenvía tal cual vino del listado (base64 estándar). */
+  async editarNombre(idCredencial: string, nombreNuevo: string): Promise<void> {
+    await apiClient.patch('/Auth/passkeys/editar', null, {
+      params: { idCredencial, nombreNuevo },
+    });
+  },
+
+  /** Elimina una credencial; idCredencial se reenvía tal cual vino del listado (base64 estándar). */
+  async eliminar(idCredencial: string): Promise<void> {
+    await apiClient.delete('/Auth/passkeys/eliminar', {
+      params: { idCredencial },
+    });
   },
 };

@@ -14,6 +14,7 @@ interface Props {
   cancelLabel?: string;
   isLoading?: boolean;
   variant?: Variant;
+  error?: string;
 }
 
 const variantConfig: Record<Variant, { icon: typeof Trash2; color: string }> = {
@@ -31,6 +32,7 @@ export function ConfirmDialog({
   cancelLabel = 'Cancelar',
   isLoading = false,
   variant = 'danger',
+  error,
 }: Props) {
   // Escape key
   useEffect(() => {
@@ -55,7 +57,12 @@ export function ConfirmDialog({
         <div className="p-6 text-center">
           <Icon className="w-12 h-12 mx-auto mb-4" style={{ color }} />
           <h3 className="text-lg font-semibold mb-2">{title}</h3>
-          <p className="text-sm mb-6" style={{ color: 'var(--color-muted)' }}>{message}</p>
+          <p className={clsx('text-sm', error ? 'mb-2' : 'mb-6')} style={{ color: 'var(--color-muted)' }}>{message}</p>
+          {error && (
+            <p className="text-sm mb-6" style={{ color: 'var(--color-danger)' }} role="alert">
+              {error}
+            </p>
+          )}
           <div className="flex gap-3 justify-center">
             <button
               onClick={onClose}
