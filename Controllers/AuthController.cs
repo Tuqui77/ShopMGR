@@ -194,9 +194,17 @@ public class AuthController(
     [Route("passkeys/editar")]
     public async Task<IActionResult> EditarNombrePasskey([FromQuery] byte[] idCredencial, string nombreNuevo)
     {
-        await _administracionPasskeys.EditarNombrePasskey(idCredencial, nombreNuevo);
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        try
+        {
+        await _administracionPasskeys.EditarNombrePasskey(idCredencial, idUsuario, nombreNuevo);
 
         return Ok("Nombre de la passkey modificado");
+        }
+        catch (InvalidOperationException)
+        {
+            return BadRequest("El usuario no es dueño de la passkey");
+        }
     }
 
     [Authorize]
@@ -204,9 +212,17 @@ public class AuthController(
     [Route("passkeys/eliminar")]
     public async Task<IActionResult> EliminarPasskey([FromQuery] byte[] idCredencial)
     {
-        await _administracionPasskeys.EliminarPasskeyAsync(idCredencial);
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        try
+        {
+        await _administracionPasskeys.EliminarPasskeyAsync(idCredencial, idUsuario);
 
         return Ok("Passkey eliminada correctamente");
+        }
+        catch (InvalidOperationException)
+        {
+            return BadRequest("El usuario no es dueño de la passkey");
+        }
     }
 
     private byte[] DecodificarBase64Url(string rawIdRequest)

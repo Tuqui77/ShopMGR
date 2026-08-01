@@ -169,21 +169,26 @@ public class AdministracionPasskeys(
         return passkey.Usuario;
     }
 
-    public async Task EditarNombrePasskey([FromQuery] byte[] idCredencial, string nombreNuevo)
+    public async Task EditarNombrePasskey([FromQuery] byte[] idCredencial, int idUsuario, string nombreNuevo)
     {
         var credencial =
             await _repositorio.ObtenerPasskeyPorIdCredencial(idCredencial)
             ?? throw new ArgumentException("No se encuentra una passkey con ese ID");
+
+        if (credencial.IdUsuario != idUsuario) throw new InvalidOperationException();
+
         credencial.EditarNombre(nombreNuevo);
 
         await _repositorio.ActualizarAsync(credencial);
     }
 
-    public async Task EliminarPasskeyAsync([FromQuery] byte[] idCredencial)
+    public async Task EliminarPasskeyAsync([FromQuery] byte[] idCredencial, int idUsuario)
     {
         var credencial =
             await _repositorio.ObtenerPasskeyPorIdCredencial(idCredencial)
             ?? throw new ArgumentException("Passkey no encontrada");
+
+        if (credencial.IdUsuario != idUsuario) throw new InvalidOperationException();
 
         await _repositorio.EliminarPasskeyAsync(credencial);
     }

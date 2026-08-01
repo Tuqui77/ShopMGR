@@ -17,6 +17,6 @@ public interface IAdministracionPasskeys
     public Task<Usuario?> CompletarAuthAsync(
             AuthenticatorAssertionRawResponse assertionResponse
     );
-    public Task EditarNombrePasskey(byte[] idCredencial, string nombreNuevo);
-    public Task EliminarPasskeyAsync(byte[] idCredencial);
+    public Task EditarNombrePasskey(byte[] idCredencial, int idUsuario, string nombreNuevo);
+    public Task EliminarPasskeyAsync(byte[] idCredencial, int idUsuario);
 }
