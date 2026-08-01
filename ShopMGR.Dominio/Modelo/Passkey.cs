@@ -11,7 +11,7 @@ namespace ShopMGR.Dominio.Modelo
         public string Nombre { get; private set; }
         public DateTime FechaCreacion { get; private set; }
         public DateTime? UltimoUso { get; private set; }
-        public string? Attestation { get; set; }
+        public string? Attestation { get; private set; }
 
         // Relaciones
         public Usuario Usuario { get; private set; }
