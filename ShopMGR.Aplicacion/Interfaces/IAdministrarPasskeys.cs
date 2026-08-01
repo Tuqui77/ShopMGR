@@ -6,6 +6,7 @@ namespace ShopMGR.Aplicacion.Interfaces;
 
 public interface IAdministracionPasskeys
 {
+    public Task<List<Passkey>> ListarPasskeysPorIdUsuario(int idUsuario);
     public Task<CredentialCreateOptions> ObtenerOpcionesRegistroAsync(Usuario usuario);
     public Task<Passkey> CompletarRegistroAsync(
         Usuario usuario,
@@ -16,4 +17,6 @@ public interface IAdministracionPasskeys
     public Task<Usuario?> CompletarAuthAsync(
             AuthenticatorAssertionRawResponse assertionResponse
     );
+    public Task EditarNombrePasskey(byte[] idCredencial, string nombreNuevo);
+    public Task EliminarPasskeyAsync(byte[] idCredencial);
 }

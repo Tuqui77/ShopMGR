@@ -6,6 +6,7 @@ using System.Text.Json;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -32,6 +33,13 @@ public class AdministracionPasskeys(
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
     };
+
+    public async Task<List<Passkey>> ListarPasskeysPorIdUsuario(int idUsuario)
+    {
+        var credencialesUsuario = await _repositorio.ListarCredencialesPorIdUsuario(idUsuario);
+
+        return credencialesUsuario;
+    }
 
     public async Task<CredentialCreateOptions> ObtenerOpcionesRegistroAsync(Usuario usuario)
     {
@@ -124,55 +132,84 @@ public class AdministracionPasskeys(
         return opciones;
     }
 
-    public async Task<Usuario?> CompletarAuthAsync(
-        AuthenticatorAssertionRawResponse assertionResponse
-    )
+    public async Task<Usuario?> CompletarAuthAsync(AuthenticatorAssertionRawResponse assertionResponse)
     {
-        var challengeB64 = ExtraerChallengeJson(assertionResponse.Response.ClientDataJson)
+        var challengeB64 =
+            ExtraerChallengeJson(assertionResponse.Response.ClientDataJson)
             ?? throw new InvalidOperationException("No se pudo extraer el challenge de la respuesta");
 
-        var challengeAuth = await _repositorio.ObtenerChallengeAuth(challengeB64)
+        var challengeAuth =
+            await _repositorio.ObtenerChallengeAuth(challengeB64)
             ?? throw new InvalidOperationException("Challenge de auth no encontrado o expirado");
 
-        var opcionesRequest = JsonSerializer.Deserialize<AssertionOptions>(
-                challengeAuth.OpcionesJson, _opcionesJson)
+        var opcionesRequest =
+            JsonSerializer.Deserialize<AssertionOptions>(challengeAuth.OpcionesJson, _opcionesJson)
             ?? throw new InvalidOperationException("Error al reconstruir las opciones del request");
 
         await _repositorio.EliminarChallengeUsado(challengeAuth);
 
         var passkey = await _repositorio.ObtenerPasskeyPorRawId(assertionResponse.RawId);
-        if (passkey == null) return null;
+        if (passkey == null)
+            return null;
 
-        var resultado = await _fido2.MakeAssertionAsync(new MakeAssertionParams
-                {
+        var resultado = await _fido2.MakeAssertionAsync(
+            new MakeAssertionParams
+            {
                 AssertionResponse = assertionResponse,
                 OriginalOptions = opcionesRequest,
                 StoredPublicKey = passkey.ClavePublica,
                 StoredSignatureCounter = passkey.ContadorLogin,
-                IsUserHandleOwnerOfCredentialIdCallback = (args, ct2) => _repositorio.ElUserHandleEsDuenoDeLaCredencial(args.UserHandle, args.CredentialId)
-                });
+                IsUserHandleOwnerOfCredentialIdCallback = (args, ct2) =>
+                    _repositorio.ElUserHandleEsDuenoDeLaCredencial(args.UserHandle, args.CredentialId),
+            }
+        );
 
         await _repositorio.ActualizarContador(passkey, resultado.SignCount);
 
         return passkey.Usuario;
     }
 
+    public async Task EditarNombrePasskey([FromQuery] byte[] idCredencial, string nombreNuevo)
+    {
+        var credencial =
+            await _repositorio.ObtenerPasskeyPorIdCredencial(idCredencial)
+            ?? throw new ArgumentException("No se encuentra una passkey con ese ID");
+        credencial.EditarNombre(nombreNuevo);
+
+        await _repositorio.ActualizarAsync(credencial);
+    }
+
+    public async Task EliminarPasskeyAsync([FromQuery] byte[] idCredencial)
+    {
+        var credencial =
+            await _repositorio.ObtenerPasskeyPorIdCredencial(idCredencial)
+            ?? throw new ArgumentException("Passkey no encontrada");
+
+        await _repositorio.EliminarPasskeyAsync(credencial);
+    }
+
     private string? ExtraerChallengeJson(byte[]? json)
     {
-        if (json == null || json.Length == 0) return null;
+        if (json == null || json.Length == 0)
+            return null;
 
         try
         {
             using var doc = JsonDocument.Parse(json);
             var challengeB64Url = doc.RootElement.GetProperty("challenge").GetString();
-            if (challengeB64Url == null) return null;
+            if (challengeB64Url == null)
+                return null;
 
             var challengeB64 = challengeB64Url.Replace("-", "+").Replace("_", "/");
 
             switch (challengeB64.Length % 4)
             {
-                case 2: challengeB64 += "=="; break;
-                case 3: challengeB64 += "="; break;
+                case 2:
+                    challengeB64 += "==";
+                    break;
+                case 3:
+                    challengeB64 += "=";
+                    break;
             }
 
             return challengeB64;

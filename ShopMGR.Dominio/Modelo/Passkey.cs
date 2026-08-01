@@ -46,5 +46,10 @@ namespace ShopMGR.Dominio.Modelo
             ContadorLogin = contador;
             UltimoUso = DateTime.Now;
         }
+
+        public void EditarNombre(string nuevoNombre)
+        {
+            Nombre = nuevoNombre;
+        }
     }
 }

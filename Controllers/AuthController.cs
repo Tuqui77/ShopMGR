@@ -177,6 +177,38 @@ public class AuthController(
         }
     }
 
+    [Authorize]
+    [HttpGet]
+    [Route("passkeys/listar")]
+    public async Task<IActionResult> ListarPasskeysPorIdUsuario()
+    {
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var credencialesUsuario = await _administracionPasskeys.ListarPasskeysPorIdUsuario(idUsuario);
+
+        return Ok(credencialesUsuario);
+    }
+
+    [Authorize]
+    [HttpPatch]
+    [Route("passkeys/editar")]
+    public async Task<IActionResult> EditarNombrePasskey([FromQuery] byte[] idCredencial, string nombreNuevo)
+    {
+        await _administracionPasskeys.EditarNombrePasskey(idCredencial, nombreNuevo);
+
+        return Ok("Nombre de la passkey modificado");
+    }
+
+    [Authorize]
+    [HttpDelete]
+    [Route("passkeys/eliminar")]
+    public async Task<IActionResult> EliminarPasskey([FromQuery] byte[] idCredencial)
+    {
+        await _administracionPasskeys.EliminarPasskeyAsync(idCredencial);
+
+        return Ok("Passkey eliminada correctamente");
+    }
+
     private byte[] DecodificarBase64Url(string rawIdRequest)
     {
         var rawIdB64 = rawIdRequest.Replace("-", "+").Replace("_", "/");
