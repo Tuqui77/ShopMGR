@@ -35,7 +35,9 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
 
     public async Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request)
     {
-        var usuarioDb = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.UserName == request.UserName);
+        var usuarioDb = await _contexto
+            .Usuarios.Include(u => u.RefreshTokens)
+            .FirstOrDefaultAsync(u => u.UserName == request.UserName);
 
         if (
             usuarioDb == null
@@ -48,6 +50,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         var refreshToken = GenerarRefreshToken();
         var hash = CalcularHash(refreshToken);
         usuarioDb.CrearRefreshToken(hash, TimeSpan.FromDays(30));
+        usuarioDb.EliminarRefreshTokensExpirados();
         await _contexto.SaveChangesAsync();
 
         return new RespuestaLogin(accessToken, refreshToken);
@@ -59,6 +62,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         var refreshToken = GenerarRefreshToken();
         var hash = CalcularHash(refreshToken);
         usuario.CrearRefreshToken(hash, TimeSpan.FromDays(30));
+        usuario.EliminarRefreshTokensExpirados();
         await _contexto.SaveChangesAsync();
 
         return new RespuestaLogin(accessToken, refreshToken);

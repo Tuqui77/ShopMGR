@@ -26,4 +26,9 @@ public class Usuario
 
         refreshToken.Revocar();
     }
+
+    public void EliminarRefreshTokensExpirados()
+    {
+        _refreshTokens.RemoveAll(rt => rt.EstaExpirado);
+    }
 }

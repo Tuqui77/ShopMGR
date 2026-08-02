@@ -40,6 +40,7 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioPasskeys, PasskeysRepositorio>();
 
             //Herramientas adicionales
+            services.AddHostedService<RefreshTokenCleanupService>();
             // Mapeadores manuales
             services.AddMappersFromAssembly(typeof(ClienteMapper));
             services.AddScoped<MapperRegistry>();
