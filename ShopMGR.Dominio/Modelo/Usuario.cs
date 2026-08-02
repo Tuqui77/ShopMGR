@@ -19,14 +19,6 @@ public class Usuario
         return token;
     }
 
-    public void RevocarRefreshToken(string hash)
-    {
-        var refreshToken = _refreshTokens.FirstOrDefault(rt => rt.Hash == hash)
-            ?? throw new KeyNotFoundException();
-
-        refreshToken.Revocar();
-    }
-
     public void EliminarRefreshTokensExpirados()
     {
         _refreshTokens.RemoveAll(rt => rt.EstaExpirado);
