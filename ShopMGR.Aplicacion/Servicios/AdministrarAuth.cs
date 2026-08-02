@@ -84,7 +84,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
             var nuevoRefreshToken = GenerarRefreshToken();
             var hash = CalcularHash(nuevoRefreshToken);
             usuario.CrearRefreshToken(hash, TimeSpan.FromDays(30));
-            usuario.RevocarRefreshToken(token!.Hash);
+            token!.Revocar();
             await _contexto.SaveChangesAsync();
 
             return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken);
@@ -99,11 +99,8 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         var token =
             await _contexto.RefreshTokens.FirstOrDefaultAsync(rt => rt.Hash == hash)
             ?? throw new KeyNotFoundException();
-        var usuario =
-            await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token.IdUsuario)
-            ?? throw new KeyNotFoundException();
 
-        usuario.RevocarRefreshToken(token.Hash);
+        token.Revocar();
         await _contexto.SaveChangesAsync();
     }
 
