@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { useStore } from '../store';
 import { useCrearCliente, useModificarCliente } from '../hooks/useClientes';
 import type { Cliente } from '../types';
-import { Loader2, X, Check, Plus, Trash2, Pencil } from 'lucide-react';
+import { Loader2, X, Check } from 'lucide-react';
 
 interface ClienteFormProps {
   cliente?: Cliente;  // Si se pasa cliente, es modo edición
@@ -25,25 +25,6 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   // Only needed for create mode
   const [telefonoInput, setTelefonoInput] = useState('');
   const [telefonoDesc, setTelefonoDesc] = useState('');
-  const [telefonos, setTelefonos] = useState<{ id: number; telefono: string; descripcion: string }[]>(
-    () => {
-      if (!cliente?.telefonosCompletos && !cliente?.telefono) return [];
-      if (cliente.telefonosCompletos && Array.isArray(cliente.telefonosCompletos)) {
-        return cliente.telefonosCompletos.map(t => ({
-          id: t.id || 0,
-          telefono: t.telefono,
-          descripcion: t.descripcion || 'Principal',
-        }));
-      } else if (cliente.telefono && Array.isArray(cliente.telefono)) {
-        return cliente.telefono.map((t: unknown, idx: number) => ({
-          id: idx,
-          telefono: typeof t === 'string' ? t : String(t),
-          descripcion: 'Principal',
-        }));
-      }
-      return [];
-    }
-  );
   const [calle, setCalle] = useState(cliente?.direccionesCompletas?.[0]?.calle || '');
   const [altura, setAltura] = useState(cliente?.direccionesCompletas?.[0]?.altura || '');
   const [ciudad, setCiudad] = useState(cliente?.direccionesCompletas?.[0]?.ciudad || '');
@@ -51,8 +32,6 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const [departamento, setDepartamento] = useState(cliente?.direccionesCompletas?.[0]?.departamento || '');
   const [descripcion, setDescripcion] = useState(cliente?.direccionesCompletas?.[0]?.descripcion || '');
   const [codigoPostal, setCodigoPostal] = useState(cliente?.direccionesCompletas?.[0]?.codigoPostal || '');
-
-  const [editingTelefonoIndex, setEditingTelefonoIndex] = useState<number | null>(null);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
@@ -69,7 +48,6 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     setCuit('');
     setTelefonoInput('');
     setTelefonoDesc('');
-    setTelefonos([]);
     setCalle('');
     setAltura('');
     setCiudad('');
@@ -79,7 +57,6 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     setCodigoPostal('');
     setErrors({});
     setShowSuccess(false);
-    setEditingTelefonoIndex(null);
   }, [isEditing, setEditingCliente, setShowClienteForm]);
 
   // Cerrar con ESC
@@ -104,6 +81,11 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
 
     if (cuit && !/^\d{11}$/.test(cuit.replace(/[-\s]/g, ''))) {
       newErrors.cuit = 'CUIT debe tener 11 dígitos';
+    }
+
+    const telefono = telefonoInput.trim();
+    if (telefono && telefono.length < 10) {
+      newErrors.telefono = 'El teléfono debe tener al menos 10 dígitos';
     }
 
     const tieneCalle = calle.trim().length > 0;
@@ -135,49 +117,6 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
   const tieneCodigoPostal = codigoPostal.trim().length > 0;
   const tieneDireccion = tieneCalle || tieneAltura || tieneCiudad || tienePiso || tieneDepartamento || tieneDescripcion || tieneCodigoPostal;
 
-  const handleRemoveTelefono = (index: number) => {
-    setTelefonos(telefonos.filter((_, i) => i !== index));
-  };
-
-  const handleEditTelefono = (index: number) => {
-    const tel = telefonos[index];
-    setTelefonoInput(tel.telefono);
-    setTelefonoDesc(tel.descripcion);
-    setEditingTelefonoIndex(index);
-  };
-
-  const handleAddTelefono = () => {
-    if (!telefonoInput.trim()) return;
-
-    if (editingTelefonoIndex !== null) {
-      const nuevosTelefonos = [...telefonos];
-      nuevosTelefonos[editingTelefonoIndex] = {
-        id: telefonos[editingTelefonoIndex].id,
-        telefono: telefonoInput.trim(),
-        descripcion: telefonoDesc.trim() || 'Principal'
-      };
-      setTelefonos(nuevosTelefonos);
-      setEditingTelefonoIndex(null);
-    } else {
-      const telefonoObj = {
-        id: 0,
-        telefono: telefonoInput.trim(),
-        descripcion: telefonoDesc.trim() || 'Principal'
-      };
-      if (!telefonos.some(t => t.telefono === telefonoObj.telefono)) {
-        setTelefonos([...telefonos, telefonoObj]);
-      }
-    }
-    setTelefonoInput('');
-    setTelefonoDesc('');
-  };
-
-  const handleCancelEditTelefono = () => {
-    setTelefonoInput('');
-    setTelefonoDesc('');
-    setEditingTelefonoIndex(null);
-  };
-
   const handleSubmit = async () => {
     if (!validate()) return;
 
@@ -204,9 +143,17 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
             }]
           : undefined;
 
+        // Issue #117: el teléfono es un único campo opcional con descripción opcional.
+        // Si hay teléfono se envía con la descripción escrita o el default "Principal".
+        // Si no hay teléfono, la descripción se ignora y se envía lista vacía.
+        const telefono = telefonoInput.trim();
+        const descripcionTelefono = telefonoDesc.trim();
+
         await crearCliente.mutateAsync({
           nombreCompleto: nombre.trim(),
-          telefono: telefonos,
+          telefono: telefono
+            ? [{ telefono, descripcion: descripcionTelefono || 'Principal' }]
+            : [],
           direccion: direccionData,
         });
       }
@@ -319,96 +266,35 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
                 </div>
               ) : (
                 <>
-                  {/* Teléfonos (create mode only) */}
+                  {/* Teléfono y descripción (create mode only) */}
                   <div>
                     <label className="text-sm mb-2 block" style={{ color: 'var(--color-muted)' }}>
-                      Teléfonos
+                      Teléfono (opcional)
                     </label>
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <input
-                          type="tel"
-                          value={telefonoInput}
-                          onChange={(e) => setTelefonoInput(e.target.value)}
-                          placeholder="Número de teléfono"
-                          className="input flex-1"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddTelefono}
-                          className="btn-secondary"
-                          disabled={!telefonoInput.trim()}
-                          aria-label={editingTelefonoIndex !== null ? 'Guardar teléfono' : 'Agregar teléfono'}
-                        >
-                          {editingTelefonoIndex !== null ? (
-                            <Check className="w-5 h-5" />
-                          ) : (
-                            <Plus className="w-5 h-5" />
-                          )}
-                        </button>
-                        {editingTelefonoIndex !== null && (
-                          <button
-                            type="button"
-                            onClick={handleCancelEditTelefono}
-                            className="btn-secondary"
-                            style={{ color: 'var(--color-danger)' }}
-                            aria-label="Cancelar edición"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        value={telefonoDesc}
-                        onChange={(e) => setTelefonoDesc(e.target.value)}
-                        placeholder="Descripción (ej: Celular, Trabajo)"
-                        className="input"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddTelefono();
-                          }
-                        }}
-                      />
-
-                      {telefonos.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {telefonos.map((tel, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between p-2 rounded-lg transition-colors duration-200 hover:bg-[var(--color-hover)]"
-                              style={{ backgroundColor: 'var(--color-surface)' }}
-                            >
-                              <div>
-                                <span className="text-sm">{tel.telefono}</span>
-                                <span className="text-xs ml-2" style={{ color: 'var(--color-muted)' }}>
-                                  ({tel.descripcion})
-                                </span>
-                              </div>
-                              <div className="flex gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => handleEditTelefono(index)}
-                                  className="btn-icon p-1"
-                                  aria-label="Editar teléfono"
-                                >
-                                  <Pencil className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveTelefono(index)}
-                                  className="btn-icon p-1"
-                                  aria-label="Eliminar teléfono"
-                                >
-                                  <Trash2 className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <input
+                      type="tel"
+                      value={telefonoInput}
+                      onChange={(e) => {
+                        setTelefonoInput(e.target.value);
+                        if (errors.telefono) {
+                          setErrors(prev => ({ ...prev, telefono: '' }));
+                        }
+                      }}
+                      placeholder="Número de teléfono"
+                      className={clsx('input', errors.telefono && 'input-error')}
+                    />
+                    {errors.telefono && (
+                      <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                        {errors.telefono}
+                      </p>
+                    )}
+                    <input
+                      type="text"
+                      value={telefonoDesc}
+                      onChange={(e) => setTelefonoDesc(e.target.value)}
+                      placeholder="Descripción (ej: Celular, Trabajo)"
+                      className="input mt-2"
+                    />
                   </div>
 
                   {/* Dirección (create mode only) */}
