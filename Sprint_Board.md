@@ -1,0 +1,178 @@
+# Product Management Tracking - Sprint Board
+
+## Historial de Solicitudes (Changelog)
+- **[Iteración 1]**: Sprint 1 — Setup del proyecto, arquitectura base (backend .NET 9 + frontend React/Vite), entidades core (Clientes, Trabajos, Presupuestos, Movimientos).
+- **[Iteración 2]**: Sprint 2 — Auth (JWT + refresh tokens + rate limiting), Passkeys WebAuthn/FIDO2 (registro, login, gestión en Configuración, validación userHandle, fix IDOR), fixes de frontend (tokens Zustand↔localStorage, refresh en body, FAB en modales). Release mergeado: PR #111 (`development` → `main`, `80f7c19`).
+- **[Iteración 3]**: Definición del Sprint 3 (2026-08-01). El usuario define alcance: **Bloque A completo (auth UX)** + 3 issues nuevos de seguridad/operaciones de auth (#114 SEV-001, #115 FUN-001, #116 OPS-001) + #75 + #57.
+
+## Sprint Actual: Sprint 3
+**Objetivo del Sprint**: Consolidar la seguridad y robustez del flujo de auth (refresh tokens en cookie HttpOnly, revocación explícita, índice/purga, recuperación de contraseña admin, SRP) + mejoras UX de auth en frontend + hardening de infraestructura (#75) y validación de entrada (#57).
+**Estado General**: Planificación formal (issues definidos, alcance confirmado por el usuario)
+
+### Issues del Sprint 3
+
+| Issue | Descripción | Área | Type | Prioridad | Estado |
+|-------|-------------|------|------|-----------|--------|
+| #114 (SEV-001) | Migrar RefreshToken a cookie HttpOnly con restricción de sitio | Backend+Frontend | Feature (security) | High | **In Progress — Commits + push OK (sin PR)** — validado en navegador (login/refresh/logout OK, cookie HttpOnly se elimina). 3 commits atómicos pusheados a `origin/development` (`3cadb14` backend, `8ae69cb` tests, `1a04df5` frontend). PR pendiente (el usuario lo hará al final del sprint) |
+| #115 (FUN-001) | Revocación de refresh tokens depende de relationship fixup implícito de EF Core | Backend | Bug | High | OPEN |
+| #116 (OPS-001) | Índice sobre RefreshTokens.Hash + purga de tokens expirados | Backend/DevOps | Task (perf/ops) | High | OPEN |
+| #99 | Recuperar contraseña mediante admin con token de un solo uso (roles) | Backend | Feature | Medium | OPEN |
+| #100 | Extraer acceso a datos de AdministrarAuth a repositorio (SRP) | Backend | Task (refactor) | Medium | OPEN |
+| #112 | Submenú de usuario en Configuración + mover gestión passkeys | Frontend | Feature | Medium | OPEN |
+| #113 | Botón "+" en vez de "Registrar dispositivo" en passkeys | Frontend | Fix | Low | OPEN |
+| #96 | Botón mostrar/ocultar contraseña en login | Frontend | Feature | Medium | OPEN |
+| #75 | Quitar puerto 1433 de SQL Server del host | DevOps | Task (security) | High | OPEN |
+| #57 | Data annotations a DTOs de entrada | Backend | Feature (security) | High | OPEN |
+| #117 | Persistir teléfono al guardar cliente sin requerir botón "+" | Frontend | Bug (UX) | Medium | OPEN |
+
+### Backlog de Tareas Atómicas — Sprint 3
+
+**Tareas Pendientes / En Progreso:**
+- [ ] **TSK-S3-01:** ✅ Alcance del Sprint 3 definido y documentado (issues creados/verificados)
+- [ ] **TSK-S3-02:** Planificar orden de ejecución según dependencias (auth backend → auth frontend → infra)
+- [ ] **TSK-S3-03:** Implementar issues backend (usuario ejecuta) — #114, #115, #116, #99, #100, #57
+- [ ] **TSK-S3-04:** Implementar issues frontend (subagente Frontend) — #112, #113, #96 (+ ajustes frontend de #114)
+- [ ] **TSK-S3-05:** Implementar #75 (DevOps — usuario ejecuta)
+- [ ] **TSK-S3-06:** QA de los cambios + MergeGuard + Release del Sprint 3
+
+**Tareas Completadas (Sprints anteriores):**
+- [x] **Sprint 2**: Auth JWT + refresh tokens + rate limiting
+- [x] **Sprint 2**: Passkeys WebAuthn (registro, login, gestión, validación userHandle, fix IDOR)
+- [x] **Sprint 2**: Fixes frontend (tokens Zustand↔localStorage, refresh en body, FAB en modales)
+- [x] **Sprint 2**: Release PR #111 mergeado (`80f7c19`)
+
+## Notas de Decisión (Iteración 3)
+
+- El usuario definió el alcance del Sprint 3 explícitamente: Bloque A completo (#99, #100, #112, #113, #96) + SEV-001 (#114) + FUN-001 (#115) + OPS-001 (#116) + #75 + #57.
+- Los issues #114, #115, #116 fueron creados con contexto técnico verificado en la codebase (AuthController, AdministrarAuth, RefreshToken, UsuarioConfiguracion, RefreshTokenConfiguracion).
+- Dependencia clave: #114/#115/#116 tocan el mismo flujo de refresh tokens → implementar juntos para no rehacer.
+- Backend/DevOps: el usuario ejecuta directamente (patrón del proyecto). Frontend: se delega al subagente Frontend.
+
+## Iteración 4 (2026-08-01) — Issue #114: Hallazgos de QA (tests backend)
+
+- QA escribió `ShopMGR.Tests/AuthControllerTests.cs` (10 tests de contrato de cookie con DefaultHttpContext). Suite: **128 PASS / 5 FAIL / 1 SKIP** (SKIP pre-existente ajeno).
+- **BUG #1 (High)**: `GuardarRefreshTokenCookie` usa `Path = "/api/AuthController"` pero el controller responde en `/api/Auth/*` (`[Route("api/[controller]")]`) → el navegador nunca envía la cookie → refresh/logout rotos. Fix: `Path = "/api/Auth"`.
+- **BUG #2 (High)**: `Response.Cookies.Delete("refreshToken")` sin `CookieOptions` → borra con `path=/` que no matchea la cookie original (Path `/api/AuthController`, HttpOnly, SameSite=Strict, Secure) → el navegador no borra la cookie. Fix: pasar los mismos options.
+- Observaciones Low: `DateTimeOffset.Now` → `UtcNow` (consistencia/DST); hardcodear `Expires=+30 días` → mover a configuración.
+- Frontend (#114) implementado por subagente Frontend: 10 archivos, `npm run lint` ✅, `npx vitest run` ✅ 116/116, `npm run build` ✅. Eliminado `refreshToken` de store (versión 2 + migrate), interceptor refresh sin body, services sin parámetro, type guard passkeys sin refreshToken.
+- Frontend confirma de forma independiente el mismo hallazgo del Path y maneja el fallo de refresh con logout+redirect (seguro de desplegar).
+- Próximo paso: el usuario corrige los 2 bugs backend; luego QA re-corre tests (deben pasar 10/10).
+
+## Iteración 5 (2026-08-01) — Issue #114: Fix backend aplicado y validado
+
+- El usuario corrigió los 2 bugs: `GuardarRefreshTokenCookie` usa `Path = "/api/Auth"` y se creó helper `BorrarRefreshTokenCookie()` que hace `Response.Cookies.Delete("refreshToken", opciones)` con los mismos CookieOptions (HttpOnly, Secure, SameSite=Strict, Path).
+- Verificado en diff: `CerrarSesion()` llama `BorrarRefreshTokenCookie()` siempre (defensivo) y revoca solo si hay cookie.
+- `dotnet test ShopMGR.Tests`: **133 PASS / 0 FAIL / 1 SKIP** (SKIP pre-existente `PresupuestoRepositorioTests`, ajeno).
+- Estado #114: **implementación completa** (backend + frontend + tests). Pendiente: validación en navegador (rebuild de contenedores), commits atómicos (aprobación del usuario) y PR → MergeGuard.
+
+## Iteración 6 (2026-08-01) — Issue #114: Validación usuario + commits atómicos + push
+
+- El usuario validó el flujo completo en el navegador: iniciar sesión y refresh funcionan, cookie es HttpOnly y al cerrar sesión se elimina correctamente.
+- Usuario aprobó commits + push a origin, pero **NO crear PR** (para no disparar CI por cada commit; el PR se hará al final del sprint).
+- 3 commits atómicos pusheados a `origin/development` sobre `80f7c19`:
+  1. `3cadb14` `feat(auth): migrar refresh token a cookie HttpOnly` (backend: AuthController, RespuestaLogin, IAdministrarAuth, AdministrarAuth, appsettings.json)
+  2. `8ae69cb` `test(auth): agregar tests de cookie HttpOnly en AuthController` (AuthControllerTests.cs, 373 líneas)
+  3. `1a04df5` `feat(auth): adaptar frontend a refresh token en cookie HttpOnly` (10 archivos Frontend)
+- Working tree limpio salvo `Sprint_Board.md` (untracked, queda fuera de la entrega).
+- Nota del remote: Dependabot reporta 56 vulnerabilidades en branch default (1 critical, 20 high) — pendiente de revisión por el usuario.
+
+## Iteración 7 (2026-08-01) — Decisión de diseño #116 + Issue nuevo #117
+
+- **Decisión de diseño #116 (purga de tokens)**: el usuario consultó si conviene conservar tokens expirados/revocados vs eliminarlos al rotar. Decisión del PM: **conservar el hash del token rotado/revocado (con FechaExpiracion) y purgar por expiración**, no borrar al refrescar. Motivos: detección de replay/robo (un token ya rotado que vuelve a presentarse indica compromiso → revocar familia, patrón OAuth2 de rotación con detección de reuso) y auditoría/forense de sesiones. La tabla no crece indefinidamente porque la purga (job periódico) borra solo lo expirado.
+- **Issue #117 creado** (`fix(clientes): persistir teléfono al guardar cliente sin requerir botón "+"`, labels `frontend`+`bug`+`priority: medium`): en `ClienteForm.tsx` el teléfono vive en `telefonoInput` y solo entra a `telefonos[]` con `handleAddTelefono()` (botón "+"); al submit se envía `telefono: telefonos` → si no se apretó "+", el dato se pierde. La dirección sí se persiste directo. Cambio: incluir el input pendiente al guardar (default descripción "Principal"), mantener "+" para múltiples teléfonos.
+- Usuario: próximo sprint dedicado a resolver vulnerabilidades de Dependabot. Nota registrada.
+- #116 en progreso por el usuario: index sobre `RefreshTokens.Hash` ya agregado.
+
+## Iteración 8 (2026-08-01) — Issue #116: Implementación mixta del cleanup — BUG crítico detectado
+
+- El usuario implementó el cleanup con enfoque mixto: (1) al iniciar sesión (password y passkey) se eliminan los refresh tokens expirados del usuario (`Usuario.EliminarRefreshTokensExpirados()` + `Include(u => u.RefreshTokens)` en `IniciarSesion`/`FinalizarAuthPasskey`); (2) servicio diario `RefreshTokenCleanupService` (BackgroundService, cada 24h) que barre toda la tabla. Sin período de gracia (documentado en comentario del service y de la entidad Usuario).
+- Index único sobre `RefreshTokens.Hash` agregado en `RefreshTokenConfiguracion.cs`.
+- **🐞 BUG CRÍTICO detectado en `RefreshTokenCleanupService.cs:31`**: `Where(rt => rt.ExpiraEn > DateTime.Now)` está **INVERTIDO** → elimina los tokens VÁLIDOS (que expiran en el futuro) y conserva los expirados. Consecuencia: el job diario rompería sesiones activas de todos los usuarios y no limpiaría nada de lo que debería. Fix: `rt.ExpiraEn <= DateTime.Now` (equivalente a `EstaExpirado`, que usa `>=`).
+- Pendientes: fix del filtro, migración del índice (`HasIndex` requiere `dotnet ef migrations add` + aplicar), tests de cleanup (delegables a QA).
+
+## Iteración 9 (2026-08-01) — Issue #116: Fix aplicado + Tests QA 7/7 PASS + migración del usuario
+
+- El usuario corrigió el filtro del service: `rt.ExpiraEn <= DateTime.Now` ✅ (verificado).
+- QA escribió tests delegados:
+  - `ShopMGR.Tests/UsuarioTests.cs` (4 tests de dominio `EliminarRefreshTokensExpirados`, con reflexión para setters privados).
+  - `ShopMGR.Tests/RefreshTokenCleanupServiceTests.cs` (3 tests con SQLite in-memory; estrategia híbrida: ejecuta el service real vía subclass + test de contrato que documenta por qué `>` era el bug). Agregado paquete `Microsoft.EntityFrameworkCore.Sqlite 9.0.0` al csproj de tests.
+  - Resultado: **7/7 PASS**, suite completa **140 PASS / 1 SKIP** (SKIP pre-existente) — sin regresiones.
+- El usuario creó la migración del índice en paralelo: `20260801231902_AgregarIndiceHashRefreshToken` (cs + Designer + snapshot modificado). Pendiente: aplicar a la BD.
+- **🔴 Hallazgo QA (Alta, pre-existente)**: `RefreshTokenConfiguracion` usa `.HasColumnType("date")` en `CreadoEn`, `ExpiraEn` y `RevocadoEn` → SQL Server trunca a precisión de día: un token que expira 02/08 15:00 pasa a considerarse expirado desde las 00:00 (hasta 24h antes); `CreadoEn` pierde la hora (token de 30 días dura 29-30 días según hora de creación). Los tests no lo detectan (SQLite conserva precisión). Decisión pendiente del usuario: ¿cambiar a `datetime2` en la misma migración o documentar para después?
+- Hallazgos menores QA: `EnsureCreated()` falla en SQLite por `nvarchar(max)` en PasskeyChallengeConfiguracion (tests usan esquema mínimo, OK); sugerencia de refactor de testabilidad (TimeProvider/reloj inyectable) → backlog.
+
+## Iteración 10 (2026-08-01) — Issue #116: Diagnóstico de validación + fix passkey + commits atómicos
+
+- **Problema reportado por el usuario**: modificó un refresh token en BD (ExpiraEn en fecha anterior) y no ve que se elimine al iniciar sesión.
+- **Diagnóstico del PM con queries directas a la BD** (`podman exec shopmgr_db_1`):
+  - Migración del índice SÍ aplicada: columnas `datetime2` + índice único `IX_RefreshTokens_Hash` verificados en `sys.columns`/`sys.indexes`.
+  - El token modificado (Id=1, ExpiraEn 2026-07-25) seguía en la tabla a las 23:52.
+  - La imagen del contenedor SÍ incluye el código nuevo (`EliminarRefreshTokensExpirados` presente en `ShopMGR.Aplicacion.dll`), BackgroundService registrado (`InyeccionServicios.cs:43`).
+  - Cadena de tokens 18004→18008 (23:43-23:48) mostró que la prueba del usuario fue refresh, no login.
+- **🐞 BUG real encontrado en flujo passkey**: `PasskeysRepositorio.ObtenerPasskeyPorRawId` hace `.Include(pk => pk.Usuario)` **sin `.ThenInclude(u => u.RefreshTokens)`** → en `FinalizarAuthPasskey` la colección `RefreshTokens` del usuario llega vacía → `EliminarRefreshTokensExpirados()` no elimina nada. Mismo patrón del issue #115 (FUN-001): la purga depende de que la colección esté cargada. El flujo password SÍ tiene el `Include` y funciona.
+- **Fix del usuario**: agregó `.ThenInclude(u => u.RefreshTokens)` en `PasskeysRepositorio.cs:55` + probó que funciona. También validó que el BackgroundService elimina los expirados al reconstruir contenedores.
+- **📌 Logs del BackgroundService no visibles**: causa encontrada — `appsettings.json` tiene `"LogLevel": {"Default": "Warning"}` y el service usa `_logger.LogInformation(...)` (Information queda por debajo de Warning → descartado). El service FUNCIONA (verificado en BD: 0 tokens expirados), solo no loguea visiblemente. Opciones si se quieren logs: subir el nivel del service a `LogLevel` con override específico (`"ShopMGR.Aplicacion.RefreshTokenCleanupService": "Information"`) o usar `LogWarning`. Pendiente decisión del usuario (no bloquea).
+- **Commits atómicos creados (usuario autorizó "hacé los commits", sin push/PR)**:
+  1. `26abfc4` `feat(auth): purgar refresh tokens expirados al iniciar sesión y con BackgroundService` (InyeccionServicios, AdministrarAuth, Usuario, BackgroundServices/, PasskeysRepositorio)
+  2. `270d985` `fix(db): usar datetime2 en RefreshTokens y agregar índice único a Hash` (RefreshTokenConfiguracion + Migrations cs/Designer/snapshot)
+  3. `7d4d68f` `test(auth): agregar tests de limpieza de refresh tokens expirados` (csproj + UsuarioTests + RefreshTokenCleanupServiceTests)
+- Working tree limpio salvo `Sprint_Board.md` (untracked). Suite de tests: 140 PASS / 1 SKIP.
+- Estado #116: **implementación completa + validada en BD**. Pendiente: push a origin (usuario decide timing) y PR al final del sprint → MergeGuard.
+
+## Iteración 11 (2026-08-01) — #116 push a origin + #115 implementado + #117 frontend
+
+- **Push #116 autorizado por el usuario y ejecutado**: `1a04df5..7d4d68f development -> development` (3 commits: `26abfc4`, `270d985`, `7d4d68f`). Verificado post-push: 0 commits sin pushear de #116.
+- **Fix #115 implementado por el usuario y commiteado** (`e5d8533`): `Refrescar` y `CerrarSesion` ahora revocan el token directamente con `token!.Revocar()` (ya no dependen del relationship fixup implícito de EF Core); `CerrarSesion` ya no busca el usuario en BD. Commit: `fix(auth): revocar refresh token directamente en la entidad` (#115).
+- **Limpieza complementaria del usuario**: eliminó el método `RevocarRefreshToken(string hash)` de `Usuario.cs` (dead code — verificado con `git grep`: 0 referencias en *.cs). Commit: `7be19aa` `refactor(auth): eliminar método RevocarRefreshToken sin uso` (#115).
+- **Validación**: suite backend completa **140 PASS / 1 SKIP** (SKIP pre-existente) con el método eliminado — sin regresiones.
+- **Issue #117 (teléfono) implementado por subagente Frontend** (working tree, sin commit):
+  - `Frontend/src/components/ClienteForm.tsx`: en `handleSubmit` (rama de creación) si `telefonoInput` tiene texto pendiente se agrega a `telefonosParaEnviar` (dedupe + reemplazo si hay edición en curso; descripción default `"Principal"`).
+  - `Frontend/src/__tests__/components/ClienteForm.test.tsx`: nuevo, 7 tests.
+  - Verificado: `npm run typecheck` ✅, `npm run build` ✅, eslint ✅, suite 123/123 ✅.
+  - Decisión adicional: validación de teléfono ≥10 dígitos aplicada también en `handleAddTelefono` (consistencia UX con el submit).
+- **Pendientes en working tree**: `appsettings.json` (logging del usuario: `Default: Information` + EF `Warning`), `Sprint_Board.md` (untracked).
+- **Branch**: `development...origin/development` adelante 2 (`e5d8533`, `7be19aa`) — push de #115 pendiente de decisión del usuario.
+
+## Iteración 12 (2026-08-01) — #117: decición de UX del usuario → simplificar a teléfono único
+
+- El usuario probó el fix #117 y confirmó que funciona, pero detectó que el botón "+" al lado del teléfono ya no aporta (el teléfono se persiste solo al crear). Decidió eliminarlo.
+- PM presentó 2 opciones de alcance: A) solo quitar el botón (deja lista sin forma descubrible de agregar) vs B) simplificar todo el bloque a un único campo. **El usuario eligió la B**.
+- Subagente Frontend implementó la B en `ClienteForm.tsx`:
+  - Eliminados: `telefonoDesc`, `telefonos[]`, `editingTelefonoIndex`, handlers `handleAddTelefono`/`handleEditTelefono`/`handleRemoveTelefono`/`handleCancelEditTelefono`, iconos `Plus`/`Trash2`/`Pencil`.
+  - UI: un único input `type="tel"` "Teléfono (opcional)" con validación ≥10 dígitos inline.
+  - Submit: `telefono: telefono ? [{ telefono, descripcion: 'Principal' }] : []` (el tipo `CrearClienteRequest.telefono` es obligatorio → `[]` en vez de `undefined`; sin `id: 0` porque el tipo de creación no lo acepta — el backend auto-genera).
+  - Tests reescritos: 7 → 4 (persiste con "Principal", vacío → `[]`, validación 10 dígitos, regresión guard: botón "+" no existe). Suite total 120/120 ✅, typecheck/lint/build ✅.
+- Documentación actualizada: Sprint_Board + project-register. Pendiente: commit + push + PR del #117 (usuario decide timing), push #115.
+
+## Iteración 13 (2026-08-01) — #117: recuperar campo de descripción del teléfono (ajuste UX)
+
+- El usuario notó que con la opción B también desapareció el campo de descripción del teléfono, y pidió recuperarlo manteniendo la simplificación (1 teléfono, sin botón "+", sin lista).
+- Ajuste aprobado y implementado por subagente Frontend:
+  - Estado `telefonoDesc` re-agregado + limpio en `handleClose`.
+  - UI: input teléfono único + input descripción opcional (placeholder "Descripción (ej: Celular, Trabajo)") debajo del error. Sin "+", sin lista.
+  - Submit: `telefono: telefono ? [{ telefono, descripcion: telefonoDesc.trim() || 'Principal' }] : []` — descripción vacía → default "Principal"; teléfono vacío → `[]` (descripción ignorada).
+  - Tests: 5 en ClienteForm (default Principal, descripción escrita, teléfono vacío → [], validación 10 dígitos, regresión sin botones/lista). Suite 121/121 ✅, typecheck/lint/build ✅.
+- Pendiente: validación del usuario en navegador, luego commit + push + PR del #117.
+
+## Iteración 14 (2026-08-01) — #117 validado + commits + estado Sprint 3
+
+- El usuario validó el formulario en navegador: "Ahora sí funciona como corresponde".
+- Commits atómicos autorizados y creados (sin push):
+  1. `bfa484a` `fix(clientes): persistir teléfono al guardar cliente sin requerir botón '+'` (ClienteForm.tsx + ClienteForm.test.tsx) — #117
+  2. `3fe5f9b` `chore(config): subir logging default a Information con EF en Warning` (appsettings.json)
+- Branch: `development...origin/development` adelante 4 (`e5d8533` #115, `7be19aa` refactor, `bfa484a` #117, `3fe5f9b` chore). Working tree limpio salvo `Sprint_Board.md` (untracked).
+- Estado Sprint 3 al cierre del turno: implementados #114 (push OK), #115 (local), #116 (push OK), #117 (local). Pendientes de sprint: #99, #100, #112, #113, #96 (Bloque A auth UX), #75 (DevOps), #57 (data annotations).
+
+## Iteración 15 (2026-08-03) — Issue #99: fix persistencia de rol + gating frontend por rol admin
+
+- **Fix de persistencia de rol (backend, usuario)**:
+  - Causa raíz: la migración original `20260803213135_AgregaRolesYTokenUnUso` aplicó `Rol` con `defaultValue: ""` → EF materializaba `''` como `Administrador` (enum 0) → al elegir "Administrador" en UI no había cambio y `SaveChangesAsync` no emitía UPDATE.
+  - El usuario regeneró la migración (`20260804005039_AgregaRolesYTokenUnUso`) con `HasMaxLength(20)` + `HasDefaultValue(RolUsuario.Empleado)` (aprendizaje: `HasDefaultValue` espera el tipo del modelo, no el de almacenamiento). Migración ya aplicada en BD + backfill `UPDATE Usuarios SET Rol='Empleado' WHERE Rol='' OR Rol IS NULL` + ajuste manual de la columna.
+  - Backend ahora protege `PATCH /api/Auth/CambiarRol` con `[Authorize(Roles = "Administrador")]` → 403 a no-admins (validado por el usuario). El JWT incluye claim `role` (`AdministrarAuth.CrearToken`).
+  - El usuario validó: cambio de contraseña y roles funcionan correctamente; no-admins reciben 403.
+- **Gating frontend (subagente Frontend)** — aprobado por usuario (GATE) y verificado:
+  - `Frontend/src/utils/jwt.ts` (nuevo): `obtenerRolDesdeToken(accessToken)` — decode local sin dependencias, fail-closed (token inválido/sin claim/rol desconocido → null).
+  - `Frontend/src/pages/Configuracion.tsx`: card "Rol de usuario" solo visible si `rol === 'Administrador'`; preselección del rol actual; botón Guardar deshabilitado en no-op; tras cambiar rol → `authService.refrescar()` (primario, re-emite claim → card se oculta sola) con fallback `logout()` + redirect a `/login`.
+  - Tests: `jwt.test.ts` 14/14, `Configuracion.test.tsx` 7/7 (admin visible / no-admin oculto / degradación Admin→Empleado), suite completa 142/142, lint/typecheck/build OK.
+- **Nota futuro (registrado en issue)**: el usuario planea modificar el endpoint para editar roles de OTROS usuarios (finalidad buscada del issue).
+- **Pendiente**: reconstruir contenedores (`podman compose down --remove-orphans && podman compose up --build -d`), verificación manual en navegador, luego commits autorizados.
