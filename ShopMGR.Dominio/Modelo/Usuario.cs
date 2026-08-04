@@ -1,3 +1,5 @@
+using ShopMGR.Dominio.Enums;
+
 namespace ShopMGR.Dominio.Modelo;
 
 public class Usuario
@@ -6,8 +8,10 @@ public class Usuario
     private readonly List<Passkey> _passKeys = [];
 
     public int Id { get; set; }
+    public RolUsuario Rol { get; private set; }
     public string UserName { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? CodigoUsoUnico { get; private set; }
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens;
     public IReadOnlyCollection<Passkey> PassKeys => _passKeys;
 
@@ -22,5 +26,23 @@ public class Usuario
     public void EliminarRefreshTokensExpirados()
     {
         _refreshTokens.RemoveAll(rt => rt.EstaExpirado);
+    }
+
+    public void CambiarContrasena(string passwordHash)
+    {
+        if (passwordHash != PasswordHash)
+            PasswordHash = passwordHash;
+
+        CodigoUsoUnico = null;
+    }
+
+    public void AgregarCodigoDeUnUso(string codigo)
+    {
+        CodigoUsoUnico = codigo;
+    }
+
+    public void CambiarRol(RolUsuario rol)
+    {
+        Rol = rol;
     }
 }
