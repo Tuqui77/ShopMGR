@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.WebApi.Controllers;
@@ -240,6 +241,30 @@ public class AuthController(
         {
             return BadRequest("El usuario no es dueño de la passkey");
         }
+    }
+
+    [Authorize]
+    [HttpPatch]
+    [Route("CambiarContrasena")]
+    public async Task<IActionResult> CambiarContrasena(string contraseñaActual, string contraseñaNueva)
+    {
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _administrarAuth.CambiarContrasena(idUsuario, contraseñaActual, contraseñaNueva);
+
+        return Ok("Contraseña modificada");
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpPatch]
+    [Route("CambiarRol")]
+    public async Task<IActionResult> CambiarRol([FromBody] RolUsuario nuevoRol)
+    {
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _administrarAuth.CambiarRolUsuario(idUsuario, nuevoRol);
+
+        return Ok("Rol modificado");
     }
 
     private byte[] DecodificarBase64Url(string rawIdRequest)
