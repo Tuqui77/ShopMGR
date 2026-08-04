@@ -16,6 +16,9 @@ export interface LoginResponse {
   accessToken: string;
 }
 
+// Roles de usuario (coinciden con el enum RolUsuario del backend; viajan como string)
+export type RolUsuario = 'Administrador' | 'Empleado' | 'Cliente';
+
 export interface PasskeyCredencial {
   idCredencial: string;      // base64 estándar (se reenvía tal cual al backend)
   nombre: string;
