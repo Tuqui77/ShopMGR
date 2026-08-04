@@ -1,4 +1,5 @@
 ﻿using Extensiones;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
@@ -41,6 +42,7 @@ namespace ShopMGR.Aplicacion
 
             //Herramientas adicionales
             services.AddHostedService<RefreshTokenCleanupService>();
+            services.AddSingleton<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
             // Mapeadores manuales
             services.AddMappersFromAssembly(typeof(ClienteMapper));
             services.AddScoped<MapperRegistry>();

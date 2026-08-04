@@ -9,14 +9,16 @@ using Microsoft.IdentityModel.Tokens;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Contexto;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios;
 
-public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion) : IAdministrarAuth
+public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion, IPasswordHasher<Usuario> passwordHasher) : IAdministrarAuth
 {
     private readonly ShopMGRDbContexto _contexto = contexto; // TODO(#100): Implementar un repositorio para no acceder a datos directamente, SRP!
     private readonly IConfiguration _configuracion = configuracion;
+    private readonly IPasswordHasher<Usuario> _passwordHasher = passwordHasher;
 
     public async Task<Usuario?> RegistrarUsuarioAsync(UsuarioDTO request)
     {
@@ -24,8 +26,9 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
             return null;
 
         var usuario = new Usuario() { UserName = request.UserName };
-        var hashedPassword = new PasswordHasher<Usuario>().HashPassword(usuario, request.Password);
+        var hashedPassword = _passwordHasher.HashPassword(usuario, request.Password);
         usuario.PasswordHash = hashedPassword;
+        usuario.CambiarRol(RolUsuario.Empleado);
 
         await _contexto.Usuarios.AddAsync(usuario);
         await _contexto.SaveChangesAsync();
@@ -41,7 +44,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
 
         if (
             usuarioDb == null
-            || new PasswordHasher<Usuario>().VerifyHashedPassword(usuarioDb, usuarioDb.PasswordHash, request.Password)
+            || _passwordHasher.VerifyHashedPassword(usuarioDb, usuarioDb.PasswordHash, request.Password)
                 == PasswordVerificationResult.Failed
         )
             return null;
@@ -104,8 +107,6 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         await _contexto.SaveChangesAsync();
     }
 
-    // Métodos que se van a mover a un repositorio
-
     public async Task<Usuario?> ObtenerUsuarioPorIdAsync(int idUsuario)
     {
         var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == idUsuario);
@@ -113,12 +114,41 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         return usuario;
     }
 
+    public async Task CambiarContrasena(int idUsuario, string contraseñaActual, string contraseñaNueva)
+    {
+        var usuario =
+            await _contexto.Usuarios.Where(u => u.Id == idUsuario).FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Usuario no encontrado");
+
+        if (
+            _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, contraseñaActual)
+            == PasswordVerificationResult.Failed
+        )
+            throw new ArgumentException("La contraseña actual es incorrecta");
+
+        var hashContraseñaNueva = _passwordHasher.HashPassword(usuario, contraseñaNueva);
+        usuario.CambiarContrasena(hashContraseñaNueva);
+
+        await _contexto.SaveChangesAsync();
+    }
+
+    public async Task CambiarRolUsuario(int idUsuario, RolUsuario rol)
+    {
+        var usuario =
+            await _contexto.Usuarios.Where(u => u.Id == idUsuario).FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Usuario no encontrado");
+
+        usuario.CambiarRol(rol);
+        await _contexto.SaveChangesAsync();
+    }
+
     private string CrearToken(Usuario usuario)
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, usuario.UserName),
-            new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+            new(ClaimTypes.Name, usuario.UserName),
+            new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+            new(ClaimTypes.Role, usuario.Rol.ToString()),
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuracion.GetSection("Jwt:Token").Value!));
