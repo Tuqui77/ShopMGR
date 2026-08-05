@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using ShopMGR.Dominio.Enums;
+﻿using ShopMGR.Dominio.Enums;
 
 namespace ShopMGR.Dominio.Modelo
 {
