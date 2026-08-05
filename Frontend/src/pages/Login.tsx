@@ -1,10 +1,32 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, LogIn, Loader2, UserPlus, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { User, Lock, LogIn, Loader2, UserPlus, KeyRound, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../store';
 import { authService, extractAuthErrorMessage } from '../services/auth';
 import { PasskeyButton } from '../components/PasskeyButton';
 import { usePasskeyLogin } from '../hooks/usePasskeyLogin';
+
+/** Botón mostrar/ocultar contraseña (issue #96). Vive absoluto a la derecha
+ *  del input (wrapper relative); type="button" para no disparar submit. */
+function TogglePasswordButton({
+  visible,
+  onToggle,
+}: {
+  visible: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+      aria-pressed={visible}
+      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors duration-200"
+    >
+      {visible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+    </button>
+  );
+}
 
 export function Login() {
   const navigate = useNavigate();
@@ -15,6 +37,11 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ userName: '', password: '', general: '', success: '' });
   const [isLoading, setIsLoading] = useState(false);
+
+  // ── Toggle mostrar/ocultar contraseña (issue #96) ──
+  const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [mostrarContrasenaNueva, setMostrarContrasenaNueva] = useState(false);
+  const [mostrarConfirmarContrasena, setMostrarConfirmarContrasena] = useState(false);
 
   // ── Cambio de contraseña obligatorio (login con código de un solo uso, #99) ──
   const [requiereCambio, setRequiereCambio] = useState(false);
@@ -65,6 +92,10 @@ export function Login() {
           setCambioContraseñaPendiente(true);
           setRequiereCambio(true);
           setErrors({ userName: '', password: '', general: '', success: '' });
+          // El modal se abre con los campos ocultos (issue #96).
+          setMostrarPassword(false);
+          setMostrarContrasenaNueva(false);
+          setMostrarConfirmarContrasena(false);
         } else {
           setTokens(respuesta.accessToken);
           navigate('/');
@@ -80,6 +111,8 @@ export function Login() {
           ? String((axiosData as { error: unknown }).error)
           : 'Error al conectar con el servidor';
       setErrors(prev => ({ ...prev, general: message }));
+      // El login falló: el campo vuelve a estar oculto por defecto (issue #96).
+      setMostrarPassword(false);
     } finally {
       setIsLoading(false);
     }
@@ -126,6 +159,8 @@ export function Login() {
     setModalError(null);
     setModalExito(false);
     setModalLoading(false);
+    setMostrarContrasenaNueva(false);
+    setMostrarConfirmarContrasena(false);
   };
   
   return (
@@ -190,11 +225,15 @@ export function Login() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
               <input
                 id="login-contrasena"
-                type="password"
+                type={mostrarPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="input !pl-11"
+                className="input !pl-11 !pr-11"
+              />
+              <TogglePasswordButton
+                visible={mostrarPassword}
+                onToggle={() => setMostrarPassword(!mostrarPassword)}
               />
             </div>
             {errors.password && (
@@ -314,13 +353,17 @@ export function Login() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
                     <input
                       id="cambio-contrasena-nueva"
-                      type="password"
+                      type={mostrarContrasenaNueva ? 'text' : 'password'}
                       value={contrasenaNueva}
                       onChange={(e) => { setContrasenaNueva(e.target.value); setModalError(null); }}
                       placeholder="••••••••"
-                      className="input !pl-11"
+                      className="input !pl-11 !pr-11"
                       autoComplete="new-password"
                       autoFocus
+                    />
+                    <TogglePasswordButton
+                      visible={mostrarContrasenaNueva}
+                      onToggle={() => setMostrarContrasenaNueva(!mostrarContrasenaNueva)}
                     />
                   </div>
                 </div>
@@ -333,12 +376,16 @@ export function Login() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
                     <input
                       id="cambio-contrasena-confirmar"
-                      type="password"
+                      type={mostrarConfirmarContrasena ? 'text' : 'password'}
                       value={confirmarContrasena}
                       onChange={(e) => { setConfirmarContrasena(e.target.value); setModalError(null); }}
                       placeholder="••••••••"
-                      className="input !pl-11"
+                      className="input !pl-11 !pr-11"
                       autoComplete="new-password"
+                    />
+                    <TogglePasswordButton
+                      visible={mostrarConfirmarContrasena}
+                      onToggle={() => setMostrarConfirmarContrasena(!mostrarConfirmarContrasena)}
                     />
                   </div>
                 </div>

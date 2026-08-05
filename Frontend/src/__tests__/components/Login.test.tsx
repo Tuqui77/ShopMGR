@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { Login } from '../../pages/Login';
 import { useStore } from '../../store';
@@ -152,5 +152,77 @@ describe('Login: modal de cambio de contraseña obligatorio (issue #99)', () => 
     // El form de login sigue visible para una nueva sesión.
     expect(screen.getByLabelText('Usuario')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
+  });
+});
+
+describe('Login: toggle mostrar/ocultar contraseña (issue #96)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useStore.getState().logout();
+    vi.clearAllMocks();
+  });
+
+  it('alterna entre password y text en el campo del login', () => {
+    renderLogin();
+
+    const input = screen.getByLabelText('Contraseña');
+    expect(input).toHaveAttribute('type', 'password');
+
+    const toggle = screen.getByRole('button', { name: 'Mostrar contraseña' });
+    expect(toggle).toHaveAttribute('type', 'button');
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(toggle);
+    expect(input).toHaveAttribute('type', 'text');
+    expect(screen.getByRole('button', { name: 'Ocultar contraseña' })).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    expect(input).toHaveAttribute('type', 'password');
+  });
+
+  it('el modal tiene un toggle independiente por campo (nueva y confirmar)', async () => {
+    await abrirModalCambio();
+
+    const dialog = screen.getByRole('dialog');
+    const toggles = within(dialog).getAllByRole('button', { name: 'Mostrar contraseña' });
+    expect(toggles).toHaveLength(2);
+
+    fireEvent.click(toggles[0]);
+    expect(within(dialog).getByLabelText('Contraseña nueva')).toHaveAttribute('type', 'text');
+    // El segundo campo del modal sigue oculto.
+    expect(within(dialog).getByLabelText('Confirmar contraseña')).toHaveAttribute('type', 'password');
+  });
+
+  it('al abrir el modal, el campo del login vuelve a estar oculto', async () => {
+    vi.mocked(authService.login).mockResolvedValue({
+      accessToken: 'token-codigo',
+      requiereCambioContraseña: true,
+    });
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('Usuario'), { target: { value: 'juan' } });
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secreto' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'text');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    await screen.findByRole('dialog');
+
+    // El login volvió a oculto detrás del modal y el modal abre oculto.
+    expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password');
+    expect(within(screen.getByRole('dialog')).getByLabelText('Contraseña nueva')).toHaveAttribute('type', 'password');
+  });
+
+  it('vuelve a ocultar la contraseña cuando el login falla', async () => {
+    vi.mocked(authService.login).mockRejectedValue(new Error('Credenciales inválidas'));
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('Usuario'), { target: { value: 'juan' } });
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'secreto' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'text');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+
+    await waitFor(() => expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password'));
+    expect(screen.getByRole('button', { name: 'Mostrar contraseña' })).toBeInTheDocument();
   });
 });
