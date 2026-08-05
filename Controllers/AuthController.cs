@@ -243,10 +243,20 @@ public class AuthController(
         }
     }
 
+    [Authorize(Roles = "Administrador")]
+    [HttpPatch]
+    [Route("CambiarContrasenaAdmin")]
+    public async Task<IActionResult> CambiarContrasena(int idUsuario, string? contraseñaActual, string contraseñaNueva)
+    {
+        await _administrarAuth.CambiarContrasena(idUsuario, contraseñaNueva);
+
+        return Ok("Contraseña modificada");
+    }
+
     [Authorize]
     [HttpPatch]
     [Route("CambiarContrasena")]
-    public async Task<IActionResult> CambiarContrasena(string contraseñaActual, string contraseñaNueva)
+    public async Task<IActionResult> CambiarContrasena(string? contraseñaActual, string contraseñaNueva)
     {
         var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
@@ -258,13 +268,31 @@ public class AuthController(
     [Authorize(Roles = "Administrador")]
     [HttpPatch]
     [Route("CambiarRol")]
-    public async Task<IActionResult> CambiarRol([FromBody] RolUsuario nuevoRol)
+    public async Task<IActionResult> CambiarRol(int idUsuario, [FromBody] RolUsuario nuevoRol)
     {
-        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
         await _administrarAuth.CambiarRolUsuario(idUsuario, nuevoRol);
 
         return Ok("Rol modificado");
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpPatch]
+    [Route("RestaurarContraseña")]
+    public async Task<IActionResult> RestaurarContraseña(int idUsuario)
+    {
+        var codigoUnUso = await _administrarAuth.RestaurarContraseña(idUsuario);
+
+        return Ok(codigoUnUso);
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpGet]
+    [Route("ListarUsuariosAsync")]
+    public async Task<IActionResult> ListarUsuariosAsync()
+    {
+        var usuarios = await _administrarAuth.ListarUsuariosAsync();
+
+        return Ok(usuarios);
     }
 
     private byte[] DecodificarBase64Url(string rawIdRequest)
