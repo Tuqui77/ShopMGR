@@ -118,11 +118,14 @@ export function Login() {
 
   const handleSalir = () => {
     // Sin el token no hay sesión: el guard de la app redirige a /login.
+    // El form de login queda intacto detrás del modal.
     logout();
     setRequiereCambio(false);
     setContrasenaNueva('');
     setConfirmarContrasena('');
     setModalError(null);
+    setModalExito(false);
+    setModalLoading(false);
   };
   
   return (
@@ -138,193 +141,102 @@ export function Login() {
           </p>
         </div>
 
-        {requiereCambio ? (
-          /* ── Cambio de contraseña obligatorio (issue #99) ───────────────────
-             Vista separada del form de login: no re-envía credenciales. */
-          <form onSubmit={handleCambioObligatorio} className="card space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
-                <KeyRound className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
-              </div>
-              <div>
-                <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
-                  Cambio de contraseña obligatorio
-                </h2>
-                <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                  Ingresaste con un código de un solo uso. Creá una contraseña nueva para continuar.
-                </p>
-              </div>
+        {/* ── Login/Register Form ───────────────────────────────────────────
+           Siempre visible: si el login exige cambio de contraseña (código de
+           un solo uso, #99), el modal se abre ENCIMA sin desmontar este form. */}
+        <form onSubmit={handleSubmit} className="card space-y-4">
+          {/* General error */}
+          {errors.general && (
+            <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
+              <p className="text-sm text-[var(--color-danger)] text-center">{errors.general}</p>
             </div>
-
-            {modalError && (
-              <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20" role="alert">
-                <p className="text-sm text-[var(--color-danger)] flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  {modalError}
-                </p>
-              </div>
+          )}
+          
+          {/* Success message */}
+          {errors.success && (
+            <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
+              <p className="text-sm text-[var(--color-success)] text-center">{errors.success}</p>
+            </div>
+          )}
+          
+          {/* UserName Field */}
+          <div>
+            <label htmlFor="login-usuario" className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+              Usuario
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+              <input
+                id="login-usuario"
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                placeholder="Tu usuario"
+                className="input !pl-11"
+                autoFocus
+              />
+            </div>
+            {errors.userName && (
+              <p className="text-sm text-[var(--color-danger)] mt-1">{errors.userName}</p>
             )}
-
-            {modalExito && (
-              <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
-                <p className="text-sm text-[var(--color-success)] flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  Contraseña modificada. Ingresando...
-                </p>
-              </div>
+          </div>
+          
+          {/* Password Field */}
+          <div>
+            <label htmlFor="login-contrasena" className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+              Contraseña
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+              <input
+                id="login-contrasena"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="input !pl-11"
+              />
+            </div>
+            {errors.password && (
+              <p className="text-sm text-[var(--color-danger)] mt-1">{errors.password}</p>
             )}
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
-                Contraseña nueva
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
-                <input
-                  type="password"
-                  value={contrasenaNueva}
-                  onChange={(e) => { setContrasenaNueva(e.target.value); setModalError(null); }}
-                  placeholder="••••••••"
-                  className="input !pl-11"
-                  autoComplete="new-password"
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
-                Confirmar contraseña
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
-                <input
-                  type="password"
-                  value={confirmarContrasena}
-                  onChange={(e) => { setConfirmarContrasena(e.target.value); setModalError(null); }}
-                  placeholder="••••••••"
-                  className="input !pl-11"
-                  autoComplete="new-password"
-                />
-              </div>
-            </div>
-
+          </div>
+          
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn-primary flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : isRegistering ? (
+              <UserPlus className="w-5 h-5" />
+            ) : (
+              <LogIn className="w-5 h-5" />
+            )}
+            {isLoading
+              ? (isRegistering ? 'Creando...' : 'Ingresando...')
+              : (isRegistering ? 'Crear Usuario' : 'Iniciar sesión')
+            }
+          </button>
+          
+          {/* Toggle Login/Register */}
+          <p className="text-center text-sm text-[var(--color-muted)]">
+            {isRegistering ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?'}{' '}
             <button
-              type="submit"
-              disabled={modalLoading}
-              className="btn-primary flex items-center justify-center gap-2"
+              type="button"
+              onClick={toggleMode}
+              className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
             >
-              {modalLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <KeyRound className="w-5 h-5" />
-              )}
-              {modalLoading ? 'Guardando...' : 'Cambiar contraseña'}
+              {isRegistering ? 'Iniciar sesión' : 'Crear Usuario'}
             </button>
+          </p>
+        </form>
 
-            <p className="text-center text-sm text-[var(--color-muted)]">
-              ¿No sos vos?{' '}
-              <button
-                type="button"
-                onClick={handleSalir}
-                className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
-              >
-                Cerrar sesión
-              </button>
-            </p>
-          </form>
-        ) : (
-          /* ── Login/Register Form ─────────────────────────────────────────── */
-          <form onSubmit={handleSubmit} className="card space-y-4">
-            {/* General error */}
-            {errors.general && (
-              <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
-                <p className="text-sm text-[var(--color-danger)] text-center">{errors.general}</p>
-              </div>
-            )}
-            
-            {/* Success message */}
-            {errors.success && (
-              <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
-                <p className="text-sm text-[var(--color-success)] text-center">{errors.success}</p>
-              </div>
-            )}
-            
-            {/* UserName Field */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
-                Usuario
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  placeholder="Tu usuario"
-                  className="input !pl-11"
-                  autoFocus
-                />
-              </div>
-              {errors.userName && (
-                <p className="text-sm text-[var(--color-danger)] mt-1">{errors.userName}</p>
-              )}
-            </div>
-            
-            {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
-                Contraseña
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="input !pl-11"
-                />
-              </div>
-              {errors.password && (
-                <p className="text-sm text-[var(--color-danger)] mt-1">{errors.password}</p>
-              )}
-            </div>
-            
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="btn-primary flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : isRegistering ? (
-                <UserPlus className="w-5 h-5" />
-              ) : (
-                <LogIn className="w-5 h-5" />
-              )}
-              {isLoading
-                ? (isRegistering ? 'Creando...' : 'Ingresando...')
-                : (isRegistering ? 'Crear Usuario' : 'Iniciar sesión')
-              }
-            </button>
-            
-            {/* Toggle Login/Register */}
-            <p className="text-center text-sm text-[var(--color-muted)]">
-              {isRegistering ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?'}{' '}
-              <button
-                type="button"
-                onClick={toggleMode}
-                className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
-              >
-                {isRegistering ? 'Iniciar sesión' : 'Crear Usuario'}
-              </button>
-            </p>
-          </form>
-        )}
-
-        {/* Passkey login (fuera del form: no debe enviarse como submit) */}
+        {/* Passkey login (fuera del form: no debe enviarse como submit).
+            Se oculta mientras el modal de cambio está abierto: no se puede
+            iniciar otra sesión con passkey mientras el cambio es obligatorio. */}
         {!isRegistering && !requiereCambio && passkeysSoportados && (
           <div className="mt-4 space-y-4">
             <div className="flex items-center gap-3">
@@ -341,6 +253,124 @@ export function Login() {
           </div>
         )}
       </div>
+
+      {/* ── Modal: cambio de contraseña obligatorio (issue #99) ─────────────
+         Se abre sobre la pantalla de login, que queda visible detrás. Vive
+         FUERA del <form> de login: su submit no re-envía credenciales. Es
+         obligatorio: no se cierra con Escape ni click en el backdrop — la
+         única salida es completar el cambio o "Cerrar sesión". */}
+      {requiereCambio && (
+        <>
+          <div className="modal-backdrop" />
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cambio-contrasena-titulo"
+          >
+            <div className="p-6">
+              <form onSubmit={handleCambioObligatorio} className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
+                    <KeyRound className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+                  </div>
+                  <div>
+                    <h2
+                      id="cambio-contrasena-titulo"
+                      className="font-semibold"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      Cambio de contraseña obligatorio
+                    </h2>
+                    <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                      Ingresaste con un código de un solo uso. Creá una contraseña nueva para continuar.
+                    </p>
+                  </div>
+                </div>
+
+                {modalError && (
+                  <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20" role="alert">
+                    <p className="text-sm text-[var(--color-danger)] flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {modalError}
+                    </p>
+                  </div>
+                )}
+
+                {modalExito && (
+                  <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
+                    <p className="text-sm text-[var(--color-success)] flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      Contraseña modificada. Ingresando...
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="cambio-contrasena-nueva" className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+                    Contraseña nueva
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+                    <input
+                      id="cambio-contrasena-nueva"
+                      type="password"
+                      value={contrasenaNueva}
+                      onChange={(e) => { setContrasenaNueva(e.target.value); setModalError(null); }}
+                      placeholder="••••••••"
+                      className="input !pl-11"
+                      autoComplete="new-password"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label htmlFor="cambio-contrasena-confirmar" className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+                    Confirmar contraseña
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+                    <input
+                      id="cambio-contrasena-confirmar"
+                      type="password"
+                      value={confirmarContrasena}
+                      onChange={(e) => { setConfirmarContrasena(e.target.value); setModalError(null); }}
+                      placeholder="••••••••"
+                      className="input !pl-11"
+                      autoComplete="new-password"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={modalLoading}
+                  className="btn-primary flex items-center justify-center gap-2"
+                >
+                  {modalLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <KeyRound className="w-5 h-5" />
+                  )}
+                  {modalLoading ? 'Guardando...' : 'Cambiar contraseña'}
+                </button>
+
+                <p className="text-center text-sm text-[var(--color-muted)]">
+                  ¿No sos vos?{' '}
+                  <button
+                    type="button"
+                    onClick={handleSalir}
+                    className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
+                  >
+                    Cerrar sesión
+                  </button>
+                </p>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
