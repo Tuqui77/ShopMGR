@@ -14,7 +14,11 @@ using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios;
 
-public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion, IPasswordHasher<Usuario> passwordHasher) : IAdministrarAuth
+public class AdministrarAuth(
+    ShopMGRDbContexto contexto,
+    IConfiguration configuracion,
+    IPasswordHasher<Usuario> passwordHasher
+) : IAdministrarAuth
 {
     private readonly ShopMGRDbContexto _contexto = contexto; // TODO(#100): Implementar un repositorio para no acceder a datos directamente, SRP!
     private readonly IConfiguration _configuracion = configuracion;
@@ -42,11 +46,16 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
             .Usuarios.Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(u => u.UserName == request.UserName);
 
-        if (
-            usuarioDb == null
-            || _passwordHasher.VerifyHashedPassword(usuarioDb, usuarioDb.PasswordHash, request.Password)
-                == PasswordVerificationResult.Failed
-        )
+        if (usuarioDb == null)
+            return null;
+
+        var esCodigoUsoUnico = usuarioDb.CodigoUsoUnico != null && usuarioDb.CodigoUsoUnico == request.Password;
+
+        var esContraseñaValida =
+            _passwordHasher.VerifyHashedPassword(usuarioDb, usuarioDb.PasswordHash, request.Password)
+            == PasswordVerificationResult.Success;
+
+        if (!esCodigoUsoUnico && !esContraseñaValida)
             return null;
 
         var accessToken = CrearToken(usuarioDb);
@@ -56,7 +65,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         usuarioDb.EliminarRefreshTokensExpirados();
         await _contexto.SaveChangesAsync();
 
-        return new RespuestaLogin(accessToken, refreshToken);
+        return new RespuestaLogin(accessToken, refreshToken, esCodigoUsoUnico);
     }
 
     public async Task<RespuestaLogin> FinalizarAuthPasskey(Usuario usuario)
@@ -68,7 +77,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         usuario.EliminarRefreshTokensExpirados();
         await _contexto.SaveChangesAsync();
 
-        return new RespuestaLogin(accessToken, refreshToken);
+        return new RespuestaLogin(accessToken, refreshToken, false);
     }
 
     public async Task<RespuestaLogin?> Refrescar(string refreshTokenRequest)
@@ -90,7 +99,7 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
             token!.Revocar();
             await _contexto.SaveChangesAsync();
 
-            return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken);
+            return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken, false);
         }
 
         return null;
@@ -114,15 +123,30 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         return usuario;
     }
 
-    public async Task CambiarContrasena(int idUsuario, string contraseñaActual, string contraseñaNueva)
+    public async Task<List<ResumenUsuarios>> ListarUsuariosAsync()
+    {
+        var usuarios = await _contexto
+            .Usuarios.Select(u => new ResumenUsuarios
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                Rol = u.Rol,
+            })
+            .ToListAsync();
+
+        return usuarios;
+    }
+
+    public async Task CambiarContrasena(int idUsuario, string? contraseñaActual, string contraseñaNueva)
     {
         var usuario =
             await _contexto.Usuarios.Where(u => u.Id == idUsuario).FirstOrDefaultAsync()
             ?? throw new KeyNotFoundException("Usuario no encontrado");
 
         if (
-            _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, contraseñaActual)
-            == PasswordVerificationResult.Failed
+            usuario.CodigoUsoUnico == null
+            && _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, contraseñaActual)
+                == PasswordVerificationResult.Failed
         )
             throw new ArgumentException("La contraseña actual es incorrecta");
 
@@ -130,6 +154,30 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
         usuario.CambiarContrasena(hashContraseñaNueva);
 
         await _contexto.SaveChangesAsync();
+    }
+
+    public async Task CambiarContrasena(int idUsuario, string contraseñaNueva)
+    {
+        var usuario =
+            await _contexto.Usuarios.Where(u => u.Id == idUsuario).FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Usuario no encontrado");
+
+        var hashContraseñaNueva = _passwordHasher.HashPassword(usuario, contraseñaNueva);
+        usuario.CambiarContrasena(hashContraseñaNueva);
+
+        await _contexto.SaveChangesAsync();
+    }
+
+    public async Task<string> RestaurarContraseña(int idUsuario)
+    {
+        var usuario =
+            await _contexto.Usuarios.Where(u => u.Id == idUsuario).FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Usuario no encontrado");
+
+        usuario.GenerarCodigoUsoUnico();
+        await _contexto.SaveChangesAsync();
+
+        return usuario.CodigoUsoUnico!;
     }
 
     public async Task CambiarRolUsuario(int idUsuario, RolUsuario rol)
