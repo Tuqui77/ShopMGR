@@ -13,6 +13,7 @@ public class Usuario
     public string UserName { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string? CodigoUsoUnico { get; private set; }
+    public DateTime? ExpiracionCodigoUsoUnico { get; private set; }
     public IReadOnlyCollection<RefreshToken> RefreshTokens => _refreshTokens;
     public IReadOnlyCollection<Passkey> PassKeys => _passKeys;
 
@@ -34,19 +35,25 @@ public class Usuario
         if (passwordHash != PasswordHash)
             PasswordHash = passwordHash;
 
-        CodigoUsoUnico = null;
+        EliminarCodigoUsoUnico();
     }
 
     public void GenerarCodigoUsoUnico()
     {
         CodigoUsoUnico = GenerarCódigo();
+        ExpiracionCodigoUsoUnico = DateTime.Now.AddMinutes(5);
+    }
+
+    public void EliminarCodigoUsoUnico()
+    {
+        CodigoUsoUnico = null;
+        ExpiracionCodigoUsoUnico = null;
     }
 
     public void CambiarRol(RolUsuario rol)
     {
         Rol = rol;
     }
-    
 
     private string GenerarCódigo()
     {

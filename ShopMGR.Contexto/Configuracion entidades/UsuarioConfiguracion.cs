@@ -24,6 +24,8 @@ public class UsuarioConfiguracion : IEntityTypeConfiguration<Usuario>
 
         builder.Property(u => u.CodigoUsoUnico).IsRequired(false);
 
+        builder.Property(u => u.ExpiracionCodigoUsoUnico).IsRequired(false).HasColumnType("datetime2");
+
         builder
             .HasMany(u => u.RefreshTokens)
             .WithOne(rt => rt.Usuario)
