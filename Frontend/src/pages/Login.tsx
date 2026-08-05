@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, LogIn, Loader2, UserPlus } from 'lucide-react';
+import { User, Lock, LogIn, Loader2, UserPlus, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useStore } from '../store';
-import { authService } from '../services/auth';
+import { authService, extractAuthErrorMessage } from '../services/auth';
 import { PasskeyButton } from '../components/PasskeyButton';
 import { usePasskeyLogin } from '../hooks/usePasskeyLogin';
 
 export function Login() {
   const navigate = useNavigate();
-  const { setTokens } = useStore();
+  const { setTokens, setCambioContraseñaPendiente, logout } = useStore();
   
   const [isRegistering, setIsRegistering] = useState(false);
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ userName: '', password: '', general: '', success: '' });
   const [isLoading, setIsLoading] = useState(false);
+
+  // ── Cambio de contraseña obligatorio (login con código de un solo uso, #99) ──
+  const [requiereCambio, setRequiereCambio] = useState(false);
+  const [contrasenaNueva, setContrasenaNueva] = useState('');
+  const [confirmarContrasena, setConfirmarContrasena] = useState('');
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [modalExito, setModalExito] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
   
   const passkey = usePasskeyLogin();
   const passkeysSoportados = typeof window !== 'undefined' && window.PublicKeyCredential !== undefined;
@@ -48,9 +56,19 @@ export function Login() {
         setIsRegistering(false);
         setPassword('');
       } else {
-        const { accessToken } = await authService.login({ userName: userName.trim(), password });
-        setTokens(accessToken);
-        navigate('/');
+        const respuesta = await authService.login({ userName: userName.trim(), password });
+
+        if (respuesta.requiereCambioContraseña === true) {
+          // El token ya se setea para que la llamada de cambio vaya autenticada;
+          // el flag evita que LoginPage redirija antes de completar el cambio.
+          setTokens(respuesta.accessToken);
+          setCambioContraseñaPendiente(true);
+          setRequiereCambio(true);
+          setErrors({ userName: '', password: '', general: '', success: '' });
+        } else {
+          setTokens(respuesta.accessToken);
+          navigate('/');
+        }
       }
     } catch (err: unknown) {
       const axiosData = typeof err === 'object' && err !== null && 'response' in err
@@ -71,6 +89,41 @@ export function Login() {
     setIsRegistering(!isRegistering);
     setErrors({ userName: '', password: '', general: '', success: '' });
   };
+
+  const handleCambioObligatorio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contrasenaNueva || !confirmarContrasena) {
+      setModalError('Completá la contraseña nueva y su confirmación.');
+      return;
+    }
+    if (contrasenaNueva !== confirmarContrasena) {
+      setModalError('Las contraseñas no coinciden.');
+      return;
+    }
+    setModalError(null);
+    setModalLoading(true);
+    try {
+      // contraseñaActual = null: el backend NO valida la actual (login con código).
+      await authService.cambiarContrasena(null, contrasenaNueva);
+      setModalExito(true);
+      setCambioContraseñaPendiente(false);
+      // El accessToken ya quedó en el store al hacer login: solo se navega.
+      navigate('/');
+    } catch (err: unknown) {
+      setModalError(extractAuthErrorMessage(err) || 'No se pudo cambiar la contraseña. Probá de nuevo.');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleSalir = () => {
+    // Sin el token no hay sesión: el guard de la app redirige a /login.
+    logout();
+    setRequiereCambio(false);
+    setContrasenaNueva('');
+    setConfirmarContrasena('');
+    setModalError(null);
+  };
   
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -84,98 +137,195 @@ export function Login() {
             Gestión de talleres y clientes
           </p>
         </div>
-        
-        {/* Login/Register Form */}
-        <form onSubmit={handleSubmit} className="card space-y-4">
-          {/* General error */}
-          {errors.general && (
-            <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
-              <p className="text-sm text-[var(--color-danger)] text-center">{errors.general}</p>
+
+        {requiereCambio ? (
+          /* ── Cambio de contraseña obligatorio (issue #99) ───────────────────
+             Vista separada del form de login: no re-envía credenciales. */
+          <form onSubmit={handleCambioObligatorio} className="card space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
+                <KeyRound className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
+              </div>
+              <div>
+                <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                  Cambio de contraseña obligatorio
+                </h2>
+                <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                  Ingresaste con un código de un solo uso. Creá una contraseña nueva para continuar.
+                </p>
+              </div>
             </div>
-          )}
-          
-          {/* Success message */}
-          {errors.success && (
-            <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
-              <p className="text-sm text-[var(--color-success)] text-center">{errors.success}</p>
-            </div>
-          )}
-          
-          {/* UserName Field */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
-              Usuario
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
-              <input
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                placeholder="Tu usuario"
-                className="input !pl-11"
-                autoFocus
-              />
-            </div>
-            {errors.userName && (
-              <p className="text-sm text-[var(--color-danger)] mt-1">{errors.userName}</p>
+
+            {modalError && (
+              <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20" role="alert">
+                <p className="text-sm text-[var(--color-danger)] flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {modalError}
+                </p>
+              </div>
             )}
-          </div>
-          
-          {/* Password Field */}
-          <div>
-            <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
-              Contraseña
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="input !pl-11"
-              />
+
+            {modalExito && (
+              <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
+                <p className="text-sm text-[var(--color-success)] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  Contraseña modificada. Ingresando...
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+                Contraseña nueva
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+                <input
+                  type="password"
+                  value={contrasenaNueva}
+                  onChange={(e) => { setContrasenaNueva(e.target.value); setModalError(null); }}
+                  placeholder="••••••••"
+                  className="input !pl-11"
+                  autoComplete="new-password"
+                  autoFocus
+                />
+              </div>
             </div>
-            {errors.password && (
-              <p className="text-sm text-[var(--color-danger)] mt-1">{errors.password}</p>
-            )}
-          </div>
-          
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="btn-primary flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : isRegistering ? (
-              <UserPlus className="w-5 h-5" />
-            ) : (
-              <LogIn className="w-5 h-5" />
-            )}
-            {isLoading
-              ? (isRegistering ? 'Creando...' : 'Ingresando...')
-              : (isRegistering ? 'Crear Usuario' : 'Iniciar sesión')
-            }
-          </button>
-          
-          {/* Toggle Login/Register */}
-          <p className="text-center text-sm text-[var(--color-muted)]">
-            {isRegistering ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?'}{' '}
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+                Confirmar contraseña
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+                <input
+                  type="password"
+                  value={confirmarContrasena}
+                  onChange={(e) => { setConfirmarContrasena(e.target.value); setModalError(null); }}
+                  placeholder="••••••••"
+                  className="input !pl-11"
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+
             <button
-              type="button"
-              onClick={toggleMode}
-              className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
+              type="submit"
+              disabled={modalLoading}
+              className="btn-primary flex items-center justify-center gap-2"
             >
-              {isRegistering ? 'Iniciar sesión' : 'Crear Usuario'}
+              {modalLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <KeyRound className="w-5 h-5" />
+              )}
+              {modalLoading ? 'Guardando...' : 'Cambiar contraseña'}
             </button>
-          </p>
-        </form>
+
+            <p className="text-center text-sm text-[var(--color-muted)]">
+              ¿No sos vos?{' '}
+              <button
+                type="button"
+                onClick={handleSalir}
+                className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
+              >
+                Cerrar sesión
+              </button>
+            </p>
+          </form>
+        ) : (
+          /* ── Login/Register Form ─────────────────────────────────────────── */
+          <form onSubmit={handleSubmit} className="card space-y-4">
+            {/* General error */}
+            {errors.general && (
+              <div className="p-3 rounded-lg bg-[var(--color-danger)]/10 border border-[var(--color-danger)]/20">
+                <p className="text-sm text-[var(--color-danger)] text-center">{errors.general}</p>
+              </div>
+            )}
+            
+            {/* Success message */}
+            {errors.success && (
+              <div className="p-3 rounded-lg bg-[var(--color-success)]/10 border border-[var(--color-success)]/20">
+                <p className="text-sm text-[var(--color-success)] text-center">{errors.success}</p>
+              </div>
+            )}
+            
+            {/* UserName Field */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+                Usuario
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  placeholder="Tu usuario"
+                  className="input !pl-11"
+                  autoFocus
+                />
+              </div>
+              {errors.userName && (
+                <p className="text-sm text-[var(--color-danger)] mt-1">{errors.userName}</p>
+              )}
+            </div>
+            
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-[var(--color-muted)] mb-2">
+                Contraseña
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-muted)]" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input !pl-11"
+                />
+              </div>
+              {errors.password && (
+                <p className="text-sm text-[var(--color-danger)] mt-1">{errors.password}</p>
+              )}
+            </div>
+            
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-primary flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isRegistering ? (
+                <UserPlus className="w-5 h-5" />
+              ) : (
+                <LogIn className="w-5 h-5" />
+              )}
+              {isLoading
+                ? (isRegistering ? 'Creando...' : 'Ingresando...')
+                : (isRegistering ? 'Crear Usuario' : 'Iniciar sesión')
+              }
+            </button>
+            
+            {/* Toggle Login/Register */}
+            <p className="text-center text-sm text-[var(--color-muted)]">
+              {isRegistering ? '¿Ya tenés cuenta?' : '¿No tenés cuenta?'}{' '}
+              <button
+                type="button"
+                onClick={toggleMode}
+                className="text-[var(--color-accent)] hover:underline px-1 rounded transition-colors duration-200"
+              >
+                {isRegistering ? 'Iniciar sesión' : 'Crear Usuario'}
+              </button>
+            </p>
+          </form>
+        )}
 
         {/* Passkey login (fuera del form: no debe enviarse como submit) */}
-        {!isRegistering && passkeysSoportados && (
+        {!isRegistering && !requiereCambio && passkeysSoportados && (
           <div className="mt-4 space-y-4">
             <div className="flex items-center gap-3">
               <div className="h-px flex-1" style={{ backgroundColor: 'var(--color-border)' }} />

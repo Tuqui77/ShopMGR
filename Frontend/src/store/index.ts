@@ -22,6 +22,11 @@ interface AppState {
   
   // Auth State (JWT access token; el refresh token vive en cookie HttpOnly)
   accessToken: string | null;
+
+  // true mientras el login pendiente exige cambiar la contraseña (código de un
+  // solo uso). Evita que LoginPage redirija antes de completar el cambio (#99).
+  // NO se persiste: es transitorio entre login y navegación al dashboard.
+  cambioContraseñaPendiente: boolean;
   
   // UI State
   showHoursModal: boolean;
@@ -44,6 +49,7 @@ interface AppState {
   
   // Auth Actions
   setTokens: (accessToken: string) => void;
+  setCambioContraseñaPendiente: (pendiente: boolean) => void;
   logout: () => void;
   
   // UI Actions
@@ -75,6 +81,7 @@ export const useStore = create<AppState>()(
       
       // Initial auth state
       accessToken: null,
+      cambioContraseñaPendiente: false,
       
       // Initial UI state
       showHoursModal: false,
@@ -94,8 +101,11 @@ export const useStore = create<AppState>()(
       // Auth Actions
       setTokens: (accessToken) => set({ accessToken }),
 
+      setCambioContraseñaPendiente: (cambioContraseñaPendiente) =>
+        set({ cambioContraseñaPendiente }),
+
       logout: () => {
-        set({ accessToken: null });
+        set({ accessToken: null, cambioContraseñaPendiente: false });
       },
       
       // UI Actions

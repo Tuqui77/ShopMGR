@@ -97,15 +97,17 @@ function ProtectedLayout() {
 }
 
 function LoginPage() {
-  const { accessToken } = useStore();
+  const { accessToken, cambioContraseñaPendiente } = useStore();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
-  
-  // If already authenticated, redirect to dashboard
-  if (accessToken) {
+
+  // Si el login exige cambiar la contraseña (código de un solo uso, issue #99),
+  // el token ya está seteado pero el modal de cambio debe completarse antes de
+  // entrar a la app: se omite el redirect mientras el flag esté activo.
+  if (accessToken && !cambioContraseñaPendiente) {
     return <Navigate to={from} replace />
   }
-  
+
   return <Login />
 }
 
