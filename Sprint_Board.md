@@ -194,3 +194,16 @@
   - `jwt.ts`: `obtenerRolDesdeToken` y `obtenerIdUsuarioDesdeToken` validan el valor de cada claim antes de devolver (fallback robusto entre claims cortos y URIs largos).
   - Tests: `auth.test.ts` nuevo (8), `Configuracion.test.tsx` reescrito (11), `jwt.test.ts` +12 (33 total). **Suite 173/173**, lint/typecheck/build OK.
 - **Pendiente**: reconstruir contenedores (`podman compose down --remove-orphans && podman compose up --build -d`), verificación manual en navegador (login con código → cambio forzado; admin: dropdown usuarios, cambiar rol, restaurar, copiar código), luego commits autorizados (backend sin commitear + frontend sin commitear).
+
+## Iteración 17 (2026-08-05) — Issue #99: expiración del código de un solo uso + modal de cambio de contraseña
+
+- **Backend (usuario) — expiración del código de un solo uso (5 min)**:
+  - `Usuario.cs`: nuevo campo `DateTime? ExpiracionCodigoUsoUnico`; `GenerarCodigoUsoUnico()` setea `DateTime.Now.AddMinutes(5)`; nuevo método `EliminarCodigoUsoUnico()` limpia ambos campos (usado por `CambiarContrasena`).
+  - `AdministrarAuth.cs` (IniciarSesion): `esCodigoUsoUnico` ahora exige `ExpiracionCodigoUsoUnico > DateTime.Now`; bloque de limpieza automática: si hay código con expiración pasada → `EliminarCodigoUsoUnico()` + `SaveChangesAsync()`.
+  - Bug detectado por el PM: operador `<` invertido en la comparación de expiración (daba acceso SOLO cuando el código ya expiró); corregido a `>` (validado por el usuario en navegador).
+  - Migración `20260805213336_AgregaExpiracionCodigoUnUso` (`datetime2` nullable) + `UsuarioConfiguracion` mapea la columna + snapshot.
+- **Frontend (subagente Frontend) — modal de cambio de contraseña obligatorio (spec del usuario)**:
+  - `Login.tsx`: la pantalla de login ya NO se reemplaza; se abre un modal (`.modal-backdrop` + `.modal-content`, patrón ClienteForm/HoursModal) sobre el form de login con el cambio de contraseña. Escape NO cierra (cambio obligatorio, evita perder el código); única salida: completar cambio o "Cerrar sesión". Passkey login oculto mientras el modal está abierto. Mejora a11y: `label htmlFor` ↔ `input id` en los 4 campos.
+  - `Login.test.tsx` (nuevo, 5 tests): login normal navega; login con código muestra modal + form de login visible; mismatch valida; submit exitoso llama `cambiarContrasena(null, nueva)` y navega; "Cerrar sesión" limpia. Valida contrato con guard de App (`cambioContraseñaPendiente`).
+  - Suite **178/178**, lint/typecheck/build OK.
+- **Pendiente**: commits autorizados (backend expiración + frontend modal), push coordinado, cierre del issue #99 (criterio "Tokens expiran" ahora cumplido), release al final del sprint.
