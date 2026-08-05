@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using ShopMGR.Dominio.Enums;
 
 namespace ShopMGR.Dominio.Modelo;
@@ -36,13 +37,28 @@ public class Usuario
         CodigoUsoUnico = null;
     }
 
-    public void AgregarCodigoDeUnUso(string codigo)
+    public void GenerarCodigoUsoUnico()
     {
-        CodigoUsoUnico = codigo;
+        CodigoUsoUnico = GenerarCódigo();
     }
 
     public void CambiarRol(RolUsuario rol)
     {
         Rol = rol;
+    }
+    
+
+    private string GenerarCódigo()
+    {
+        const string caracteres = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
+        Span<char> resultado = stackalloc char[6];
+
+        for (int i = 0; i < 6; i++)
+        {
+            resultado[i] = caracteres[RandomNumberGenerator.GetInt32(caracteres.Length)];
+        }
+        
+        return new string(resultado);
     }
 }
