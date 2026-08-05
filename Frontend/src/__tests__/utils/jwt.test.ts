@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { obtenerRolDesdeToken } from '../../utils/jwt';
+import { obtenerRolDesdeToken, obtenerIdUsuarioDesdeToken } from '../../utils/jwt';
 
 // ============================================================================
 // Helpers de prueba
@@ -133,5 +133,68 @@ describe('obtenerRolDesdeToken (issue #99: rol desde el claim del JWT)', () => {
   it('devuelve null si el claim con URI largo tiene un valor desconocido', () => {
     const token = crearToken({ [CLAIM_ROL_URI_LARGO]: 'SuperAdmin' });
     expect(obtenerRolDesdeToken(token)).toBeNull();
+  });
+});
+
+// URI largo que .NET 9 serializa para ClaimTypes.NameIdentifier en el payload
+// crudo del JWT (JwtSecurityTokenHandler.WriteToken), ver issue #99.
+const CLAIM_NAME_IDENTIFIER_URI_LARGO =
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/nameidentifier';
+
+describe('obtenerIdUsuarioDesdeToken (issue #99: id del usuario logueado)', () => {
+  it('decodifica el id numérico desde el claim corto "nameid"', () => {
+    const token = crearToken({ nameid: '42' });
+    expect(obtenerIdUsuarioDesdeToken(token)).toBe(42);
+  });
+
+  it('decodifica el id numérico desde el claim con URI largo (.NET)', () => {
+    const token = crearToken({ [CLAIM_NAME_IDENTIFIER_URI_LARGO]: '42' });
+    expect(obtenerIdUsuarioDesdeToken(token)).toBe(42);
+  });
+
+  it('prioriza el claim corto "nameid" si ambos claims están presentes', () => {
+    const token = crearToken({ nameid: '1', [CLAIM_NAME_IDENTIFIER_URI_LARGO]: '2' });
+    expect(obtenerIdUsuarioDesdeToken(token)).toBe(1);
+  });
+
+  it('acepta el claim de URI largo si el corto no es numérico', () => {
+    const token = crearToken({ nameid: 'abc', [CLAIM_NAME_IDENTIFIER_URI_LARGO]: '7' });
+    expect(obtenerIdUsuarioDesdeToken(token)).toBe(7);
+  });
+
+  it('devuelve null si el token es null', () => {
+    expect(obtenerIdUsuarioDesdeToken(null)).toBeNull();
+  });
+
+  it('devuelve null si el token es string vacío', () => {
+    expect(obtenerIdUsuarioDesdeToken('')).toBeNull();
+  });
+
+  it('devuelve null si el token no tiene forma JWT (menos de 3 partes)', () => {
+    expect(obtenerIdUsuarioDesdeToken('solo.dos')).toBeNull();
+  });
+
+  it('devuelve null si el payload contiene base64 inválido', () => {
+    expect(obtenerIdUsuarioDesdeToken('header.b@c#d.firma')).toBeNull();
+  });
+
+  it('devuelve null si el payload no es JSON válido', () => {
+    const token = `header.${codificarBase64Url('{nameid:')}.firma`;
+    expect(obtenerIdUsuarioDesdeToken(token)).toBeNull();
+  });
+
+  it('devuelve null si el token no tiene ninguno de los dos claims de id', () => {
+    const token = crearToken({ role: 'Administrador' });
+    expect(obtenerIdUsuarioDesdeToken(token)).toBeNull();
+  });
+
+  it('devuelve null si el claim de id no es numérico (fail-closed)', () => {
+    const token = crearToken({ nameid: 'abc' });
+    expect(obtenerIdUsuarioDesdeToken(token)).toBeNull();
+  });
+
+  it('devuelve null si el claim de id es un string vacío', () => {
+    const token = crearToken({ nameid: '' });
+    expect(obtenerIdUsuarioDesdeToken(token)).toBeNull();
   });
 });

@@ -17,6 +17,14 @@ const CLAIMS_DE_ROL = [
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
 ] as const;
 
+// Nombres de claim de id de usuario aceptados (se buscan en orden):
+// - "nameid": variante corta estándar (misma prioridad que "role").
+// - URI largo de .NET para ClaimTypes.NameIdentifier (mismo serializador que el rol).
+const CLAIMS_ID_USUARIO = [
+  'nameid',
+  'http://schemas.microsoft.com/ws/2008/06/identity/claims/nameidentifier',
+] as const;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -47,8 +55,9 @@ function decodificarPayload(token: string): unknown {
 /**
  * Extrae el rol del JWT de acceso. El claim puede venir como "role" (estándar)
  * o como el URI largo de .NET
- * (http://schemas.microsoft.com/ws/2008/06/identity/claims/role). Se devuelve el
- * primer claim que tenga un RolUsuario válido.
+ * (http://schemas.microsoft.com/ws/2008/06/identity/claims/role). Se recorre en
+ * orden y se devuelve el PRIMER claim con un RolUsuario válido: si el primero
+ * trae un valor desconocido, se prueba el siguiente.
  * Fail-closed: token ausente o malformado, payload sin ninguno de los claims o
  * rol desconocido devuelven null — si no se puede probar el rol, la UI no lo asume.
  */
@@ -58,9 +67,35 @@ export function obtenerRolDesdeToken(accessToken: string | null): RolUsuario | n
     const payload = decodificarPayload(accessToken);
     if (!isRecord(payload)) return null;
     for (const claim of CLAIMS_DE_ROL) {
-      const role = payload[claim];
-      if (role === 'Administrador' || role === 'Empleado' || role === 'Cliente') {
-        return role;
+      const value = payload[claim];
+      if (value === 'Administrador' || value === 'Empleado' || value === 'Cliente') {
+        return value;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extrae el id de usuario del JWT de acceso (claim "nameid" o NameIdentifier de
+ * .NET, serializado como URI largo). Se recorre en orden y se devuelve el PRIMER
+ * claim con un id numérico válido: si el primero no es numérico, se prueba el
+ * siguiente. Se usa para comparar contra los ids de ListarUsuariosAsync y
+ * refrescar el token cuando el admin se cambia el rol a sí mismo.
+ * Fail-closed: token ausente/malformado o id no numérico devuelven null.
+ */
+export function obtenerIdUsuarioDesdeToken(accessToken: string | null): number | null {
+  if (typeof accessToken !== 'string' || accessToken.length === 0) return null;
+  try {
+    const payload = decodificarPayload(accessToken);
+    if (!isRecord(payload)) return null;
+    for (const claim of CLAIMS_ID_USUARIO) {
+      const value = payload[claim];
+      if (typeof value === 'string' && value.length > 0) {
+        const numero = Number(value);
+        if (Number.isInteger(numero)) return numero;
       }
     }
     return null;
