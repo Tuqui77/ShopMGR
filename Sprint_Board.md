@@ -7,23 +7,23 @@
 
 ## Sprint Actual: Sprint 3
 **Objetivo del Sprint**: Consolidar la seguridad y robustez del flujo de auth (refresh tokens en cookie HttpOnly, revocación explícita, índice/purga, recuperación de contraseña admin, SRP) + mejoras UX de auth en frontend + hardening de infraestructura (#75) y validación de entrada (#57).
-**Estado General**: Planificación formal (issues definidos, alcance confirmado por el usuario)
+**Estado General**: Implementación casi completa — 5/11 issues listos (cierre de issues pendiente del PR final); en curso: #57 (data annotations, usuario) y #96 (mostrar/ocultar contraseña, Frontend)
 
 ### Issues del Sprint 3
 
 | Issue | Descripción | Área | Type | Prioridad | Estado |
 |-------|-------------|------|------|-----------|--------|
 | #114 (SEV-001) | Migrar RefreshToken a cookie HttpOnly con restricción de sitio | Backend+Frontend | Feature (security) | High | **In Progress — Commits + push OK (sin PR)** — validado en navegador (login/refresh/logout OK, cookie HttpOnly se elimina). 3 commits atómicos pusheados a `origin/development` (`3cadb14` backend, `8ae69cb` tests, `1a04df5` frontend). PR pendiente (el usuario lo hará al final del sprint) |
-| #115 (FUN-001) | Revocación de refresh tokens depende de relationship fixup implícito de EF Core | Backend | Bug | High | OPEN |
-| #116 (OPS-001) | Índice sobre RefreshTokens.Hash + purga de tokens expirados | Backend/DevOps | Task (perf/ops) | High | OPEN |
+| #115 (FUN-001) | Revocación de refresh tokens depende de relationship fixup implícito de EF Core | Backend | Bug | High | **Listo — cierre pendiente del PR final** — revocación directa en la entidad (`e5d8533` + `7be19aa`), pusheado a `origin/development`. Validado por el usuario (el token se revoca sin depender de la relación con el usuario) |
+| #116 (OPS-001) | Índice sobre RefreshTokens.Hash + purga de tokens expirados | Backend/DevOps | Task (perf/ops) | High | **Listo — cierre pendiente del PR final** — índice único a Hash con datetime2 (`270d985`), purga al iniciar sesión + BackgroundService cada 24 h (`26abfc4`), tests (`7d4d68f`), pusheado a `origin/development`. Validado por el usuario |
 | #99 | Recuperar contraseña mediante admin con token de un solo uso (roles) | Backend | Feature | Medium | OPEN |
 | #100 | Extraer acceso a datos de AdministrarAuth a repositorio (SRP) | Backend | Task (refactor) | Medium | OPEN |
 | #112 | Submenú de usuario en Configuración + mover gestión passkeys | Frontend | Feature | Medium | OPEN |
 | #113 | Botón "+" en vez de "Registrar dispositivo" en passkeys | Frontend | Fix | Low | OPEN |
-| #96 | Botón mostrar/ocultar contraseña en login | Frontend | Feature | Medium | OPEN |
-| #75 | Quitar puerto 1433 de SQL Server del host | DevOps | Task (security) | High | OPEN |
-| #57 | Data annotations a DTOs de entrada | Backend | Feature (security) | High | OPEN |
-| #117 | Persistir teléfono al guardar cliente sin requerir botón "+" | Frontend | Bug (UX) | Medium | OPEN |
+| #96 | Botón mostrar/ocultar contraseña en login | Frontend | Feature | Medium | In Progress — delegado al subagente Frontend (2026-08-05) |
+| #75 | Quitar puerto 1433 de SQL Server del host | DevOps | Task (security) | High | **Implementado — SIN COMMITEAR** — cambio en `docker-compose.yaml` pendiente de commit |
+| #57 | Data annotations a DTOs de entrada | Backend | Feature (security) | High | In Progress — usuario ejecutando (2026-08-05) |
+| #117 | Persistir teléfono al guardar cliente sin requerir botón "+" | Frontend | Bug (UX) | Medium | **Listo — cierre pendiente del PR final** — `bfa484a`, pusheado a `origin/development`. Completado en iteración previa |
 
 ### Backlog de Tareas Atómicas — Sprint 3
 
@@ -207,3 +207,22 @@
   - `Login.test.tsx` (nuevo, 5 tests): login normal navega; login con código muestra modal + form de login visible; mismatch valida; submit exitoso llama `cambiarContrasena(null, nueva)` y navega; "Cerrar sesión" limpia. Valida contrato con guard de App (`cambioContraseñaPendiente`).
   - Suite **178/178**, lint/typecheck/build OK.
 - **Pendiente**: commits autorizados (backend expiración + frontend modal), push coordinado, cierre del issue #99 (criterio "Tokens expiran" ahora cumplido), release al final del sprint.
+
+## Iteración 18 (2026-08-05) — Sprint 3: confirmación de issues completados + delegación #96
+
+- **Usuario confirma implementación completa** (commits ya pusheados a `origin/development` en iteraciones previas, cierre de issues diferido al PR final):
+  - **#115 (FUN-001)** — la revocación del refresh token funciona sin depender del relationship fixup implícito de EF Core (`e5d8533` fix + `7be19aa` refactor).
+  - **#116 (OPS-001)** — índice único sobre `RefreshTokens.Hash` + `datetime2` (`270d985`); purga de tokens expirados al iniciar sesión y con BackgroundService cada 24 h (`26abfc4`); tests de limpieza (`7d4d68f`).
+  - **#117** — persistencia del teléfono al guardar cliente sin botón "+" (`bfa484a`).
+  - **#75** — puerto `1433:1433` eliminado de `docker-compose.yaml` (cambio SIN commitear aún).
+- **Actualización del Sprint Board**: tabla de issues del Sprint 3 refleja el nuevo estado (5 listos + 1 implementado sin commitear + 1 en curso por el usuario + 1 delegado).
+- **#96 delegado al subagente Frontend**: botón mostrar/ocultar contraseña en login (requisitos en la tarea del subagente).
+- **#57 en curso**: el usuario comenzó data annotations a DTOs de entrada en paralelo.
+
+## Iteración 19 (2026-08-05) — Sprint 3: #96 validado + #57 terminado + lote de commits + delegación #112/#113
+
+- **#96 (mostrar/ocultar contraseña) implementado y validado por el usuario**:
+  - `Login.tsx`: toggle en los 3 campos de contraseña (login + modal de cambio obligatorio) con `Eye`/`EyeOff` de Lucide, `type="button"`, `aria-label` + `aria-pressed`. Reset a oculto al fallar login, al abrir el modal y al cerrar sesión.
+  - `Login.test.tsx`: +4 tests (toggle login, 2 toggles independientes en modal, reset al abrir modal, reset tras login fallido). Suite **182/182**, lint/typecheck/build OK.
+- **#57 (data annotations a DTOs de entrada) terminado por el usuario**: 9 DTOs (`ClienteDTO`, `DireccionDTO`, `HorasYDescripcionDTO`, `MaterialDTO`, `MovimientoBalanceDTO`, `PresupuestoDTO`, `RespuestaLogin`, `TelefonoClienteDTO`, `TrabajoDTO`) + ajuste en `Dominio/Modelo/Trabajo.cs`.
+- **Lote de commits** (decisión del usuario, opción C): commitear lote actual (#96 + #57 + #75 + docs) en paralelo con delegación de #112/#113 al subagente Frontend.
