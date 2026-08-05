@@ -146,7 +146,7 @@ public class AuthControllerTests
     public void RespuestaLogin_CuandoSeSerializa_DeberiaOcultarRefreshTokenYExponerAccessToken()
     {
         // Arrange
-        var respuesta = new RespuestaLogin("access-123", "refresh-456");
+        var respuesta = new RespuestaLogin("access-123", "refresh-456", false);
 
         // Act + Assert
         VerificarBodyNoFiltraRefreshToken(respuesta);
@@ -172,7 +172,7 @@ public class AuthControllerTests
         );
         authMock
             .Setup(x => x.IniciarSesion(It.IsAny<UsuarioDTO>()))
-            .ReturnsAsync(new RespuestaLogin("access-token", "refresh-token"));
+            .ReturnsAsync(new RespuestaLogin("access-token", "refresh-token", false));
 
         // Act
         var resultado = await controller.IniciarSesion(
@@ -218,7 +218,7 @@ public class AuthControllerTests
         var (controller, httpContext) = CrearController(authMock, passkeysMock, secure: true, conCookieRefresh: true);
         authMock
             .Setup(x => x.Refrescar("token-viejo"))
-            .ReturnsAsync(new RespuestaLogin("nuevo-access", "nuevo-refresh"));
+            .ReturnsAsync(new RespuestaLogin("nuevo-access", "nuevo-refresh", false));
 
         // Act
         var resultado = await controller.Refrescar();
@@ -343,7 +343,7 @@ public class AuthControllerTests
             .ReturnsAsync(new Usuario { Id = 1, UserName = "usuario-passkey" });
         authMock
             .Setup(x => x.FinalizarAuthPasskey(It.IsAny<Usuario>()))
-            .ReturnsAsync(new RespuestaLogin("pass-access", "pass-refresh"));
+            .ReturnsAsync(new RespuestaLogin("pass-access", "pass-refresh", false));
 
         var request = new IniciarSesionPasskeyRequest
         {
