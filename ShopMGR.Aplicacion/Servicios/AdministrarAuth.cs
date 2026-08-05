@@ -49,11 +49,20 @@ public class AdministrarAuth(
         if (usuarioDb == null)
             return null;
 
-        var esCodigoUsoUnico = usuarioDb.CodigoUsoUnico != null && usuarioDb.CodigoUsoUnico == request.Password;
+        var esCodigoUsoUnico =
+            usuarioDb.CodigoUsoUnico != null
+            && usuarioDb.CodigoUsoUnico == request.Password
+            && usuarioDb.ExpiracionCodigoUsoUnico > DateTime.Now;
 
         var esContraseñaValida =
             _passwordHasher.VerifyHashedPassword(usuarioDb, usuarioDb.PasswordHash, request.Password)
             == PasswordVerificationResult.Success;
+
+        if (usuarioDb.CodigoUsoUnico != null && usuarioDb.ExpiracionCodigoUsoUnico < DateTime.Now)
+        {
+            usuarioDb.EliminarCodigoUsoUnico();
+            await _contexto.SaveChangesAsync();
+        }
 
         if (!esCodigoUsoUnico && !esContraseñaValida)
             return null;
