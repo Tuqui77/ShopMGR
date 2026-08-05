@@ -11,9 +11,11 @@ import {
   Shield,
   AlertCircle,
   CheckCircle2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
-import { obtenerRolDesdeToken } from '../utils/jwt';
+import { obtenerRolDesdeToken, obtenerIdUsuarioDesdeToken } from '../utils/jwt';
 import { apiClient } from '../services/api';
 import { PasskeySection } from '../components/PasskeySection';
 import { authService, extractAuthErrorMessage } from '../services/auth';
@@ -170,23 +172,68 @@ export function Configuracion() {
     );
   };
   
-  // ── Rol de usuario (issue #99) ─────────────────────────────────────────────
+  // ── Administrar usuarios (issue #99, solo Admin) ───────────────────────────
   // El rol se deriva del JWT de acceso (claim "role"); como el token se renueva
   // vía el interceptor de refresh, esta derivación se mantiene siempre al día.
   const accessToken = useStore((s) => s.accessToken);
   const setTokens = useStore((s) => s.setTokens);
   const logout = useStore((s) => s.logout);
   const rol = useMemo(() => obtenerRolDesdeToken(accessToken), [accessToken]);
+  const idUsuarioLogueado = useMemo(
+    () => obtenerIdUsuarioDesdeToken(accessToken),
+    [accessToken],
+  );
 
-  // El select preselecciona el rol actual (ahora expuesto en el JWT): elegir
-  // otro rol es deliberado y el botón queda deshabilitado si no cambió.
-  const [rolSeleccionado, setRolSeleccionado] = useState<RolUsuario | null>(() => rol);
-  const [showRolSuccess, setShowRolSuccess] = useState(false);
-  
-  const cambiarRolMutation = useMutation({
-    mutationFn: (rol: RolUsuario) => authService.cambiarRol(rol),
+  // Lista de usuarios: el endpoint es solo para Administrador, por eso la card
+  // y el query se habilitan únicamente cuando el rol derivado lo confirma.
+  const {
+    data: usuarios = [],
+    isLoading: isLoadingUsuarios,
+    isError: isErrorUsuarios,
+    refetch: refetchUsuarios,
+  } = useQuery({
+    queryKey: ['usuarios'],
+    queryFn: authService.listarUsuarios,
+    enabled: rol === 'Administrador',
   });
-  
+
+  const [usuarioSeleccionadoId, setUsuarioSeleccionadoId] = useState<number | null>(null);
+  const [nuevoRol, setNuevoRol] = useState<RolUsuario | null>(null);
+  const [codigoRestaurado, setCodigoRestaurado] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+  const [showRolAdminSuccess, setShowRolAdminSuccess] = useState(false);
+  const [contrasenaNuevaAdmin, setContrasenaNuevaAdmin] = useState('');
+  const [validacionContrasenaAdmin, setValidacionContrasenaAdmin] = useState<string | null>(null);
+  const [showContrasenaAdminSuccess, setShowContrasenaAdminSuccess] = useState(false);
+
+  const usuarioSeleccionado = usuarios.find((u) => u.id === usuarioSeleccionadoId) ?? null;
+
+  const cambiarRolAdminMutation = useMutation({
+    mutationFn: ({ id, rol: rolNuevo }: { id: number; rol: RolUsuario }) =>
+      authService.cambiarRol(id, rolNuevo),
+    onSuccess: () => {
+      void refetchUsuarios();
+    },
+  });
+
+  const restaurarContrasenaMutation = useMutation({
+    mutationFn: (idUsuario: number) => authService.restaurarContraseña(idUsuario),
+    onSuccess: (codigo) => {
+      setCodigoRestaurado(codigo);
+      setCopiado(false);
+    },
+  });
+
+  const cambiarContrasenaAdminMutation = useMutation({
+    mutationFn: ({ id, nueva }: { id: number; nueva: string }) =>
+      authService.cambiarContrasenaAdmin(id, null, nueva),
+    onSuccess: () => {
+      setContrasenaNuevaAdmin('');
+      setShowContrasenaAdminSuccess(true);
+      setTimeout(() => setShowContrasenaAdminSuccess(false), 3000);
+    },
+  });
+
   /**
    * Tras cambiar el rol, el JWT local queda obsoleto (su claim "role" sigue con
    * el rol anterior hasta el próximo refresh). Se pide un access token nuevo: el
@@ -202,21 +249,76 @@ export function Configuracion() {
       window.location.replace('/login');
     }
   }
-  
-  const handleRolChange = (e: ChangeEvent<HTMLSelectElement>) => {
+
+  const handleUsuarioChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setRolSeleccionado(value === '' ? null : (value as RolUsuario));
-    if (cambiarRolMutation.isError) cambiarRolMutation.reset();
+    setUsuarioSeleccionadoId(value === '' ? null : Number(value));
+    setNuevoRol(null);
+    setCodigoRestaurado(null);
+    setValidacionContrasenaAdmin(null);
+    if (cambiarRolAdminMutation.isError) cambiarRolAdminMutation.reset();
+    if (restaurarContrasenaMutation.isError) restaurarContrasenaMutation.reset();
+    if (cambiarContrasenaAdminMutation.isError) cambiarContrasenaAdminMutation.reset();
   };
-  
-  const handleGuardarRol = () => {
-    if (rolSeleccionado === null || rolSeleccionado === rol) return;
-    cambiarRolMutation.mutate(rolSeleccionado, {
-      onSuccess: () => {
-        setShowRolSuccess(true);
-        setTimeout(() => setShowRolSuccess(false), 3000);
-        void refrescarTokenTrasCambioDeRol();
+
+  const handleNuevoRolChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setNuevoRol(value === '' ? null : (value as RolUsuario));
+    if (cambiarRolAdminMutation.isError) cambiarRolAdminMutation.reset();
+  };
+
+  const handleGuardarRolAdmin = () => {
+    if (usuarioSeleccionado === null || nuevoRol === null || nuevoRol === usuarioSeleccionado.rol) return;
+    cambiarRolAdminMutation.mutate(
+      { id: usuarioSeleccionado.id, rol: nuevoRol },
+      {
+        onSuccess: () => {
+          setShowRolAdminSuccess(true);
+          setTimeout(() => setShowRolAdminSuccess(false), 3000);
+          setNuevoRol(null);
+          // Si el usuario es uno mismo, el JWT local queda con el claim de rol
+          // viejo hasta el próximo refresh: se pide un token nuevo.
+          if (usuarioSeleccionado.id === idUsuarioLogueado) {
+            void refrescarTokenTrasCambioDeRol();
+          }
+        },
       },
+    );
+  };
+
+  const handleRestaurarContrasena = () => {
+    if (usuarioSeleccionado === null) return;
+    restaurarContrasenaMutation.mutate(usuarioSeleccionado.id);
+  };
+
+  const handleCopiarCodigo = async () => {
+    if (codigoRestaurado === null) return;
+    try {
+      await navigator.clipboard.writeText(codigoRestaurado);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      // Clipboard no disponible (sin permiso): el código queda visible para
+      // copiado manual.
+    }
+  };
+
+  const handleContrasenaNuevaAdminChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setContrasenaNuevaAdmin(e.target.value);
+    setValidacionContrasenaAdmin(null);
+    if (cambiarContrasenaAdminMutation.isError) cambiarContrasenaAdminMutation.reset();
+  };
+
+  const handleGuardarContrasenaAdmin = () => {
+    if (usuarioSeleccionado === null) return;
+    if (!contrasenaNuevaAdmin.trim()) {
+      setValidacionContrasenaAdmin('Ingresá la contraseña nueva.');
+      return;
+    }
+    setValidacionContrasenaAdmin(null);
+    cambiarContrasenaAdminMutation.mutate({
+      id: usuarioSeleccionado.id,
+      nueva: contrasenaNuevaAdmin,
     });
   };
   
@@ -531,7 +633,7 @@ export function Configuracion() {
           </div>
         </div>
         
-        {/* Rol de usuario: solo visible para administradores (issue #99) */}
+        {/* Administrar usuarios: solo visible para administradores (issue #99) */}
         {rol === 'Administrador' && (
         <div className="card">
           <div className="flex items-center gap-3 mb-4">
@@ -539,64 +641,216 @@ export function Configuracion() {
               <Shield className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
             </div>
             <div className="flex-1">
-              <h2 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Rol de usuario</h2>
-              <p className="text-xs" style={{ color: 'var(--color-muted)' }}>El rol se aplica a tu cuenta actual.</p>
+              <h2 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Administrar usuarios</h2>
+              <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Cambiá el rol o restaurá la contraseña de un usuario.</p>
             </div>
           </div>
-          
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <select
-              value={rolSeleccionado ?? ''}
-              onChange={handleRolChange}
-              className="text-sm rounded-lg px-3 py-2 cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)] flex-1"
-              style={{ 
-                backgroundColor: 'var(--color-surface)',
-                color: 'var(--color-text)',
-                border: '1px solid var(--color-surface)'
-              }}
-              aria-label="Rol de usuario"
-            >
-              <option value="" disabled>Seleccionar rol...</option>
-              {ROLES_OPCIONES.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-            
-            <button
-              onClick={handleGuardarRol}
-              disabled={rolSeleccionado === null || rolSeleccionado === rol || cambiarRolMutation.isPending || showRolSuccess}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ 
-                backgroundColor: showRolSuccess ? 'var(--color-success)' : 'var(--color-accent)', 
-                color: 'white' 
-              }}
-            >
-              {cambiarRolMutation.isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Guardando...
-                </span>
-              ) : showRolSuccess ? (
-                'Guardado'
+
+          {isLoadingUsuarios ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--color-muted)' }} />
+            </div>
+          ) : isErrorUsuarios ? (
+            <p role="alert" className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-danger)' }}>
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              No se pudieron cargar los usuarios. Probá de nuevo más tarde.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {/* Selector de usuario */}
+              <div>
+                <label htmlFor="usuario-a-administrar" className="text-sm mb-1 block" style={{ color: 'var(--color-muted)' }}>
+                  Usuario
+                </label>
+                <select
+                  id="usuario-a-administrar"
+                  value={usuarioSeleccionadoId ?? ''}
+                  onChange={handleUsuarioChange}
+                  className="text-sm rounded-lg px-3 py-2 cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)] w-full"
+                  style={{
+                    backgroundColor: 'var(--color-surface)',
+                    color: 'var(--color-text)',
+                    border: '1px solid var(--color-surface)'
+                  }}
+                >
+                  <option value="" disabled>Seleccionar usuario...</option>
+                  {usuarios.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.userName} — {u.rol}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {usuarioSeleccionado === null ? (
+                <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                  Seleccioná un usuario para administrar su rol o contraseña.
+                </p>
               ) : (
-                'Guardar'
+                <div className="space-y-4">
+                  {/* Cambiar rol del usuario seleccionado */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <select
+                      value={nuevoRol ?? ''}
+                      onChange={handleNuevoRolChange}
+                      aria-label={`Nuevo rol para ${usuarioSeleccionado.userName}`}
+                      className="text-sm rounded-lg px-3 py-2 cursor-pointer transition-colors duration-200 hover:bg-[var(--color-hover)] flex-1"
+                      style={{
+                        backgroundColor: 'var(--color-surface)',
+                        color: 'var(--color-text)',
+                        border: '1px solid var(--color-surface)'
+                      }}
+                    >
+                      <option value="" disabled>Cambiar rol...</option>
+                      {ROLES_OPCIONES.map(({ value, label }) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+
+                    <button
+                      onClick={handleGuardarRolAdmin}
+                      disabled={nuevoRol === null || nuevoRol === usuarioSeleccionado.rol || cambiarRolAdminMutation.isPending || showRolAdminSuccess}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: showRolAdminSuccess ? 'var(--color-success)' : 'var(--color-accent)',
+                        color: 'white'
+                      }}
+                    >
+                      {cambiarRolAdminMutation.isPending ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Guardando...
+                        </span>
+                      ) : showRolAdminSuccess ? (
+                        'Guardado'
+                      ) : (
+                        'Cambiar rol'
+                      )}
+                    </button>
+                  </div>
+
+                  {cambiarRolAdminMutation.isError && (
+                    <p role="alert" className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-danger)' }}>
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {extractAuthErrorMessage(cambiarRolAdminMutation.error) || MENSAJE_ERROR_ROL}
+                    </p>
+                  )}
+
+                  {/* Restaurar contraseña (código de un solo uso) */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1 text-sm" style={{ color: 'var(--color-muted)' }}>
+                      {codigoRestaurado === null ? (
+                        <span>
+                          Generá un código de un solo uso para que{' '}
+                          <strong style={{ color: 'var(--color-text)' }}>{usuarioSeleccionado.userName}</strong>{' '}
+                          ingrese y configure una contraseña nueva.
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs">Código de un solo uso:</span>
+                          <code
+                            className="px-2 py-1 rounded-lg font-mono text-sm tracking-widest"
+                            style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-accent)' }}
+                          >
+                            {codigoRestaurado}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={handleCopiarCodigo}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors duration-200 hover:bg-[var(--color-hover)]"
+                            style={{ color: 'var(--color-accent)' }}
+                            aria-label="Copiar código"
+                          >
+                            {copiado ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copiado ? 'Copiado' : 'Copiar'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleRestaurarContrasena}
+                      disabled={restaurarContrasenaMutation.isPending}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: 'var(--color-warning)', color: 'white' }}
+                    >
+                      {restaurarContrasenaMutation.isPending ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Generando...
+                        </span>
+                      ) : (
+                        'Restaurar contraseña'
+                      )}
+                    </button>
+                  </div>
+
+                  {restaurarContrasenaMutation.isError && (
+                    <p role="alert" className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-danger)' }}>
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {extractAuthErrorMessage(restaurarContrasenaMutation.error) ||
+                        'No se pudo generar el código. Probá de nuevo.'}
+                    </p>
+                  )}
+
+                  {/* Cambiar contraseña directa (admin) */}
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1">
+                      <label htmlFor="contrasena-nueva-admin" className="text-sm mb-1 block" style={{ color: 'var(--color-muted)' }}>
+                        Contraseña nueva para {usuarioSeleccionado.userName}
+                      </label>
+                      <input
+                        id="contrasena-nueva-admin"
+                        type="password"
+                        value={contrasenaNuevaAdmin}
+                        onChange={handleContrasenaNuevaAdminChange}
+                        placeholder="••••••••"
+                        className="input"
+                        autoComplete="new-password"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleGuardarContrasenaAdmin}
+                      disabled={!contrasenaNuevaAdmin.trim() || cambiarContrasenaAdminMutation.isPending || showContrasenaAdminSuccess}
+                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backgroundColor: showContrasenaAdminSuccess ? 'var(--color-success)' : 'var(--color-accent)',
+                        color: 'white'
+                      }}
+                    >
+                      {cambiarContrasenaAdminMutation.isPending ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Guardando...
+                        </span>
+                      ) : showContrasenaAdminSuccess ? (
+                        'Guardado'
+                      ) : (
+                        'Guardar'
+                      )}
+                    </button>
+                  </div>
+
+                  {validacionContrasenaAdmin && (
+                    <p role="alert" className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-danger)' }}>
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {validacionContrasenaAdmin}
+                    </p>
+                  )}
+
+                  {cambiarContrasenaAdminMutation.isError && (
+                    <p role="alert" className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-danger)' }}>
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {extractAuthErrorMessage(cambiarContrasenaAdminMutation.error) ||
+                        'No se pudo cambiar la contraseña. Probá de nuevo.'}
+                    </p>
+                  )}
+                </div>
               )}
-            </button>
-          </div>
-          
-          <div className="mt-3">
-            {cambiarRolMutation.isError ? (
-              <p role="alert" className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-danger)' }}>
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {extractAuthErrorMessage(cambiarRolMutation.error) || MENSAJE_ERROR_ROL}
-              </p>
-            ) : showRolSuccess ? (
-              <p className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-success)' }}>
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                Rol modificado
-              </p>
-            ) : null}
-          </div>
+            </div>
+          )}
         </div>
         )}
         
