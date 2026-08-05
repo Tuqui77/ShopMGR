@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import type { LoginRequest, LoginResponse, RolUsuario } from '../types';
+import type { LoginRequest, LoginResponse, ResumenUsuario, RolUsuario } from '../types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -57,11 +57,17 @@ export const authService = {
     await apiClient.post('/Auth/CerrarSesion');
   },
 
-  /** Cambia la contraseña del usuario logueado (query params, sin body). */
-  async cambiarContrasena(contraseñaActual: string, contraseñaNueva: string): Promise<string> {
+  /**
+   * Cambia la contraseña del usuario logueado (query params, sin body).
+   * contraseñaActual es OPCIONAL (string?): cuando el login fue con un código de
+   * un solo uso, el backend NO valida la actual y el parámetro debe omitirse.
+   */
+  async cambiarContrasena(contraseñaActual: string | null, contraseñaNueva: string): Promise<string> {
     // Los query params viajan como URLSearchParams (patrón de ActualizarCostoHoraDeTrabajo).
     const params = new URLSearchParams();
-    params.append('contraseñaActual', contraseñaActual);
+    if (contraseñaActual !== null) {
+      params.append('contraseñaActual', contraseñaActual);
+    }
     params.append('contraseñaNueva', contraseñaNueva);
     const response = await apiClient.request<string>({
       method: 'PATCH',
@@ -71,10 +77,66 @@ export const authService = {
     return response.data;
   },
 
-  /** Cambia el rol del usuario logueado. El body es el valor JSON directo del enum (string). */
-  async cambiarRol(nuevoRol: RolUsuario): Promise<string> {
-    // [FromBody] RolUsuario espera el valor directo ("Cliente"), no { nuevoRol: "Cliente" }.
-    const response = await apiClient.patch<string>('/Auth/CambiarRol', JSON.stringify(nuevoRol));
+  /**
+   * Cambia el rol de un usuario (solo Administrador). El body es el valor JSON
+   * directo del enum (string), NO { rol: ... }: el controller usa
+   * [FromBody] RolUsuario.
+   */
+  async cambiarRol(idUsuario: number, nuevoRol: RolUsuario): Promise<string> {
+    const response = await apiClient.patch<string>(
+      `/Auth/CambiarRol?idUsuario=${idUsuario}`,
+      JSON.stringify(nuevoRol),
+    );
     return response.data;
   },
+
+  /** Cambia la contraseña de OTRO usuario (solo Administrador). contraseñaActual es opcional. */
+  async cambiarContrasenaAdmin(
+    idUsuario: number,
+    contraseñaActual: string | null,
+    contraseñaNueva: string,
+  ): Promise<string> {
+    const params = new URLSearchParams();
+    params.append('idUsuario', idUsuario.toString());
+    if (contraseñaActual !== null) {
+      params.append('contraseñaActual', contraseñaActual);
+    }
+    params.append('contraseñaNueva', contraseñaNueva);
+    const response = await apiClient.request<string>({
+      method: 'PATCH',
+      url: `/Auth/CambiarContrasenaAdmin?${params.toString()}`,
+      data: '',
+    });
+    return response.data;
+  },
+
+  /** Genera un código alfanumérico de 6 caracteres de un solo uso para restaurar la contraseña de un usuario. */
+  async restaurarContraseña(idUsuario: number): Promise<string> {
+    const response = await apiClient.request<string>({
+      method: 'PATCH',
+      url: `/Auth/RestaurarContraseña?idUsuario=${idUsuario}`,
+      data: '',
+    });
+    return response.data;
+  },
+
+  /** Lista los usuarios para la administración (solo Administrador). */
+  async listarUsuarios(): Promise<ResumenUsuario[]> {
+    const response = await apiClient.get<unknown>('/Auth/ListarUsuariosAsync');
+    return (Array.isArray(response.data) ? response.data : []).filter(esResumenUsuario);
+  },
 };
+
+function esRolUsuario(value: unknown): value is RolUsuario {
+  return value === 'Administrador' || value === 'Empleado' || value === 'Cliente';
+}
+
+/** Type guard fail-closed para la respuesta de ListarUsuariosAsync. */
+function esResumenUsuario(value: unknown): value is ResumenUsuario {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'number' &&
+    typeof value.userName === 'string' &&
+    esRolUsuario(value.rol)
+  );
+}
