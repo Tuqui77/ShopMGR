@@ -176,3 +176,21 @@
   - Tests: `jwt.test.ts` 14/14, `Configuracion.test.tsx` 7/7 (admin visible / no-admin oculto / degradación Admin→Empleado), suite completa 142/142, lint/typecheck/build OK.
 - **Nota futuro (registrado en issue)**: el usuario planea modificar el endpoint para editar roles de OTROS usuarios (finalidad buscada del issue).
 - **Pendiente**: reconstruir contenedores (`podman compose down --remove-orphans && podman compose up --build -d`), verificación manual en navegador, luego commits autorizados.
+
+## Iteración 16 (2026-08-04) — Issue #99: gestión de usuarios por admin + código de un solo uso + cambio forzado de contraseña
+
+- **Backend (usuario + ajustes de PM)**:
+  - `RespuestaLogin` ahora tiene `bool RequiereCambioContraseña` (default false) y constructor de 3 args `(accessToken, refreshToken, requiereCambioContraseña)`. `IniciarSesion` lo setea a true cuando el login se hace con código de un solo uso.
+  - `IAdministrarAuth`: `CambiarContrasena(int idUsuario, string? contraseñaActual, string contraseñaNueva)` (actual opcional si `CodigoUsoUnico != null`), `RestaurarContraseña(int) → Task<string>`, `CambiarRolUsuario(int, RolUsuario)`, `ListarUsuariosAsync() → Task<List<ResumenUsuarios>>` (corregido: la interfaz quedó desincronizada con el servicio → error CS0738, el usuario la alineó).
+  - Nuevo DTO `ResumenUsuarios { Id, UserName, Rol }` — NO expone `PasswordHash` ni `CodigoUsoUnico` (recomendación del PM por seguridad).
+  - Controller: `PATCH CambiarContrasenaAdmin?idUsuario` (solo Admin, resuelve el IDOR detectado — el `CambiarContrasena` autenticado usa solo el id del token), `PATCH CambiarRol?idUsuario` (body directo del enum), `PATCH RestaurarContraseña?idUsuario` (genera + persiste + devuelve código de 6 chars con `SaveChangesAsync`), `GET ListarUsuariosAsync` (solo Admin).
+  - Errores CS7036 corregidos: 3 en `AdministrarAuth.cs` (FinalizarAuthPasskey, Refrescar, IniciarSesion) por el constructor de 3 args + 4 en `AuthControllerTests.cs` (corregidos por el PM, permiso de AGENTS.md para tests). Build solución: **0 errores**; `AuthControllerTests` 10/10 verdes.
+- **Frontend (subagente Frontend, GATE aprobado)**:
+  - `types/index.ts`: `LoginResponse.requiereCambioContraseña: boolean` + `ResumenUsuario { id, userName, rol }`.
+  - `services/auth.ts`: `cambiarContrasena(actual: string | null, nueva)` — omite `contraseñaActual` del query cuando es null; `cambiarRol(idUsuario, rol)`; nuevos `cambiarContrasenaAdmin(idUsuario, actual, nueva)`, `restaurarContraseña(idUsuario) → Promise<string>`, `listarUsuarios() → ResumenUsuario[]`.
+  - `Login.tsx`: si `requiereCambioContraseña === true` → vista separada de cambio obligatorio (sin pedir la actual; omitida del query); al éxito limpia flag y navega a `/`. Botón "Cerrar sesión" para evitar usuario atascado.
+  - `store/index.ts` + `App.tsx`: flag transitorio `cambioContraseñaPendiente` (no persistido, reset en logout) para que el redirect por accessToken no desmonte la vista de cambio.
+  - `Configuracion.tsx`: eliminada la card obsoleta de auto-cambio de rol; nueva sección "Administrar usuarios" (solo Admin): dropdown de usuarios, cambio de rol (con refresh de token si es el propio usuario), restaurar contraseña (muestra código + botón copiar), cambio directo de contraseña de otro usuario. Estados loading/error/empty.
+  - `jwt.ts`: `obtenerRolDesdeToken` y `obtenerIdUsuarioDesdeToken` validan el valor de cada claim antes de devolver (fallback robusto entre claims cortos y URIs largos).
+  - Tests: `auth.test.ts` nuevo (8), `Configuracion.test.tsx` reescrito (11), `jwt.test.ts` +12 (33 total). **Suite 173/173**, lint/typecheck/build OK.
+- **Pendiente**: reconstruir contenedores (`podman compose down --remove-orphans && podman compose up --build -d`), verificación manual en navegador (login con código → cambio forzado; admin: dropdown usuarios, cambiar rol, restaurar, copiar código), luego commits autorizados (backend sin commitear + frontend sin commitear).
