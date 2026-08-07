@@ -162,9 +162,9 @@ public class AdministrarAuth(
 
         var tieneCodigoUnUsoValido = usuario.CodigoUsoUnico != null && usuario.ExpiracionCodigoUsoUnico > DateTime.Now;
         var contraseñaActualValida =
-            contraseñaActual != null 
+            contraseñaActual != null
             && _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, contraseñaActual)
-            == PasswordVerificationResult.Success;
+                == PasswordVerificationResult.Success;
 
         if (!tieneCodigoUnUsoValido && !contraseñaActualValida)
             throw new InvalidOperationException("La contraseña actual es incorrecta");

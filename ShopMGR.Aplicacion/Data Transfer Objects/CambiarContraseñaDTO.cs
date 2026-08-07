@@ -1,4 +1,3 @@
-
 using System.ComponentModel.DataAnnotations;
 
 namespace ShopMGR.Aplicacion.Data_Transfer_Objects
@@ -18,5 +17,5 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 
         [Required]
         public string ContrasenaNueva { get; set; } = "";
-   }
+    }
 }
