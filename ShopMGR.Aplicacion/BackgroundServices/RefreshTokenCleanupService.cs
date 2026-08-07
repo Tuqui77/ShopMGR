@@ -20,7 +20,7 @@ namespace ShopMGR.Aplicacion
         {
             while (!ct.IsCancellationRequested)
             {
-                var scope = _scopeFactory.CreateScope();
+                using var scope = _scopeFactory.CreateScope();
                 var contexto = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
 
                 try
