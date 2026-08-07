@@ -298,3 +298,11 @@
 - **CI 4/4 PASS en el último commit** (`84a074b`): lint, test-backend, test-frontend, GitGuardian. (El primer intento de lint falló por 2 errores WHITESPACE del backend — corregidos por el usuario + commit `84a074b`.)
 - **MergeGuard revisión final → 🟢 APPROVE** ([comment](https://github.com/Tuqui77/ShopMGR/pull/120#issuecomment-5219434743)): 0 Blocker, 0 Critical, 0 Major; 2 Minor cosméticos (MIN-001 `[Required]` no-op en `int`, MIN-002 nombre de archivo con ñ). Edge cases verificados (ContrasenaActual opcional, idUsuario en body, DateTime? fail-safe, 404 en id inexistente).
 - **Estado PR #120**: **avanza a PR Pending** — listo para merge manual del usuario. SEV-004 registrado como deuda de release → backlog Sprint 4.
+
+## Iteración 25 (2026-08-07) — Hotfix #121: acceso a /perfil en móvil (post-release Sprint 3)
+
+- **Bug en prod**: en móvil el acceso a `/perfil` estaba solo en el Sidebar (oculto en <1024px) → usuarios móviles sin poder cambiar contraseña, gestionar passkeys ni administrar usuarios (admin, #99). El BottomNav móvil tenía "Config." y el Dashboard header (esquina sup. der., solo móvil) tenía OTRO botón a `/configuracion` → **duplicación real**.
+- **Decisión del dueño (rework de dirección)**: reemplazar el botón del **Dashboard header** (Settings → `UserRound`, `→ /perfil`, `aria-label="Perfil"`), manteniendo Config. en el BottomNav. (Primera versión delegada tocó el BottomNav → revertida.)
+- **Logout móvil resuelto**: el Sidebar (desktop) tenía "perfil + cerrar sesión" → al mover Perfil al header quedaba el logout colgado en móvil. Solución: botón sutil `sidebar-logout-btn` (icono LogOut, hover danger) en la esquina superior derecha del primer card de `/perfil`, **solo móvil** (`lg:!hidden` — importante por conflicto de capas Tailwind v4 con `.sidebar-logout-btn`, mismo patrón que el Dashboard header). El del Sidebar se mantiene para desktop.
+- **Archivos**: `Dashboard.tsx` (botón header → /perfil), `Perfil.tsx` (handleLogout + botón sutil en card, `useNavigate`), `Perfil.test.tsx` (+MemoryRouter + mock `cerrarSesion` + 2 tests nuevos). Suite frontend **219/219**, lint/tsc OK, verificación DOM en móvil (visible) y desktop (oculto).
+- **Deuda técnica registrada**: no existe `Dashboard.test.tsx` (el botón del header no tiene cobertura unitaria) → backlog Sprint 4.
