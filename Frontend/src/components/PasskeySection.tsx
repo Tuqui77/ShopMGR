@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Fingerprint, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Fingerprint, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useModal } from '../hooks/useModal';
 import { usePasskeys, useEliminarPasskey } from '../hooks/usePasskeys';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -21,8 +21,17 @@ function formatFecha(iso: string | null): string {
   return date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-/** Card de Passkeys en Configuración: lista, renombra, elimina y registra dispositivos. */
-export function PasskeySection() {
+interface PasskeySectionProps {
+  /**
+   * Renderiza el contenido sin el wrapper `.card` para incrustarse dentro de un
+   * panel (submenú Usuario de Configuración). Por defecto se renderiza como
+   * card independiente.
+   */
+  embedded?: boolean;
+}
+
+/** Gestión de passkeys: lista, renombra, elimina y registra dispositivos. */
+export function PasskeySection({ embedded = false }: PasskeySectionProps) {
   const modal = useModal();
   const soportado = passkeysSoportados();
   const { data, isLoading, error } = usePasskeys();
@@ -46,7 +55,7 @@ export function PasskeySection() {
   const passkeys = data ?? [];
 
   return (
-    <div className="card">
+    <div className={embedded ? undefined : 'card'}>
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--color-surface)' }}>
           <Fingerprint className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
@@ -58,8 +67,13 @@ export function PasskeySection() {
           </p>
         </div>
         {soportado && (
-          <button onClick={modal.open} className="btn-secondary text-sm px-3 py-1.5">
-            Registrar dispositivo
+          <button
+            onClick={modal.open}
+            className="btn-icon"
+            aria-label="Registrar dispositivo"
+            title="Registrar dispositivo"
+          >
+            <Plus className="w-4 h-4" />
           </button>
         )}
       </div>
