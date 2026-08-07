@@ -30,17 +30,22 @@ public class AdministrarAuth(
         usuario.PasswordHash = hashedPassword;
         usuario.CambiarRol(RolUsuario.Empleado);
 
-        await _repositorio.CrearAsync(usuario);
-        return usuario;
+        var usuarioCreado = await _repositorio.CrearAsync(usuario);
+        if (usuarioCreado == null) return null;
+        return usuarioCreado;
     }
 
     public async Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request)
     {
         var usuario = await _repositorio.ObtenerUsuarioPorNombre(request.UserName);
 
+        if (usuario == null)
+            return null;
+
         var esCodigoUsoUnico =
             usuario.CodigoUsoUnico != null
-            && usuario.CodigoUsoUnico == request.Password
+            && _passwordHasher.VerifyHashedPassword(usuario, usuario.CodigoUsoUnico, request.Password)
+                == PasswordVerificationResult.Success
             && usuario.ExpiracionCodigoUsoUnico > DateTime.Now;
 
         var esContraseñaValida =
@@ -83,6 +88,9 @@ public class AdministrarAuth(
         var hashRequest = CalcularHash(refreshTokenRequest);
         var usuario = await _repositorio.ObtenerUsuarioPorRefreshTokenHash(hashRequest);
 
+        if (usuario == null)
+            return null;
+
         var refreshToken = usuario.RefreshTokens.First(rt => rt.Hash == hashRequest);
 
         var esValido = refreshToken != null && !refreshToken.EstaExpirado && !refreshToken.EstaRevocado;
@@ -102,14 +110,16 @@ public class AdministrarAuth(
         return null;
     }
 
-    public async Task CerrarSesion(int idUsuario, string refreshTokenRequest)
+    public async Task CerrarSesion(string refreshTokenRequest)
     {
-        var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
-
         var hash = CalcularHash(refreshTokenRequest);
-        var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Hash == hash) ?? throw new KeyNotFoundException();
+        var usuario = await _repositorio.ObtenerUsuarioPorRefreshTokenHash(hash);
+        if (usuario == null) return;
 
-        token.Revocar();
+        var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Hash == hash);
+
+        token?.Revocar();
+
         await _repositorio.ActualizarUsuarioAsync(usuario);
     }
 
@@ -145,7 +155,7 @@ public class AdministrarAuth(
             && _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, contraseñaActual)
                 == PasswordVerificationResult.Failed
         )
-            throw new ArgumentException("La contraseña actual es incorrecta");
+            throw new InvalidOperationException("La contraseña actual es incorrecta");
 
         var hashContraseñaNueva = _passwordHasher.HashPassword(usuario, contraseñaNueva);
         usuario.CambiarContrasena(hashContraseñaNueva);
@@ -167,10 +177,13 @@ public class AdministrarAuth(
     {
         var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
 
-        usuario.GenerarCodigoUsoUnico();
+        var codigoUsoUnico = usuario.GenerarCódigo();
+        var hashCodigo = _passwordHasher.HashPassword(usuario, codigoUsoUnico);
+        usuario.SetearCodigoUsoUnico(hashCodigo);
+
         await _repositorio.ActualizarUsuarioAsync(usuario);
 
-        return usuario.CodigoUsoUnico!;
+        return codigoUsoUnico;
     }
 
     public async Task CambiarRolUsuario(int idUsuario, RolUsuario rol)

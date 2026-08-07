@@ -38,9 +38,9 @@ public class Usuario
         EliminarCodigoUsoUnico();
     }
 
-    public void GenerarCodigoUsoUnico()
+    public void SetearCodigoUsoUnico(string codigo)
     {
-        CodigoUsoUnico = GenerarCódigo();
+        CodigoUsoUnico = codigo;
         ExpiracionCodigoUsoUnico = DateTime.Now.AddMinutes(5);
     }
 
@@ -55,7 +55,7 @@ public class Usuario
         Rol = rol;
     }
 
-    private string GenerarCódigo()
+    public string GenerarCódigo()
     {
         const string caracteres = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
 
