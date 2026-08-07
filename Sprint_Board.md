@@ -7,7 +7,7 @@
 
 ## Sprint Actual: Sprint 3
 **Objetivo del Sprint**: Consolidar la seguridad y robustez del flujo de auth (refresh tokens en cookie HttpOnly, revocación explícita, índice/purga, recuperación de contraseña admin, SRP) + mejoras UX de auth en frontend + hardening de infraestructura (#75) y validación de entrada (#57).
-**Estado General**: Implementación casi completa — 5/11 issues listos (cierre de issues pendiente del PR final); en curso: #57 (data annotations, usuario) y #96 (mostrar/ocultar contraseña, Frontend)
+**Estado General**: Sprint completo — PR #120 en **PR Pending** (52 commits, CI 4/4, MergeGuard 🟢 APPROVE). Issues se cierran automáticamente al mergear el PR. Deuda registrada para Sprint 4: SEV-004 (bootstrap admin + rate limit), #118 (métricas históricas), 2 Minor de MergeGuard.
 
 ### Issues del Sprint 3
 
@@ -277,3 +277,24 @@
   5. **🟠 FUN-002** — `[Range(1, int.MaxValue)]` en horas rechaza el chip `0.5` del modal de horas (#57).
 - **Estado PR**: **NO avanza a PR Pending**. Queda en espera de decisión del usuario sobre los fixes backend (prohibidos por AGENTS.md sin autorización explícita).
 - **Alternativa**: los 8 Warning pueden ir a follow-up sin bloquear.
+
+## Iteración 24 (2026-08-07) — Sprint 3: fixes de MergeGuard + re-revisión 🟡 + revisión final 🟢 APPROVE
+
+- **Fixes de los 5 blockers (implementados por el usuario, backend) + lote de 6 commits atómicos pusheados a `origin/development`** (`c1d5ff0..59bc170`):
+  1. `b9c4c6c` — `fix(auth)`: SEV-001 (login ya no revela usernames), SEV-002 (logout con token expirado revoca cookie), FUN-001 (Refrescar purgado → 401).
+  2. `d4eff03` — `feat(auth)`: OPS-001 (bootstrap primer usuario Admin en migración).
+  3. `018f99e` — `fix(api)`: FUN-002 (`[Range]` de horas acepta decimales 0.5).
+  4. `be782ce` — `fix(ops)`: dispose de scope en `RefreshTokenCleanupService`.
+  5. `b61c532` — `test(auth)`: tests de `CerrarSesion` con nueva firma.
+  6. `59bc170` — `docs`: Sprint Board iteraciones 20-23.
+- **MergeGuard re-ejecutado → 🟡 COMMENT** ([comment](https://github.com/Tuqui77/ShopMGR/pull/120#issuecomment-5211761444)): 5 blockers resueltos ✅, CI 4/4, 140/140 tests. Nuevos hallazgos no bloqueantes:
+  - 🟡 **SEV-003** (CWE-598): contraseñas en query params de `CambiarContrasena`/`CambiarContrasenaAdmin`.
+  - 🟡 **SEV-004**: bootstrap de admin sin restricción + sin rate limit en registro ("admin theft"). → **Deuda de release aceptada por el usuario** (no crítico en uso actual).
+  - 🟢 Menores: SEV-005 (cookie `Path=/api/Auth` amplio), FUN-003 (código de un solo uso expirado no validado), FUN-004 (`ArgumentNullException` → 500 con `contraseñaActual` null), OPS-002 (LogLevel).
+- **SEV-003 fix (backend, implementado por el usuario)**: DTOs dedicados (`ShopMGR.Aplicacion/Data Transfer Objects/CambiarContraseñaDTO.cs`: `CambiarContrasenaDTO` con `ContrasenaActual?` + `ContrasenaNueva [Required]`; `CambiarContrasenaAdminDTO` con `IdUsuario [Required]` + `ContrasenaNueva [Required]`) + `[FromBody]` en `AuthController.cs`. Naming sin ñ por decisión del dueño. Fix de constructor primary → setters públicos (para deserialización correcta de System.Text.Json).
+- **FUN-003/FUN-004 fix (backend, implementado por el usuario)**: `AdministrarAuth.cs` — `tieneCodigoUnUsoValido = CodigoUsoUnico != null && ExpiracionCodigoUsoUnico > DateTime.Now` (código expirado rechazado) + cortocircuito `contraseñaActual != null && VerifyHashedPassword(...)` (400 en vez de 500).
+- **Frontend migrado a body JSON (subagente Frontend, iteración 24)**: `authService.cambiarContrasena` y `cambiarContrasenaAdmin` envían `data` JSON con naming sin ñ (`contrasenaActual`/`contrasenaNueva`/`idUsuario`); firma de `cambiarContrasenaAdmin` simplificada (sin `contraseñaActual`); call-sites y tests actualizados (`Perfil.tsx`, `auth.test.ts`, `Perfil.test.tsx`). Suite frontend **217/217**, lint/tsc/build OK.
+- **Commits adicionales (PM)**: `c14375d` (SEV-003 backend), `184cb2c` (SEV-003 frontend), `1f5e9b5` (FUN-003/FUN-004), `84a074b` (style: whitespace dotnet format). Push `1f5e9b5..84a074b`. PR #120 → **52 commits**.
+- **CI 4/4 PASS en el último commit** (`84a074b`): lint, test-backend, test-frontend, GitGuardian. (El primer intento de lint falló por 2 errores WHITESPACE del backend — corregidos por el usuario + commit `84a074b`.)
+- **MergeGuard revisión final → 🟢 APPROVE** ([comment](https://github.com/Tuqui77/ShopMGR/pull/120#issuecomment-5219434743)): 0 Blocker, 0 Critical, 0 Major; 2 Minor cosméticos (MIN-001 `[Required]` no-op en `int`, MIN-002 nombre de archivo con ñ). Edge cases verificados (ContrasenaActual opcional, idUsuario en body, DateTime? fail-safe, 404 en id inexistente).
+- **Estado PR #120**: **avanza a PR Pending** — listo para merge manual del usuario. SEV-004 registrado como deuda de release → backlog Sprint 4.
