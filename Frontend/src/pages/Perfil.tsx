@@ -1,6 +1,7 @@
 import { useState, useMemo, type ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Loader2, UserRound, KeyRound, Shield, Copy, Check, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, UserRound, KeyRound, Shield, Copy, Check, AlertCircle, CheckCircle2, LogOut } from 'lucide-react';
 import {
   obtenerRolDesdeToken,
   obtenerNombreUsuarioDesdeToken,
@@ -44,6 +45,7 @@ export function Perfil() {
   const accessToken = useStore((s) => s.accessToken);
   const setTokens = useStore((s) => s.setTokens);
   const logout = useStore((s) => s.logout);
+  const navigate = useNavigate();
 
   // Datos derivados del JWT de acceso (claims "unique_name"/"name" y "role").
   // El id de usuario NO se muestra (issue #112): la UI solo usa nombre y rol.
@@ -236,6 +238,20 @@ export function Perfil() {
     });
   };
 
+  // ── Cerrar sesión (issue #121) ────────────────────────────────────────────
+  // En móvil el Sidebar (desktop) no está disponible; el logout vive acá junto
+  // al acceso a Perfil del Dashboard header. Mismo patrón que el Sidebar.
+  const handleLogout = async () => {
+    try {
+      // La cookie HttpOnly se borra server-side en /Auth/CerrarSesion (issue #114).
+      await authService.cerrarSesion();
+    } catch {
+      // Ignore errors — always clear local state
+    }
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
@@ -253,6 +269,18 @@ export function Perfil() {
               <h2 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Perfil</h2>
               <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Datos de tu cuenta.</p>
             </div>
+            {/* Cerrar sesión (issue #121): solo móvil (lg:!hidden por conflicto de
+                capas con .sidebar-logout-btn, ver Dashboard header). En desktop el
+                Sidebar tiene su propio logout y este botón queda oculto. */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+              className="sidebar-logout-btn lg:!hidden"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="space-y-3">
