@@ -28,7 +28,15 @@ public class AdministrarAuth(
         var usuario = new Usuario() { UserName = request.UserName };
         var hashedPassword = _passwordHasher.HashPassword(usuario, request.Password);
         usuario.PasswordHash = hashedPassword;
-        usuario.CambiarRol(RolUsuario.Empleado);
+        var hayUsuarios = (await _repositorio.ListarUsuariosAsync()).Any();
+        if (!hayUsuarios)
+        {
+            usuario.CambiarRol(RolUsuario.Administrador);
+        }
+        else
+        {
+            usuario.CambiarRol(RolUsuario.Empleado);
+        }
 
         var usuarioCreado = await _repositorio.CrearAsync(usuario);
         if (usuarioCreado == null) return null;
