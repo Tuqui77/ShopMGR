@@ -264,3 +264,16 @@
   3. `feat(ui)`: #113 botón "+" — `PasskeySection.tsx` + `PasskeySection.test.tsx`.
   4. `feat(trabajos)`: #119 Pendiente→Iniciado — `AdministracionTrabajos.cs`.
   5. `docs`: Sprint Board iteraciones 20-22.
+
+## Iteración 23 (2026-08-06) — Sprint 3: push + PR #120 + revisión MergeGuard 🔴
+
+- **Push**: los 5 commits del lote pusheados a `origin/development` (`eb51b14..3d0dad8`). Working tree limpio.
+- **PR creado**: [#120](https://github.com/Tuqui77/ShopMGR/pull/120) `development` → `main` (patrón de release del repo), título "release: sprint 3 — seguridad y robustez de auth (refresh tokens en cookie, revocación, purga, SRP) + UX de perfil de usuario", 41 commits, sin assignee. Body con 12 keywords `Closes #` (#114, #115, #116, #117, #99, #100, #112, #113, #96, #57, #75, #119). **Sin #118** (siguiente sprint).
+- **MergeGuard → 🔴 REQUEST_CHANGES** ([comment](https://github.com/Tuqui77/ShopMGR/pull/120#issuecomment-5210641878)). 5 hallazgos bloqueantes (2 Blocker + 3 Critical), 8 Warning, 4 Info:
+  1. **🔴 SEV-001** — Login revela qué usernames existen (404 vs 400) por el refactor SRP #100. `UsuarioRepositorio.cs:27`
+  2. **🔴 SEV-002** — Logout con access token expirado → 500 → cookie no se borra ni sesión revocada. `AuthController.cs:83`
+  3. **🟠 OPS-001** — Migración deja a todos como `Empleado`; sin bootstrap del primer Admin, las features de restauración (#99) quedan inutilizables.
+  4. **🟠 FUN-001** — `Refrescar` con token purgado → 404 en vez de 401.
+  5. **🟠 FUN-002** — `[Range(1, int.MaxValue)]` en horas rechaza el chip `0.5` del modal de horas (#57).
+- **Estado PR**: **NO avanza a PR Pending**. Queda en espera de decisión del usuario sobre los fixes backend (prohibidos por AGENTS.md sin autorización explícita).
+- **Alternativa**: los 8 Warning pueden ir a follow-up sin bloquear.
