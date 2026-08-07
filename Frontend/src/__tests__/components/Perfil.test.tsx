@@ -288,7 +288,7 @@ describe('Perfil: administrar usuarios (issue #99)', () => {
     fireEvent.click(within(card).getByRole('button', { name: 'Guardar' }));
 
     await waitFor(() =>
-      expect(authService.cambiarContrasenaAdmin).toHaveBeenCalledWith(2, null, 'nueva123'),
+      expect(authService.cambiarContrasenaAdmin).toHaveBeenCalledWith(2, 'nueva123'),
     );
   });
 });

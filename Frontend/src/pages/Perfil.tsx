@@ -140,7 +140,7 @@ export function Perfil() {
 
   const cambiarContrasenaAdminMutation = useMutation({
     mutationFn: ({ id, nueva }: { id: number; nueva: string }) =>
-      authService.cambiarContrasenaAdmin(id, null, nueva),
+      authService.cambiarContrasenaAdmin(id, nueva),
     onSuccess: () => {
       setContrasenaNuevaAdmin('');
       setShowContrasenaAdminSuccess(true);

@@ -17,14 +17,13 @@ describe('authService (issue #99): contrato con el backend', () => {
   });
 
   describe('cambiarContrasena', () => {
-    // URLSearchParams percent-encoda caracteres no ASCII: ñ -> %C3%B1.
     it('omite contraseñaActual cuando es null (login con código de un solo uso)', async () => {
       vi.mocked(apiClient.request).mockResolvedValue({ data: 'Contraseña modificada' });
       await authService.cambiarContrasena(null, 'nueva123');
       expect(apiClient.request).toHaveBeenCalledWith({
         method: 'PATCH',
-        url: '/Auth/CambiarContrasena?contrase%C3%B1aNueva=nueva123',
-        data: '',
+        url: '/Auth/CambiarContrasena',
+        data: { contrasenaNueva: 'nueva123' },
       });
     });
 
@@ -33,8 +32,8 @@ describe('authService (issue #99): contrato con el backend', () => {
       await authService.cambiarContrasena('actual456', 'nueva123');
       expect(apiClient.request).toHaveBeenCalledWith({
         method: 'PATCH',
-        url: '/Auth/CambiarContrasena?contrase%C3%B1aActual=actual456&contrase%C3%B1aNueva=nueva123',
-        data: '',
+        url: '/Auth/CambiarContrasena',
+        data: { contrasenaActual: 'actual456', contrasenaNueva: 'nueva123' },
       });
     });
   });
@@ -51,13 +50,13 @@ describe('authService (issue #99): contrato con el backend', () => {
   });
 
   describe('cambiarContrasenaAdmin', () => {
-    it('omite contraseñaActual cuando es null y pasa el idUsuario', async () => {
+    it('envía idUsuario y contrasenaNueva en el body JSON', async () => {
       vi.mocked(apiClient.request).mockResolvedValue({ data: 'Contraseña modificada' });
-      await authService.cambiarContrasenaAdmin(7, null, 'nueva456');
+      await authService.cambiarContrasenaAdmin(7, 'nueva456');
       expect(apiClient.request).toHaveBeenCalledWith({
         method: 'PATCH',
-        url: '/Auth/CambiarContrasenaAdmin?idUsuario=7&contrase%C3%B1aNueva=nueva456',
-        data: '',
+        url: '/Auth/CambiarContrasenaAdmin',
+        data: { idUsuario: 7, contrasenaNueva: 'nueva456' },
       });
     });
   });

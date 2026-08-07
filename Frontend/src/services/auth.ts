@@ -58,21 +58,21 @@ export const authService = {
   },
 
   /**
-   * Cambia la contraseña del usuario logueado (query params, sin body).
+   * Cambia la contraseña del usuario logueado. Las credenciales viajan en el
+   * body JSON (issue SEV-003/CWE-598: sin query params). El naming del body es
+   * sin ñ (contrasenaActual/contrasenaNueva) por decisión del dueño del repo.
    * contraseñaActual es OPCIONAL (string?): cuando el login fue con un código de
-   * un solo uso, el backend NO valida la actual y el parámetro debe omitirse.
+   * un solo uso, el backend NO valida la actual y el campo debe omitirse.
    */
   async cambiarContrasena(contraseñaActual: string | null, contraseñaNueva: string): Promise<string> {
-    // Los query params viajan como URLSearchParams (patrón de ActualizarCostoHoraDeTrabajo).
-    const params = new URLSearchParams();
-    if (contraseñaActual !== null) {
-      params.append('contraseñaActual', contraseñaActual);
-    }
-    params.append('contraseñaNueva', contraseñaNueva);
+    const data = {
+      ...(contraseñaActual !== null ? { contrasenaActual: contraseñaActual } : {}),
+      contrasenaNueva: contraseñaNueva,
+    };
     const response = await apiClient.request<string>({
       method: 'PATCH',
-      url: `/Auth/CambiarContrasena?${params.toString()}`,
-      data: '', // String vacío en lugar de undefined
+      url: '/Auth/CambiarContrasena',
+      data,
     });
     return response.data;
   },
@@ -90,22 +90,12 @@ export const authService = {
     return response.data;
   },
 
-  /** Cambia la contraseña de OTRO usuario (solo Administrador). contraseñaActual es opcional. */
-  async cambiarContrasenaAdmin(
-    idUsuario: number,
-    contraseñaActual: string | null,
-    contraseñaNueva: string,
-  ): Promise<string> {
-    const params = new URLSearchParams();
-    params.append('idUsuario', idUsuario.toString());
-    if (contraseñaActual !== null) {
-      params.append('contraseñaActual', contraseñaActual);
-    }
-    params.append('contraseñaNueva', contraseñaNueva);
+  /** Cambia la contraseña de OTRO usuario (solo Administrador). idUsuario y contrasenaNueva viajan en el body JSON (issue SEV-003/CWE-598: sin query params). El DTO Admin no valida contrasenaActual. */
+  async cambiarContrasenaAdmin(idUsuario: number, contrasenaNueva: string): Promise<string> {
     const response = await apiClient.request<string>({
       method: 'PATCH',
-      url: `/Auth/CambiarContrasenaAdmin?${params.toString()}`,
-      data: '',
+      url: '/Auth/CambiarContrasenaAdmin',
+      data: { idUsuario, contrasenaNueva },
     });
     return response.data;
   },
