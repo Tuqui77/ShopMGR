@@ -65,7 +65,7 @@ public class Usuario
         {
             resultado[i] = caracteres[RandomNumberGenerator.GetInt32(caracteres.Length)];
         }
-        
+
         return new string(resultado);
     }
 }
