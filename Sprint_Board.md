@@ -226,3 +226,41 @@
   - `Login.test.tsx`: +4 tests (toggle login, 2 toggles independientes en modal, reset al abrir modal, reset tras login fallido). Suite **182/182**, lint/typecheck/build OK.
 - **#57 (data annotations a DTOs de entrada) terminado por el usuario**: 9 DTOs (`ClienteDTO`, `DireccionDTO`, `HorasYDescripcionDTO`, `MaterialDTO`, `MovimientoBalanceDTO`, `PresupuestoDTO`, `RespuestaLogin`, `TelefonoClienteDTO`, `TrabajoDTO`) + ajuste en `Dominio/Modelo/Trabajo.cs`.
 - **Lote de commits** (decisión del usuario, opción C): commitear lote actual (#96 + #57 + #75 + docs) en paralelo con delegación de #112/#113 al subagente Frontend.
+
+## Iteración 20 (2026-08-05) — Sprint 3: #112/#113 implementados + Issue nuevo #118 (métricas históricas)
+
+- **#112 (submenú de usuario en Configuración) + #113 (botón "+" en passkeys) implementados por el subagente Frontend** (en paralelo con el lote de commits de la iteración 19):
+  - `Configuracion.tsx`: nueva card "Usuario" con submenú de pestañas (`filter-pill` + `aria-pressed`): **Perfil** (rol + ID del JWT), **Seguridad** (card "Cambiar contraseña" movida intacta), **Passkeys** (`<PasskeySection embedded />`, ya no suelta al final). "Administrar usuarios" (solo admin, #99) intacto, verificado en navegador.
+  - `PasskeySection.tsx`: prop `embedded?` (wrapper `.card` condicional) + botón "+" (`.btn-icon` con `Plus`, `aria-label` + `title` preservados).
+  - Tests: `Configuracion.test.tsx` +5, `PasskeySection.test.tsx` nuevo +4. Suite **191/191**, lint/tsc/build OK.
+  - **Pendiente**: validación del usuario en navegador + commits de #112/#113.
+- **Issue nuevo #118 (feat metrics — comparación mes en curso vs anterior + sección de histórico)** creado en GitHub con labels `backend`, `frontend`, `priority: medium`:
+  - Backend ya soporta consulta por mes (`MetricasController` acepta `DateOnly fecha`); el frontend hoy hardcodea el mes actual en `metricasService.obtenerTodas()`.
+  - Criterios: comparación vs mes anterior en dashboard (con caso sin datos del mes anterior), nueva sección con selector mes/año, tests, endpoint único opcional (`ObtenerTodas`).
+  - **Estado: Pending** — se planifica tras cerrar el Sprint 3 (#100 pendiente de backend y validación de #112/#113).
+
+## Iteración 21 (2026-08-05) — Sprint 3: #100 terminado + feedback del usuario sobre #112
+
+- **#100 (SRP en AdministrarAuth) terminado por el usuario** (backend, sin commitear aún):
+  - Nuevos: `ShopMGR.Dominio/Abstracciones/IRepositorioUsuario.cs`, `ShopMGR.Repositorios/UsuarioRepositorio.cs`.
+  - Modificados: `AdministrarAuth.cs`, `IAdministrarAuth.cs`, `InyeccionServicios.cs`, `AuthController.cs`.
+- **Validación del usuario en navegador**:
+  - **#113 OK** — botón "+" en passkeys funciona.
+  - **#112 requiere rework (NO cumple la visión)**: la card "Usuario" con pestañas dentro de Configuración no es lo pedido. La idea es una **sección/página nueva** con todas esas configuraciones (perfil, seguridad, passkeys), accesible desde un **menú en la barra lateral** — idealmente un botón que muestre el **nombre de usuario**. Además, el **ID de usuario no debe mostrarse**.
+- **Dato técnico clave**: el backend ya emite `ClaimTypes.Name` (UserName) en el JWT (`AdministrarAuth.cs:188`) — el frontend solo necesita un helper para leerlo (`jwt.ts` hoy solo tiene rol e id).
+- **Rework #112 delegado al subagente Frontend**: nueva página de perfil/usuario + botón en Sidebar con nombre de usuario + quitar la card "Usuario" de Configuración + no mostrar el ID.
+
+## Iteración 22 (2026-08-06) — Sprint 3: fixes de build/tests + issue #119 + lote de commits autorizado
+
+- **Build backend ROTO tras el #100 del usuario**: `CerrarSesion` cambió de firma a `CerrarSesion(int idUsuario, string refreshTokenRequest)` (ahora recibe el id del claim `NameIdentifier` + el refresh token de la cookie), pero `AuthControllerTests.cs` seguía usando la firma vieja → 4× CS7036.
+- **Fixes de tests (PM, permiso AGENTS.md)**:
+  - `AuthControllerTests.cs`: `using System.Security.Claims`; helper `CrearController` acepta `string? idUsuario` y setea `httpContext.User` con el claim `NameIdentifier`; los 2 tests de `CerrarSesion` usan la firma nueva (`Setup`/`Verify` con `(It.IsAny<int>(), It.IsAny<string>())` y `(42, "token-viejo")`).
+  - `RefreshTokenCleanupServiceTests.cs`: el esquema mínimo SQLite de `CrearEsquemaMinimo` no incluía las columnas agregadas por el código de uso único → `DbUpdateException: table Usuarios has no column named CodigoUsoUnico`. Agregadas `Rol TEXT NOT NULL DEFAULT 'Empleado'`, `CodigoUsoUnico TEXT NULL`, `ExpiracionCodigoUsoUnico TEXT NULL` (replica fiel de `UsuarioConfiguracion`).
+  - Resultado: `dotnet build ShopMGR.sln` **0 errores**, suite backend **140/140 (1 omitido)**.
+- **Issue nuevo #119 (feat trabajos)**: pasar trabajo a **Iniciado** automáticamente al agregar horas — `if (trabajo.Estado == EstadoTrabajo.Pendiente) trabajo.IniciarTrabajo();` en `AdministracionTrabajos.AgregarHoras`. Implementado por el usuario (backend, sin commitear). Creado en GitHub con labels `enhancement`, `backend`, `priority: high`. **Entra al release del Sprint 3**.
+- **Lote de commits autorizado por el usuario** (pendiente de ejecución por el subagente Frontend, SIN push):
+  1. `feat(auth)`: #100 SRP — `IRepositorioUsuario.cs`, `UsuarioRepositorio.cs`, `IAdministrarAuth.cs`, `AdministrarAuth.cs`, `InyeccionServicios.cs`, `AuthController.cs` + tests actualizados.
+  2. `feat(ui)`: #112 página de perfil — `Perfil.tsx` (nuevo), `Sidebar.tsx`, `App.tsx`, `jwt.ts`, `index.css`, `Configuracion.tsx` (revertida a preferencias) + tests.
+  3. `feat(ui)`: #113 botón "+" — `PasskeySection.tsx` + `PasskeySection.test.tsx`.
+  4. `feat(trabajos)`: #119 Pendiente→Iniciado — `AdministracionTrabajos.cs`.
+  5. `docs`: Sprint Board iteraciones 20-22.
