@@ -10,7 +10,7 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
     public class HorasYDescripcionDTO
     {
         [Required(ErrorMessage = "La cantidad de horas es obligatoria")]
-        [Range(1, int.MaxValue)]
+        [Range(0.25, 8)]
         public float Horas { get; set; }
 
         [Required(ErrorMessage = "La descripción de las horas es obligatoria")]

@@ -17,7 +17,7 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 
         public EstadoTrabajo? Estado { get; set; }
 
-        [Range(1, int.MaxValue)]
+        [Range(0, 1000)]
         public double? HorasEstimadas { get; set; }
 
         public decimal? TotalLabor { get; set; }

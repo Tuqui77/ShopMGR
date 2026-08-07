@@ -12,7 +12,7 @@ namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 
         public List<MaterialDTO>? Materiales { get; set; }
 
-        [Range(1, int.MaxValue)]
+        [Range(1, 1000)]
         public double HorasEstimadas { get; set; }
 
         //Relaciones
