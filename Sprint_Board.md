@@ -4,10 +4,51 @@
 - **[Iteración 1]**: Sprint 1 — Setup del proyecto, arquitectura base (backend .NET 9 + frontend React/Vite), entidades core (Clientes, Trabajos, Presupuestos, Movimientos).
 - **[Iteración 2]**: Sprint 2 — Auth (JWT + refresh tokens + rate limiting), Passkeys WebAuthn/FIDO2 (registro, login, gestión en Configuración, validación userHandle, fix IDOR), fixes de frontend (tokens Zustand↔localStorage, refresh en body, FAB en modales). Release mergeado: PR #111 (`development` → `main`, `80f7c19`).
 - **[Iteración 3]**: Definición del Sprint 3 (2026-08-01). El usuario define alcance: **Bloque A completo (auth UX)** + 3 issues nuevos de seguridad/operaciones de auth (#114 SEV-001, #115 FUN-001, #116 OPS-001) + #75 + #57.
+- **[Iteración 26]**: Sprint 3 completado + hotfix #121 desplegado a prod + Definición del Sprint 4 (2026-08-07). El dueño define alcance: **Dependabot (mayor prioridad)** + SEV-004 + #74 + #67 + #81/#82/#83 (tests) + #76. Se crean issues #123 (Dependabot, 26 alertas npm) y #124 (SEV-004). Documentación oficial del Sprint 4 en el board.
 
-## Sprint Actual: Sprint 3
+## Sprint Anterior: Sprint 3 (COMPLETADO — 2026-08-07)
 **Objetivo del Sprint**: Consolidar la seguridad y robustez del flujo de auth (refresh tokens en cookie HttpOnly, revocación explícita, índice/purga, recuperación de contraseña admin, SRP) + mejoras UX de auth en frontend + hardening de infraestructura (#75) y validación de entrada (#57).
-**Estado General**: Sprint completo — PR #120 en **PR Pending** (52 commits, CI 4/4, MergeGuard 🟢 APPROVE). Issues se cierran automáticamente al mergear el PR. Deuda registrada para Sprint 4: SEV-004 (bootstrap admin + rate limit), #118 (métricas históricas), 2 Minor de MergeGuard.
+**Estado General**: Sprint COMPLETADO — PR #120 (release Sprint 3) MERGED (`5275c52`, 2026-08-07). Hotfix #121 (PR #122) MERGED y desplegado a prod OK (`6be2db0`, 2026-08-07) — issue #121 CLOSED. Sprint 4 definido (ver sección a continuación).
+
+## Sprint Actual: Sprint 4 (DEFINIDO — 2026-08-07)
+**Objetivo del Sprint**: Cerrar brechas de seguridad y deuda técnica acumulada: resolver vulnerabilidades de Dependabot (prioridad #1), eliminar SEV-004 (bootstrap admin + rate limit), separar Zustand de React Query (#74), lazy loading de rutas (#67), fortalecer la suite de tests (#81/#82/#83) y optimizar CI con cache (#76).
+
+**Estado General**: Sprint 4 DEFINIDO por el dueño (2026-08-07). Pendiente: crear issues faltantes (hecho: #123 Dependabot, #124 SEV-004) y planificar orden de ejecución por dependencias. Issues #74/#67/#81/#82/#83/#76 ya existían en backlog.
+
+### Issues del Sprint 4
+
+| Issue | Descripción | Área | Type | Prioridad | Estado |
+|-------|-------------|------|------|-----------|--------|
+| #123 | Vulnerabilidades de Dependabot — 26 alertas npm (11 high, 15 medium) | DevOps/Backend/Frontend | Bug (security) | Urgent | **Creado 2026-08-07** — mayor prioridad del sprint |
+| #124 (SEV-004) | Restringir bootstrap del primer admin + rate limit en registro ("admin theft") | Backend | Feature (security) | Urgent | **Creado 2026-08-07** — deuda de release Sprint 3 |
+| #74 | Separar Zustand (UI state) de React Query (server state) | Frontend | Refactor | High | OPEN — backlog previo |
+| #67 | Lazy loading de rutas con React.lazy | Frontend | Feature | High | OPEN — backlog previo |
+| #81 | Reescribir tests de frontend con assertions reales | Frontend | Test (qa) | High | OPEN — backlog previo |
+| #82 | Tests de integración para endpoints críticos | Backend | Test (qa) | High | OPEN — backlog previo |
+| #83 | Tests de seguridad (auth + autorización) | Backend | Test (qa) | High | OPEN — backlog previo |
+| #76 | Cache de NuGet y npm en GitHub Actions | DevOps | Task | High | OPEN — backlog previo |
+
+### Notas de Decisión (Definición Sprint 4)
+
+- El dueño definió el alcance explícitamente: **Dependabot (mayor prioridad)** + SEV-004 + #74 + #67 + #81 + #82 + #83 + #76.
+- El issue #123 (Dependabot) fue creado con el conteo real de alertas al 2026-08-07: 26 abiertas (0 critical, 11 high, 15 medium), ecosistema npm. Nota: la cifra previa del Sprint 3 ("56 vuln, 1 critical, 20 high") no coincide con el conteo actual de la API — verificar con `gh api /repos/Tuqui77/ShopMGR/dependabot/alerts`.
+- El issue #124 (SEV-004) fue creado con contexto técnico del hallazgo MergeGuard PR #120 (migración OPS-001 `d4eff03` + patrón rate limit del login del Sprint 2).
+- **Regla de ejecución**: backend/devops los ejecuta el usuario directamente; frontend se delega al subagente Frontend. #82/#83 son backend (usuario). #81 es frontend (subagente). #123 Dependabot es mixto (npm del Frontend + posiblemente backend) — verificar alcance real.
+- **Dependencia clave**: #74 (Zustand↔React Query) toca la arquitectura de datos del frontend → conviene hacerlo ANTES de #67 (lazy loading) para no re-tocar rutas/páginas, y antes de #81 (tests) para que las assertions reales se escriban sobre el estado ya refactorizado.
+- **Fuera de alcance en este sprint (por decisión del dueño)**: #118 (métricas históricas), #72/#73/#95/#93/#92/#91/#90/#89/#88/#87/#86/#85/#84/#80/#79/#78/#77/#70/#69/#68/#65/#64. Quedan en backlog.
+
+### Backlog de Tareas Atómicas — Sprint 4
+
+- [ ] **TSK-S4-01:** ✅ Alcance del Sprint 4 definido y documentado (issues creados/verificados: #123, #124 nuevos; #74/#67/#81/#82/#83/#76 existentes)
+- [ ] **TSK-S4-02:** Planificar orden de ejecución según dependencias (Dependabot #123 → SEV-004 #124 → #74 → #67 → #81/#82/#83 → #76)
+- [ ] **TSK-S4-03:** Implementar #123 (Dependabot — usuario + subagente según alcance)
+- [ ] **TSK-S4-04:** Implementar #124 SEV-004 (backend — usuario ejecuta)
+- [ ] **TSK-S4-05:** Implementar #74 (frontend — subagente Frontend)
+- [ ] **TSK-S4-06:** Implementar #67 (frontend — subagente Frontend)
+- [ ] **TSK-S4-07:** Implementar #81 (frontend — subagente Frontend/QA)
+- [ ] **TSK-S4-08:** Implementar #82/#83 (backend — usuario ejecuta)
+- [ ] **TSK-S4-09:** Implementar #76 (devops — usuario ejecuta)
+- [ ] **TSK-S4-10:** QA de los cambios + MergeGuard + Release del Sprint 4
 
 ### Issues del Sprint 3
 
