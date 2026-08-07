@@ -2,25 +2,24 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { useStore } from '../../store';
 import type { Trabajo } from '../../types';
 
-/** Lee los tokens persistidos por el middleware `persist` en localStorage. */
-function readPersistedTokens(): { accessToken: string | null; refreshToken: string | null } {
+/** Lee el accessToken persistido por el middleware `persist` en localStorage. */
+function readPersistedAccessToken(): string | null {
   const raw = localStorage.getItem('shopmgr-storage');
-  if (!raw) return { accessToken: null, refreshToken: null };
-  const parsed = JSON.parse(raw) as { state?: { accessToken?: unknown; refreshToken?: unknown } };
-  return {
-    accessToken: typeof parsed.state?.accessToken === 'string' ? parsed.state.accessToken : null,
-    refreshToken: typeof parsed.state?.refreshToken === 'string' ? parsed.state.refreshToken : null,
-  };
+  if (!raw) return null;
+  const parsed = JSON.parse(raw) as { state?: { accessToken?: unknown } };
+  return typeof parsed.state?.accessToken === 'string' ? parsed.state.accessToken : null;
 }
 
 describe('useStore', () => {
   beforeEach(() => {
+    localStorage.clear();
     // Reset store state before each test
     useStore.setState({
       showHoursModal: false,
       selectedTrabajo: null,
       lastTrabajoId: null,
       isDetailModalOpen: false,
+      accessToken: null,
     });
   });
 
@@ -102,45 +101,59 @@ describe('useStore', () => {
     });
   });
 
-  describe('setTokens (issue #105: consistencia memoria ↔ localStorage)', () => {
-    it('actualiza tokens en memoria y en localStorage', () => {
-      useStore.getState().setTokens('access-123', 'refresh-456');
+  describe('setTokens (issue #114: solo accessToken; refresh token en cookie)', () => {
+    it('actualiza el accessToken en memoria y en localStorage', () => {
+      useStore.getState().setTokens('access-123');
 
       const state = useStore.getState();
       expect(state.accessToken).toBe('access-123');
-      expect(state.refreshToken).toBe('refresh-456');
 
-      // El middleware persist debe haber escrito los mismos tokens
-      expect(readPersistedTokens()).toEqual({
-        accessToken: 'access-123',
-        refreshToken: 'refresh-456',
-      });
+      // El middleware persist debe haber escrito el accessToken
+      expect(readPersistedAccessToken()).toBe('access-123');
     });
 
-    it('reemplaza tokens previos en memoria y localStorage', () => {
-      useStore.getState().setTokens('access-old', 'refresh-old');
-      useStore.getState().setTokens('access-new', 'refresh-new');
+    it('reemplaza el accessToken previo en memoria y localStorage', () => {
+      useStore.getState().setTokens('access-old');
+      useStore.getState().setTokens('access-new');
 
       expect(useStore.getState().accessToken).toBe('access-new');
-      expect(useStore.getState().refreshToken).toBe('refresh-new');
-      expect(readPersistedTokens()).toEqual({
-        accessToken: 'access-new',
-        refreshToken: 'refresh-new',
-      });
+      expect(readPersistedAccessToken()).toBe('access-new');
     });
   });
 
   describe('logout (issue #105: limpieza explícita)', () => {
-    it('limpia tokens en memoria y en localStorage', () => {
-      useStore.getState().setTokens('access-123', 'refresh-456');
+    it('limpia el accessToken en memoria y en localStorage', () => {
+      useStore.getState().setTokens('access-123');
       useStore.getState().logout();
 
       expect(useStore.getState().accessToken).toBeNull();
-      expect(useStore.getState().refreshToken).toBeNull();
-      expect(readPersistedTokens()).toEqual({
-        accessToken: null,
-        refreshToken: null,
-      });
+      expect(readPersistedAccessToken()).toBeNull();
+    });
+  });
+
+  describe('persist migrate (issue #114: limpiar refreshToken residual)', () => {
+    it('migra de v1 a v2: elimina refreshToken y conserva accessToken', async () => {
+      // Simula una sesión persistida con el formato viejo (v1) que todavía
+      // contiene el refreshToken en localStorage.
+      localStorage.setItem('shopmgr-storage', JSON.stringify({
+        state: { accessToken: 'access-viejo', refreshToken: 'refresh-viejo' },
+        version: 1,
+      }));
+
+      await useStore.persist.rehydrate();
+
+      const state = useStore.getState();
+      expect(state.accessToken).toBe('access-viejo');
+      expect('refreshToken' in state).toBe(false);
+
+      // El storage queda reescrito con version 2 y sin refreshToken
+      const persisted = JSON.parse(localStorage.getItem('shopmgr-storage') ?? '{}') as {
+        state?: { accessToken?: unknown; refreshToken?: unknown };
+        version?: unknown;
+      };
+      expect(persisted.version).toBe(2);
+      expect(persisted.state?.accessToken).toBe('access-viejo');
+      expect(persisted.state?.refreshToken).toBeUndefined();
     });
   });
 

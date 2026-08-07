@@ -1,4 +1,5 @@
 ﻿using Extensiones;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using ShopMGR.Aplicacion.Interfaces;
 using ShopMGR.Aplicacion.Mappers;
@@ -33,6 +34,7 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioMetricas, MetricasRepositorio>();
 
             services.AddScoped<IAdministrarAuth, AdministrarAuth>();
+            services.AddScoped<IRepositorioUsuario, UsuarioRepositorio>();
 
             services.AddScoped<IAlmacenamientoServicio, AlmacenamientoServicio>();
 
@@ -40,6 +42,8 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioPasskeys, PasskeysRepositorio>();
 
             //Herramientas adicionales
+            services.AddHostedService<RefreshTokenCleanupService>();
+            services.AddSingleton<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
             // Mapeadores manuales
             services.AddMappersFromAssembly(typeof(ClienteMapper));
             services.AddScoped<MapperRegistry>();

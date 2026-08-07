@@ -18,6 +18,7 @@ import { TrabajoDetalle } from './pages/TrabajoDetalle';
 import { Presupuestos } from './pages/Presupuestos';
 import { PresupuestoDetalle } from './pages/PresupuestoDetalle';
 import { Configuracion } from './pages/Configuracion';
+import { Perfil } from './pages/Perfil';
 import { Login } from './pages/Login';
 import { useStore } from './store';
 
@@ -97,15 +98,17 @@ function ProtectedLayout() {
 }
 
 function LoginPage() {
-  const { accessToken } = useStore();
+  const { accessToken, cambioContraseñaPendiente } = useStore();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
-  
-  // If already authenticated, redirect to dashboard
-  if (accessToken) {
+
+  // Si el login exige cambiar la contraseña (código de un solo uso, issue #99),
+  // el token ya está seteado pero el modal de cambio debe completarse antes de
+  // entrar a la app: se omite el redirect mientras el flag esté activo.
+  if (accessToken && !cambioContraseñaPendiente) {
     return <Navigate to={from} replace />
   }
-  
+
   return <Login />
 }
 
@@ -125,6 +128,7 @@ function App() {
               <Route path="/presupuestos" element={<ErrorBoundary pageName="Presupuestos"><Presupuestos /></ErrorBoundary>} />
               <Route path="/presupuestos/:id" element={<ErrorBoundary pageName="Detalle de Presupuesto"><PresupuestoDetalle /></ErrorBoundary>} />
               <Route path="/configuracion" element={<ErrorBoundary pageName="Configuración"><Configuracion /></ErrorBoundary>} />
+              <Route path="/perfil" element={<ErrorBoundary pageName="Perfil"><Perfil /></ErrorBoundary>} />
             </Route>
           </Routes>
         </BrowserRouter>

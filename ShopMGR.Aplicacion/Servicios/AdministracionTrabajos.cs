@@ -105,6 +105,9 @@ namespace ShopMGR.Aplicacion.Servicios
             var horas = _mapper.Map<HorasYDescripcionDTO, HorasYDescripcion>(horasDTO);
             var trabajo = await _repositorio.ObtenerPorIdAsync(horasDTO.IdTrabajo);
 
+            if (trabajo.Estado == EstadoTrabajo.Pendiente)
+                trabajo.IniciarTrabajo();
+
             if (trabajo.IdPresupuesto == null)
             {
                 var valorHora = await _repositorioPresupuestos.ObtenerCostoHoraDeTrabajo();

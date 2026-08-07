@@ -16,18 +16,21 @@ public class RefreshTokenConfiguracion : IEntityTypeConfiguration<RefreshToken>
         builder.Property(rt => rt.Hash)
             .IsRequired(true)
             .HasMaxLength(64);
+        builder
+            .HasIndex(rt => rt.Hash)
+            .IsUnique(true);
 
         builder.Property(rt => rt.CreadoEn)
             .IsRequired(true)
-            .HasColumnType("date");
+            .HasColumnType("datetime2");
 
         builder.Property(rt => rt.ExpiraEn)
             .IsRequired(true)
-            .HasColumnType("date");
+            .HasColumnType("datetime2");
 
         builder.Property(rt => rt.RevocadoEn)
             .IsRequired(false)
-            .HasColumnType("date");
+            .HasColumnType("datetime2");
 
         builder
             .HasOne(rt => rt.Usuario)

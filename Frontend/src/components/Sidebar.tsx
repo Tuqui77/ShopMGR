@@ -1,8 +1,10 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 import clsx from 'clsx';
-import { Home, Users, Wrench, Clipboard, Settings, LogOut } from 'lucide-react';
+import { Home, Users, Wrench, Clipboard, Settings, LogOut, UserRound } from 'lucide-react';
 import { useStore } from '../store';
 import { authService } from '../services/auth';
+import { obtenerNombreUsuarioDesdeToken } from '../utils/jwt';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Inicio' },
@@ -19,13 +21,20 @@ function isActivePath(currentPath: string, itemPath: string) {
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, refreshToken } = useStore();
+  const { logout } = useStore();
+
+  // Nombre del usuario logueado desde el JWT (issue #112). Si el token no lo
+  // trae (token viejo), se muestra el fallback "Mi cuenta" — nunca el id.
+  const accessToken = useStore((s) => s.accessToken);
+  const nombreUsuario = useMemo(
+    () => obtenerNombreUsuarioDesdeToken(accessToken),
+    [accessToken],
+  );
 
   const handleLogout = async () => {
     try {
-      if (refreshToken) {
-        await authService.cerrarSesion(refreshToken);
-      }
+      // La cookie HttpOnly se borra server-side en /Auth/CerrarSesion (issue #114).
+      await authService.cerrarSesion();
     } catch {
       // Ignore errors — always clear local state
     }
@@ -73,13 +82,30 @@ export function Sidebar() {
           <Settings className="sidebar-item-icon" />
           <span>Configuración</span>
         </Link>
-        <button
-          onClick={handleLogout}
-          className="sidebar-item w-full text-left"
-        >
-          <LogOut className="sidebar-item-icon" />
-          <span>Cerrar sesión</span>
-        </button>
+
+        {/* Fila: nombre de usuario (→ /perfil) + cerrar sesión como icono chico */}
+        <div className="flex items-center gap-0.5">
+          <Link
+            to="/perfil"
+            className={clsx(
+              'sidebar-item flex-1 min-w-0',
+              location.pathname === '/perfil' && 'active'
+            )}
+            title={nombreUsuario ?? 'Mi cuenta'}
+          >
+            <UserRound className="sidebar-item-icon" />
+            <span className="truncate">{nombreUsuario ?? 'Mi cuenta'}</span>
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+            className="sidebar-logout-btn"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </aside>
   );

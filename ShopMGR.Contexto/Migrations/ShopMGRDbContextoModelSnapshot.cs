@@ -417,10 +417,10 @@ namespace ShopMGR.Contexto.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreadoEn")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("ExpiraEn")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Hash")
                         .IsRequired()
@@ -431,9 +431,12 @@ namespace ShopMGR.Contexto.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("RevocadoEn")
-                        .HasColumnType("date");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Hash")
+                        .IsUnique();
 
                     b.HasIndex("Id")
                         .IsUnique();
@@ -535,9 +538,22 @@ namespace ShopMGR.Contexto.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CodigoUsoUnico")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiracionCodigoUsoUnico")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Rol")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Empleado");
 
                     b.Property<string>("UserName")
                         .IsRequired()

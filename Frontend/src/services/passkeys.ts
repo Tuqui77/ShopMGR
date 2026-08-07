@@ -127,10 +127,10 @@ function isAssertionOptionsResponse(value: unknown): value is AssertionOptionsRe
 // ---- Respuesta de login -----------------------------------------------------
 
 function isLoginResponse(value: unknown): value is LoginResponse {
+  // El refresh token ya no viaja en el body: vive en cookie HttpOnly (issue #114).
   return (
     isRecord(value) &&
-    typeof value.accessToken === 'string' &&
-    typeof value.refreshToken === 'string'
+    typeof value.accessToken === 'string'
   );
 }
 

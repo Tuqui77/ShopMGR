@@ -1,10 +1,18 @@
-﻿namespace ShopMGR.Aplicacion.Data_Transfer_Objects
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ShopMGR.Aplicacion.Data_Transfer_Objects
 {
     public class PresupuestoDTOcreacion
     {
-        public string Titulo { get; set; }
+        [Required(ErrorMessage = "El campo Título es obligatorio")]
+        public string Titulo { get; set; } = "";
+
+        [StringLength(500, ErrorMessage = "Descripcion demasiado larga")]
         public string? Descripcion { get; set; }
+
         public List<MaterialDTO>? Materiales { get; set; }
+
+        [Range(1, 1000)]
         public double HorasEstimadas { get; set; }
 
         //Relaciones

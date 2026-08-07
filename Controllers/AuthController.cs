@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.WebApi.Controllers;
@@ -18,12 +19,14 @@ namespace ShopMGR.WebApi.Controllers;
 public class AuthController(
     IAdministrarAuth administrarAuth,
     IAdministracionPasskeys administracionPasskeys,
-    IFido2 fido2
+    IFido2 fido2,
+    IConfiguration configuracion
 ) : ControllerBase
 {
     private readonly IAdministrarAuth _administrarAuth = administrarAuth;
     private readonly IAdministracionPasskeys _administracionPasskeys = administracionPasskeys;
     private readonly IFido2 _fido2 = fido2;
+    private readonly IConfiguration _configuracion = configuracion;
 
     [HttpPost]
     [Route("RegistrarUsuario")]
@@ -49,26 +52,43 @@ public class AuthController(
             return BadRequest("Nombre de usuario o contraseña incorrectos");
         }
 
+        GuardarRefreshTokenCookie(respuestaLogin.RefreshToken);
+
         return Ok(respuestaLogin);
     }
 
     [HttpPost]
     [Route("Refrescar")]
-    public async Task<IActionResult> Refrescar([FromBody] string refreshTokenRequest)
+    public async Task<IActionResult> Refrescar()
     {
+        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshTokenRequest))
+            return Unauthorized();
+
         var respuestaLogin = await _administrarAuth.Refrescar(refreshTokenRequest);
 
         if (respuestaLogin == null)
-            return BadRequest("Refresh Token inválido");
+            return Unauthorized("Refresh Token inválido");
+
+        GuardarRefreshTokenCookie(respuestaLogin.RefreshToken);
 
         return Ok(respuestaLogin);
     }
 
     [HttpPost]
     [Route("CerrarSesion")]
-    public async Task<IActionResult> CerrarSesion([FromBody] string refreshTokenRequest)
+    public async Task<IActionResult> CerrarSesion()
     {
-        await _administrarAuth.CerrarSesion(refreshTokenRequest);
+        try
+        {
+            if (Request.Cookies.TryGetValue("refreshToken", out var refreshTokenRequest))
+            {
+                await _administrarAuth.CerrarSesion(refreshTokenRequest);
+            }
+        }
+        finally
+        {
+            BorrarRefreshTokenCookie();
+        }
 
         return Ok("Sesión cerrada correctamente");
     }
@@ -143,6 +163,7 @@ public class AuthController(
     [Route("passkeys/auth")]
     public async Task<IActionResult> IniciarSesionConPasskey(IniciarSesionPasskeyRequest request)
     {
+
         var respuestaAssertion = new AuthenticatorAssertionRawResponse
         {
             Id = request.Id,
@@ -164,6 +185,8 @@ public class AuthController(
 
             //Generar datos de inicio de sesión normal:
             var respuestaLogin = await _administrarAuth.FinalizarAuthPasskey(usuario);
+
+            GuardarRefreshTokenCookie(respuestaLogin.RefreshToken);
 
             return Ok(respuestaLogin);
         }
@@ -225,6 +248,58 @@ public class AuthController(
         }
     }
 
+    [Authorize(Roles = "Administrador")]
+    [HttpPatch]
+    [Route("CambiarContrasenaAdmin")]
+    public async Task<IActionResult> CambiarContrasena([FromBody] CambiarContrasenaAdminDTO cambioContrasena)
+    {
+        await _administrarAuth.CambiarContrasena(cambioContrasena.IdUsuario, cambioContrasena.ContrasenaNueva);
+
+        return Ok("Contraseña modificada");
+    }
+
+    [Authorize]
+    [HttpPatch]
+    [Route("CambiarContrasena")]
+    public async Task<IActionResult> CambiarContrasena([FromBody] CambiarContrasenaDTO cambioContrasena)
+    {
+        var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        await _administrarAuth.CambiarContrasena(idUsuario, cambioContrasena.ContrasenaActual, cambioContrasena.ContrasenaNueva);
+
+        return Ok("Contraseña modificada");
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpPatch]
+    [Route("CambiarRol")]
+    public async Task<IActionResult> CambiarRol(int idUsuario, [FromBody] RolUsuario nuevoRol)
+    {
+        await _administrarAuth.CambiarRolUsuario(idUsuario, nuevoRol);
+
+        return Ok("Rol modificado");
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpPatch]
+    [Route("RestaurarContraseña")]
+    public async Task<IActionResult> RestaurarContraseña(int idUsuario)
+    {
+        var codigoUnUso = await _administrarAuth.RestaurarContraseña(idUsuario);
+
+        return Ok(codigoUnUso);
+    }
+
+    [Authorize(Roles = "Administrador")]
+    [HttpGet]
+    [Route("ListarUsuariosAsync")]
+    public async Task<IActionResult> ListarUsuariosAsync()
+    {
+        var usuarios = await _administrarAuth.ListarUsuariosAsync();
+
+        return Ok(usuarios);
+    }
+
     private byte[] DecodificarBase64Url(string rawIdRequest)
     {
         var rawIdB64 = rawIdRequest.Replace("-", "+").Replace("_", "/");
@@ -240,6 +315,32 @@ public class AuthController(
         }
 
         return Convert.FromBase64String(rawIdB64);
+    }
+
+    private void GuardarRefreshTokenCookie(string refreshToken)
+    {
+        var opciones = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = _configuracion.GetValue<bool>("Auth:RefreshTokenCookie.Secure"),
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/Auth",
+            Expires = DateTimeOffset.Now.AddDays(30),
+            IsEssential = true
+        };
+
+        Response.Cookies.Append("refreshToken", refreshToken, opciones);
+    }
+
+    private void BorrarRefreshTokenCookie()
+    {
+        Response.Cookies.Delete("refreshToken", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = _configuracion.GetValue<bool>("Auth:RefreshTokenCookie.Secure"),
+            SameSite = SameSiteMode.Strict,
+            Path = "/api/Auth"
+        });
     }
 
     [Authorize]

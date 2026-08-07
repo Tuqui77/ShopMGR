@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
 import { apiClient } from '../services/api';
-import { PasskeySection } from '../components/PasskeySection';
 
 // ============================================================================
 // Types
@@ -329,9 +328,6 @@ export function Configuracion() {
             </select>
           </div>
         </div>
-        
-        {/* Passkeys */}
-        <PasskeySection />
       </section>
     </div>
   );

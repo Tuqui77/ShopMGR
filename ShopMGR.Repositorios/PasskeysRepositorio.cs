@@ -53,6 +53,7 @@ namespace ShopMGR.Repositorios
         {
             var passkey = await _contexto
                 .Passkeys.Include(pk => pk.Usuario)
+                    .ThenInclude(u => u.RefreshTokens)
                 .FirstOrDefaultAsync(pk => pk.IdCredencial == id);
 
             return passkey;
@@ -101,10 +102,12 @@ namespace ShopMGR.Repositorios
         public async Task<bool> ElUserHandleEsDuenoDeLaCredencial(byte[] userHandle, byte[] idCredencial)
         {
             var passkey = await _contexto.Passkeys.Where(pk => pk.IdCredencial == idCredencial).FirstOrDefaultAsync();
-            if (passkey == null
-                    || userHandle == null
-                    || passkey.UserHandle == null
-                    || !passkey.UserHandle.SequenceEqual(userHandle))
+            if (
+                passkey == null
+                || userHandle == null
+                || passkey.UserHandle == null
+                || !passkey.UserHandle.SequenceEqual(userHandle)
+            )
             {
                 return false;
             }

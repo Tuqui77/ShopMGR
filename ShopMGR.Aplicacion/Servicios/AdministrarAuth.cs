@@ -3,87 +3,117 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using ShopMGR.Aplicacion.Data_Transfer_Objects;
 using ShopMGR.Aplicacion.Interfaces;
-using ShopMGR.Contexto;
+using ShopMGR.Dominio.Abstracciones;
+using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 
 namespace ShopMGR.Aplicacion.Servicios;
 
-public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configuracion) : IAdministrarAuth
+public class AdministrarAuth(
+    IRepositorioUsuario repositorio,
+    IConfiguration configuracion,
+    IPasswordHasher<Usuario> passwordHasher
+) : IAdministrarAuth
 {
-    private readonly ShopMGRDbContexto _contexto = contexto; // TODO(#100): Implementar un repositorio para no acceder a datos directamente, SRP!
+    private readonly IRepositorioUsuario _repositorio = repositorio;
     private readonly IConfiguration _configuracion = configuracion;
+    private readonly IPasswordHasher<Usuario> _passwordHasher = passwordHasher;
 
     public async Task<Usuario?> RegistrarUsuarioAsync(UsuarioDTO request)
     {
-        if (await _contexto.Usuarios.AnyAsync(u => u.UserName == request.UserName))
-            return null;
-
         var usuario = new Usuario() { UserName = request.UserName };
-        var hashedPassword = new PasswordHasher<Usuario>().HashPassword(usuario, request.Password);
+        var hashedPassword = _passwordHasher.HashPassword(usuario, request.Password);
         usuario.PasswordHash = hashedPassword;
+        var hayUsuarios = (await _repositorio.ListarUsuariosAsync()).Any();
+        if (!hayUsuarios)
+        {
+            usuario.CambiarRol(RolUsuario.Administrador);
+        }
+        else
+        {
+            usuario.CambiarRol(RolUsuario.Empleado);
+        }
 
-        await _contexto.Usuarios.AddAsync(usuario);
-        await _contexto.SaveChangesAsync();
-
-        return usuario;
+        var usuarioCreado = await _repositorio.CrearAsync(usuario);
+        if (usuarioCreado == null)
+            return null;
+        return usuarioCreado;
     }
 
     public async Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request)
     {
-        var usuarioDb = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.UserName == request.UserName);
+        var usuario = await _repositorio.ObtenerUsuarioPorNombre(request.UserName);
 
-        if (
-            usuarioDb == null
-            || new PasswordHasher<Usuario>().VerifyHashedPassword(usuarioDb, usuarioDb.PasswordHash, request.Password)
-                == PasswordVerificationResult.Failed
-        )
+        if (usuario == null)
             return null;
 
-        var accessToken = CrearToken(usuarioDb);
+        var esCodigoUsoUnico =
+            usuario.CodigoUsoUnico != null
+            && _passwordHasher.VerifyHashedPassword(usuario, usuario.CodigoUsoUnico, request.Password)
+                == PasswordVerificationResult.Success
+            && usuario.ExpiracionCodigoUsoUnico > DateTime.Now;
+
+        var esContraseñaValida =
+            _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, request.Password)
+            == PasswordVerificationResult.Success;
+
+        if (usuario.CodigoUsoUnico != null && usuario.ExpiracionCodigoUsoUnico < DateTime.Now)
+        {
+            usuario.EliminarCodigoUsoUnico();
+            await _repositorio.ActualizarUsuarioAsync(usuario);
+        }
+
+        if (!esCodigoUsoUnico && !esContraseñaValida)
+            return null;
+
+        var accessToken = CrearToken(usuario);
         var refreshToken = GenerarRefreshToken();
         var hash = CalcularHash(refreshToken);
-        usuarioDb.CrearRefreshToken(hash, TimeSpan.FromDays(30));
-        await _contexto.SaveChangesAsync();
+        usuario.CrearRefreshToken(hash, TimeSpan.FromDays(30));
+        usuario.EliminarRefreshTokensExpirados();
+        await _repositorio.ActualizarUsuarioAsync(usuario);
 
-        return new RespuestaLogin(accessToken, refreshToken);
+        return new RespuestaLogin(accessToken, refreshToken, esCodigoUsoUnico);
     }
 
-    public async Task<RespuestaLogin?> FinalizarAuthPasskey(Usuario usuario)
+    public async Task<RespuestaLogin> FinalizarAuthPasskey(Usuario usuario)
     {
         var accessToken = CrearToken(usuario);
         var refreshToken = GenerarRefreshToken();
         var hash = CalcularHash(refreshToken);
         usuario.CrearRefreshToken(hash, TimeSpan.FromDays(30));
-        await _contexto.SaveChangesAsync();
+        usuario.EliminarRefreshTokensExpirados();
+        await _repositorio.ActualizarUsuarioAsync(usuario);
 
-        return new RespuestaLogin(accessToken, refreshToken);
+        return new RespuestaLogin(accessToken, refreshToken, false);
     }
 
     public async Task<RespuestaLogin?> Refrescar(string refreshTokenRequest)
     {
         var hashRequest = CalcularHash(refreshTokenRequest);
-        var token = await _contexto.RefreshTokens.FirstOrDefaultAsync(rt => rt.Hash == hashRequest);
+        var usuario = await _repositorio.ObtenerUsuarioPorRefreshTokenHash(hashRequest);
 
-        var esValido = token != null && !token.EstaExpirado && !token.EstaRevocado;
+        if (usuario == null)
+            return null;
+
+        var refreshToken = usuario.RefreshTokens.First(rt => rt.Hash == hashRequest);
+
+        var esValido = refreshToken != null && !refreshToken.EstaExpirado && !refreshToken.EstaRevocado;
 
         if (esValido)
         {
-            var usuario =
-                await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token!.IdUsuario)
-                ?? throw new KeyNotFoundException();
             var nuevoAccessToken = CrearToken(usuario);
             var nuevoRefreshToken = GenerarRefreshToken();
             var hash = CalcularHash(nuevoRefreshToken);
             usuario.CrearRefreshToken(hash, TimeSpan.FromDays(30));
-            usuario.RevocarRefreshToken(token!.Hash);
-            await _contexto.SaveChangesAsync();
+            refreshToken!.Revocar();
+            await _repositorio.ActualizarUsuarioAsync(usuario);
 
-            return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken);
+            return new RespuestaLogin(nuevoAccessToken, nuevoRefreshToken, false);
         }
 
         return null;
@@ -92,32 +122,97 @@ public class AdministrarAuth(ShopMGRDbContexto contexto, IConfiguration configur
     public async Task CerrarSesion(string refreshTokenRequest)
     {
         var hash = CalcularHash(refreshTokenRequest);
-        var token =
-            await _contexto.RefreshTokens.FirstOrDefaultAsync(rt => rt.Hash == hash)
-            ?? throw new KeyNotFoundException();
-        var usuario =
-            await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == token.IdUsuario)
-            ?? throw new KeyNotFoundException();
+        var usuario = await _repositorio.ObtenerUsuarioPorRefreshTokenHash(hash);
+        if (usuario == null)
+            return;
 
-        usuario.RevocarRefreshToken(token.Hash);
-        await _contexto.SaveChangesAsync();
+        var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Hash == hash);
+
+        token?.Revocar();
+
+        await _repositorio.ActualizarUsuarioAsync(usuario);
     }
-
-    // Métodos que se van a mover a un repositorio
 
     public async Task<Usuario?> ObtenerUsuarioPorIdAsync(int idUsuario)
     {
-        var usuario = await _contexto.Usuarios.FirstOrDefaultAsync(u => u.Id == idUsuario);
+        var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
 
         return usuario;
+    }
+
+    public async Task<List<ResumenUsuarios>> ListarUsuariosAsync()
+    {
+        var usuarios = await _repositorio.ListarUsuariosAsync();
+
+        var resumenUsuarios = usuarios
+            .Select(u => new ResumenUsuarios
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                Rol = u.Rol,
+            })
+            .ToList();
+
+        return resumenUsuarios;
+    }
+
+    public async Task CambiarContrasena(int idUsuario, string? contraseñaActual, string contraseñaNueva)
+    {
+        var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
+
+        var tieneCodigoUnUsoValido = usuario.CodigoUsoUnico != null && usuario.ExpiracionCodigoUsoUnico > DateTime.Now;
+        var contraseñaActualValida =
+            contraseñaActual != null
+            && _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, contraseñaActual)
+                == PasswordVerificationResult.Success;
+
+        if (!tieneCodigoUnUsoValido && !contraseñaActualValida)
+            throw new InvalidOperationException("La contraseña actual es incorrecta");
+
+        var hashContraseñaNueva = _passwordHasher.HashPassword(usuario, contraseñaNueva);
+        usuario.CambiarContrasena(hashContraseñaNueva);
+
+        await _repositorio.ActualizarUsuarioAsync(usuario);
+    }
+
+    public async Task CambiarContrasena(int idUsuario, string contraseñaNueva)
+    {
+        var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
+
+        var hashContraseñaNueva = _passwordHasher.HashPassword(usuario, contraseñaNueva);
+        usuario.CambiarContrasena(hashContraseñaNueva);
+
+        await _repositorio.ActualizarUsuarioAsync(usuario);
+    }
+
+    public async Task<string> RestaurarContraseña(int idUsuario)
+    {
+        var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
+
+        var codigoUsoUnico = usuario.GenerarCódigo();
+        var hashCodigo = _passwordHasher.HashPassword(usuario, codigoUsoUnico);
+        usuario.SetearCodigoUsoUnico(hashCodigo);
+
+        await _repositorio.ActualizarUsuarioAsync(usuario);
+
+        return codigoUsoUnico;
+    }
+
+    public async Task CambiarRolUsuario(int idUsuario, RolUsuario rol)
+    {
+        var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
+
+        usuario.CambiarRol(rol);
+        await _repositorio.ActualizarUsuarioAsync(usuario);
     }
 
     private string CrearToken(Usuario usuario)
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, usuario.UserName),
-            new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+            new(ClaimTypes.Name, usuario.UserName),
+            new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+            new(ClaimTypes.Role, usuario.Rol.ToString()),
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuracion.GetSection("Jwt:Token").Value!));

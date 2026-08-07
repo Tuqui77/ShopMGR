@@ -14,7 +14,19 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   accessToken: string;
-  refreshToken: string;
+  // true cuando el login fue con un código de un solo uso (contraseña restaurada):
+  // el usuario debe cambiarla antes de usar la app (issue #99).
+  requiereCambioContraseña?: boolean;
+}
+
+// Roles de usuario (coinciden con el enum RolUsuario del backend; viajan como string)
+export type RolUsuario = 'Administrador' | 'Empleado' | 'Cliente';
+
+/** Resumen de un usuario para la gestión de administración (GET /Auth/ListarUsuariosAsync). */
+export interface ResumenUsuario {
+  id: number;
+  userName: string;
+  rol: RolUsuario;
 }
 
 export interface PasskeyCredencial {
