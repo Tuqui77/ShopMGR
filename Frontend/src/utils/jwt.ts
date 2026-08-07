@@ -25,6 +25,17 @@ const CLAIMS_ID_USUARIO = [
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/nameidentifier',
 ] as const;
 
+// Nombres de claim de nombre de usuario aceptados (se buscan en orden):
+// - "unique_name": lo que el JwtSecurityTokenHandler de .NET 9 emite para
+//   ClaimTypes.Name (System.IdentityModel.Tokens.Jwt mapea Name -> unique_name).
+// - "name": variante estándar OIDC.
+// - URI largo de .NET para ClaimTypes.Name (mismo serializador que rol e id).
+const CLAIMS_NOMBRE_USUARIO = [
+  'unique_name',
+  'name',
+  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name',
+] as const;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -48,7 +59,12 @@ function decodificarPayload(token: string): unknown {
   const partes = token.split('.');
   if (partes.length !== 3) throw new Error('Formato JWT inválido');
   const payload = partes[1];
-  const json = atob(base64UrlABase64(payload));
+  // atob() devuelve los bytes como code units latin-1; los claims pueden traer
+  // UTF-8 multibyte (nombres con acentos, p.ej. "José"), por eso se redecodifica
+  // el buffer como UTF-8 antes de parsear el JSON.
+  const binario = atob(base64UrlABase64(payload));
+  const bytes = Uint8Array.from(binario, (caracter) => caracter.charCodeAt(0));
+  const json = new TextDecoder('utf-8').decode(bytes);
   return JSON.parse(json);
 }
 
@@ -96,6 +112,32 @@ export function obtenerIdUsuarioDesdeToken(accessToken: string | null): number |
       if (typeof value === 'string' && value.length > 0) {
         const numero = Number(value);
         if (Number.isInteger(numero)) return numero;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extrae el nombre de usuario del JWT de acceso. El claim puede venir como
+ * "unique_name" (lo que .NET 9 emite para ClaimTypes.Name), "name" (OIDC) o el
+ * URI largo de .NET. Se recorre en orden y se devuelve el PRIMER claim con un
+ * valor no vacío (con trim). Se usa para mostrar el nombre en la barra lateral
+ * y en la página de perfil (issue #112).
+ * Fail-closed: token ausente/malformado o nombre vacío devuelven null — la UI
+ * muestra el fallback "Mi cuenta", NUNCA el id de usuario.
+ */
+export function obtenerNombreUsuarioDesdeToken(accessToken: string | null): string | null {
+  if (typeof accessToken !== 'string' || accessToken.length === 0) return null;
+  try {
+    const payload = decodificarPayload(accessToken);
+    if (!isRecord(payload)) return null;
+    for (const claim of CLAIMS_NOMBRE_USUARIO) {
+      const value = payload[claim];
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return value.trim();
       }
     }
     return null;

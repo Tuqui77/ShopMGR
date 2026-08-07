@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { obtenerRolDesdeToken, obtenerIdUsuarioDesdeToken } from '../../utils/jwt';
+import { obtenerRolDesdeToken, obtenerIdUsuarioDesdeToken, obtenerNombreUsuarioDesdeToken } from '../../utils/jwt';
 
 // ============================================================================
 // Helpers de prueba
@@ -196,5 +196,91 @@ describe('obtenerIdUsuarioDesdeToken (issue #99: id del usuario logueado)', () =
   it('devuelve null si el claim de id es un string vacío', () => {
     const token = crearToken({ nameid: '' });
     expect(obtenerIdUsuarioDesdeToken(token)).toBeNull();
+  });
+});
+
+// URI largo que .NET 9 serializa para ClaimTypes.Name en el payload crudo del
+// JWT (JwtSecurityTokenHandler.WriteToken), ver issue #112.
+const CLAIM_NAME_URI_LARGO =
+  'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
+
+describe('obtenerNombreUsuarioDesdeToken (issue #112: nombre en la barra lateral)', () => {
+  it('decodifica el nombre desde el claim corto "unique_name" (.NET)', () => {
+    const token = crearToken({ unique_name: 'Juan' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBe('Juan');
+  });
+
+  it('decodifica el nombre desde el claim corto "name" (OIDC)', () => {
+    const token = crearToken({ name: 'María' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBe('María');
+  });
+
+  it('decodifica el nombre desde el claim con URI largo (.NET)', () => {
+    const token = crearToken({ [CLAIM_NAME_URI_LARGO]: 'Juan' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBe('Juan');
+  });
+
+  it('prioriza "unique_name" si varios claims de nombre están presentes', () => {
+    const token = crearToken({
+      unique_name: 'Juan',
+      name: 'María',
+      [CLAIM_NAME_URI_LARGO]: 'Pedro',
+    });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBe('Juan');
+  });
+
+  it('acepta el claim "name" si "unique_name" está vacío', () => {
+    const token = crearToken({ unique_name: '', name: 'María' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBe('María');
+  });
+
+  it('acepta el claim de URI largo si los cortos están vacíos', () => {
+    const token = crearToken({ unique_name: '', name: '', [CLAIM_NAME_URI_LARGO]: 'Pedro' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBe('Pedro');
+  });
+
+  it('decodifica nombres con acentos (UTF-8 multibyte)', () => {
+    const token = crearToken({ unique_name: 'José — Ñandú' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBe('José — Ñandú');
+  });
+
+  it('devuelve null si el token es null', () => {
+    expect(obtenerNombreUsuarioDesdeToken(null)).toBeNull();
+  });
+
+  it('devuelve null si el token es undefined', () => {
+    expect(obtenerNombreUsuarioDesdeToken(undefined as unknown as null)).toBeNull();
+  });
+
+  it('devuelve null si el token es string vacío', () => {
+    expect(obtenerNombreUsuarioDesdeToken('')).toBeNull();
+  });
+
+  it('devuelve null si el token no tiene forma JWT (menos de 3 partes)', () => {
+    expect(obtenerNombreUsuarioDesdeToken('solo.dos')).toBeNull();
+  });
+
+  it('devuelve null si el payload contiene base64 inválido', () => {
+    expect(obtenerNombreUsuarioDesdeToken('header.b@c#d.firma')).toBeNull();
+  });
+
+  it('devuelve null si el payload no es JSON válido', () => {
+    const token = `header.${codificarBase64Url('{unique_name:')}.firma`;
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBeNull();
+  });
+
+  it('devuelve null si el token no tiene ninguno de los claims de nombre', () => {
+    const token = crearToken({ role: 'Empleado', nameid: '7' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBeNull();
+  });
+
+  it('devuelve null si el valor del claim es un string vacío (fail-closed)', () => {
+    const token = crearToken({ unique_name: '   ' });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBeNull();
+  });
+
+  it('devuelve null si el valor del claim no es string', () => {
+    const token = crearToken({ unique_name: 42 });
+    expect(obtenerNombreUsuarioDesdeToken(token)).toBeNull();
   });
 });

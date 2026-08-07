@@ -193,6 +193,28 @@ input, textarea, select {
   gap: 0.125rem;
 }
 
+/* Botón chico de cerrar sesión en el footer del sidebar (issue #112): cuadrado,
+   compacto, con hover que lo tiñe de danger para anticipar la acción. */
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar-logout-btn:hover {
+  background-color: var(--color-hover);
+  color: var(--color-danger);
+}
+
 @media (min-width: 1024px) {
   .sidebar {
     display: flex;

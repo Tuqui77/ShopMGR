@@ -18,6 +18,7 @@ import { TrabajoDetalle } from './pages/TrabajoDetalle';
 import { Presupuestos } from './pages/Presupuestos';
 import { PresupuestoDetalle } from './pages/PresupuestoDetalle';
 import { Configuracion } from './pages/Configuracion';
+import { Perfil } from './pages/Perfil';
 import { Login } from './pages/Login';
 import { useStore } from './store';
 
@@ -127,6 +128,7 @@ function App() {
               <Route path="/presupuestos" element={<ErrorBoundary pageName="Presupuestos"><Presupuestos /></ErrorBoundary>} />
               <Route path="/presupuestos/:id" element={<ErrorBoundary pageName="Detalle de Presupuesto"><PresupuestoDetalle /></ErrorBoundary>} />
               <Route path="/configuracion" element={<ErrorBoundary pageName="Configuración"><Configuracion /></ErrorBoundary>} />
+              <Route path="/perfil" element={<ErrorBoundary pageName="Perfil"><Perfil /></ErrorBoundary>} />
             </Route>
           </Routes>
         </BrowserRouter>
