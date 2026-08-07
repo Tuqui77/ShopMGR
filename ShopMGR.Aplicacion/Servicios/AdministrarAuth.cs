@@ -39,7 +39,8 @@ public class AdministrarAuth(
         }
 
         var usuarioCreado = await _repositorio.CrearAsync(usuario);
-        if (usuarioCreado == null) return null;
+        if (usuarioCreado == null)
+            return null;
         return usuarioCreado;
     }
 
@@ -122,7 +123,8 @@ public class AdministrarAuth(
     {
         var hash = CalcularHash(refreshTokenRequest);
         var usuario = await _repositorio.ObtenerUsuarioPorRefreshTokenHash(hash);
-        if (usuario == null) return;
+        if (usuario == null)
+            return;
 
         var token = usuario.RefreshTokens.FirstOrDefault(rt => rt.Hash == hash);
 
@@ -158,11 +160,13 @@ public class AdministrarAuth(
     {
         var usuario = await _repositorio.ObtenerUsuarioPorId(idUsuario);
 
-        if (
-            usuario.CodigoUsoUnico == null
+        var tieneCodigoUnUsoValido = usuario.CodigoUsoUnico != null && usuario.ExpiracionCodigoUsoUnico > DateTime.Now;
+        var contraseñaActualValida =
+            contraseñaActual != null 
             && _passwordHasher.VerifyHashedPassword(usuario, usuario.PasswordHash, contraseñaActual)
-                == PasswordVerificationResult.Failed
-        )
+            == PasswordVerificationResult.Success;
+
+        if (!tieneCodigoUnUsoValido && !contraseñaActualValida)
             throw new InvalidOperationException("La contraseña actual es incorrecta");
 
         var hashContraseñaNueva = _passwordHasher.HashPassword(usuario, contraseñaNueva);
