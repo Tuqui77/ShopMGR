@@ -254,7 +254,10 @@ public class RefreshTokenCleanupServiceTests
                 CREATE TABLE "Usuarios" (
                     "Id" INTEGER NOT NULL CONSTRAINT "PK_Usuarios" PRIMARY KEY AUTOINCREMENT,
                     "UserName" TEXT NOT NULL,
-                    "PasswordHash" TEXT NOT NULL
+                    "PasswordHash" TEXT NOT NULL,
+                    "Rol" TEXT NOT NULL DEFAULT 'Empleado',
+                    "CodigoUsoUnico" TEXT NULL,
+                    "ExpiracionCodigoUsoUnico" TEXT NULL
                 );
 
                 CREATE TABLE "RefreshTokens" (

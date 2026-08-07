@@ -34,6 +34,7 @@ namespace ShopMGR.Aplicacion
             services.AddScoped<IRepositorioMetricas, MetricasRepositorio>();
 
             services.AddScoped<IAdministrarAuth, AdministrarAuth>();
+            services.AddScoped<IRepositorioUsuario, UsuarioRepositorio>();
 
             services.AddScoped<IAlmacenamientoServicio, AlmacenamientoServicio>();
 

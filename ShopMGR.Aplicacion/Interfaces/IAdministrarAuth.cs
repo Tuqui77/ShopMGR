@@ -10,7 +10,7 @@ public interface IAdministrarAuth
     public Task<RespuestaLogin?> IniciarSesion(UsuarioDTO request);
     public Task<RespuestaLogin> FinalizarAuthPasskey(Usuario usuario);
     public Task<RespuestaLogin?> Refrescar(string refreshToken);
-    public Task CerrarSesion(string refreshTokenRequest);
+    public Task CerrarSesion(int idUsuario, string refreshTokenRequest);
     public Task CambiarContrasena(int idUsuario, string? contraseñaActual, string contraseñaNueva);
     public Task CambiarContrasena(int idUsuario, string contraseñaNueva);
     public Task<string> RestaurarContraseña(int idUsuario);

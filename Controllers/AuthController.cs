@@ -80,7 +80,8 @@ public class AuthController(
     {
         if (Request.Cookies.TryGetValue("refreshToken", out var refreshTokenRequest))
         {
-            await _administrarAuth.CerrarSesion(refreshTokenRequest);
+            var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            await _administrarAuth.CerrarSesion(idUsuario, refreshTokenRequest);
         }
 
         BorrarRefreshTokenCookie();

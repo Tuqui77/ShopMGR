@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FluentAssertions;
@@ -40,7 +41,8 @@ public class AuthControllerTests
         Mock<IAdministrarAuth> authMock,
         Mock<IAdministracionPasskeys> passkeysMock,
         bool secure,
-        bool conCookieRefresh
+        bool conCookieRefresh,
+        string? idUsuario = null
     )
     {
         var configuracion = new ConfigurationBuilder()
@@ -62,6 +64,16 @@ public class AuthControllerTests
         var httpContext = new DefaultHttpContext();
         if (conCookieRefresh)
             httpContext.Request.Headers["Cookie"] = $"{NombreCookie}=token-viejo";
+
+        if (idUsuario != null)
+        {
+            httpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    [new Claim(ClaimTypes.NameIdentifier, idUsuario)],
+                    authenticationType: "Test"
+                )
+            );
+        }
 
         controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
@@ -266,15 +278,15 @@ public class AuthControllerTests
         // Arrange
         var authMock = new Mock<IAdministrarAuth>();
         var passkeysMock = new Mock<IAdministracionPasskeys>();
-        var (controller, httpContext) = CrearController(authMock, passkeysMock, secure: true, conCookieRefresh: true);
-        authMock.Setup(x => x.CerrarSesion(It.IsAny<string>())).Returns(Task.CompletedTask);
+        var (controller, httpContext) = CrearController(authMock, passkeysMock, secure: true, conCookieRefresh: true, idUsuario: "42");
+        authMock.Setup(x => x.CerrarSesion(It.IsAny<int>(), It.IsAny<string>())).Returns(Task.CompletedTask);
 
         // Act
         var resultado = await controller.CerrarSesion();
 
         // Assert
         resultado.Should().BeOfType<OkObjectResult>();
-        authMock.Verify(x => x.CerrarSesion("token-viejo"), Times.Once);
+        authMock.Verify(x => x.CerrarSesion(42, "token-viejo"), Times.Once);
 
         // El borrado debe usar los MISMOS atributos que la creación para que el
         // navegador matchee la cookie original (hallazgo preliminar #2).
@@ -291,14 +303,14 @@ public class AuthControllerTests
         var authMock = new Mock<IAdministrarAuth>();
         var passkeysMock = new Mock<IAdministracionPasskeys>();
         var (controller, httpContext) = CrearController(authMock, passkeysMock, secure: true, conCookieRefresh: false);
-        authMock.Setup(x => x.CerrarSesion(It.IsAny<string>())).Returns(Task.CompletedTask);
+        authMock.Setup(x => x.CerrarSesion(It.IsAny<int>(), It.IsAny<string>())).Returns(Task.CompletedTask);
 
         // Act
         var resultado = await controller.CerrarSesion();
 
         // Assert
         resultado.Should().BeOfType<OkObjectResult>();
-        authMock.Verify(x => x.CerrarSesion(It.IsAny<string>()), Times.Never);
+        authMock.Verify(x => x.CerrarSesion(It.IsAny<int>(), It.IsAny<string>()), Times.Never);
 
         // Aunque no llegue cookie, el logout SIEMPRE intenta limpiar la cookie
         ObtenerCookieDeRespuesta(httpContext)[NombreCookie].Should().BeEmpty();
