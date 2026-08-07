@@ -251,9 +251,9 @@ public class AuthController(
     [Authorize(Roles = "Administrador")]
     [HttpPatch]
     [Route("CambiarContrasenaAdmin")]
-    public async Task<IActionResult> CambiarContrasena(int idUsuario, string? contraseñaActual, string contraseñaNueva)
+    public async Task<IActionResult> CambiarContrasena([FromBody] CambiarContrasenaAdminDTO cambioContrasena)
     {
-        await _administrarAuth.CambiarContrasena(idUsuario, contraseñaNueva);
+        await _administrarAuth.CambiarContrasena(cambioContrasena.IdUsuario, cambioContrasena.ContrasenaNueva);
 
         return Ok("Contraseña modificada");
     }
@@ -261,11 +261,11 @@ public class AuthController(
     [Authorize]
     [HttpPatch]
     [Route("CambiarContrasena")]
-    public async Task<IActionResult> CambiarContrasena(string? contraseñaActual, string contraseñaNueva)
+    public async Task<IActionResult> CambiarContrasena([FromBody] CambiarContrasenaDTO cambioContrasena)
     {
         var idUsuario = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        await _administrarAuth.CambiarContrasena(idUsuario, contraseñaActual, contraseñaNueva);
+        await _administrarAuth.CambiarContrasena(idUsuario, cambioContrasena.ContrasenaActual, cambioContrasena.ContrasenaNueva);
 
         return Ok("Contraseña modificada");
     }
