@@ -1,4 +1,4 @@
-import { Settings, Loader2, Clock, TrendingUp, Timer, CheckCircle2, FileText, ClipboardCheck, Check, X, Play } from 'lucide-react';
+import { UserRound, Loader2, Clock, TrendingUp, Timer, CheckCircle2, FileText, ClipboardCheck, Check, X, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStore } from '../store';
@@ -69,10 +69,10 @@ export function Dashboard() {
           </div>
           <button
             className="btn-icon lg:!hidden"
-            onClick={() => navigate('/configuracion')}
-            aria-label="Configuración"
+            onClick={() => navigate('/perfil')}
+            aria-label="Perfil"
           >
-            <Settings className="w-5 h-5" />
+            <UserRound className="w-5 h-5" />
           </button>
         </div>
       </header>

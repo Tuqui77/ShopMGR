@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Perfil } from '../../pages/Perfil';
 import { useStore } from '../../store';
@@ -18,6 +19,7 @@ vi.mock('../../services/auth', () => ({
     listarUsuarios: vi.fn().mockResolvedValue([]),
     restaurarContraseña: vi.fn(),
     cambiarContrasenaAdmin: vi.fn(),
+    cerrarSesion: vi.fn(),
   },
   extractAuthErrorMessage: () => '',
 }));
@@ -50,9 +52,11 @@ function renderPerfil(accessToken: string | null) {
   useStore.setState({ accessToken });
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={queryClient}>
-      <Perfil />
-    </QueryClientProvider>
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <Perfil />
+      </QueryClientProvider>
+    </MemoryRouter>
   );
 }
 
@@ -120,6 +124,27 @@ describe('Perfil (issue #112): página de perfil del usuario', () => {
   it('muestra la gestión de passkeys embebida (issue #112/#113)', () => {
     renderPerfil(crearToken({ role: 'Empleado' }));
     expect(screen.getByTestId('passkey-section')).toBeInTheDocument();
+  });
+
+  it('muestra el botón "Cerrar sesión" solo en móvil (issue #121: logout móvil en el perfil)', () => {
+    renderPerfil(crearToken({ role: 'Empleado' }));
+    const boton = screen.getByRole('button', { name: 'Cerrar sesión' });
+    expect(boton).toHaveAttribute('title', 'Cerrar sesión');
+    // Solo icono: sin texto visible, y oculto en desktop (lg:!hidden) porque el
+    // Sidebar tiene su propio logout.
+    expect(boton.textContent).toBe('');
+    expect(boton.className).toContain('lg:!hidden');
+  });
+
+  it('el botón "Cerrar sesión" llama a authService.cerrarSesion y limpia el store', async () => {
+    vi.mocked(authService.cerrarSesion).mockResolvedValue(undefined);
+    renderPerfil(crearToken({ role: 'Empleado' }));
+    expect(useStore.getState().accessToken).not.toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+
+    await waitFor(() => expect(authService.cerrarSesion).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(useStore.getState().accessToken).toBeNull());
   });
 });
 
