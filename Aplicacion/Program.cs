@@ -11,10 +11,12 @@ using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Writers;
 using Middleware;
 using Scalar.AspNetCore;
 using ShopMGR.Aplicacion;
@@ -68,10 +70,26 @@ namespace ShopMGR.WebApi.Aplicacion
                 {
                     context.HttpContext.Response.ContentType = "application/json";
 
-                    await context.HttpContext.Response.WriteAsJsonAsync(
-                        new { error = "Demasiados intentos de inicio de sesión. Inténtelo nuevamente en unos minutos" },
-                        CancellationToken
-                    );
+                    string mensaje;
+                    var nombrePolicy = context
+                        .HttpContext.GetEndpoint()
+                        ?.Metadata.GetMetadata<EnableRateLimitingAttribute>()
+                        ?.PolicyName;
+
+                    switch (nombrePolicy)
+                    {
+                        case "login":
+                            mensaje = "Demasiados intentos de inicio de sesión, inténtelo de nuevo en unos minutos";
+                            break;
+                        case "registro":
+                            mensaje = "Demasiados intentos de registro, inténtelo de nuevo en unos minutos";
+                            break;
+                        default:
+                            mensaje = "";
+                            break;
+                    }
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(new { error = mensaje });
                 };
 
                 options.AddPolicy(
@@ -82,6 +100,20 @@ namespace ShopMGR.WebApi.Aplicacion
                             factory: _ => new FixedWindowRateLimiterOptions
                             {
                                 PermitLimit = 5,
+                                Window = TimeSpan.FromMinutes(1),
+                                QueueLimit = 0,
+                            }
+                        )
+                );
+
+                options.AddPolicy(
+                    "registro",
+                    HttpContext =>
+                        RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = 1,
                                 Window = TimeSpan.FromMinutes(1),
                                 QueueLimit = 0,
                             }
