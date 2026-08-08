@@ -7,7 +7,6 @@ import {
   type RegistrarHorasRequest,
   type ModificarHorasRequest,
 } from '../services/trabajos';
-import type { EstadoTrabajo } from '../types';
 
 // ============================================================================
 // Queries
@@ -55,17 +54,6 @@ export function useTrabajosPorCliente(idCliente: number | undefined) {
     queryKey: ['trabajos', 'cliente', idCliente],
     queryFn: () => trabajosService.obtenerPorCliente(idCliente!),
     enabled: typeof idCliente === 'number' && idCliente > 0,
-  });
-}
-
-/**
- * Obtiene todos los trabajos con un estado específico
- */
-export function useTrabajosPorEstado(estado: EstadoTrabajo | undefined) {
-  return useQuery({
-    queryKey: ['trabajos', 'estado', estado],
-    queryFn: () => trabajosService.obtenerPorEstado(estado!),
-    enabled: !!estado,
   });
 }
 

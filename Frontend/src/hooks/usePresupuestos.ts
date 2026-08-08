@@ -62,17 +62,6 @@ export function usePresupuestosPorEstado(estado: EstadoPresupuesto | undefined) 
   });
 }
 
-/**
- * Obtiene el costo hora de trabajo
- */
-export function useCostoHora() {
-  return useQuery({
-    queryKey: ['costo-hora'],
-    queryFn: () => presupuestosService.obtenerCostoHora(),
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
-}
-
 // ============================================================================
 // Mutations
 // ============================================================================
@@ -155,19 +144,5 @@ export function useRechazarPresupuesto(options?: { onError?: (error: Error) => v
       queryClient.invalidateQueries({ queryKey: ['presupuestos', id] });
     },
     onError: options?.onError,
-  });
-}
-
-/**
- * Actualiza el costo hora de trabajo
- */
-export function useActualizarCostoHora() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (nuevoCosto: number) => presupuestosService.actualizarCostoHora(nuevoCosto),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['costo-hora'] });
-    },
   });
 }
