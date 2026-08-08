@@ -5,7 +5,7 @@
 - **[Iteración 2]**: Sprint 2 — Auth (JWT + refresh tokens + rate limiting), Passkeys WebAuthn/FIDO2 (registro, login, gestión en Configuración, validación userHandle, fix IDOR), fixes de frontend (tokens Zustand↔localStorage, refresh en body, FAB en modales). Release mergeado: PR #111 (`development` → `main`, `80f7c19`).
 - **[Iteración 3]**: Definición del Sprint 3 (2026-08-01). El usuario define alcance: **Bloque A completo (auth UX)** + 3 issues nuevos de seguridad/operaciones de auth (#114 SEV-001, #115 FUN-001, #116 OPS-001) + #75 + #57.
 - **[Iteración 26]**: Sprint 3 completado + hotfix #121 desplegado a prod + Definición del Sprint 4 (2026-08-07). El dueño define alcance: **Dependabot (mayor prioridad)** + SEV-004 + #74 + #67 + #81/#82/#83 (tests) + #76. Se crean issues #123 (Dependabot, 26 alertas npm) y #124 (SEV-004). Documentación oficial del Sprint 4 en el board.
-- **[Iteración 27]**: Issue #123 (Dependabot) — parte Frontend COMPLETADA y MERGEADA a `development` (2026-08-07). Análisis de `npm audit` completo (Frontend: 8 high/1 moderate/1 low; raíz: 1 critical/5 high/3 moderate). Test de actualización en branch `feature/issue-123-dependabot`: build/tsc/lint/219 tests PASS + `npm audit` 0 vulns en Frontend. Versiones seguras: react-router-dom 7.18.2 (fix HIGH DoS), axios 1.19.0 (9 CVEs), vite 8.2.1, postcss 8.5.26, undici 7.29.0 (12 CVEs). Merge directo a dev (sin PR, sin pipeline a dev) + push: `9420c81` docs + `f53dd33` deps. AGENTS.md actualizado localmente (v6→v7, excluido del versionado). **Pendiente dueño**: scope de la raíz (semantic-release: `tar` CRITICAL) — el dueño arranca con eso.
+- **[Iteración 28]**: Issue #123 (Dependabot) — COMPLETADO (2026-08-07). Bump de dependencias de la raíz commiteado y pusheado a `development` (commit `5520dc2`: `semantic-release` ^25.0.3→^25.0.9, `conventional-changelog-conventionalcommits` ^9.3.1→^10.2.1). **Diagnóstico clave**: las 7 vulns restantes de la raíz (0 critical, 5 moderate, 2 high) viven en **bundled dependencies** del npm embebido de `@semantic-release/npm@13.1.5` (tar 7.5.19, brace-expansion 5.0.7, ip-address 10.2.0, undici 6.27.0) — los `overrides` de npm NO aplican sobre bundled deps de un tercero (reproducido con `npm install` + `--force`). npm 12.x incompatible con `@semantic-release/npm@13.1.5` (pin `^11.6.2`) y además bundlea tar 7.5.19 igual. **Decisión: riesgo aceptado y documentado** (comment en issue #123). Monitoreo: cuando npm publique 11.20.x+ con tar ≥7.5.21 bundled se resuelve solo. Frontend ya en 0 vulns desde `f53dd33`.
 
 ## Sprint Anterior: Sprint 3 (COMPLETADO — 2026-08-07)
 **Objetivo del Sprint**: Consolidar la seguridad y robustez del flujo de auth (refresh tokens en cookie HttpOnly, revocación explícita, índice/purga, recuperación de contraseña admin, SRP) + mejoras UX de auth en frontend + hardening de infraestructura (#75) y validación de entrada (#57).
@@ -14,13 +14,13 @@
 ## Sprint Actual: Sprint 4 (DEFINIDO — 2026-08-07)
 **Objetivo del Sprint**: Cerrar brechas de seguridad y deuda técnica acumulada: resolver vulnerabilidades de Dependabot (prioridad #1), eliminar SEV-004 (bootstrap admin + rate limit), separar Zustand de React Query (#74), lazy loading de rutas (#67), fortalecer la suite de tests (#81/#82/#83) y optimizar CI con cache (#76).
 
-**Estado General**: Sprint 4 EN CURSO (2026-08-07). Issue #123 (Dependabot) — parte Frontend MERGEADA a `development` (fast-forward `9420c81..f53dd33`, push OK). Pendiente: scope de la raíz (`tar` CRITICAL — lo ejecuta el dueño) y luego SEV-004 #124 (backend — dueño).
+**Estado General**: Sprint 4 EN CURSO (2026-08-07). Issue #123 (Dependabot) COMPLETADO: Frontend en 0 vulns (`f53dd33`), raíz con bumps legítimos (`5520dc2`), 7 vulns restantes de bundled deps de npm = **riesgo aceptado y documentado**. Siguiente: SEV-004 #124 (backend — dueño ejecuta).
 
 ### Issues del Sprint 4
 
 | Issue | Descripción | Área | Type | Prioridad | Estado |
 |-------|-------------|------|------|-----------|--------|
-| #123 | Vulnerabilidades de Dependabot — 26 alertas npm (11 high, 15 medium) | DevOps/Backend/Frontend | Bug (security) | Urgent | **EN PROGRESO** — parte Frontend mergeada a dev (`f53dd33`); pendiente scope raíz (`tar` CRITICAL) |
+| #123 | Vulnerabilidades de Dependabot — 26 alertas npm (11 high, 15 medium) | DevOps/Backend/Frontend | Bug (security) | Urgent | **COMPLETADO 2026-08-07** — Frontend 0 vulns (`f53dd33`); raíz bumps legítimos (`5520dc2`); 7 vulns restantes (bundled deps npm) = riesgo aceptado, comment en issue |
 | #124 (SEV-004) | Restringir bootstrap del primer admin + rate limit en registro ("admin theft") | Backend | Feature (security) | Urgent | **Creado 2026-08-07** — deuda de release Sprint 3 |
 | #74 | Separar Zustand (UI state) de React Query (server state) | Frontend | Refactor | High | OPEN — backlog previo |
 | #67 | Lazy loading de rutas con React.lazy | Frontend | Feature | High | OPEN — backlog previo |
@@ -42,7 +42,7 @@
 
 - [ ] **TSK-S4-01:** ✅ Alcance del Sprint 4 definido y documentado (issues creados/verificados: #123, #124 nuevos; #74/#67/#81/#82/#83/#76 existentes)
 - [ ] **TSK-S4-02:** Planificar orden de ejecución según dependencias (Dependabot #123 → SEV-004 #124 → #74 → #67 → #81/#82/#83 → #76)
-- [ ] **TSK-S4-03:** Implementar #123 (Dependabot — usuario + subagente según alcance) — ✅ Parte Frontend mergeada a dev (`f53dd33`); ⏳ pendiente raíz (`tar` CRITICAL — dueño ejecuta)
+- [ ] **TSK-S4-03:** ✅ Implementar #123 (Dependabot) — Frontend 0 vulns (`f53dd33`); raíz bumps (`5520dc2`); 7 vulns bundled deps npm = riesgo aceptado documentado
 - [ ] **TSK-S4-04:** Implementar #124 SEV-004 (backend — usuario ejecuta)
 - [ ] **TSK-S4-05:** Implementar #74 (frontend — subagente Frontend)
 - [ ] **TSK-S4-06:** Implementar #67 (frontend — subagente Frontend)
