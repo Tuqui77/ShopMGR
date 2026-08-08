@@ -16,7 +16,7 @@ namespace ShopMGR.Repositorios
 
             await _contexto.Usuarios.AddAsync(usuario);
             await _contexto.SaveChangesAsync();
-
+            
             return usuario;
         }
 

@@ -15,8 +15,7 @@ public class UsuarioConfiguracion : IEntityTypeConfiguration<Usuario>
         builder
             .Property(u => u.Rol)
             .HasConversion<string>()
-            .HasMaxLength(20)
-            .HasDefaultValue(RolUsuario.Empleado);
+            .HasMaxLength(20);
 
         builder.Property(u => u.UserName).IsRequired(true).HasMaxLength(50);
 

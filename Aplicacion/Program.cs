@@ -4,11 +4,13 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using AdminBootstrap;
 using AspNetCore.Scalar;
 using AspNetCoreRateLimit;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -17,13 +19,14 @@ using Middleware;
 using Scalar.AspNetCore;
 using ShopMGR.Aplicacion;
 using ShopMGR.Contexto;
+using ShopMGR.Dominio.Modelo;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace ShopMGR.WebApi.Aplicacion
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -177,14 +180,17 @@ namespace ShopMGR.WebApi.Aplicacion
 
             using (var scope = app.Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
+                var contexto = scope.ServiceProvider.GetRequiredService<ShopMGRDbContexto>();
+                var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+                var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<Usuario>>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Bootstrap>>();
 
                 var retries = 10;
                 while (retries > 0)
                 {
                     try
                     {
-                        db.Database.Migrate();
+                        contexto.Database.Migrate();
                         break;
                     }
                     catch (Exception)
@@ -193,6 +199,8 @@ namespace ShopMGR.WebApi.Aplicacion
                         Thread.Sleep(5000);
                     }
                 }
+
+                await Bootstrap.InicializarAsync(contexto, config, logger, passwordHasher);
             }
 
             app.Run();

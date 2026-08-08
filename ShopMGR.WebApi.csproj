@@ -89,6 +89,7 @@
     <ProjectReference Include="ShopMGR.Contexto\ShopMGR.Contexto.csproj" />
     <ProjectReference Include="ShopMGR.Dominio\ShopMGR.Dominio.csproj" />
     <ProjectReference Include="ShopMGR.Repositorios\ShopMGR.Repositorios.csproj" />
+    <ProjectReference Include="Infraestructura/Bootstrap/Bootstrap.csproj" />
   </ItemGroup>
 
   <ItemGroup>
