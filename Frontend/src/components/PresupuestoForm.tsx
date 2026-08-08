@@ -9,69 +9,59 @@ import { CalculatorModal } from './CalculatorModal';
 
 interface Props {
   presupuestoId?: number;
+  /** Id del presupuesto origen a duplicar; precarga el form desde el detalle (React Query). */
+  presupuestoDuplicadoId?: number;
   isOpen?: boolean;
   onClose?: () => void;
   onSuccess?: () => void;
 }
 
 // Si no se pasa isOpen, usa el store
-export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
-  const store = useStore();
+export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
+  const showPresupuestoForm = useStore((s) => s.showPresupuestoForm);
+  const setShowPresupuestoForm = useStore((s) => s.setShowPresupuestoForm);
   const isEditing = !!presupuestoId;
+  const esDuplicado = !!presupuestoDuplicadoId;
 
   // Usar props si se pasan, sino usar store
-  const isOpen = isOpenProp ?? store.showPresupuestoForm;
+  const isOpen = isOpenProp ?? showPresupuestoForm;
   const onClose = useCallback(() => {
     if (onCloseProp) {
       onCloseProp();
     } else {
-      store.setShowPresupuestoForm(false);
+      setShowPresupuestoForm(false);
     }
-  }, [onCloseProp, store]);
+  }, [onCloseProp, setShowPresupuestoForm]);
 
   // Queries y mutations
   const { data: clientes = [] } = useClientes();
   const { data: presupuestoOriginal } = usePresupuestoDetalle(presupuestoId);
+  const { data: presupuestoDuplicado } = usePresupuestoDetalle(presupuestoDuplicadoId);
   const crearPresupuesto = useCrearPresupuesto();
   const modificarPresupuesto = useModificarPresupuesto();
 
   const [step, setStep] = useState<'cliente' | 'datos'>('cliente');
-  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(() => {
-    // Initialize with duplication data if present
-    if (store.datosDuplicarPresupuesto) {
-      return {
-        id: store.datosDuplicarPresupuesto.idCliente,
-        nombreCompleto: store.datosDuplicarPresupuesto.nombreCliente,
-        telefono: [],
-        balance: 0,
-        trabajosCount: 0,
-        presupuestosCount: 0,
-      } as Cliente;
-    }
-    return null;
-  });
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
   const [search, setSearch] = useState('');
 
-  // Datos del presupuesto - initialize with presupuestoOriginal if editing, or duplication data
+  // Datos del presupuesto - initialize with presupuestoOriginal if editing.
+  // El modo duplicado se puebla por effect cuando carga el detalle del origen.
   const [titulo, setTitulo] = useState(() => {
     if (presupuestoOriginal?.titulo) return presupuestoOriginal.titulo;
-    if (store.datosDuplicarPresupuesto?.titulo) return store.datosDuplicarPresupuesto.titulo;
     return '';
   });
   const [descripcion, setDescripcion] = useState(() => {
     if (presupuestoOriginal?.descripcion) return presupuestoOriginal.descripcion;
-    if (store.datosDuplicarPresupuesto?.descripcion) return store.datosDuplicarPresupuesto.descripcion;
     return '';
   });
   const [horasEstimadas, setHorasEstimadas] = useState(() => {
     if (presupuestoOriginal?.horasEstimadas) return presupuestoOriginal.horasEstimadas.toString();
-    if (store.datosDuplicarPresupuesto?.horasEstimadas) return store.datosDuplicarPresupuesto.horasEstimadas.toString();
     return '0';
   });
 
-  // Materiales - initialize with presupuestoOriginal if editing, or duplication data
+  // Materiales - initialize with presupuestoOriginal if editing
   const [materiales, setMateriales] = useState<MaterialRequest[]>(() => {
-    const source = presupuestoOriginal?.materiales || store.datosDuplicarPresupuesto?.materiales;
+    const source = presupuestoOriginal?.materiales;
     if (!source || !Array.isArray(source)) {
       return [];
     }
@@ -93,7 +83,6 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
-  const [esDuplicado, setEsDuplicado] = useState(() => !!store.datosDuplicarPresupuesto);
 
   // Cuando se edita y los datos del presupuesto cargan, poblar el formulario
   useEffect(() => {
@@ -115,13 +104,33 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [isEditing, presupuestoOriginal]);
 
+  // Cuando se duplica y carga el detalle del presupuesto origen, poblar el form
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (esDuplicado && presupuestoDuplicado?.cliente) {
+      setClienteSeleccionado(presupuestoDuplicado.cliente);
+      setTitulo(`Copia de ${presupuestoDuplicado.titulo}`);
+      setDescripcion(presupuestoDuplicado.descripcion || '');
+      setHorasEstimadas(presupuestoDuplicado.horasEstimadas.toString());
+      setMateriales(
+        (presupuestoDuplicado.materiales || []).map(m => ({
+          descripcion: m.descripcion,
+          cantidad: m.cantidad,
+          Precio: m.precioUnitario,
+        }))
+      );
+      setStep('datos');
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [esDuplicado, presupuestoDuplicado]);
+
   // Estado para la calculadora
   const [calculatorField, setCalculatorField] = useState<'cantidad' | 'precio' | 'editCantidad' | 'editPrecio' | null>(null);
   const [calculatorPosition, setCalculatorPosition] = useState({ x: 0, y: 0 });
   const [calculatorEditIndex, setCalculatorEditIndex] = useState<number | null>(null);
 
   const handleClose = useCallback(() => {
-    const closeFn = onClose ?? (() => store.setShowPresupuestoForm(false));
+    const closeFn = onClose ?? (() => setShowPresupuestoForm(false));
     closeFn();
     // Reset form after close animation
     setTimeout(() => {
@@ -136,10 +145,9 @@ export function PresupuestoForm({ presupuestoId, isOpen: isOpenProp, onClose: on
         setNuevoMaterial({ descripcion: '', cantidad: 1, precioUnitario: 0 });
         setErrors({});
         setShowSuccess(false);
-        setEsDuplicado(false);
       }
     }, 200);
-  }, [onClose, store, isOpenProp]);
+  }, [onClose, setShowPresupuestoForm, isOpenProp]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
