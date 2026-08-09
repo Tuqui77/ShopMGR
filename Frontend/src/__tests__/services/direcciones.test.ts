@@ -93,7 +93,7 @@ describe('direccionesService', () => {
 
       const direccion = await direccionesService.obtenerPorId(3);
 
-      expect(mockedGet).toHaveBeenCalledWith('/Direccion/Obtener detalle por id', {
+      expect(mockedGet).toHaveBeenCalledWith('/Direccion/ObtenerDetallePorId', {
         params: { idDireccion: 3 },
       });
       expect(direccion.id).toBe(3);
