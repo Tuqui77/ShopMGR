@@ -1,25 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { FAB } from './components/FAB';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LoadingSpinner } from './components/LoadingSpinner';
 import { HoursModal } from './components/HoursModal';
 import { ClienteForm } from './components/ClienteForm';
 import { PresupuestoForm } from './components/PresupuestoForm';
 import { TrabajoForm } from './components/TrabajoForm';
 import { MovimientoModal } from './components/MovimientoModal';
-import { Dashboard } from './pages/Dashboard';
-import { Clientes } from './pages/Clientes';
-import { ClienteDetalle } from './pages/ClienteDetalle';
-import { Trabajos } from './pages/Trabajos';
-import { TrabajoDetalle } from './pages/TrabajoDetalle';
-import { Presupuestos } from './pages/Presupuestos';
-import { PresupuestoDetalle } from './pages/PresupuestoDetalle';
-import { Configuracion } from './pages/Configuracion';
-import { Perfil } from './pages/Perfil';
+// Páginas eager: carga inicial crítica (login y dashboard)
 import { Login } from './pages/Login';
+import { Dashboard } from './pages/Dashboard';
+// Páginas lazy: un chunk por ruta (issue #67)
+const Clientes = lazy(() => import('./pages/Clientes').then(m => ({ default: m.Clientes })));
+const ClienteDetalle = lazy(() => import('./pages/ClienteDetalle').then(m => ({ default: m.ClienteDetalle })));
+const Trabajos = lazy(() => import('./pages/Trabajos').then(m => ({ default: m.Trabajos })));
+const TrabajoDetalle = lazy(() => import('./pages/TrabajoDetalle').then(m => ({ default: m.TrabajoDetalle })));
+const Presupuestos = lazy(() => import('./pages/Presupuestos').then(m => ({ default: m.Presupuestos })));
+const PresupuestoDetalle = lazy(() => import('./pages/PresupuestoDetalle').then(m => ({ default: m.PresupuestoDetalle })));
+const Configuracion = lazy(() => import('./pages/Configuracion').then(m => ({ default: m.Configuracion })));
+const Perfil = lazy(() => import('./pages/Perfil').then(m => ({ default: m.Perfil })));
 import { useStore } from './store';
 
 const queryClient = new QueryClient({
@@ -82,7 +85,9 @@ function ProtectedLayout() {
     <div className="main-content with-sidebar">
       <Sidebar />
       <div className="flex-1 min-h-screen min-w-0 pb-24 lg:pb-8">
-        <Outlet />
+        <Suspense fallback={<LoadingSpinner message="Cargando…" />}>
+          <Outlet />
+        </Suspense>
       </div>
       <BottomNav />
       {!imageFullscreenOpen && !isDetailModalOpen && (
@@ -118,7 +123,11 @@ function App() {
       <ErrorBoundary pageName="Aplicación">
         <BrowserRouter>
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
+            <Route path="/login" element={
+              <Suspense fallback={<LoadingSpinner message="Cargando…" />}>
+                <LoginPage />
+              </Suspense>
+            } />
             <Route element={<ProtectedLayout />}>
               <Route path="/" element={<ErrorBoundary pageName="Dashboard"><Dashboard /></ErrorBoundary>} />
               <Route path="/clientes" element={<ErrorBoundary pageName="Clientes"><Clientes /></ErrorBoundary>} />
