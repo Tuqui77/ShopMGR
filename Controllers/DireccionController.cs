@@ -27,7 +27,7 @@ namespace ShopMGR.WebApi.Controllers
 
         [Authorize]
         [HttpGet]
-        [Route("Obtener detalle por id")]
+        [Route("ObtenerDetallePorId")]
         public async Task<IActionResult> ObtenerDetallePorIdAsync(int idDireccion)
         {
             var direccion = await administracionDirecciones.ObtenerDetallePorIdAsync(idDireccion);
