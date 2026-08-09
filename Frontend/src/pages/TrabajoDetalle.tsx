@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx'; 
 import { 
   Loader2, 
@@ -35,6 +35,7 @@ export function TrabajoDetalle() {
   const terminarTrabajo = useTerminarTrabajo();
   const iniciarTrabajo = useIniciarTrabajo();
   const eliminarTrabajo = useEliminarTrabajo();
+  const navigate = useNavigate();
   const subirFotos = useSubirFotos();
   const eliminarFoto = useEliminarFoto();
   const { setShowHoursModal, setSelectedTrabajo, editingTrabajoId, setEditingTrabajoId, setImageFullscreenOpen } = useStore();
@@ -116,7 +117,8 @@ const [isPanning, setIsPanning] = useState(false); // Controls CSS transition du
     if (trabajo) {
       try {
         await eliminarTrabajo.mutateAsync(trabajo.id);
-        window.location.href = '/trabajos';
+        // Navegación SPA a la lista (evita recargar el bundle — issue #67)
+        navigate('/trabajos');
       } catch (err) {
         console.error('Error al eliminar trabajo:', err);
         setShowDeleteConfirm(false);

@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useState, useRef, useEffect } from 'react';
 import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight, Plus, MoreVertical } from 'lucide-react';
@@ -17,6 +17,7 @@ export function ClienteDetalle() {
   
   const { data: cliente, isLoading, error } = useClienteDetalle(clienteId!);
   const eliminarCliente = useEliminarCliente();
+  const navigate = useNavigate();
   const { editingCliente, setEditingCliente } = useStore();
   
   // Estado para modal de dirección
@@ -78,8 +79,8 @@ export function ClienteDetalle() {
     try {
       await eliminarCliente.mutateAsync(cliente.id);
       setShowDeleteConfirm(false);
-      // Navigate back after delete
-      window.location.href = '/clientes';
+      // Navigate back after delete (SPA, evita recargar el bundle — issue #67)
+      navigate('/clientes');
     } catch (err) {
       console.error('Error al eliminar cliente:', err);
       alert('Error al eliminar el cliente');
