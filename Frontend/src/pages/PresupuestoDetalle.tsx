@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Loader2, 
@@ -28,6 +28,7 @@ export function PresupuestoDetalle() {
   const { id } = useParams<{ id: string }>();
   const presupuestoId = id ? parseInt(id, 10) : undefined;
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -82,7 +83,10 @@ export function PresupuestoDetalle() {
       await apiClient.delete(`/Presupuestos/EliminarPresupuesto?idPresupuesto=${id}`);
     },
     onSuccess: () => {
-      window.location.href = '/presupuestos';
+      // Navegación SPA a la lista + invalidación para que el item eliminado
+      // desaparezca (el full reload anterior recargaba la lista del backend).
+      queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
+      navigate('/presupuestos');
     },
   });
 

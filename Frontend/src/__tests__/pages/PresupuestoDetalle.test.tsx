@@ -8,16 +8,18 @@ import type { Presupuesto } from '../../types';
 
 // ── Mocks ────────────────────────────────────────────────
 
-const { apiGetMock, apiDeleteMock, aceptarMock, rechazarMock, crearDesdePresupuestoMock } = vi.hoisted(() => ({
+const { apiGetMock, apiDeleteMock, aceptarMock, rechazarMock, crearDesdePresupuestoMock, navigateMock } = vi.hoisted(() => ({
   apiGetMock: vi.fn(),
   apiDeleteMock: vi.fn(),
   aceptarMock: vi.fn(),
   rechazarMock: vi.fn(),
   crearDesdePresupuestoMock: vi.fn(),
+  navigateMock: vi.fn(),
 }));
 
 vi.mock('react-router-dom', () => ({
   useParams: () => ({ id: '10' }),
+  useNavigate: () => navigateMock,
   Link: ({ to, children }: { to: string; children: ReactNode }) => <a href={to}>{children}</a>,
 }));
 
@@ -200,7 +202,7 @@ describe('PresupuestoDetalle (caracterización)', () => {
     await waitFor(() => expect(rechazarMock).toHaveBeenCalledWith(10));
   });
 
-  it('eliminar: confirma, llama el endpoint y redirige a /presupuestos', async () => {
+  it('eliminar: confirma, llama el endpoint y navega a /presupuestos (SPA)', async () => {
     apiDeleteMock.mockResolvedValue(undefined);
 
     render(<PresupuestoDetalle />, { wrapper });
@@ -215,7 +217,9 @@ describe('PresupuestoDetalle (caracterización)', () => {
     await waitFor(() =>
       expect(apiDeleteMock).toHaveBeenCalledWith('/Presupuestos/EliminarPresupuesto?idPresupuesto=10'),
     );
-    expect(window.location.href).toBe('/presupuestos');
+    // Navegación client-side (issue #67 F3): sin full page load
+    expect(navigateMock).toHaveBeenCalledWith('/presupuestos');
+    expect(window.location.href).not.toBe('/presupuestos');
   });
 
   it('muestra el spinner mientras carga (isLoading)', () => {
