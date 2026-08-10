@@ -16,14 +16,15 @@ namespace ShopMGR.Repositorios
 
             await _contexto.Usuarios.AddAsync(usuario);
             await _contexto.SaveChangesAsync();
-            
+
             return usuario;
         }
 
         public async Task<Usuario?> ObtenerUsuarioPorNombre(string userName)
         {
-            var usuarioDb =
-                await _contexto.Usuarios.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.UserName == userName);
+            var usuarioDb = await _contexto
+                .Usuarios.Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
 
             return usuarioDb;
         }
