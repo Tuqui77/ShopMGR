@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extensiones", "Infraestruct
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShopMGR.Tests", "ShopMGR.Tests\ShopMGR.Tests.csproj", "{73CC3D6D-2FE9-4904-B7DB-14A8ABC631A1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bootstrap", "Infraestructura\Bootstrap\Bootstrap.csproj", "{20879A20-AAA2-42F8-8D08-7DCB248D03A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,10 @@ Global
 		{73CC3D6D-2FE9-4904-B7DB-14A8ABC631A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73CC3D6D-2FE9-4904-B7DB-14A8ABC631A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73CC3D6D-2FE9-4904-B7DB-14A8ABC631A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20879A20-AAA2-42F8-8D08-7DCB248D03A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20879A20-AAA2-42F8-8D08-7DCB248D03A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20879A20-AAA2-42F8-8D08-7DCB248D03A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20879A20-AAA2-42F8-8D08-7DCB248D03A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +91,7 @@ Global
 		{1BC14618-3701-CD78-EBAC-5FBA1D4C9AE4} = {E3464B65-C3E6-48C7-93BE-D9DBE8F00B42}
 		{1540CAA8-9EDD-4C9C-8424-9854F637F7B0} = {E3464B65-C3E6-48C7-93BE-D9DBE8F00B42}
 		{610D7925-3ADA-457B-BB89-62D112494006} = {E3464B65-C3E6-48C7-93BE-D9DBE8F00B42}
+		{20879A20-AAA2-42F8-8D08-7DCB248D03A0} = {E3464B65-C3E6-48C7-93BE-D9DBE8F00B42}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16716EA5-EBE6-4220-B538-9AB0C3E57578}

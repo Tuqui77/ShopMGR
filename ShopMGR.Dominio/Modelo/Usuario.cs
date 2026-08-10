@@ -9,7 +9,7 @@ public class Usuario
     private readonly List<Passkey> _passKeys = [];
 
     public int Id { get; set; }
-    public RolUsuario Rol { get; private set; }
+    public RolUsuario Rol { get; private set; } = RolUsuario.Empleado;
     public string UserName { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string? CodigoUsoUnico { get; private set; }

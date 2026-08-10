@@ -17,14 +17,15 @@ interface Props {
 
 // Si no se pasa isOpen, usa el store
 export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onCloseProp, onSuccess }: Props = {}) {
-  const store = useStore();
+  const showTrabajoForm = useStore((s) => s.showTrabajoForm);
+  const setShowTrabajoForm = useStore((s) => s.setShowTrabajoForm);
   const isEditing = !!trabajoId;
 
   // Usar props si se pasan, sino usar store
-  const isOpen = isOpenProp ?? store.showTrabajoForm;
+  const isOpen = isOpenProp ?? showTrabajoForm;
   const onClose = useMemo(() => {
-    return onCloseProp ?? (() => store.setShowTrabajoForm(false));
-  }, [onCloseProp, store]);
+    return onCloseProp ?? (() => setShowTrabajoForm(false));
+  }, [onCloseProp, setShowTrabajoForm]);
 
   // Queries y mutations
   const { data: clientes = [], isLoading: loadingClientes } = useClientes();
@@ -69,7 +70,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
 
   // Resetear formulario al cerrar - handled in onClose
   const onCloseCallback = useCallback(() => {
-    const closeFn = onClose ?? (() => store.setShowTrabajoForm(false));
+    const closeFn = onClose ?? (() => setShowTrabajoForm(false));
     closeFn();
     // Reset after animation
     setTimeout(() => {
@@ -84,7 +85,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
         setMontoAnticipo('');
       }
     }, 200);
-  }, [onClose, store, isOpenProp]);
+  }, [onClose, setShowTrabajoForm, isOpenProp]);
 
   // Cerrar con ESC
   useEffect(() => {

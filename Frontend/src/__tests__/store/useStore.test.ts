@@ -10,94 +10,183 @@ function readPersistedAccessToken(): string | null {
   return typeof parsed.state?.accessToken === 'string' ? parsed.state.accessToken : null;
 }
 
+const mockTrabajo: Trabajo = {
+  id: 1,
+  titulo: 'Test Trabajo',
+  estado: 'Pendiente',
+  horasRegistradas: 0,
+  fotosCount: 0,
+  cliente: null,
+  clienteId: 1,
+};
+
 describe('useStore', () => {
   beforeEach(() => {
     localStorage.clear();
-    // Reset store state before each test
-    useStore.setState({
-      showHoursModal: false,
-      selectedTrabajo: null,
-      lastTrabajoId: null,
-      isDetailModalOpen: false,
-      accessToken: null,
-    });
+    // Reset completo del store al estado inicial antes de cada test
+    useStore.setState(useStore.getInitialState());
   });
 
   describe('initial state', () => {
-    it('has initial data populated from mocks', () => {
-      const state = useStore.getState();
-      expect(state.clientes).toBeDefined();
-      expect(state.trabajos).toBeDefined();
-      expect(state.horas).toBeDefined();
-      expect(state.presupuestos).toBeDefined();
-      expect(state.valorHora).toBeDefined();
-    });
-
-    it('has initial UI state set to defaults', () => {
+    it('arranca con el estado de UI en defaults', () => {
       const state = useStore.getState();
       expect(state.showHoursModal).toBe(false);
+      expect(state.showClienteForm).toBe(false);
+      expect(state.showPresupuestoForm).toBe(false);
+      expect(state.showTrabajoForm).toBe(false);
+      expect(state.showMovimientoModal).toBe(false);
+      expect(state.imageFullscreenOpen).toBe(false);
+      expect(state.isDetailModalOpen).toBe(false);
       expect(state.selectedTrabajo).toBe(null);
       expect(state.lastTrabajoId).toBe(null);
+      expect(state.editingCliente).toBe(null);
+      expect(state.editingTrabajoId).toBe(null);
+      expect(state.editingPresupuestoId).toBe(null);
+    });
+
+    it('arranca sin sesión (accessToken null y cambioContraseñaPendiente false)', () => {
+      const state = useStore.getState();
+      expect(state.accessToken).toBe(null);
+      expect(state.cambioContraseñaPendiente).toBe(false);
     });
   });
 
   describe('setShowHoursModal', () => {
-    it('sets showHoursModal to true', () => {
-      const { setShowHoursModal } = useStore.getState();
-      setShowHoursModal(true);
+    it('setea showHoursModal a true', () => {
+      useStore.getState().setShowHoursModal(true);
       expect(useStore.getState().showHoursModal).toBe(true);
     });
 
-    it('sets showHoursModal to false', () => {
-      // First set to true
+    it('setea showHoursModal a false', () => {
       useStore.setState({ showHoursModal: true });
-      const { setShowHoursModal } = useStore.getState();
-      setShowHoursModal(false);
+      useStore.getState().setShowHoursModal(false);
       expect(useStore.getState().showHoursModal).toBe(false);
     });
   });
 
-  describe('setSelectedTrabajo', () => {
-    it('sets selectedTrabajo and lastTrabajoId', () => {
-      const mockTrabajo: Trabajo = {
-        id: 1,
-        titulo: 'Test Trabajo',
-        estado: 'Pendiente',
-        horasRegistradas: 0,
-        fotosCount: 0,
-        cliente: null,
-        clienteId: 1,
-      };
+  describe('setShowClienteForm', () => {
+    it('setea showClienteForm a true y de vuelta a false', () => {
+      useStore.getState().setShowClienteForm(true);
+      expect(useStore.getState().showClienteForm).toBe(true);
 
-      const { setSelectedTrabajo } = useStore.getState();
-      setSelectedTrabajo(mockTrabajo);
+      useStore.getState().setShowClienteForm(false);
+      expect(useStore.getState().showClienteForm).toBe(false);
+    });
+  });
+
+  describe('setShowPresupuestoForm', () => {
+    it('setea showPresupuestoForm a true y de vuelta a false', () => {
+      useStore.getState().setShowPresupuestoForm(true);
+      expect(useStore.getState().showPresupuestoForm).toBe(true);
+
+      useStore.getState().setShowPresupuestoForm(false);
+      expect(useStore.getState().showPresupuestoForm).toBe(false);
+    });
+  });
+
+  describe('setShowTrabajoForm', () => {
+    it('setea showTrabajoForm a true y de vuelta a false', () => {
+      useStore.getState().setShowTrabajoForm(true);
+      expect(useStore.getState().showTrabajoForm).toBe(true);
+
+      useStore.getState().setShowTrabajoForm(false);
+      expect(useStore.getState().showTrabajoForm).toBe(false);
+    });
+  });
+
+  describe('setShowMovimientoModal', () => {
+    it('setea showMovimientoModal a true y de vuelta a false', () => {
+      useStore.getState().setShowMovimientoModal(true);
+      expect(useStore.getState().showMovimientoModal).toBe(true);
+
+      useStore.getState().setShowMovimientoModal(false);
+      expect(useStore.getState().showMovimientoModal).toBe(false);
+    });
+  });
+
+  describe('setImageFullscreenOpen', () => {
+    it('setea imageFullscreenOpen a true y de vuelta a false', () => {
+      useStore.getState().setImageFullscreenOpen(true);
+      expect(useStore.getState().imageFullscreenOpen).toBe(true);
+
+      useStore.getState().setImageFullscreenOpen(false);
+      expect(useStore.getState().imageFullscreenOpen).toBe(false);
+    });
+  });
+
+  describe('setIsDetailModalOpen (issue #98: ocultar FAB en modales de detalle)', () => {
+    it('setea isDetailModalOpen a true y de vuelta a false', () => {
+      useStore.getState().setIsDetailModalOpen(true);
+      expect(useStore.getState().isDetailModalOpen).toBe(true);
+
+      useStore.getState().setIsDetailModalOpen(false);
+      expect(useStore.getState().isDetailModalOpen).toBe(false);
+    });
+  });
+
+  describe('setSelectedTrabajo', () => {
+    it('setea selectedTrabajo y lastTrabajoId', () => {
+      useStore.getState().setSelectedTrabajo(mockTrabajo);
 
       const state = useStore.getState();
       expect(state.selectedTrabajo).toEqual(mockTrabajo);
       expect(state.lastTrabajoId).toBe(1);
     });
 
-    it('clears selectedTrabajo when null passed', () => {
-      // First set a trabajo
-      useStore.setState({
-        selectedTrabajo: {
-          id: 1,
-          titulo: 'Test',
-          estado: 'Pendiente',
-          horasRegistradas: 0,
-          fotosCount: 0,
-          cliente: null,
-          clienteId: 1,
-        },
-        lastTrabajoId: 1,
-      });
-
-      const { setSelectedTrabajo } = useStore.getState();
-      setSelectedTrabajo(null);
+    it('limpia selectedTrabajo al pasar null y conserva lastTrabajoId', () => {
+      useStore.setState({ selectedTrabajo: mockTrabajo, lastTrabajoId: 1 });
+      useStore.getState().setSelectedTrabajo(null);
 
       const state = useStore.getState();
       expect(state.selectedTrabajo).toBe(null);
-      expect(state.lastTrabajoId).toBe(1); // lastTrabajoId is not cleared
+      expect(state.lastTrabajoId).toBe(1); // lastTrabajoId no se limpia
+    });
+  });
+
+  describe('setEditingCliente', () => {
+    it('setea y limpia editingCliente', () => {
+      useStore.getState().setEditingCliente({
+        id: 3,
+        nombreCompleto: 'Cliente Edit',
+        telefono: [],
+        balance: 0,
+        trabajosCount: 0,
+        presupuestosCount: 0,
+      });
+      expect(useStore.getState().editingCliente?.id).toBe(3);
+
+      useStore.getState().setEditingCliente(null);
+      expect(useStore.getState().editingCliente).toBe(null);
+    });
+  });
+
+  describe('setEditingTrabajoId', () => {
+    it('setea y limpia editingTrabajoId', () => {
+      useStore.getState().setEditingTrabajoId(5);
+      expect(useStore.getState().editingTrabajoId).toBe(5);
+
+      useStore.getState().setEditingTrabajoId(null);
+      expect(useStore.getState().editingTrabajoId).toBe(null);
+    });
+  });
+
+  describe('setEditingPresupuestoId', () => {
+    it('setea y limpia editingPresupuestoId', () => {
+      useStore.getState().setEditingPresupuestoId(10);
+      expect(useStore.getState().editingPresupuestoId).toBe(10);
+
+      useStore.getState().setEditingPresupuestoId(null);
+      expect(useStore.getState().editingPresupuestoId).toBe(null);
+    });
+  });
+
+  describe('setCambioContraseñaPendiente', () => {
+    it('setea el flag a true y de vuelta a false', () => {
+      useStore.getState().setCambioContraseñaPendiente(true);
+      expect(useStore.getState().cambioContraseñaPendiente).toBe(true);
+
+      useStore.getState().setCambioContraseñaPendiente(false);
+      expect(useStore.getState().cambioContraseñaPendiente).toBe(false);
     });
   });
 
@@ -129,6 +218,28 @@ describe('useStore', () => {
       expect(useStore.getState().accessToken).toBeNull();
       expect(readPersistedAccessToken()).toBeNull();
     });
+
+    it('resetea cambioContraseñaPendiente a false', () => {
+      useStore.getState().setCambioContraseñaPendiente(true);
+      useStore.getState().logout();
+
+      expect(useStore.getState().cambioContraseñaPendiente).toBe(false);
+    });
+  });
+
+  describe('persist partialize (issue #114)', () => {
+    it('persiste únicamente accessToken (ni UI state ni data)', () => {
+      useStore.getState().setTokens('access-123');
+      useStore.getState().setShowPresupuestoForm(true);
+      useStore.getState().setEditingPresupuestoId(10);
+
+      const raw = localStorage.getItem('shopmgr-storage');
+      expect(raw).not.toBeNull();
+
+      const parsed = JSON.parse(raw!) as { state: Record<string, unknown>; version: unknown };
+      expect(Object.keys(parsed.state)).toEqual(['accessToken']);
+      expect(parsed.version).toBe(2);
+    });
   });
 
   describe('persist migrate (issue #114: limpiar refreshToken residual)', () => {
@@ -154,107 +265,6 @@ describe('useStore', () => {
       expect(persisted.version).toBe(2);
       expect(persisted.state?.accessToken).toBe('access-viejo');
       expect(persisted.state?.refreshToken).toBeUndefined();
-    });
-  });
-
-  describe('setIsDetailModalOpen (issue #98: ocultar FAB en modales de detalle)', () => {
-    it('inicia en false', () => {
-      expect(useStore.getState().isDetailModalOpen).toBe(false);
-    });
-
-    it('setea el flag a true y de vuelta a false', () => {
-      useStore.getState().setIsDetailModalOpen(true);
-      expect(useStore.getState().isDetailModalOpen).toBe(true);
-
-      useStore.getState().setIsDetailModalOpen(false);
-      expect(useStore.getState().isDetailModalOpen).toBe(false);
-    });
-  });
-
-  describe('updateTrabajoEstado', () => {
-    it('updates trabajo estado correctly', () => {
-      const { updateTrabajoEstado, trabajos } = useStore.getState();
-      const trabajoId = trabajos[0]?.id;
-
-      if (trabajoId) {
-        updateTrabajoEstado(trabajoId, 'Terminado');
-        const updatedTrabajo = useStore.getState().trabajos.find(t => t.id === trabajoId);
-        expect(updatedTrabajo?.estado).toBe('Terminado');
-      }
-    });
-
-    it('does not modify other trabajos', () => {
-      const { updateTrabajoEstado, trabajos } = useStore.getState();
-      const [first, second] = trabajos;
-
-      if (first && second) {
-        const firstId = first.id;
-        const originalSecondEstado = second.estado;
-
-        updateTrabajoEstado(firstId, 'Terminado');
-        const updatedSecond = useStore.getState().trabajos.find(t => t.id === second.id);
-        expect(updatedSecond?.estado).toBe(originalSecondEstado);
-      }
-    });
-  });
-
-  describe('addHoras', () => {
-    it('adds new horas entry with correct values', () => {
-      const { addHoras, horas, valorHora, trabajos } = useStore.getState();
-      
-      // Find a trabajo to add hours to
-      const trabajo = trabajos[0];
-      if (!trabajo) return;
-
-      const initialHorasCount = horas.length;
-      const initialTrabajoHoras = trabajo.horasRegistradas;
-
-      addHoras(trabajo.id, 5, 'Test hours');
-
-      const state = useStore.getState();
-      
-      // Check horas count increased
-      expect(state.horas.length).toBe(initialHorasCount + 1);
-      
-      // Check the new horas entry
-      const newHoras = state.horas[state.horas.length - 1];
-      expect(newHoras.idTrabajo).toBe(trabajo.id);
-      expect(newHoras.horas).toBe(5);
-      expect(newHoras.descripcion).toBe('Test hours');
-      expect(newHoras.valor).toBe(5 * valorHora);
-      
-      // Check trabajo hours updated
-      const updatedTrabajo = state.trabajos.find(t => t.id === trabajo.id);
-      expect(updatedTrabajo?.horasRegistradas).toBe(initialTrabajoHoras + 5);
-      expect(updatedTrabajo?.estado).toBe('Iniciado');
-    });
-
-    it('closes modal after adding horas', () => {
-      const { addHoras, trabajos } = useStore.getState();
-      
-      const trabajo = trabajos[0];
-      if (!trabajo) return;
-
-      // Set modal to open
-      useStore.setState({ showHoursModal: true });
-
-      addHoras(trabajo.id, 2, 'Test');
-
-      expect(useStore.getState().showHoursModal).toBe(false);
-    });
-
-    it('clears selectedTrabajo after adding horas', () => {
-      const { addHoras, trabajos } = useStore.getState();
-      
-      const trabajo = trabajos[0];
-      if (!trabajo) return;
-
-      // Set selected trabajo
-      useStore.setState({ selectedTrabajo: trabajo });
-
-      addHoras(trabajo.id, 2, 'Test');
-
-      expect(useStore.getState().selectedTrabajo).toBe(null);
     });
   });
 });

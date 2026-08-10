@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { authService } from '../../services/auth';
+import { authService, extractAuthErrorMessage } from '../../services/auth';
 import { apiClient } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
@@ -14,6 +14,61 @@ vi.mock('../../services/api', () => ({
 describe('authService (issue #99): contrato con el backend', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  describe('login', () => {
+    it('hace POST a IniciarSesion con el request y devuelve los tokens', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({
+        data: { accessToken: 'token-abc' },
+      });
+
+      const resultado = await authService.login({ userName: 'admin', password: 'secreta' });
+
+      expect(apiClient.post).toHaveBeenCalledWith('/Auth/IniciarSesion', {
+        userName: 'admin',
+        password: 'secreta',
+      });
+      expect(resultado).toEqual({ accessToken: 'token-abc' });
+    });
+  });
+
+  describe('register', () => {
+    it('hace POST a RegistrarUsuario con el request y devuelve el mensaje', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: 'Usuario registrado' });
+
+      const mensaje = await authService.register({ userName: 'nuevo', password: '123456' });
+
+      expect(apiClient.post).toHaveBeenCalledWith('/Auth/RegistrarUsuario', {
+        userName: 'nuevo',
+        password: '123456',
+      });
+      expect(mensaje).toBe('Usuario registrado');
+    });
+  });
+
+  describe('refrescar', () => {
+    it('hace POST a Refrescar SIN body (cookie HttpOnly) y devuelve los tokens', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({
+        data: { accessToken: 'token-nuevo' },
+      });
+
+      const resultado = await authService.refrescar();
+
+      // El refresh token viaja como cookie HttpOnly (issue #114): un solo
+      // argumento, sin body ni config.
+      expect(apiClient.post).toHaveBeenCalledWith('/Auth/Refrescar');
+      expect(resultado).toEqual({ accessToken: 'token-nuevo' });
+    });
+  });
+
+  describe('cerrarSesion', () => {
+    it('hace POST a CerrarSesion SIN body (cookie HttpOnly se borra server-side)', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: 'Sesión cerrada' });
+
+      await authService.cerrarSesion();
+
+      expect(apiClient.post).toHaveBeenCalledWith('/Auth/CerrarSesion');
+    });
   });
 
   describe('cambiarContrasena', () => {
@@ -109,5 +164,36 @@ describe('authService (issue #99): contrato con el backend', () => {
       const usuarios = await authService.listarUsuarios();
       expect(usuarios).toEqual([]);
     });
+  });
+});
+
+describe('extractAuthErrorMessage', () => {
+  it('extrae el mensaje plano del backend cuando la data es un string', () => {
+    const error = { isAxiosError: true, response: { status: 400, data: 'Contraseña incorrecta' } };
+
+    expect(extractAuthErrorMessage(error)).toBe('Contraseña incorrecta');
+  });
+
+  it('extrae el mensaje del formato { error: string } (ExceptionHandlingMiddleware)', () => {
+    const error = { isAxiosError: true, response: { status: 400, data: { error: 'Usuario no existe' } } };
+
+    expect(extractAuthErrorMessage(error)).toBe('Usuario no existe');
+  });
+
+  it('devuelve string vacío si la data tiene otro formato', () => {
+    const error = { isAxiosError: true, response: { status: 400, data: { detail: 'Otro formato' } } };
+
+    expect(extractAuthErrorMessage(error)).toBe('');
+  });
+
+  it('devuelve string vacío si el error no tiene response', () => {
+    const error = { isAxiosError: true };
+
+    expect(extractAuthErrorMessage(error)).toBe('');
+  });
+
+  it('devuelve string vacío si el error no es de axios', () => {
+    expect(extractAuthErrorMessage(new Error('boom'))).toBe('');
+    expect(extractAuthErrorMessage('string raro')).toBe('');
   });
 });

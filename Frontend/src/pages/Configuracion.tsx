@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Loader2, 
   Clock, 
@@ -9,7 +8,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
-import { apiClient } from '../services/api';
+import { useCostoHora, useActualizarCostoHora } from '../hooks/useCostoHora';
 
 // ============================================================================
 // Types
@@ -40,33 +39,10 @@ function applyTheme(theme: Theme) {
 }
 
 // ============================================================================
-// API Functions
-// ============================================================================
-
-async function fetchCostoHora(): Promise<number> {
-  const response = await apiClient.get<number>('/Presupuestos/ObtenerCostoHoraDeTrabajo');
-  return response.data;
-}
-
-async function updateCostoHora(nuevoCosto: number): Promise<void> {
-  // Enviar solo el query parameter, sin body
-  // Usar URLSearchParams para construir la URL correctamente
-  const params = new URLSearchParams();
-  params.append('nuevoCosto', nuevoCosto.toString());
-  await apiClient.request({
-    method: 'PATCH',
-    url: `/Presupuestos/ActualizarCostoHoraDeTrabajo?${params.toString()}`,
-    data: '', // String vacío en lugar de undefined
-  });
-}
-
-// ============================================================================
 // Component
 // ============================================================================
 
 export function Configuracion() {
-  const queryClient = useQueryClient();
-  
   // Theme state
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem(STORAGE_KEYS.theme) as Theme) || 'oscuro';
@@ -88,21 +64,13 @@ export function Configuracion() {
   // Costo hora from API
   const [showCostoHoraSuccess, setShowCostoHoraSuccess] = useState(false);
   
-  const { data: costoHora } = useQuery({
-    queryKey: ['costoHora'],
-    queryFn: fetchCostoHora,
-  });
+  const { data: costoHora } = useCostoHora();
   
   // Local state for costo hora input - initialize with costoHora
   const [costoHoraInput, setCostoHoraInput] = useState<string>(() => costoHora?.toString() || '');
   
   // Mutation for updating costo hora
-  const updateCostoHoraMutation = useMutation({
-    mutationFn: updateCostoHora,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['costoHora'] });
-    },
-  });
+  const updateCostoHoraMutation = useActualizarCostoHora();
   
   // Apply theme on mount and when theme changes
   useEffect(() => {

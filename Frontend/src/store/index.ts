@@ -1,25 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Cliente, Trabajo, HorasRegistradas, Presupuesto, MaterialRequest } from '../types';
-
-// Type for duplicating a presupuesto
-interface DatosDuplicarPresupuesto {
-  idCliente: number;
-  nombreCliente: string;
-  titulo: string;
-  descripcion: string;
-  horasEstimadas: number;
-  materiales: MaterialRequest[];
-}
+import type { Cliente, Trabajo } from '../types';
 
 interface AppState {
-  // Data
-  clientes: Cliente[];
-  trabajos: Trabajo[];
-  horas: HorasRegistradas[];
-  presupuestos: Presupuesto[];
-  valorHora: number;
-  
   // Auth State (JWT access token; el refresh token vive en cookie HttpOnly)
   accessToken: string | null;
 
@@ -44,9 +27,6 @@ interface AppState {
   editingTrabajoId: number | null;
   editingPresupuestoId: number | null;
   
-  // Duplicar presupuesto state
-  datosDuplicarPresupuesto: DatosDuplicarPresupuesto | null;
-  
   // Auth Actions
   setTokens: (accessToken: string) => void;
   setCambioContraseñaPendiente: (pendiente: boolean) => void;
@@ -64,21 +44,11 @@ interface AppState {
   setEditingCliente: (cliente: Cliente | null) => void;
   setEditingTrabajoId: (id: number | null) => void;
   setEditingPresupuestoId: (id: number | null) => void;
-  setDatosDuplicarPresupuesto: (datos: DatosDuplicarPresupuesto | null) => void;
-  addHoras: (idTrabajo: number, horas: number, descripcion: string) => void;
-  updateTrabajoEstado: (idTrabajo: number, estado: Trabajo['estado']) => void;
 }
 
 export const useStore = create<AppState>()(
   persist(
-    (set, get) => ({
-      // Initial data (empty — server state managed by React Query)
-      clientes: [],
-      trabajos: [],
-      horas: [],
-      presupuestos: [],
-      valorHora: 0,
-      
+    (set) => ({
       // Initial auth state
       accessToken: null,
       cambioContraseñaPendiente: false,
@@ -96,7 +66,6 @@ export const useStore = create<AppState>()(
       editingCliente: null,
       editingTrabajoId: null,
       editingPresupuestoId: null,
-      datosDuplicarPresupuesto: null,
       
       // Auth Actions
       setTokens: (accessToken) => set({ accessToken }),
@@ -135,49 +104,6 @@ export const useStore = create<AppState>()(
       setEditingTrabajoId: (id) => set({ editingTrabajoId: id }),
       
       setEditingPresupuestoId: (id) => set({ editingPresupuestoId: id }),
-      
-      setDatosDuplicarPresupuesto: (datos) => set({ datosDuplicarPresupuesto: datos }),
-      
-      addHoras: (idTrabajo, horas, descripcion) => {
-        const { valorHora, horas: existingHoras, trabajos } = get();
-        const today = new Date().toISOString().split('T')[0];
-        
-        const newHoras: HorasRegistradas = {
-          id: Math.max(...existingHoras.map(h => h.id), 0) + 1,
-          idTrabajo,
-          horas,
-          descripcion,
-          fecha: today,
-          valor: horas * valorHora,
-        };
-        
-        // Update trabajo hours
-        const updatedTrabajos = trabajos.map(t => {
-          if (t.id === idTrabajo) {
-            return {
-              ...t,
-              horasRegistradas: t.horasRegistradas + horas,
-              estado: 'Iniciado' as const,
-            };
-          }
-          return t;
-        });
-        
-        set(state => ({
-          horas: [...state.horas, newHoras],
-          trabajos: updatedTrabajos,
-          showHoursModal: false,
-          selectedTrabajo: null,
-        }));
-      },
-      
-      updateTrabajoEstado: (idTrabajo, estado) => {
-        set(state => ({
-          trabajos: state.trabajos.map(t => 
-            t.id === idTrabajo ? { ...t, estado } : t
-          ),
-        }));
-      },
     }),
     {
       name: 'shopmgr-storage',

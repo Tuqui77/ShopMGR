@@ -550,10 +550,8 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.Property<string>("Rol")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Empleado");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("UserName")
                         .IsRequired()

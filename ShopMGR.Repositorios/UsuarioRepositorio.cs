@@ -22,8 +22,9 @@ namespace ShopMGR.Repositorios
 
         public async Task<Usuario?> ObtenerUsuarioPorNombre(string userName)
         {
-            var usuarioDb =
-                await _contexto.Usuarios.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.UserName == userName);
+            var usuarioDb = await _contexto
+                .Usuarios.Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
 
             return usuarioDb;
         }

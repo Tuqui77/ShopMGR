@@ -28,6 +28,7 @@ public class AuthController(
     private readonly IFido2 _fido2 = fido2;
     private readonly IConfiguration _configuracion = configuracion;
 
+    [EnableRateLimiting("registro")]
     [HttpPost]
     [Route("RegistrarUsuario")]
     public async Task<IActionResult> RegistrarUsuario(UsuarioDTO request)

@@ -1,5 +1,5 @@
-import { Link, useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Loader2, 
   ArrowLeft, 
@@ -18,126 +18,22 @@ import { presupuestosService } from '../services/presupuestos';
 import { trabajosService } from '../services/trabajos';
 import { useState, useEffect, useRef } from 'react';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
-import type { Presupuesto, EstadoPresupuesto, Cliente } from '../types';
+import type { EstadoPresupuesto } from '../types';
 import { useStore } from '../store';
 import { PresupuestoForm } from '../components/PresupuestoForm';
 import { useClienteDetalle } from '../hooks/useClientes';
-
-// Tipos para DTOs raw del backend
-interface TelefonoRaw {
-  telefono: string;
-}
-
-interface DireccionRaw {
-  calle: string;
-  altura: string;
-}
-
-interface ClienteRaw {
-  id: number;
-  nombreCompleto: string;
-  telefono?: { $id: string; $values: TelefonoRaw[] };
-  direccion?: { $id: string; $values: DireccionRaw[] };
-  balance?: number;
-  trabajos?: { $id: string; $values: unknown[] };
-  presupuestos?: { $id: string; $values: unknown[] };
-}
-
-interface MaterialRaw {
-  id: number;
-  descripcion: string;
-  cantidad: number;
-  precio: number;
-}
-
-interface PresupuestoRaw {
-  id: number;
-  titulo: string;
-  descripcion?: string;
-  estado: EstadoPresupuesto;
-  fecha: string;
-  horasEstimadas?: number;
-  costoMateriales?: number;
-  costoLabor?: number;
-  costoInsumos?: number;
-  total?: number;
-  cliente?: ClienteRaw;
-  materiales?: MaterialRaw[] | { $id: string; $values: MaterialRaw[] };
-}
-
-interface MaterialFrontend {
-  id: number;
-  descripcion: string;
-  cantidad: number;
-  precioUnitario: number;
-  subtotal: number;
-}
-
-function mapMateriales(dto: MaterialRaw[] | { $id: string; $values: MaterialRaw[] } | undefined): MaterialFrontend[] {
-  let values: MaterialRaw[];
-  if (!dto) {
-    values = [];
-  } else if (Array.isArray(dto)) {
-    values = dto;
-  } else {
-    values = dto.$values || [];
-  }
-  return values.map(m => ({
-    id: m.id,
-    descripcion: m.descripcion,
-    cantidad: m.cantidad,
-    precioUnitario: m.precio,
-    subtotal: m.cantidad * m.precio,
-  }));
-}
-
-function mapCliente(dto: ClienteRaw | null | undefined): Cliente {
-  if (!dto) return { id: 0, nombreCompleto: '', telefono: [], balance: 0, trabajosCount: 0, presupuestosCount: 0 };
-  return {
-    id: dto.id,
-    nombreCompleto: dto.nombreCompleto,
-    telefono: dto.telefono?.$values?.map(t => t.telefono) || [],
-    direccion: dto.direccion?.$values?.[0]
-      ? `${dto.direccion.$values[0].calle} ${dto.direccion.$values[0].altura}`
-      : undefined,
-    balance: dto.balance || 0,
-    trabajosCount: dto.trabajos?.$values?.length || 0,
-    presupuestosCount: dto.presupuestos?.$values?.length || 0,
-  };
-}
-
-function mapPresupuestoBackend(dto: PresupuestoRaw): Presupuesto {
-  return {
-    id: dto.id,
-    titulo: dto.titulo,
-    descripcion: dto.descripcion,
-    estado: dto.estado,
-    fecha: dto.fecha,
-    cliente: mapCliente(dto.cliente),
-    horasEstimadas: dto.horasEstimadas || 0,
-    costoMateriales: dto.costoMateriales || 0,
-    costoLabor: dto.costoLabor || 0,
-    costoInsumos: dto.costoInsumos || 0,
-    total: dto.total || 0,
-    materiales: mapMateriales(dto.materiales),
-  };
-}
-
-async function fetchPresupuestoDetalle(id: number): Promise<Presupuesto> {
-  const response = await apiClient.get('/Presupuestos/ObtenerDetallePresupuesto', {
-    params: { idPresupuesto: id },
-  });
-  return mapPresupuestoBackend(response.data);
-}
+import { usePresupuestoDetalle } from '../hooks/usePresupuestos';
 
 export function PresupuestoDetalle() {
   const { id } = useParams<{ id: string }>();
   const presupuestoId = id ? parseInt(id, 10) : undefined;
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { editingPresupuestoId, setEditingPresupuestoId, setDatosDuplicarPresupuesto, setShowPresupuestoForm } = useStore();
+  const { editingPresupuestoId, setEditingPresupuestoId } = useStore();
+  const [presupuestoDuplicadoId, setPresupuestoDuplicadoId] = useState<number | undefined>(undefined);
   
   // Cerrar menú 3 puntos al hacer click fuera
   useEffect(() => {
@@ -151,11 +47,7 @@ export function PresupuestoDetalle() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showMenu]);
 
-  const { data: presupuesto, isLoading, error } = useQuery({
-    queryKey: ['presupuesto', presupuestoId],
-    queryFn: () => fetchPresupuestoDetalle(presupuestoId!),
-    enabled: typeof presupuestoId === 'number' && presupuestoId >= 0,
-  });
+  const { data: presupuesto, isLoading, error } = usePresupuestoDetalle(presupuestoId);
 
   const { data: clienteCompleto } = useClienteDetalle(presupuesto?.cliente?.id);
 
@@ -169,7 +61,7 @@ export function PresupuestoDetalle() {
       await presupuestosService.aceptar(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });
+      queryClient.invalidateQueries({ queryKey: ['presupuestos', presupuestoId, 'detalle'] });
       queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
       queryClient.invalidateQueries({ queryKey: ['trabajos'] });
       setSuccessMessage('Presupuesto aceptado y trabajo creado exitosamente');
@@ -181,7 +73,7 @@ export function PresupuestoDetalle() {
       await presupuestosService.rechazar(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });
+      queryClient.invalidateQueries({ queryKey: ['presupuestos', presupuestoId, 'detalle'] });
       queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
     },
   });
@@ -191,7 +83,10 @@ export function PresupuestoDetalle() {
       await apiClient.delete(`/Presupuestos/EliminarPresupuesto?idPresupuesto=${id}`);
     },
     onSuccess: () => {
-      window.location.href = '/presupuestos';
+      // Navegación SPA a la lista + invalidación para que el item eliminado
+      // desaparezca (el full reload anterior recargaba la lista del backend).
+      queryClient.invalidateQueries({ queryKey: ['presupuestos'] });
+      navigate('/presupuestos');
     },
   });
 
@@ -259,27 +154,15 @@ export function PresupuestoDetalle() {
 
   const handleDuplicar = () => {
     if (presupuesto && presupuesto.cliente) {
-      setDatosDuplicarPresupuesto({
-        idCliente: presupuesto.cliente.id,
-        nombreCliente: presupuesto.cliente.nombreCompleto,
-        titulo: `Copia de ${presupuesto.titulo}`,
-        descripcion: presupuesto.descripcion || '',
-        horasEstimadas: presupuesto.horasEstimadas,
-        materiales: presupuesto.materiales?.map(m => ({
-          descripcion: m.descripcion,
-          cantidad: m.cantidad,
-          Precio: m.precioUnitario,
-          precioUnitario: m.precioUnitario,
-        })) || [],
-      });
-      setShowPresupuestoForm(true);
+      // El detalle completo lo precarga PresupuestoForm vía React Query (prop presupuestoDuplicadoId)
+      setPresupuestoDuplicadoId(presupuesto.id);
     }
   };
 
   const handleEditSuccess = () => {
     setEditingPresupuestoId(null);
     // Refetch presupuesto data
-    queryClient.invalidateQueries({ queryKey: ['presupuesto', presupuestoId] });
+    queryClient.invalidateQueries({ queryKey: ['presupuestos', presupuestoId, 'detalle'] });
   };
 
   if (isLoading) {
@@ -597,6 +480,15 @@ export function PresupuestoDetalle() {
           isOpen={true}
           onClose={() => setEditingPresupuestoId(null)}
           onSuccess={handleEditSuccess}
+        />
+      )}
+
+      {/* Presupuesto Form for duplicating */}
+      {presupuestoDuplicadoId && (
+        <PresupuestoForm
+          presupuestoDuplicadoId={presupuestoDuplicadoId}
+          isOpen={true}
+          onClose={() => setPresupuestoDuplicadoId(undefined)}
         />
       )}
     </div>

@@ -39,7 +39,7 @@ export const direccionesService = {
   },
 
   async obtenerPorId(id: number): Promise<DireccionItem> {
-    const response = await apiClient.get<DireccionItem>('/Direccion/Obtener detalle por id', {
+    const response = await apiClient.get<DireccionItem>('/Direccion/ObtenerDetallePorId', {
       params: { idDireccion: id },
     });
     return response.data;

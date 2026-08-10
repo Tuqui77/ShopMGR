@@ -20,15 +20,45 @@ const localStorageMock = (() => {
 
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 
-// Mock window.location
-Object.defineProperty(globalThis, 'location', {
-  value: {
-    href: 'http://localhost/',
-    origin: 'http://localhost',
-    replace: vi.fn(),
+// Mock window.location.
+//
+// Debe conservar la API completa de Location: pathname/search/hash se derivan del
+// history real de jsdom (vía document.URL) para que BrowserRouter/react-router
+// funcionen en tests que renderizan <App /> (issue #67). El mock anterior solo
+// tenía href/origin/replace y dejaba window.location.pathname en undefined, lo
+// que rompía el matching de rutas y provocaba bucles infinitos de re-render.
+let rawHref = 'http://localhost/';
+const locationMock = {
+  get href() {
+    return rawHref;
   },
-  writable: true,
-});
+  set href(value: unknown) {
+    rawHref = String(value);
+    // Sincroniza el history real de jsdom para que document.URL/pathname
+    // reflejen la navegación (mismo comportamiento que un navegador).
+    try {
+      window.history.pushState({}, '', rawHref);
+    } catch {
+      // URL inválida: se conserva el valor crudo para la lectura.
+    }
+  },
+  get origin() {
+    return 'http://localhost';
+  },
+  get pathname() {
+    return new URL(document.URL).pathname;
+  },
+  get search() {
+    return new URL(document.URL).search;
+  },
+  get hash() {
+    return new URL(document.URL).hash;
+  },
+  replace: vi.fn(),
+  assign: vi.fn(),
+  reload: vi.fn(),
+};
+Object.defineProperty(globalThis, 'location', { value: locationMock, writable: true });
 
 // Mock matchMedia
 Object.defineProperty(globalThis, 'matchMedia', {

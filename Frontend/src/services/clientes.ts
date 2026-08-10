@@ -1,7 +1,8 @@
 import { apiClient } from './api';
 import type { Cliente } from '../types';
 
-interface ClienteBackendDTO {
+/** DTO del cliente tal como lo devuelve el backend (contrato para fixtures de tests). */
+export interface ClienteBackendDTO {
   id: number;
   nombreCompleto: string;
   cuit?: string;

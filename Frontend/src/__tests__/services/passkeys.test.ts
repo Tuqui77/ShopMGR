@@ -23,6 +23,7 @@ import {
 } from '../../services/passkeys';
 
 const mockedGet = vi.mocked(apiClient.get);
+const mockedPost = vi.mocked(apiClient.post);
 const mockedPatch = vi.mocked(apiClient.patch);
 const mockedDelete = vi.mocked(apiClient.delete);
 
@@ -266,6 +267,164 @@ describe('passkeysService.eliminar', () => {
     await passkeysService.eliminar('aGVsbG8=');
     expect(mockedDelete).toHaveBeenCalledWith('/Auth/passkeys/eliminar', {
       params: { idCredencial: 'aGVsbG8=' },
+    });
+  });
+});
+
+// ============================================================================
+// Service: flujo WebAuthn (obtenerOpcionesAuth / verificarAuth /
+// obtenerOpcionesRegistro / verificarRegistro)
+// ============================================================================
+
+/** Mock de una AuthenticatorAssertionResponse (respuesta del autenticador al login). */
+function makeAssertionResponse(userHandle: ArrayBuffer = bytesToBuffer(new Uint8Array([7]))): AuthenticatorAssertionResponse {
+  return {
+    clientDataJSON: bytesToBuffer(new Uint8Array([1, 2])),
+    authenticatorData: bytesToBuffer(new Uint8Array([3, 4])),
+    signature: bytesToBuffer(new Uint8Array([5, 6])),
+    userHandle,
+  } as AuthenticatorAssertionResponse;
+}
+
+/** Mock de una AuthenticatorAttestationResponse (respuesta del autenticador al registro). */
+function makeAttestationResponse(): AuthenticatorAttestationResponse {
+  return {
+    clientDataJSON: bytesToBuffer(new Uint8Array([1, 2])),
+    attestationObject: bytesToBuffer(new Uint8Array([8, 9])),
+    getTransports: () => ['internal'] as AuthenticatorTransport[],
+  } as AuthenticatorAttestationResponse;
+}
+
+/** Mock de una PublicKeyCredential con los campos mínimos del contrato. */
+function makeCredential(response: AuthenticatorResponse): PublicKeyCredential {
+  return {
+    id: 'cred-id',
+    rawId: bytesToBuffer(new Uint8Array([10, 11])),
+    response,
+    type: 'public-key',
+    getClientExtensionResults: () => ({}),
+    toJSON: () => ({}),
+  } as PublicKeyCredential;
+}
+
+describe('passkeysService.obtenerOpcionesAuth', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('hace POST a /auth/opciones y normaliza la respuesta a opciones de assertion', async () => {
+    mockedPost.mockResolvedValue({
+      data: { challenge: 'aGVsbG8', rpId: 'localhost', timeout: 60000, userVerification: 'preferred' },
+    });
+
+    const options = await passkeysService.obtenerOpcionesAuth();
+
+    expect(mockedPost).toHaveBeenCalledWith('/Auth/passkeys/auth/opciones', null, { signal: undefined });
+    expect(options.challenge).toBeInstanceOf(ArrayBuffer);
+    expect(bufferToBytes(options.challenge)).toEqual(new Uint8Array([104, 101, 108, 108, 111]));
+    expect(options.rpId).toBe('localhost');
+    expect(options.userVerification).toBe('preferred');
+  });
+
+  it('propaga el AbortSignal al POST', async () => {
+    const signal = new AbortController().signal;
+    mockedPost.mockResolvedValue({ data: { challenge: 'aGVsbG8' } });
+
+    await passkeysService.obtenerOpcionesAuth(signal);
+
+    expect(mockedPost.mock.calls[0]?.[2]?.signal).toBe(signal);
+  });
+});
+
+describe('passkeysService.verificarAuth', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('hace POST a /auth con el DTO de assertion y devuelve los tokens', async () => {
+    mockedPost.mockResolvedValue({ data: { accessToken: 'token-abc' } });
+
+    const resultado = await passkeysService.verificarAuth(makeCredential(makeAssertionResponse()));
+
+    expect(mockedPost).toHaveBeenCalledWith('/Auth/passkeys/auth', {
+      id: 'cred-id',
+      rawId: arrayBufferToBase64Url(bytesToBuffer(new Uint8Array([10, 11]))),
+      respuestaAssertion: {
+        id: 'cred-id',
+        rawId: arrayBufferToBase64Url(bytesToBuffer(new Uint8Array([10, 11]))),
+        firma: arrayBufferToBase64(bytesToBuffer(new Uint8Array([5, 6]))),
+        datosAutenticador: arrayBufferToBase64(bytesToBuffer(new Uint8Array([3, 4]))),
+        userHandle: arrayBufferToBase64(bytesToBuffer(new Uint8Array([7]))),
+        datosClienteJson: arrayBufferToBase64(bytesToBuffer(new Uint8Array([1, 2]))),
+      },
+    });
+    expect(resultado).toEqual({ accessToken: 'token-abc' });
+  });
+
+  it('envía userHandle null cuando el autenticador no devuelve handle', async () => {
+    const response = makeAssertionResponse(new ArrayBuffer(0));
+    mockedPost.mockResolvedValue({ data: { accessToken: 'token-abc' } });
+
+    await passkeysService.verificarAuth(makeCredential(response));
+
+    const body = mockedPost.mock.calls[0]?.[1] as { respuestaAssertion: { userHandle: unknown } };
+    expect(body.respuestaAssertion.userHandle).toBeNull();
+  });
+
+  it('rechaza cuando la respuesta no es un LoginResponse válido (fail-closed)', async () => {
+    mockedPost.mockResolvedValue({ data: { resultado: 'raro' } });
+
+    await expect(passkeysService.verificarAuth(makeCredential(makeAssertionResponse()))).rejects.toThrow(
+      'Respuesta de autenticación inválida',
+    );
+  });
+});
+
+describe('passkeysService.obtenerOpcionesRegistro', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('hace POST a /registrar/opciones y normaliza la respuesta a opciones de creación', async () => {
+    mockedPost.mockResolvedValue({
+      data: {
+        challenge: 'aGVsbG8',
+        rp: { name: 'ShopMGR' },
+        user: { id: 'dXNlcg', name: 'juan', displayName: 'Juan' },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+      },
+    });
+
+    const options = await passkeysService.obtenerOpcionesRegistro();
+
+    expect(mockedPost).toHaveBeenCalledWith('/Auth/passkeys/registrar/opciones', null, { signal: undefined });
+    expect(options.challenge).toBeInstanceOf(ArrayBuffer);
+    expect(options.rp.name).toBe('ShopMGR');
+    expect(options.user.id).toBeInstanceOf(ArrayBuffer);
+    expect(options.pubKeyCredParams).toEqual([{ type: 'public-key', alg: -7 }]);
+  });
+});
+
+describe('passkeysService.verificarRegistro', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('hace POST a /registrar con el DTO de attestation y el nombre del dispositivo', async () => {
+    mockedPost.mockResolvedValue({ data: 'Passkey registrada' });
+
+    await passkeysService.verificarRegistro(makeCredential(makeAttestationResponse()), 'iPhone de Juan');
+
+    expect(mockedPost).toHaveBeenCalledWith('/Auth/passkeys/registrar', {
+      id: 'cred-id',
+      rawId: arrayBufferToBase64Url(bytesToBuffer(new Uint8Array([10, 11]))),
+      nombreDispositivo: 'iPhone de Juan',
+      respuestaAttestation: {
+        id: 'cred-id',
+        rawId: arrayBufferToBase64Url(bytesToBuffer(new Uint8Array([10, 11]))),
+        attestation: arrayBufferToBase64(bytesToBuffer(new Uint8Array([8, 9]))),
+        datosClienteJson: arrayBufferToBase64(bytesToBuffer(new Uint8Array([1, 2]))),
+      },
     });
   });
 });
