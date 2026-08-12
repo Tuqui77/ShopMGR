@@ -21,7 +21,7 @@ public class PresupuestoRepositorioTests
 
     #region CrearAsync
 
-    [Fact(Skip = "Repository bug: CrearAsync calls AddRange(materiales) without null check. Backend code fix required.")]
+    [Fact]
     public async Task CrearAsync_DeberiaCrearPresupuesto()
     {
         // Arrange
