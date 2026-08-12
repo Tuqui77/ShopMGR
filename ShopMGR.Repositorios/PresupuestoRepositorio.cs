@@ -12,6 +12,9 @@ namespace ShopMGR.Repositorios
 
         public async Task<Presupuesto> CrearAsync(Presupuesto presupuesto)
         {
+            var clienteValido = await _contexto.Clientes.AnyAsync(c => c.Id == presupuesto.IdCliente);
+            if (!clienteValido) throw new KeyNotFoundException($"No existe un cliente con id {presupuesto.IdCliente}");
+
             _contexto.Presupuestos.Add(presupuesto);
             var materiales = presupuesto.Materiales;
             _contexto.Materiales.AddRange(materiales);

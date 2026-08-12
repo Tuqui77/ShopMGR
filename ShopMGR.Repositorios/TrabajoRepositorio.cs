@@ -12,6 +12,13 @@ namespace ShopMGR.Repositorios
 
         public async Task<Trabajo> CrearAsync(Trabajo nuevoTrabajo)
         {
+            var clienteValido = await _contexto.Clientes.AnyAsync(c => c.Id == nuevoTrabajo.IdCliente);
+
+            if (!clienteValido)
+                throw new KeyNotFoundException($"No existe un cliente con id {nuevoTrabajo.IdCliente}");
+            if (nuevoTrabajo.IdPresupuesto != null && !await _contexto.Presupuestos.AnyAsync(p => p.Id == nuevoTrabajo.IdPresupuesto))
+                throw new KeyNotFoundException($"No existe un presupuesto con id {nuevoTrabajo.IdPresupuesto}");
+
             _contexto.Trabajos.Add(nuevoTrabajo);
             await _contexto.SaveChangesAsync();
             return nuevoTrabajo;
@@ -28,9 +35,7 @@ namespace ShopMGR.Repositorios
         {
             var trabajo =
                 await ObtenerPorIdAsync(horas.IdTrabajo)
-                ?? throw new KeyNotFoundException(
-                    $"No existe un trabajo con el Id {horas.IdTrabajo}"
-                );
+                ?? throw new KeyNotFoundException($"No existe un trabajo con el Id {horas.IdTrabajo}");
 
             _contexto.HorasYDescripcion.Add(horas);
             await _contexto.SaveChangesAsync();
@@ -56,8 +61,7 @@ namespace ShopMGR.Repositorios
 
         public async Task<Trabajo?> ObtenerPorIdPresupuesto(int idPresupuesto)
         {
-            var trabajo =
-                await _contexto.Trabajos.FirstOrDefaultAsync(t => t.IdPresupuesto == idPresupuesto);
+            var trabajo = await _contexto.Trabajos.FirstOrDefaultAsync(t => t.IdPresupuesto == idPresupuesto);
 
             return trabajo;
         }
@@ -79,16 +83,15 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Trabajo>> ObtenerPorClienteAsync(int idCliente)
         {
-            var trabajos = await _contexto
-                .Trabajos.Where(t => t.IdCliente == idCliente)
-                .ToListAsync();
+            var trabajos = await _contexto.Trabajos.Where(t => t.IdCliente == idCliente).ToListAsync();
 
             return trabajos;
         }
 
         public async Task<List<Trabajo>> ObtenerPorEstadoAsync(EstadoTrabajo estado)
         {
-            var trabajos = await _contexto.Trabajos.Where(t => t.Estado == estado)
+            var trabajos = await _contexto
+                .Trabajos.Where(t => t.Estado == estado)
                 .Include(t => t.Cliente)
                 .ToListAsync();
 
