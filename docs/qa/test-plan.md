@@ -1,13 +1,13 @@
-# Test Plan — Suite de Integración Backend (API .NET 9)
+# Test Plan — Suite de Integración Backend (API .NET 9) + MetricasRepositorio
 
 | Campo | Valor |
 |---|---|
-| **Versión** | v1.0 |
-| **Fecha** | 2026-08-08 |
+| **Versión** | v1.2 |
+| **Fecha** | 2026-08-11 |
 | **Autor** | QA Automation |
-| **Issue** | #82 (tests backend con assertions reales) |
-| **Alcance** | Auth, Clientes, Trabajos, Presupuestos (API REST) |
-| **Estado** | Planificado — pendiente de implementación (dueño) |
+| **Issue** | #82 (tests backend con assertions reales), #95 (suite MetricasRepositorio) |
+| **Alcance** | Auth, Clientes, Trabajos, Presupuestos (API REST) + MetricasRepositorio (repositorio) |
+| **Estado** | Implementado y verificado (#82 v1.1); suite #95 agregada (v1.2) |
 
 ---
 
@@ -186,3 +186,40 @@ reportgenerator -reports:ShopMGR.Tests/TestResults/*/coverage.cobertura.xml -tar
 | Test Cases | `docs/qa/test-cases.md` |
 | Automation Scripts | `docs/qa/automation-scripts.md` |
 | Coverage Report | `docs/qa/coverage-report.md` |
+
+---
+
+## 12. Suite MetricasRepositorio (issue #95)
+
+Suite de **tests de repositorio** (unit, InMemory + repositorio directo — mismo patrón que `ClienteRepositorioTests`/`TrabajoRepositorioTests`), complementaria a la suite de integración HTTP de las secciones 1–11.
+
+| Campo | Valor |
+|---|---|
+| **Archivo** | `ShopMGR.Tests/MetricasRepositorioTests.cs` |
+| **Clase** | `MetricasRepositorioTests` (13 tests, `[Fact]`) |
+| **Alcance** | `MetricasRepositorio`: `ObtenerIngresosAsync`, `ObtenerHorasAsync`, `ObtenerTrabajosTerminadosAsync`, `ObtenerPresupuestosCreadosAsync`, `ObtenerPresupuestosAceptadosAsync` |
+| **Provider** | EF Core **InMemory** (`UseInMemoryDatabase` con nombre `Guid` por test → aislamiento total) |
+| **Fixture de fechas** | Movimientos: mes fijo `2026-07` (el constructor de `MovimientoBalance` acepta fecha explícita). Trabajos/Presupuestos/Horas: fechas = `DateTime.Now` (setters privados del dominio) → período actual con `Hoy` y período vacío con `2000-01` |
+
+### Contexto del cambio (fuente de los asserts — Regla de No Inventar)
+
+| # | Verificación | Hallazgo | Impacto en la suite |
+|---|---|---|---|
+| M1 | `MetricasRepositorio.ObtenerIngresosAsync` (working tree, issue #95) | Antes: `Trabajos.Where(FechaFin mes).Sum(TotalLabor ?? 0m)`. **Ahora**: `MovimientoBalance.Where(Tipo == Pago && Fecha año/mes).Sum(Monto)` | Asserts de ingresos = suma de Pagos del mes; el test de regresión (TC-MET-06) fallaría con el código viejo |
+| M2 | `TipoMovimiento` enum | `Pago=0, Cargo=1, Anticipo=2, Compra=3, Ajuste=4`. **Decisión de dominio: NO se agrega `Cobro`** | La exclusión por tipo cubre los 5 valores existentes (TC-MET-02) |
+| M3 | `MovimientoBalance.Monto` (setter privado) | Normaliza signo: `Cargo`/`Compra` positivos → se persisten **negativos**; `Pago`/`Anticipo` positivos → positivos | El fix excluye por `Tipo`, no por signo — documentado en TC-MET-02 |
+| M4 | `Trabajo.FechaFin` | Solo `TerminarTrabajo()` lo setea (constructor con `EstadoTrabajo` **no** lo hace) | Helper `CrearTrabajoTerminadoAsync` en la suite; sin `FechaFin`, `ObtenerTrabajosTerminadosAsync` no contaría (filtra `FechaFin.HasValue`) |
+| M5 | `Presupuesto.Fecha`/`FechaAceptado`, `HorasYDescripcion.Fecha` | Setters privados; fijadas a `DateTime.Now` en construcción/transición | Períodos "actual" vs "vacío" (2000-01) para los asserts de regresión |
+
+### Criterios de aceptación cubiertos (issue #95)
+
+| Criterio | Casos |
+|---|---|
+| CA1 — Ingresos = suma de movimientos `Pago` del mes (múltiples Pagos) | TC-MET-01 |
+| CA2 — Excluye los demás tipos del mismo mes (Cargo, Compra, Anticipo, Ajuste) | TC-MET-02 |
+| CA3 — Filtra por mes y por año | TC-MET-03, TC-MET-04 |
+| CA4 — Mes sin movimientos → 0 | TC-MET-05 |
+| CA5 — No suma `TotalLabor` de trabajos Terminado (regresión del cambio) | TC-MET-06 |
+| CA6 — Los otros 4 métodos del repositorio siguen funcionando (regresión) | TC-MET-07..13 |
+
+**Cobertura de criterios #95: 6/6 = 100%** (ver `coverage-report.md` §7).

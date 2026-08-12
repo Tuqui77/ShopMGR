@@ -1,13 +1,13 @@
-# Test Cases — Suite de Integración Backend (#82)
+# Test Cases — Suite de Integración Backend (#82) + MetricasRepositorio (#95)
 
 | Campo | Valor |
 |---|---|
-| **Versión** | v1.1 (implementada y verificada) |
-| **Fecha** | 2026-08-09 |
+| **Versión** | v1.2 (implementada y verificada) |
+| **Fecha** | 2026-08-11 |
 | **Autor** | QA Automation |
-| **Issue** | #82 |
-| **Convención de IDs** | `TC-<FEATURE>-<n>` — AUTH (login/refresh/logout), CLI (clientes), TRA (trabajos), PRE (presupuestos), EXP (exploratory) |
-| **Fuente de asserts** | Contrato verificado en `test-plan.md` §3 (V1–V15) — ningún assert es inventado. Discrepancias detectadas al implementar se documentan en `coverage-report.md` §4 |
+| **Issue** | #82, #95 (suite MetricasRepositorio) |
+| **Convención de IDs** | `TC-<FEATURE>-<n>` — AUTH (login/refresh/logout), CLI (clientes), TRA (trabajos), PRE (presupuestos), EXP (exploratory), MET (métricas) |
+| **Fuente de asserts** | Contrato verificado en `test-plan.md` §3 (V1–V15) y §12 (M1–M5) — ningún assert es inventado. Discrepancias detectadas al implementar se documentan en `coverage-report.md` §4 |
 
 **Tipos**: `Happy` (flujo feliz) · `Negative` (errores) · `Contrato` (headers/cookies/JWT) · `Exploratory` (por investigar, se documenta el hallazgo).
 
@@ -107,7 +107,29 @@
 
 ---
 
-## F. Resumen de cobertura de criterios
+## F. Métricas — suite de repositorio (issue #95)
+
+> Suite unit de repositorio (`MetricasRepositorioTests`, InMemory + repositorio directo — patrón de `ClienteRepositorioTests`). Fuente de asserts: test-plan §12 (M1–M5). Los resultados esperados validan el **comportamiento correcto** del fix (tipo `Happy`); los de exclusión/filtro verifican que NO se incluye lo incorrecto (clave del issue #95).
+
+| ID | Título | Tipo | Precondiciones | Pasos | Resultado esperado |
+|---|---|---|---|---|---|
+| TC-MET-01 | Ingresos = suma de múltiples Pagos del mes | Happy | Cliente en BD; 3 Pagos en 2026-07 (100 + 250.50 + 49.99) | `ObtenerIngresosAsync(2026-07-15)` | **400.49** (decimal exacto) |
+| TC-MET-02 | Solo suma Pagos; excluye Cargo/Compra/Anticipo/Ajuste del mismo mes | Happy | Cliente; en 2026-07: Pago 100 + Cargo 50 + Compra 30 + Anticipo 20 + Ajuste 10 (M2/M3: los no-Pago se excluyen por `Tipo`, no por signo) | `ObtenerIngresosAsync(2026-07-15)` | **100** (solo el Pago; el resto de tipos no suma) |
+| TC-MET-03 | Ignora movimientos de otro mes | Happy | Cliente; Pagos 2026-06 (300), 2026-07 (100), 2026-08 (500) | `ObtenerIngresosAsync(2026-07-15)` | **100** (mes julio, sin junio/agosto) |
+| TC-MET-04 | Ignora movimientos de otro año | Happy | Cliente; Pagos 2025-07 (999), 2026-07 (100), 2027-07 (999) | `ObtenerIngresosAsync(2026-07-15)` | **100** (año 2026, sin 2025/2027) |
+| TC-MET-05 | Mes sin movimientos → 0 | Happy | Cliente; solo un Pago en 2026-08 | `ObtenerIngresosAsync(2026-07-15)` | **0** |
+| TC-MET-06 | No suma `TotalLabor` de trabajos Terminado (regresión del cambio) | Happy | Cliente; trabajo Terminado con `TotalLabor` 9999 (hoy, M4) + Pago 100 (hoy) | `ObtenerIngresosAsync(Hoy)` | **100** — con el código viejo (Sum de TotalLabor) devolvería 9999+100; el test fallaría si se restaura |
+| TC-MET-07 | `ObtenerHorasAsync` suma horas del mes/año, ignora otros períodos | Happy | Cliente + trabajo; horas 2.5 y 1.5 (hoy) + 50 (2000-01) | `ObtenerHorasAsync(Hoy)` | **4** |
+| TC-MET-08 | `ObtenerTrabajosTerminadosAsync` cuenta solo Terminado del mes | Happy | Cliente; 2 trabajos Terminado (hoy, vía `TerminarTrabajo()` — M4) + 1 Pendiente + 1 Iniciado | `ObtenerTrabajosTerminadosAsync(Hoy)` | **2** |
+| TC-MET-09 | `ObtenerTrabajosTerminadosAsync` mes sin terminados → 0 | Happy | Cliente; 1 trabajo Terminado (hoy) | `ObtenerTrabajosTerminadosAsync(2000-01-15)` | **0** |
+| TC-MET-10 | `ObtenerPresupuestosCreadosAsync` cuenta los del mes | Happy | Cliente; 2 presupuestos (Fecha = hoy al construirse, M5) | `ObtenerPresupuestosCreadosAsync(Hoy)` | **2** |
+| TC-MET-11 | `ObtenerPresupuestosCreadosAsync` mes sin presupuestos → 0 | Happy | Cliente; 1 presupuesto (hoy) | `ObtenerPresupuestosCreadosAsync(2000-01-15)` | **0** |
+| TC-MET-12 | `ObtenerPresupuestosAceptadosAsync` cuenta solo aceptados del mes | Happy | Cliente; 2 presupuestos Aceptado (`FechaAceptado` = hoy, M5) + 1 Rechazado (sin `FechaAceptado`) | `ObtenerPresupuestosAceptadosAsync(Hoy)` | **2** |
+| TC-MET-13 | `ObtenerPresupuestosAceptadosAsync` mes sin aceptados → 0 | Happy | Cliente; 1 presupuesto Aceptado (hoy) | `ObtenerPresupuestosAceptadosAsync(2000-01-15)` | **0** |
+
+---
+
+## G. Resumen de cobertura de criterios
 
 | Criterio de aceptación (#82) | Casos que lo cubren | Estado |
 |---|---|---|

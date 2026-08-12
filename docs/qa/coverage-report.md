@@ -1,14 +1,14 @@
-# Coverage Report — Suite de Integración Backend (#82)
+# Coverage Report — Suite Backend (#82) + MetricasRepositorio (#95)
 
 | Campo | Valor |
 |---|---|
-| **Versión** | v1.1 (verificado) |
-| **Fecha** | 2026-08-09 |
+| **Versión** | v1.2 (verificado) |
+| **Fecha** | 2026-08-11 |
 | **Autor** | QA Automation |
-| **Issue** | #82 |
-| **Objetivo** | ≥ 80% de criterios de aceptación cubiertos por tests automatizados (meta del issue) |
+| **Issue** | #82, #95 |
+| **Objetivo** | ≥ 80% de criterios de aceptación cubiertos por tests automatizados (meta de los issues) |
 
-> ✅ **Estado**: implementación **completa y verificada**. 55/55 tests de integración pasan (2 corridas consecutivas, cero flakiness). Cobertura de criterios de aceptación 7/7 (100%). Detalles en §4 y §5.
+> ✅ **Estado**: implementación **completa y verificada**. **215/215 tests PASS / 0 FAIL / 0 SKIP** en la suite completa (55 de integración #82 + 13 de repositorio #95 + 147 unit/regresión pre-existentes). Cobertura de criterios: **7/7 (#82) + 6/6 (#95) = 100%** cada uno. Detalles en §4, §5 y §7.
 
 ---
 
@@ -37,6 +37,8 @@
 | Contrato (cookie/JWT/refresh) | 7 | 17% |
 | Exploratory (automatizados en v1.1) | 3 | +TC-EXP-02, TC-EXP-03 automatizados; TC-EXP-01 resuelto como issue #126 |
 | **Total ejecutados** | **55** | **100%** (todos PASS, 2 corridas) |
+
+> La tabla cubre la suite de integración HTTP (#82). La suite unit `MetricasRepositorio` (#95, 13 tests) no se contabiliza aquí — va en §7.
 
 ---
 
@@ -129,7 +131,7 @@ El valor primario de la suite es el **contrato HTTP** (cada endpoint del alcance
 
 ---
 
-## 5. Métricas del issue #82 (resumen de estado)
+## 5. Métricas de la suite (resumen de estado)
 
 | Métrica | Objetivo | Resultado real |
 |---|---|---|
@@ -139,7 +141,9 @@ El valor primario de la suite es el **contrato HTTP** (cada endpoint del alcance
 | Flakiness (2 corridas consecutivas) | 0 | **0** — 55/55 en ambas corridas (2026-08-09) |
 | Tiempo de suite integración | < 10 min (token JWT R4) | **~4 s** (55 tests; host compartido SQLite :memory:) |
 | Dependencias nuevas | 0 | ✅ (todo ya en `ShopMGR.Tests.csproj`) |
-| Suite total (`dotnet test ShopMGR.Tests`) | — | **195/196 pass, 1 omitido** pre-existente (`PresupuestoRepositorioTests.CrearAsync_DeberiaCrearPresupuesto`, Skip con razón documentada: bug AddRange sin null check) |
+| Suite total (`dotnet test ShopMGR.Tests`) | — | **215/215 pass, 0 omitidos** (2026-08-11). El skip pre-existente de `PresupuestoRepositorioTests.CrearAsync_DeberiaCrearPresupuesto` ya no existe: el bug AddRange sin null check se resolvió y el test pasa |
+| Suite `MetricasRepositorio` (#95) | — | **13 tests** (1 clase), todos PASS; **6/6 criterios** del issue #95 cubiertos (ver §7) |
+| Suite issue #126 (`ApiIssue126Tests`) | — | **6 tests** agregados desde v1.1 (TC-TRA-14..17, TC-PRE-12..13) — documentados en la iteración del issue #126 |
 | Cobertura de código (secundaria) | Documentar, no perseguir % | WebApi 54.8% · Repos 69.1% · Aplicacion 59.7% · Dominio 72.5% (ver §4) |
 
 ---
@@ -151,7 +155,41 @@ El valor primario de la suite es el **contrato HTTP** (cada endpoint del alcance
 | TC-EXP-01 (FK sin validar en creación de trabajo/presupuesto) | **BUG confirmado** | H3: `CrearTrabajo` idCliente inexistente → **500** (debería 400/404). **Issue #126** abierto (`bug`, `severity: medium`, evidencia + fix sugerido). `CrearPresupuesto` → 404 anticipado (falla antes del FK por config de costo hora) |
 | `ActualizarPresupuesto` sin test dedicado | Resuelto | **TC-PRE-08** dedicado agregado y pasando |
 | Auth administrativo (roles, cambiar contraseña) | Ampliación | Iteración v1.1 del plan si el dueño lo prioriza |
-| `AGENTS.md` desactualizado (endpoint `ObtenerListaTrabajos` ya existe) | Deuda de docs | Actualizar AGENTS.md (Backend Gaps) — separado del issue #82 |
+| `AGENTS.md` desactualizado (endpoint `ObtenerListaTrabajos` ya existe) | Resuelto | `AGENTS.md` actualizado el 2026-08-09: gaps históricos eliminados; quedan solo los activos (issue #126: FK sin validar en creación de trabajo/presupuesto) |
 | HS512 key-length gotcha (`IDX10720`) | Nota de infraestructura de test | `Claves.JwtToken` de prueba debe tener ≥512 bits (clave aprobada por PM, 536 bits). No es un bug de producción si el secreto real cumple la longitud |
 | `ValorHoraDeTrabajo` no sembrada por Bootstrap | Gap funcional | Presupuestos y `AgregarHorasDeTrabajo` (trabajo sin presupuesto) fallan con 404 hasta configurarla vía `PATCH ActualizarCostoHoraDeTrabajo`. Considerar seed en Bootstrap |
 | Rate limiter y suites compartidas | Nota de diseño | Single-partition (TestServer → 127.0.0.1): clases con ≥6 logins/min o ≥2 registros/min reciben 429. Mitigado con `TokenCompartido` + factories aislados por test de rate-limit |
+
+---
+
+## 7. Suite MetricasRepositorio (issue #95)
+
+> Suite unit de repositorio (InMemory + repositorio directo — patrón de `ClienteRepositorioTests`). Fuente de asserts: `test-plan.md` §12 (M1–M5). Archivo: `ShopMGR.Tests/MetricasRepositorioTests.cs` (13 tests).
+
+### Matriz de trazabilidad de criterios (issue #95)
+
+| Criterio de aceptación | Casos | Resultado real |
+|---|---|---|
+| **CA1** — Ingresos = suma de movimientos `Pago` del mes (múltiples Pagos) | TC-MET-01 | ✅ PASS (400.49 exacto) |
+| **CA2** — Excluye tipos no-Pago del mismo mes (Cargo/Compra/Anticipo/Ajuste) | TC-MET-02 | ✅ PASS |
+| **CA3** — Filtra por mes y por año | TC-MET-03, TC-MET-04 | ✅ PASS |
+| **CA4** — Mes sin movimientos → 0 | TC-MET-05 | ✅ PASS |
+| **CA5** — No suma `TotalLabor` de trabajos Terminado (regresión del fix) | TC-MET-06 | ✅ PASS (fallaría con el código pre-fix: Sum de TotalLabor) |
+| **CA6** — Regresión: los otros 4 métodos del repositorio funcionan | TC-MET-07..13 | ✅ PASS (7 tests) |
+
+**Cobertura de criterios #95: 6/6 = 100%** (objetivo mínimo: ≥80% → **CUMPLIDO, verificado en ejecución**).
+
+### Métricas de la suite
+
+| Métrica | Resultado real |
+|---|---|
+| Tests | 13 `[Fact]`, 1 clase (`MetricasRepositorioTests`) |
+| Corrida individual | 13/13 PASS — fixture InMemory con nombre `Guid` por test → aislamiento total (cero estado compartido) |
+| Suite completa | **215/215 PASS / 0 FAIL / 0 SKIP** (incluye los 13) |
+| Dependencias nuevas | 0 (mismo patrón InMemory que la suite existente) |
+| Tiempo de suite | < 1 s (InMemory, sin host HTTP) |
+| Flakiness | 0 — fixture de fechas estable: mes fijo `2026-07` para movimientos; `DateTime.Now` para Trabajo/Presupuesto/Horas (setters privados) con período vacío `2000-01` |
+
+### Cobertura de código (secundaria)
+
+Los 5 métodos de `MetricasRepositorio` quedan cubiertos con asserts reales de suma/conteo (nunca pasamano). El % de líneas con los tests #95 no se midió en esta iteración (métrica secundaria — ver nota §4); el valor primario es CA = 100%.
