@@ -12,10 +12,11 @@ namespace ShopMGR.Repositorios
         {
             var (mes, anio) = ObtenerPeríodo(fecha);
             var ingresosMes = await _contexto
-                .Trabajos.Where(t =>
-                    t.FechaFin.HasValue && t.FechaFin.Value.Month == mes && t.FechaFin.Value.Year == anio
-                )
-                .SumAsync(t => t.TotalLabor ?? 0m);
+                .MovimientoBalance.Where(m => 
+                        m.Tipo == Dominio.Enums.TipoMovimiento.Pago &&
+                        m.Fecha.Year == anio &&
+                        m.Fecha.Month == mes)
+                .SumAsync(m => m.Monto);
 
             return ingresosMes;
         }
