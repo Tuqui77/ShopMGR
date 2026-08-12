@@ -21,6 +21,20 @@ const tipoConfig: Record<TipoMovimiento, { label: string; positive: boolean | 'n
   Ajuste: { label: 'Ajuste', positive: 'neutral' },
 };
 
+// Los montos vienen con signo del backend (+ créditos, - débitos). Ajuste es
+// neutral visualmente, pero su monto define la dirección (issue #128): positivo
+// suma como crédito, negativo como débito, para que el balance del modal
+// coincida siempre con Cliente.Balance del backend (Sum de todos los montos).
+function esCredito(m: MovimientoBalance): boolean {
+  const positive = tipoConfig[m.tipo]?.positive;
+  return positive === true || (positive === 'neutral' && m.monto > 0);
+}
+
+function esDebito(m: MovimientoBalance): boolean {
+  const positive = tipoConfig[m.tipo]?.positive;
+  return positive === false || (positive === 'neutral' && m.monto < 0);
+}
+
 export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onClose }: Props) {
   const { data: movimientos, isLoading, error } = useMovimientosCliente(clienteId);
   const modificarMovimiento = useModificarMovimiento();
@@ -107,11 +121,11 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
   if (!isOpen) return null;
 
   const totalCreditos = movimientos
-    ?.filter((m) => tipoConfig[m.tipo]?.positive === true)
+    ?.filter(esCredito)
     .reduce((sum, m) => sum + m.monto, 0) ?? 0;
 
   const totalDebitos = movimientos
-    ?.filter((m) => tipoConfig[m.tipo]?.positive === false)
+    ?.filter(esDebito)
     .reduce((sum, m) => sum + m.monto, 0) ?? 0;
 
   // Los montos ya vienen con signo del backend (+ créditos, - débitos)
