@@ -34,50 +34,99 @@
 - **[Iteración 54]**: Issue #81 (tests frontend) — **Gate QA 🟢 APPROVE** (2026-08-08). Auditoría independiente del agente QA sobre los 9 commits locales: cobertura **90.04% Stmts verificada por ejecución** (coincide al decimal con lo reportado; meta ≥70% cumplida y superada), **395/395 tests en 3 corridas sin flakiness**, typecheck/lint/build OK, **0 ocurrencias de `typeof === 'function'`**, 248 `expect()` reales con cross-check contra los servicios (URLs, body, params, transformaciones byte a byte en passkeys), 0 tests pasamano, diff = exactamente 9 tests + `export` type-only de clientes.ts (cero cambio de comportamiento). **Hallazgo backend (deuda de contrato)**: endpoint `GET /Direccion/Obtener detalle por id` con espacios → **issue #125 creado** (backend gap, severity Low, NO bloquea). Mejoras menores → backlog (test de paralelismo real en metricas; homogeneizar fixtures). **Los 9 commits quedan LOCALES en `development`** esperando prueba del dueño y autorización de push. Cierre del issue: con PR del sprint (regla del dueño).
 - **[Iteración 55]**: Issue #125 (endpoint direcciones con espacios) — **Fix del dueño + alineación frontend + PUSH del lote completo #81+#125** (2026-08-08). El dueño corrigió el controller: `[Route("Obtener detalle por id")]` → `[Route("ObtenerDetallePorId")]` (verificado: era el ÚNICO endpoint con espacios en Controllers/). El subagente Frontend alineó el contrato: `direcciones.ts:42` y `direcciones.test.ts:96` → `/Direccion/ObtenerDetallePorId`; verificaciones OK (typecheck/lint, suite **395/395**, cobertura direcciones **100% Stmts** y total servicios **90.04%** intactos, build OK). **2 commits atómicos**: `c39d6c5` fix(frontend) alinear endpoint de direcciones con controller corregido (#125) + `6a7e9c9` fix(direcciones) quitar espacios del endpoint ObtenerDetallePorId (#125, cambio del dueño). **El dueño autorizó "mandar todo junto" → push a `development`** del lote completo: 9 commits del #81 + 2 del #125 + 1 docs. Branch sincronizada. **Issue #81 y #125 COMPLETOS** — quedan ABIERTOS hasta el PR del sprint (regla del dueño). Siguiente: **#82/#83 (backend — usuario) → #76 (devops — usuario)**.
 - **[Iteración 56]**: Issues #82/#83 (tests backend integración + seguridad) — **Suite implementada y VERDE 55/55** (2026-08-09). QA backend: 6 archivos de tests de integración + infraestructura de host de test (SQLite `:memory:` compartida, `EnsureCreated` + fake history de migraciones → `Migrate()` no-op + Bootstrap admin; customizer para `nvarchar(max)`→TEXT). **Resultados verificados**: suite integración **55/55 PASS en 2 corridas (0 flakiness, ~4 s)**; suite total **195/196** (1 omitido pre-existente `PresupuestoRepositorioTests.CrearAsync_DeberiaCrearPresupuesto` con Skip documentado: bug AddRange sin null check). Cobertura de código (secundaria): WebApi 54.8% (incluye ExceptionHandlingMiddleware 100%), Repositorios 69.1%, Aplicacion 59.7%, Dominio 72.5% (Contexto excluido: migraciones generadas). Criterios de aceptación 7/7 = 100% (meta ≥80% ✅). **Hallazgo crítico**: H3 confirmado — `CrearTrabajo` con idCliente inexistente → **500** FK (debería 400/404) → **issue #126** creado (`bug`, `severity: medium`, evidencia + fix sugerido). Discrepancias de contrato ajustadas al comportamiento real (TC-AUTH-09 accessToken byte-idéntico en mismo segundo, TC-CLI-10 ProblemDetails del binding, TC-PRE-11 serialización decimal + culture es-AR, TC-PRE-08/TC-TRA-10 bodies completos requeridos, TC-TRA-09 flujo con horas, TC-TRA-11 requiere seed de ValorHoraDeTrabajo). TC-EXP-01/02/03 automatizados (rate limit 429 con factory aislado). Infra gotcha: coverage con `--results-directory` falla (MSB3030) si bin/obj sucios → limpiar antes. Documentación QA actualizada (`docs/qa/*` v1.1). **Sin commits** (regla del proyecto) — archivos nuevos sin trackear: `ShopMGR.Tests/Integration/` + `docs/`. Pendiente: revisión del dueño → commits atómicos → push → cierre #82/#83 con PR del sprint. Siguiente: **#76 (devops — usuario)**.
+- **[Iteración 57]**: **Sprint 4 COMPLETADO — release v0.17.0 publicado** (2026-08-10). PR #127 MERGED a `main` (`06643bd`, 2026-08-10T23:32:09Z) → Release **v0.17.0** (23:32:35Z). Workflows post-merge OK: release `31442715154` success, tests `31441766319` success, sinc-dev `31442715151` success (sync main→development 0 divergencia). **8/8 issues cerrados por Closes**: #67 #74 #76 #81 #82 #83 #124 #125. Lote final pusheado a `development`: `3a5be99..b8baab0` (5 commits: `36f9cb3` tests #82/#83, `934ee1c` docs qa, `416973d` docs iteración 56, `20dfdac` fix cache CI #76, `b8baab0` style dotnet format UsuarioRepositorio). Notas: (1) **#123 quedó ABIERTO** — implementado (iteración 28) pero no estaba en el body del PR #127; **9 alertas Dependabot open verificadas vía API = todas bundled deps de npm irreducibles** (ip-address, undici, brace-expansion, tar; 3 high + 6 medium) → candidato a cierre formal "riesgo aceptado"; (2) **AGENTS.md NO versionado** (decisión del dueño, `.git/info/exclude` local); (3) `UsuarioRepositorio.cs` formateado (`b8baab0`) es REQUERIDO por el job lint (`dotnet format --verify-no-changes`). **Sprint 5 definido** (ver sección a continuación).
+- **[Iteración 58]**: **Sprint 5 — Definición + Fase 0 + inicio Fase 1** (2026-08-10). Dueño confirmó alcance: núcleo (#123 #126 #95 #118 #84 #85 #86 #77) **+ todos los opcionales del backlog** (#68 #69 #59-#65 #79 #78 #80 #88-#92 #87 #93). **Decisión de dominio #95**: ingresos por movimientos tipo **`Pago`** (NO se agrega `Cobro` al enum; verificado: `TipoMovimiento.cs` solo tiene Pago/Cargo/Anticipo/Compra/Ajuste). **Fase 0 completada**: #123 cerrado formalmente con evidencia (9 alertas = bundled deps npm irreducibles: ip-address, undici, brace-expansion, tar; 3 high + 6 medium). Comments registrados: #95 (decisión Pago + pendiente verificar data existente), #118 (dependencia sobre #95). **Inicio Fase 1 — #126 (H3)**: el dueño implementó validación de `IdCliente` en `CrearAsync` de `TrabajoRepositorio` (+validación `IdPresupuesto` si no nulo) y `PresupuestoRepositorio` — `AnyAsync` + `KeyNotFoundException` → 404 con mensaje claro. Verificado por el dueño: 404 con idCliente inválido. Revisión PM del diff: cumple criterio del issue; mejora adicional `idPresupuesto` (FK también fallaba con 500). **Hallazgo PM (bug de lógica)**: la primera versión del dueño quedó con la condición de `IdPresupuesto` invertida (faltaba `!` — lanzaba 404 con presupuesto VÁLIDO y 500 con inexistente); detectado por PM en el diff antes de delegar QA, corregido por el dueño (1 línea: `!= null && !await`). **Pendiente**: tests de integración + commit.
+- **[Iteración 59]**: **Sprint 5 — #126: tests de integración QA 🟢** (2026-08-11). Subagente QA creó `ShopMGR.Tests/Integration/ApiIssue126Tests.cs` con **6 tests** replicando el patrón del Sprint 4 (`ApiTestsBase` + `ShopMGRWebApplicationFactory` SQLite `:memory:`): **TC-TRA-14** CrearTrabajo con cliente inexistente → 404 JSON + no persiste; **TC-TRA-15** CrearTrabajo con presupuesto inexistente (no nulo) → 404 + no persiste; **TC-TRA-16** positivo cliente válido sin presupuesto → 200 + persiste con `IdPresupuesto==null`; **TC-TRA-17** positivo cliente + presupuesto válidos → 200 + persiste; **TC-PRE-12** CrearPresupuesto con cliente inexistente → 404 + no persiste; **TC-PRE-13** positivo cliente válido → 200 + persiste. Seed de `ValorHoraDeTrabajo` requerido (sin él, falla antes por costo hora). **Resultado: suite total 202 tests — 201 PASS / 0 FAIL / 1 skip pre-existente** (el skip documentado `AddRange(materiales)` — candidato a issue separado). Numeración continua TC-TRA-14..17 / TC-PRE-12..13. **Sin commits** (regla del proyecto): working tree = 2 repositorios modificados (dueño) + `ApiIssue126Tests.cs` nuevo (QA) + Sprint_Board.md. Pendiente: verificación del dueño → commit atómico (sugerido: `test: add integration tests for issue #126 reference validation`) → siguiente #95.
 
 ## Sprint Anterior: Sprint 3 (COMPLETADO — 2026-08-07)
 **Objetivo del Sprint**: Consolidar la seguridad y robustez del flujo de auth (refresh tokens en cookie HttpOnly, revocación explícita, índice/purga, recuperación de contraseña admin, SRP) + mejoras UX de auth en frontend + hardening de infraestructura (#75) y validación de entrada (#57).
 **Estado General**: Sprint COMPLETADO — PR #120 (release Sprint 3) MERGED (`5275c52`, 2026-08-07). Hotfix #121 (PR #122) MERGED y desplegado a prod OK (`6be2db0`, 2026-08-07) — issue #121 CLOSED. Sprint 4 definido (ver sección a continuación).
 
-## Sprint Actual: Sprint 4 (DEFINIDO — 2026-08-07)
+## Sprint Anterior: Sprint 4 (COMPLETADO — 2026-08-10)
 **Objetivo del Sprint**: Cerrar brechas de seguridad y deuda técnica acumulada: resolver vulnerabilidades de Dependabot (prioridad #1), eliminar SEV-004 (bootstrap admin + rate limit), separar Zustand de React Query (#74), lazy loading de rutas (#67), fortalecer la suite de tests (#81/#82/#83) y optimizar CI con cache (#76).
+**Estado General**: Sprint COMPLETADO — PR #127 (release Sprint 4) MERGED (`06643bd`, 2026-08-10) → **Release v0.17.0 publicado** (2026-08-10T23:32:35Z). **8/8 issues cerrados** (#67 #74 #76 #81 #82 #83 #124 #125). Workflows post-merge todos success (release, tests, sinc-dev). **#123 queda ABIERTO** — 9 alertas Dependabot restantes = bundled deps de npm irreducibles (riesgo aceptado documentado, iteración 28) → pendiente de cierre formal en Sprint 5. Suite final: backend 195/196 (1 skip documentado), frontend 395/395 (90.04% Stmts servicios), integración 55/55.
 
-**Estado General**: Sprint 4 EN CURSO (2026-08-08). Issue #123 (Dependabot) COMPLETADO. Issue #124 (SEV-004) COMPLETADO (implementado + pusheado: `d2ad53d`, `4976dc0`, `a391bc2`). Issue #74 (Zustand↔React Query) COMPLETADO (8 commits pusheados `a391bc2..6c3099d`, gate QA 🟢 APPROVE). Issue #67 (Lazy loading) COMPLETADO (6 commits pusheados `6c3099d..4a94b0c`, F3 useNavigate, gate QA 🟢 APPROVE 310/310, bundle −41.7%). Issue #81 (tests frontend) COMPLETADO (implementación + gate QA 🟢 APPROVE: 9 commits locales, cobertura servicios 39.6% → 90.04% Stmts, suite 395/395) — pendiente prueba dueño + push. Issue #125 creado (endpoint direcciones con espacios → backend). Siguiente tras #81: **#82/#83 → #76**.
+## Sprint Actual: Sprint 5 (PROPUESTA — 2026-08-10, pendiente confirmación del dueño)
 
-### Issues del Sprint 4
+**Estado General**: Sprint COMPLETADO — PR #127 (release Sprint 4) MERGED (`06643bd`, 2026-08-10) → **Release v0.17.0 publicado** (2026-08-10T23:32:35Z). **8/8 issues cerrados** (#67 #74 #76 #81 #82 #83 #124 #125). Workflows post-merge todos success (release, tests, sinc-dev). **#123 queda ABIERTO** — 9 alertas Dependabot restantes = bundled deps de npm irreducibles (riesgo aceptado documentado, iteración 28) → pendiente de cierre formal en Sprint 5. Suite final: backend 195/196 (1 skip documentado), frontend 395/395 (90.04% Stmts servicios), integración 55/55.
+
+### Issues del Sprint 4 (cerrados con PR #127 / release v0.17.0)
 
 | Issue | Descripción | Área | Type | Prioridad | Estado |
 |-------|-------------|------|------|-----------|--------|
-| #123 | Vulnerabilidades de Dependabot — 26 alertas npm (11 high, 15 medium) | DevOps/Backend/Frontend | Bug (security) | Urgent | **COMPLETADO 2026-08-07** — Frontend 0 vulns (`f53dd33`); raíz bumps legítimos (`5520dc2`); 7 vulns restantes (bundled deps npm) = riesgo aceptado, comment en issue |
-| #124 (SEV-004) | Restringir bootstrap del primer admin + rate limit en registro ("admin theft") | Backend | Feature (security) | Urgent | **COMPLETADO 2026-08-08** — ✅ Bootstrap admin + ✅ rate limit registro (1/min/IP) + ✅ copy por política (switch); pusheado `d2ad53d` + `4976dc0` + `a391bc2`. Abierto hasta PR del sprint |
-| #74 | Separar Zustand (UI state) de React Query (server state) | Frontend | Refactor | High | **COMPLETADO 2026-08-08** — store limpio + hooks unificados + H4/H5/H6; tests de caracterización 296/296; gate QA 🟢 APPROVE; 8 commits pusheados `a391bc2..6c3099d`. Abierto hasta PR del sprint |
-| #67 | Lazy loading de rutas con React.lazy | Frontend | Feature | High | **COMPLETADO 2026-08-08** — 8 páginas lazy, Login/Dashboard eager; fix mock `window.location` en setup.ts (loop infinito 511k renders resuelto); F3: navegación detalle→lista con useNavigate + invalidateQueries (0 `window.location.href` en prod); suite 310/310; bundle 512→298.62 kB raw (−41.7%); 6 commits pusheados `6c3099d..4a94b0c`. Abierto hasta PR del sprint |
-| #81 | Reescribir tests de frontend con assertions reales | Frontend | Test (qa) | High | **COMPLETADO (implementación + gate QA 🟢 APPROVE) 2026-08-08** — 9 commits locales: cobertura servicios 39.6% → 90.04% Stmts (meta ≥70% ✅), 395/395 tests, 0 typeof anti-patrón, 248 assertions reales; hallazgo backend → #125. Pendiente: prueba dueño + push → cierre con PR del sprint |
-| #82 | Tests de integración para endpoints críticos | Backend | Test (qa) | High | OPEN — backlog previo |
-| #83 | Tests de seguridad (auth + autorización) | Backend | Test (qa) | High | OPEN — backlog previo |
-| #76 | Cache de NuGet y npm en GitHub Actions | DevOps | Task | High | OPEN — backlog previo |
+| #123 | Vulnerabilidades de Dependabot — 26 alertas npm (11 high, 15 medium) | DevOps/Backend/Frontend | Bug (security) | Urgent | **COMPLETADO (implementación) 2026-08-07** — Frontend 0 vulns (`f53dd33`); raíz bumps (`5520dc2`); **issue ABIERTO**: 9 alertas restantes (bundled deps npm: ip-address, undici, brace-expansion, tar) = riesgo aceptado → cierre formal pendiente en Sprint 5 |
+| #124 (SEV-004) | Restringir bootstrap del primer admin + rate limit en registro ("admin theft") | Backend | Feature (security) | Urgent | **CERRADO con PR #127** — Bootstrap admin + rate limit registro + copy por política |
+| #74 | Separar Zustand (UI state) de React Query (server state) | Frontend | Refactor | High | **CERRADO con PR #127** — store limpio + hooks unificados + H4/H5/H6; gate QA 🟢 APPROVE |
+| #67 | Lazy loading de rutas con React.lazy | Frontend | Feature | High | **CERRADO con PR #127** — 8 lazy, F3 useNavigate, bundle −41.7%, gate QA 🟢 APPROVE |
+| #81 | Reescribir tests de frontend con assertions reales | Frontend | Test (qa) | High | **CERRADO con PR #127** — cobertura servicios 90.04% Stmts, 395/395, gate QA 🟢 APPROVE |
+| #82 | Tests de integración para endpoints críticos | Backend | Test (qa) | High | **CERRADO con PR #127** — suite integración 55/55, 7/7 criterios, docs/qa v1.1 |
+| #83 | Tests de seguridad (auth + autorización) | Backend | Test (qa) | High | **CERRADO con PR #127** — cubiertos por la suite de integración (auth, autorización, rate limit 429) |
+| #76 | Cache de NuGet y npm en GitHub Actions | DevOps | Task | High | **CERRADO con PR #127** — `cache-dependency-path: '**/*.csproj'` (`20dfdac`) |
+| #125 | Endpoint de direcciones con espacios en la ruta | Backend | Bug | Low | **CERRADO con PR #127** — `ObtenerDetallePorId` + frontend alineado (`c39d6c5`, `6a7e9c9`) |
 
-### Notas de Decisión (Definición Sprint 4)
+## Sprint Actual: Sprint 5 (DEFINIDO — 2026-08-10)
 
-- El dueño definió el alcance explícitamente: **Dependabot (mayor prioridad)** + SEV-004 + #74 + #67 + #81 + #82 + #83 + #76.
-- El issue #123 (Dependabot) fue creado con el conteo real de alertas al 2026-08-07: 26 abiertas (0 critical, 11 high, 15 medium), ecosistema npm. Nota: la cifra previa del Sprint 3 ("56 vuln, 1 critical, 20 high") no coincide con el conteo actual de la API — verificar con `gh api /repos/Tuqui77/ShopMGR/dependabot/alerts`.
-- El issue #124 (SEV-004) fue creado con contexto técnico del hallazgo MergeGuard PR #120 (migración OPS-001 `d4eff03` + patrón rate limit del login del Sprint 2).
-- **Regla de ejecución**: backend/devops los ejecuta el usuario directamente; frontend se delega al subagente Frontend. #82/#83 son backend (usuario). #81 es frontend (subagente). #123 Dependabot es mixto (npm del Frontend + posiblemente backend) — verificar alcance real.
-- **Dependencia clave**: #74 (Zustand↔React Query) toca la arquitectura de datos del frontend → conviene hacerlo ANTES de #67 (lazy loading) para no re-tocar rutas/páginas, y antes de #81 (tests) para que las assertions reales se escriban sobre el estado ya refactorizado.
-- **Fuera de alcance en este sprint (por decisión del dueño)**: #118 (métricas históricas), #72/#73/#95/#93/#92/#91/#90/#89/#88/#87/#86/#85/#84/#80/#79/#78/#77/#70/#69/#68/#65/#64. Quedan en backlog.
+**Objetivo del Sprint**: Precisión financiera y de métricas (ingresos reales por pagos, histórico y comparación mes a mes) + bugs de contrato backend (400/404) + primera capa de E2E (Playwright) y hardening de calidad/CI + lote de opcionales del backlog (frontend UX, backend ops, devops, arquitectura).
 
-### Backlog de Tareas Atómicas — Sprint 4
+**Estado General**: DEFINIDO (2026-08-10) — el dueño confirmó la propuesta completa **+ todos los opcionales del backlog**. Decisión de dominio #95: usar tipo **`Pago`** (NO se agrega `Cobro` al enum). Todos los issues quedan OPEN hasta su PR de sprint (regla del dueño).
 
-- [ ] **TSK-S4-01:** ✅ Alcance del Sprint 4 definido y documentado (issues creados/verificados: #123, #124 nuevos; #74/#67/#81/#82/#83/#76 existentes)
-- [ ] **TSK-S4-02:** Planificar orden de ejecución según dependencias (Dependabot #123 → SEV-004 #124 → #74 → #67 → #81/#82/#83 → #76)
-- [ ] **TSK-S4-03:** ✅ Implementar #123 (Dependabot) — Frontend 0 vulns (`f53dd33`); raíz bumps (`5520dc2`); 7 vulns bundled deps npm = riesgo aceptado documentado
-- [ ] **TSK-S4-04:** ✅ Implementar #124 SEV-004 (backend — usuario ejecuta) — ✅ Bootstrap admin (reconciliación idempotente) + ✅ rate limit registro 1/min/IP + ✅ copy por política (switch); pusheado `d2ad53d` + `4976dc0` + `a391bc2`
-- [ ] **TSK-S4-05:** ✅ Implementar #74 (frontend — subagente Frontend) — scope aprobado: fases 1-5 + H4/H5/H6; condición del dueño: tests para todo cambio ✅ (paso 0: 6 archivos caracterización, gate QA 🟢 APPROVE); 8 commits pusheados; issue abierto hasta PR del sprint
-- [ ] **TSK-S4-06:** ✅ Implementar #67 (frontend — subagente Frontend) — ✅ plan validado (Login/Dashboard eager por LCP, 8 lazy, named export inline) + ✅ fix setup.ts (loop infinito) + ✅ F3 useNavigate (0 window.location.href en prod) + ✅ gate QA 🟢 APPROVE (310/310, bundle −41.7%) + ✅ push `6c3099d..4a94b0c`
-- [ ] **TSK-S4-07:** ✅ Implementar #81 (frontend — subagente Frontend) — ✅ auditoría (39.6% Stmts; issue desactualizado parcialmente) + ✅ plan validado por dueño (alcance completo F1+F2, meta 70% servicios como grupo) + ✅ implementación (9 commits atómicos: cobertura 90.04% Stmts, suite 395/395) + ✅ gate QA 🟢 APPROVE + ⏳ prueba dueño + push → cierre con PR del sprint
-- [ ] **TSK-S4-08:** Implementar #82/#83 (backend — usuario ejecuta)
-- [ ] **TSK-S4-09:** Implementar #76 (devops — usuario ejecuta)
-- [ ] **TSK-S4-10:** QA de los cambios + MergeGuard + Release del Sprint 4
+### Issues del Sprint 5
+
+| Issue | Descripción | Área | Type | Prioridad | Estado / Dependencias |
+|-------|-------------|------|------|-----------|----------------------|
+| #123 | Cierre formal Dependabot (riesgo aceptado: 9 alertas = bundled deps npm irreducibles) | DevOps | Bug (security) | Urgent | **Fase 0 — administrativo** (evidencia verificada: ip-address, undici, brace-expansion, tar) |
+| #126 | CrearTrabajo/CrearPresupuesto con IdCliente inexistente → 500 en vez de 400/404 (H3) | Backend | Bug | Medium | **Fase 1** — quick win documentado (evidencia + fix sugerido) |
+| #95 | Ingresos del mes por movimientos tipo **`Pago`** (hoy: trabajos Terminado) | Backend | Enhancement | Medium | **Fase 1** — ✅ decisión de dominio: `Pago` (existe en el enum). Antes de #118 |
+| #118 | Métricas: comparar mes en curso vs anterior + sección histórico con selector mes/año | Backend+Frontend | Feature | Medium | **Fase 2** — depende de #95 (ingresos correctos) |
+| #84 | Tests E2E con Playwright | Frontend | Test (qa) | Medium | **Fase 2** — subagente Frontend |
+| #85 | Quality gates en CI/CD | DevOps | Task | Medium | **Fase 3** — usuario |
+| #86 | Test data builders y factories | Backend | Test (qa) | Medium | **Fase 3** — usuario |
+| #77 | Resource limits + restart policy en containers | DevOps | Task | Medium | **Fase 3** — usuario |
+| #68 | Empty states en listas vacías | Frontend | Feature | Medium | **Fase 5** — subagente Frontend |
+| #69 | Estandarizar loading states en todas las páginas | Frontend | Fix | Medium | **Fase 5** — subagente Frontend |
+| #59 | Health check endpoint | Backend | Feature | Medium | **Fase 4** — usuario |
+| #60 | AsNoTracking en queries de lectura | Backend | Perf | Medium | **Fase 4** — usuario |
+| #61 | Índices en propiedades de búsqueda frecuente | Backend | Perf | Medium | **Fase 4** — usuario |
+| #62 | Logging estructurado con correlation IDs | Backend | Feature | Medium | **Fase 4** — usuario |
+| #63 | Swagger solo en Development | Backend | Security | Medium | **Fase 4** — usuario |
+| #64 | CORS explícito | Backend | Security | Medium | **Fase 4** — usuario |
+| #65 | Limpiar WebApi.csproj de dependencias de testing | Backend | Chore | Medium | **Fase 4** — usuario |
+| #79 | Separar secrets por ambiente (production vs development) | DevOps | Security | Medium | **Fase 6** — usuario |
+| #78 | Agregar .dockerignore | DevOps | Chore | Low | **Fase 6** — usuario |
+| #80 | Concurrency groups en GitHub Actions workflows | DevOps | Chore | Low | **Fase 6** — usuario |
+| #88 | API versioning (v1) | Backend | Architecture | Low | **Fase 7** — usuario |
+| #89 | Desacoplar Google Drive con Adapter pattern | Backend | Architecture | Low | **Fase 7** — usuario |
+| #90 | Circuit Breaker con Polly para servicios externos | Backend | Architecture | Low | **Fase 7** — usuario |
+| #91 | FluentValidation para DTOs | Backend | Architecture | Low | **Fase 7** — usuario |
+| #92 | Domain Events para notificaciones | Backend | Architecture | Low | **Fase 7** — usuario |
+| #87 | Load tests con k6 | QA | Test (qa) | Low | **Fase 8** — QA |
+| #93 | Eliminar controllers Teléfono/Dirección — entidades dependientes de Cliente | Backend+Frontend | Refactor | Medium | **Fase 9** — requiere **refinamiento previo (BA/UX)** antes de implementar |
+
+### Notas de Decisión (Definición Sprint 5)
+
+- **#95 — decisión de dominio del dueño (2026-08-10)**: el tipo de movimiento correcto para ingresos es **`Pago`** (ya existe en el enum `TipoMovimiento`). NO se agrega `Cobro` al enum, NO hay migración de enum. El cálculo de ingresos pasa de `SUM(totalLabor) de Trabajos Terminado` a `SUM(monto) de Movimientos tipo Pago del mes`. ⚠️ Pendiente de verificar en la implementación: los movimientos existentes de tipo Pago representan cobros reales en la data actual (revisar seed/datos).
+- **#123 — cierre formal**: 9 alertas Dependabot open verificadas vía API (3 high: ip-address, brace-expansion; 6 medium: ip-address, undici, tar) = todas **runtime** en bundled deps del npm embebido de `@semantic-release/npm@13.1.5`. Overrides no aplican; npm 12 incompatible. Cerrar como done con riesgo aceptado documentado. Monitoreo: se resuelve solo cuando npm publique tar ≥7.5.21 bundled.
+- **Dependencia #95 → #118**: el histórico y la comparación de ingresos se construyen sobre el cálculo corregido (Pago), no sobre el actual (Trabajos Terminado).
+- **#93 requiere refinamiento previo**: es un refactor de contrato (los endpoints de Teléfono/Dirección se integran como entidades dependientes de Cliente) → el dueño confirmó alcance, pero el diseño de detalle se planifica con BA/UX antes de delegar.
+- **Regla de ejecución** (patrón del proyecto): backend/devops/arquitectura los ejecuta el usuario directamente; frontend se delega al subagente Frontend; QA audita con gate independiente (patrón híbrido).
+- **Orden de ejecución por fases**: Fase 0 (#123) → Fase 1 (#126, #95) → Fase 2 (#118, #84) → Fase 3 (#85, #86, #77) → Fase 4 (#59-#65) → Fase 5 (#68, #69) → Fase 6 (#79, #78, #80) → Fase 7 (#88-#92) → Fase 8 (#87) → Fase 9 (#93, con refinamiento previo).
+
+### Backlog de Tareas Atómicas — Sprint 5
+
+- [ ] **TSK-S5-01:** ✅ Alcance del Sprint 5 definido y documentado (núcleo + opcionales; decisión #95 = Pago)
+- [ ] **TSK-S5-02:** Cerrar formalmente #123 (Dependabot) con evidencia y riesgo aceptado (Fase 0)
+- [ ] **TSK-S5-03:** Implementar #126 (H3: 400/404 con IdCliente inexistente) (Fase 1, backend — usuario)
+- [ ] **TSK-S5-04:** Implementar #95 (ingresos por movimientos Pago) (Fase 1, backend — usuario) + tests integración
+- [ ] **TSK-S5-05:** Implementar #118 (histórico + comparación) (Fase 2, backend — usuario + frontend — subagente)
+- [ ] **TSK-S5-06:** Implementar #84 (Playwright E2E) (Fase 2, frontend — subagente)
+- [ ] **TSK-S5-07:** Implementar #85/#86/#77 (Fase 3 — usuario/devops/QA)
+- [ ] **TSK-S5-08:** Implementar #59-#65 (Fase 4, backend — usuario)
+- [ ] **TSK-S5-09:** Implementar #68/#69 (Fase 5, frontend — subagente)
+- [ ] **TSK-S5-10:** Implementar #79/#78/#80 (Fase 6, devops — usuario)
+- [ ] **TSK-S5-11:** Implementar #88-#92 (Fase 7, arquitectura — usuario)
+- [ ] **TSK-S5-12:** Implementar #87 (k6, Fase 8 — QA)
+- [ ] **TSK-S5-13:** Refinar e implementar #93 (Fase 9 — BA/UX primero, luego backend+frontend)
+- [ ] **TSK-S5-14:** QA de los cambios + MergeGuard + Release del Sprint 5
 
 ### Issues del Sprint 3
 
