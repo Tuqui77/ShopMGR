@@ -37,7 +37,7 @@ namespace ShopMGR.Dominio.Modelo
             IdCliente = idCliente;
             Titulo = titulo;
             Descripcion = descripcion;
-            _materiales = materiales;
+            _materiales = materiales ?? [];
             HorasEstimadas = horasEstimadas;
             Fecha = DateOnly.FromDateTime(DateTime.Now);
             Estado = EstadoPresupuesto.Pendiente;
