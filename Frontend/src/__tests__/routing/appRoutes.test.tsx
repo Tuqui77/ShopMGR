@@ -90,6 +90,13 @@ vi.mock('../../pages/Perfil', async () => {
   };
 });
 
+vi.mock('../../pages/Metricas', async () => {
+  const React = await import('react');
+  return {
+    Metricas: () => React.createElement('div', { 'data-testid': 'metricas-stub' }, 'Metricas'),
+  };
+});
+
 // Layout pesado → no renderiza nada. El Sidebar REAL se conserva para poder
 // testear la navegación por click entre secciones.
 vi.mock('../../components/BottomNav', () => ({ BottomNav: () => null }));
@@ -166,6 +173,7 @@ describe('Routing (issue #67: lazy loading de páginas)', () => {
     ['/presupuestos', 'presupuestos-stub'],
     ['/configuracion', 'configuracion-stub'],
     ['/perfil', 'perfil-stub'],
+    ['/metricas', 'metricas-stub'],
   ])('renderiza el stub de %s (ruta lazy)', async (path, testId) => {
     useStore.setState({ accessToken: crearToken({}) });
     renderAppEn(path);
@@ -192,5 +200,8 @@ describe('Routing (issue #67: lazy loading de páginas)', () => {
 
     fireEvent.click(screen.getByRole('link', { name: 'Presupuestos' }));
     expect(await screen.findByTestId('presupuestos-stub')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Métricas' }));
+    expect(await screen.findByTestId('metricas-stub')).toBeInTheDocument();
   });
 });
