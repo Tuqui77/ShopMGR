@@ -1,35 +1,33 @@
 import clsx from 'clsx';
 
-interface Props {
-  value: number;
+export interface MetricCardProps {
+  /** Valor del período. null → se renderiza "—" (nunca 0, nunca %). */
+  value: number | null;
+  /** Label visible bajo el valor. */
   label: string;
-  change?: number;
+  /** Prefijo de texto opcional (mantenido por compatibilidad; hoy 0 usos). */
   prefix?: string;
+  /** Tamaño visual del valor. 'sm' para grid (text-lg), 'lg' para hero (text-3xl/4xl). Default 'sm'. */
+  size?: 'sm' | 'lg';
+  /** true → el valor se pinta muted (columna "Mes anterior"). Default false. */
+  muted?: boolean;
 }
 
-export function MetricCard({ value, label, change, prefix = '' }: Props) {
-  const isPositive = change && change > 0;
-  const isNegative = change && change < 0;
-  
+/** Átomo de métrica (issue #118): null → "—" (nunca 0, nunca %). */
+export function MetricCard({ value, label, prefix = '', size = 'sm', muted = false }: MetricCardProps) {
+  const esSinDatos = value === null;
+
   return (
     <div className="metric-card">
-      <span className="metric-value" style={{ color: 'var(--color-text)' }}>
-        {prefix}{typeof value === 'number' && value >= 1000 
-          ? value.toLocaleString() 
-          : value}
+      <span
+        className={clsx('metric-value', size === 'lg' ? 'text-3xl lg:text-4xl' : 'text-lg')}
+        style={{ color: esSinDatos || muted ? 'var(--color-muted)' : 'var(--color-text)' }}
+        aria-hidden={esSinDatos || undefined}
+      >
+        {esSinDatos ? '—' : `${prefix}${value.toLocaleString('es-AR')}`}
       </span>
-      <span className="metric-label" style={{ color: 'var(--color-muted)' }}>{label}</span>
-      {change !== undefined && (
-        <span className={clsx(
-          'text-xs font-medium',
-          isPositive && 'text-[var(--color-success)]',
-          isNegative && 'text-[var(--color-danger)]',
-          !isPositive && !isNegative && 'text-[var(--color-muted)]'
-        )}>
-          {isPositive && '↑ '}{isNegative && '↓ '}
-          {Math.abs(change)}%
-        </span>
-      )}
+      <span className="metric-label">{label}</span>
+      {esSinDatos && <span className="sr-only">Sin datos</span>}
     </div>
   );
 }

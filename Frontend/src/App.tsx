@@ -23,6 +23,7 @@ const Presupuestos = lazy(() => import('./pages/Presupuestos').then(m => ({ defa
 const PresupuestoDetalle = lazy(() => import('./pages/PresupuestoDetalle').then(m => ({ default: m.PresupuestoDetalle })));
 const Configuracion = lazy(() => import('./pages/Configuracion').then(m => ({ default: m.Configuracion })));
 const Perfil = lazy(() => import('./pages/Perfil').then(m => ({ default: m.Perfil })));
+const Metricas = lazy(() => import('./pages/Metricas').then(m => ({ default: m.Metricas })));
 import { useStore } from './store';
 
 const queryClient = new QueryClient({
@@ -138,6 +139,7 @@ function App() {
               <Route path="/presupuestos/:id" element={<ErrorBoundary pageName="Detalle de Presupuesto"><PresupuestoDetalle /></ErrorBoundary>} />
               <Route path="/configuracion" element={<ErrorBoundary pageName="Configuración"><Configuracion /></ErrorBoundary>} />
               <Route path="/perfil" element={<ErrorBoundary pageName="Perfil"><Perfil /></ErrorBoundary>} />
+              <Route path="/metricas" element={<ErrorBoundary pageName="Métricas"><Metricas /></ErrorBoundary>} />
             </Route>
           </Routes>
         </BrowserRouter>

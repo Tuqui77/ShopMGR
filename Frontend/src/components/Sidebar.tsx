@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import clsx from 'clsx';
-import { Home, Users, Wrench, Clipboard, Settings, LogOut, UserRound } from 'lucide-react';
+import { Home, Users, Wrench, Clipboard, BarChart3, Settings, LogOut, UserRound } from 'lucide-react';
 import { useStore } from '../store';
 import { authService } from '../services/auth';
 import { obtenerNombreUsuarioDesdeToken } from '../utils/jwt';
@@ -11,6 +11,7 @@ const navItems = [
   { path: '/clientes', icon: Users, label: 'Clientes' },
   { path: '/trabajos', icon: Wrench, label: 'Trabajos' },
   { path: '/presupuestos', icon: Clipboard, label: 'Presupuestos' },
+  { path: '/metricas', icon: BarChart3, label: 'Métricas' },
 ];
 
 function isActivePath(currentPath: string, itemPath: string) {

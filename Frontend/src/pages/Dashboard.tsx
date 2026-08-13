@@ -1,11 +1,15 @@
-import { UserRound, Loader2, Clock, TrendingUp, Timer, CheckCircle2, FileText, ClipboardCheck, Check, X, Play } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { UserRound, Loader2, Clock, TrendingUp, Check, X, Play } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStore } from '../store';
-import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
+import { useComparativaMetricas } from '../hooks/useMetricas';
 import { useTrabajosActivos, useIniciarTrabajo } from '../hooks/useTrabajos';
 import { usePresupuestosPorEstado, useAceptarPresupuesto, useRechazarPresupuesto } from '../hooks/usePresupuestos';
+import { MetricCardComparativo } from '../components/MetricCardComparativo';
+import { MetricasGrid } from '../components/MetricasGrid';
+import { metricasGridConfig } from '../components/metricasGridConfig';
 import { formatCurrency } from '../utils/dateFormat';
+import { formatPeriodo, nombreMes, periodoAnterior } from '../utils/periodos';
 import type { Trabajo } from '../types';
 
 // ============================================================================
@@ -34,8 +38,13 @@ function getTodayDate(): string {
 export function Dashboard() {
   const navigate = useNavigate();
   const { setShowHoursModal, setSelectedTrabajo } = useStore();
-  const { data: metricas, isLoading: isLoadingMetricas } = useDashboardMetrics();
+  const { actual: metricas, anterior: metricasAnteriores, isLoading: isLoadingMetricas } = useComparativaMetricas();
   const { data: trabajosActivos, isLoading: isLoadingTrabajos } = useTrabajosActivos();
+
+  const ahora = new Date();
+  const anioActual = ahora.getFullYear();
+  const mesActual = ahora.getMonth() + 1;
+  const anterior = periodoAnterior(anioActual, mesActual);
 
   const queryClient = useQueryClient();
   const { data: presupuestosPendientes, isLoading: isLoadingPresupuestos } = usePresupuestosPorEstado('Pendiente');
@@ -78,7 +87,7 @@ export function Dashboard() {
       </header>
 
       {/* ================================================================= */}
-      {/* Hero Metric — Ingresos del mes                                  */}
+      {/* Hero Metric — Ingresos del mes (comparativo navegable, D3)       */}
       {/* ================================================================= */}
       <section className="px-4 mb-3">
         {isLoadingMetricas ? (
@@ -87,39 +96,28 @@ export function Dashboard() {
               <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
             </div>
           </div>
-        ) : metricas ? (
-          <div
-            className="card !p-5 border flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
-            style={{
-              borderColor: 'var(--color-accent)',
-              borderWidth: '1px',
-              background: 'var(--color-card)',
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
-              <span className="text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                Ingresos del mes
-              </span>
-            </div>
-            <span
-              className="font-mono text-3xl font-bold lg:text-4xl lg:text-right"
-              style={{ color: 'var(--color-accent)' }}
-            >
-              {formatCurrency(metricas.ingresos)}
-            </span>
-          </div>
         ) : (
-          <div className="card !p-5">
-            <div className="text-center py-4" style={{ color: 'var(--color-muted)' }}>
-              Sin datos de ingresos
-            </div>
-          </div>
+          <Link
+            to={`/metricas?periodo=${formatPeriodo(anioActual, mesActual)}`}
+            className="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-accent)"
+          >
+            <MetricCardComparativo
+              variant="hero"
+              label="Ingresos del mes"
+              icono={TrendingUp}
+              colorIcono="var(--color-accent)"
+              formato="moneda"
+              valorActual={metricas?.ingresos ?? null}
+              valorAnterior={metricasAnteriores?.ingresos ?? null}
+              mesActual={nombreMes(mesActual)}
+              mesAnterior={nombreMes(anterior.mes)}
+            />
+          </Link>
         )}
       </section>
 
       {/* ================================================================= */}
-      {/* Secondary Metrics — 2x2 grid                                    */}
+      {/* Secondary Metrics — grid comparativo 2x2 (NO tappable, D3)      */}
       {/* ================================================================= */}
       <section className="px-4 mb-4">
         {isLoadingMetricas ? (
@@ -132,57 +130,22 @@ export function Dashboard() {
               </div>
             ))}
           </div>
-        ) : metricas ? (
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-            {/* Horas trabajadas */}
-            <div className="card !p-3 hover:bg-[var(--color-hover)] transition-colors duration-200">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Timer className="w-3.5 h-3.5" style={{ color: 'var(--color-muted)' }} />
-                <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Horas trabajadas</span>
-              </div>
-              <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-text)' }}>
-                {metricas.horasTrabajadas.toFixed(1)}
-                <span className="text-xs font-normal" style={{ color: 'var(--color-muted)' }}> hs</span>
-              </span>
-            </div>
-
-            {/* Trabajos terminados */}
-            <div className="card !p-3 hover:bg-[var(--color-hover)] transition-colors duration-200">
-              <div className="flex items-center gap-1.5 mb-1">
-                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--color-success)' }} />
-                <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Trabajos terminados</span>
-              </div>
-              <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-success)' }}>
-                {metricas.trabajosTerminados}
-              </span>
-            </div>
-
-            {/* Presupuestos creados */}
-            <div className="card !p-3 hover:bg-[var(--color-hover)] transition-colors duration-200">
-              <div className="flex items-center gap-1.5 mb-1">
-                <FileText className="w-3.5 h-3.5" style={{ color: 'var(--color-muted)' }} />
-                <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Presupuestos creados</span>
-              </div>
-              <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-text)' }}>
-                {metricas.presupuestosCreados}
-              </span>
-            </div>
-
-            {/* Presupuestos aceptados */}
-            <div className="card !p-3 hover:bg-[var(--color-hover)] transition-colors duration-200">
-              <div className="flex items-center gap-1.5 mb-1">
-                <ClipboardCheck className="w-3.5 h-3.5" style={{ color: 'var(--color-info)' }} />
-                <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Presupuestos aceptados</span>
-              </div>
-              <span className="font-mono text-lg font-bold" style={{ color: 'var(--color-info)' }}>
-                {metricas.presupuestosAceptados}
-              </span>
-            </div>
-          </div>
         ) : (
-          <div className="text-center py-4" style={{ color: 'var(--color-muted)' }}>
-            No hay métricas disponibles
-          </div>
+          <MetricasGrid>
+            {metricasGridConfig.map((m) => (
+              <MetricCardComparativo
+                key={m.key}
+                label={m.label}
+                icono={m.icono}
+                colorIcono={m.colorIcono}
+                formato={m.formato}
+                valorActual={metricas?.[m.key] ?? null}
+                valorAnterior={metricasAnteriores?.[m.key] ?? null}
+                mesActual={nombreMes(mesActual)}
+                mesAnterior={nombreMes(anterior.mes)}
+              />
+            ))}
+          </MetricasGrid>
         )}
       </section>
 

@@ -310,8 +310,9 @@ input, textarea, select {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
+/* El font-size se controla desde el componente (issue #118): utilities
+   Tailwind text-lg (grid) / text-3xl lg:text-4xl (hero). */
 .metric-value {
-  font-size: 1.5rem;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: -0.025em;

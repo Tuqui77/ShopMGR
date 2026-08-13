@@ -381,10 +381,20 @@ export interface MovimientoBalance {
   idTrabajo?: number;
 }
 
+/**
+ * Contrato null (Opción B, issue #118): null = sin datos de la métrica en el
+ * período. 0 = dato real (cero). La UI muestra "—" solo con null.
+ */
 export interface MetricasMes {
-  ingresos: number;
-  horasTrabajadas: number;
-  trabajosTerminados: number;
-  presupuestosCreados: number;
-  presupuestosAceptados: number;
+  ingresos: number | null;
+  horasTrabajadas: number | null;
+  trabajosTerminados: number | null;
+  presupuestosCreados: number | null;
+  presupuestosAceptados: number | null;
+}
+
+/** Período con actividad (D2, issue #118). mes: 1-12. */
+export interface PeriodoMetrica {
+  anio: number;
+  mes: number;
 }
