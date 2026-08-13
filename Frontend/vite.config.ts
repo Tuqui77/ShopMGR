@@ -21,6 +21,10 @@ export default defineConfig({
         'src/App.tsx',
         'src/__tests__/**',
       ],
+      // Quality gate (#85): baseline 2026-08-13 = 51.92% líneas.
+      thresholds: {
+        lines: 50,
+      },
     },
   },
 })
