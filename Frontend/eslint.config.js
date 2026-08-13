@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage']),
+  // e2e/ queda fuera del lint de la app: es código de test con su propio
+  // tsconfig (tsconfig.e2e.json) y convenciones (issue #84).
+  globalIgnores(['dist', 'coverage', 'e2e']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

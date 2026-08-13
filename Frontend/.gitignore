@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright E2E (issue #84)
+test-results/
+playwright-report/
+blob-report/
+.auth/
