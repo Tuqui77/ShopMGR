@@ -13,6 +13,8 @@ namespace ShopMGR.Tests;
 /// TotalLabor de trabajos Terminado del mes sino los movimientos TipoMovimiento.Pago.
 /// Decisión de dominio: NO se agrega Cobro al enum — TipoMovimiento queda
 /// Pago=0, Cargo=1, Anticipo=2, Compra=3, Ajuste=4.
+/// Contrato del #118: los métodos devuelven null cuando el período no tiene datos
+/// (distinto de "cero" con datos); el frontend maneja null defensivamente.
 /// </summary>
 public class MetricasRepositorioTests
 {
@@ -158,18 +160,19 @@ public class MetricasRepositorioTests
     }
 
     [Fact]
-    public async Task ObtenerIngresosAsync_MesSinMovimientos_DevuelveCero()
+    public async Task ObtenerIngresosAsync_MesSinMovimientos_DevuelveNull()
     {
         using var contexto = CreateDbContext();
         var repositorio = new MetricasRepositorio(contexto);
         var idCliente = await CrearClienteAsync(contexto, "mes vacío");
 
         // Solo movimientos de agosto 2026; la consulta apunta a un mes sin Pagos.
+        // Contrato #118: sin datos en el período → null (distinto de "cero" con datos).
         await CrearMovimientoAsync(contexto, TipoMovimiento.Pago, 100m, "Agosto", new DateOnly(2026, 8, 1), idCliente);
 
         var resultado = await repositorio.ObtenerIngresosAsync(new DateOnly(2026, 7, 15));
 
-        resultado.Should().Be(0m);
+        resultado.Should().BeNull();
     }
 
     [Fact]
@@ -236,7 +239,7 @@ public class MetricasRepositorioTests
     }
 
     [Fact]
-    public async Task ObtenerTrabajosTerminadosAsync_MesSinTrabajosTerminados_DevuelveCero()
+    public async Task ObtenerTrabajosTerminadosAsync_MesSinTrabajosTerminados_DevuelveNull()
     {
         using var contexto = CreateDbContext();
         var repositorio = new MetricasRepositorio(contexto);
@@ -245,7 +248,7 @@ public class MetricasRepositorioTests
 
         var resultado = await repositorio.ObtenerTrabajosTerminadosAsync(MesVacio);
 
-        resultado.Should().Be(0);
+        resultado.Should().BeNull();
     }
 
     #endregion
@@ -272,7 +275,7 @@ public class MetricasRepositorioTests
     }
 
     [Fact]
-    public async Task ObtenerPresupuestosCreadosAsync_MesSinPresupuestos_DevuelveCero()
+    public async Task ObtenerPresupuestosCreadosAsync_MesSinPresupuestos_DevuelveNull()
     {
         using var contexto = CreateDbContext();
         var repositorio = new MetricasRepositorio(contexto);
@@ -282,7 +285,7 @@ public class MetricasRepositorioTests
 
         var resultado = await repositorio.ObtenerPresupuestosCreadosAsync(MesVacio);
 
-        resultado.Should().Be(0);
+        resultado.Should().BeNull();
     }
 
     #endregion
@@ -312,7 +315,7 @@ public class MetricasRepositorioTests
     }
 
     [Fact]
-    public async Task ObtenerPresupuestosAceptadosAsync_MesSinAceptados_DevuelveCero()
+    public async Task ObtenerPresupuestosAceptadosAsync_MesSinAceptados_DevuelveNull()
     {
         using var contexto = CreateDbContext();
         var repositorio = new MetricasRepositorio(contexto);
@@ -324,7 +327,7 @@ public class MetricasRepositorioTests
 
         var resultado = await repositorio.ObtenerPresupuestosAceptadosAsync(MesVacio);
 
-        resultado.Should().Be(0);
+        resultado.Should().BeNull();
     }
 
     #endregion
