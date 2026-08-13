@@ -15,7 +15,7 @@ namespace ShopMGR.WebApi.Controllers
         {
             var ingresosMes = await administracionMetricas.ObtenerIngresosAsync(fecha);
 
-            return Ok(ingresosMes);
+            return new JsonResult(ingresosMes);
         }
 
         [Authorize]
@@ -25,7 +25,7 @@ namespace ShopMGR.WebApi.Controllers
         {
             var horasTrabajadasMes = await administracionMetricas.ObtenerHorasAsync(fecha);
 
-            return Ok(horasTrabajadasMes);
+            return new JsonResult(horasTrabajadasMes);
         }
 
         [Authorize]
@@ -35,7 +35,7 @@ namespace ShopMGR.WebApi.Controllers
         {
             var trabajosTerminadosMes = await administracionMetricas.ObtenerTrabajosTerminadosAsync(fecha);
 
-            return Ok(trabajosTerminadosMes);
+            return new JsonResult(trabajosTerminadosMes);
         }
 
         [Authorize]
@@ -45,7 +45,7 @@ namespace ShopMGR.WebApi.Controllers
         {
             var presupuestosCreadosMes = await administracionMetricas.ObtenerPresupuestosCreadosAsync(fecha);
 
-            return Ok(presupuestosCreadosMes);
+            return new JsonResult(presupuestosCreadosMes);
         }
 
         [Authorize]
@@ -55,7 +55,17 @@ namespace ShopMGR.WebApi.Controllers
         {
             var presupuestosAceptadosMes = await administracionMetricas.ObtenerPresupuestosAceptadosAsync(fecha);
 
-            return Ok(presupuestosAceptadosMes);
+            return new JsonResult(presupuestosAceptadosMes);
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("ObtenerMesesConDatos")]
+        public async Task<IActionResult> ObtenerMesesConDatos()
+        {
+            var mesesConDatos = await administracionMetricas.ObtenerMesesConDatos();
+
+            return Ok(mesesConDatos);
         }
     }
 }
