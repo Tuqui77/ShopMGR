@@ -19,7 +19,7 @@ public class MovimientoBalanceConfiguracion : IEntityTypeConfiguration<Movimient
 
         builder.Property(m => m.Descripcion)
           .IsRequired(true)
-          .HasMaxLength(50);
+          .HasMaxLength(500);
 
         builder.Property(m => m.Fecha)
           .IsRequired(true)
