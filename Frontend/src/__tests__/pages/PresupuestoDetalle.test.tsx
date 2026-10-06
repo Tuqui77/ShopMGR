@@ -142,6 +142,20 @@ describe('PresupuestoDetalle (caracterización)', () => {
     expect(queryClient.getQueryData(['presupuesto', 10])).toBeUndefined();
   });
 
+  it('rendered subtotal del material es el calculado (2 x $500 = $1.000, nunca $0)', async () => {
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    // Fixture dtoRaw: material "Aceite" cantidad 2 precio 500
+    expect(screen.getByText('Aceite')).toBeInTheDocument();
+    expect(screen.getByText('2 x $500')).toBeInTheDocument();
+
+    // El subtotal se renderiza con el monto calculado y no como $0.
+    // Locale-tolerante: $1.000 (es-AR) o $1,000 (en-US).
+    expect(screen.getByText(/\$1[.,]000/)).toBeInTheDocument();
+    expect(screen.queryByText('$0')).toBeNull();
+  });
+
   it('duplicar: abre el PresupuestoForm con presupuestoDuplicadoId sin tocar el store', async () => {
     render(<PresupuestoDetalle />, { wrapper });
     await screen.findByText('Presupuesto detalle');

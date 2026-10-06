@@ -286,7 +286,6 @@ export interface MaterialBackendDTO {
   descripcion: string;
   cantidad: number;
   precioUnitario: number;
-  subtotal: number;
 }
 
 // DTO for list view - simplified response from ListarPresupuestos

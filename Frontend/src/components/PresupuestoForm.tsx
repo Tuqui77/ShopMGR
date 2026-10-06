@@ -5,6 +5,7 @@ import { useCrearPresupuesto, useModificarPresupuesto, usePresupuestoDetalle } f
 import type { Cliente, MaterialRequest } from '../types';
 import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft, Calculator } from 'lucide-react';
 import clsx from 'clsx';
+import { calcularSubtotal } from '../utils/materiales';
 import { CalculatorModal } from './CalculatorModal';
 
 interface Props {
@@ -264,7 +265,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
     }
   };
 
-  const totalMateriales = materiales.reduce((sum, m) => sum + (m.cantidad * (m.Precio || m.precioUnitario || 0)), 0);
+  const totalMateriales = materiales.reduce((sum, m) => sum + calcularSubtotal(m.cantidad, m.Precio || m.precioUnitario || 0), 0);
 
   const isSubmitting = crearPresupuesto.isPending || modificarPresupuesto.isPending;
 
@@ -568,7 +569,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
                           </div>
                           <div className="flex justify-between items-center">
                             <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                              Subtotal: ${(materialEditandoData.cantidad * materialEditandoData.precioUnitario).toLocaleString()}
+                              Subtotal: ${calcularSubtotal(materialEditandoData.cantidad, materialEditandoData.precioUnitario).toLocaleString()}
                             </p>
                             <div className="flex gap-1">
                               <button
@@ -603,7 +604,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
                           >
                             <p className="text-sm font-medium truncate">{m.descripcion}</p>
                             <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                              {m.cantidad} x ${(m.Precio || m.precioUnitario || 0).toLocaleString()} = ${(m.cantidad * (m.Precio || m.precioUnitario || 0)).toLocaleString()}
+                              {m.cantidad} x ${(m.Precio || m.precioUnitario || 0).toLocaleString()} = ${calcularSubtotal(m.cantidad, m.Precio || m.precioUnitario || 0).toLocaleString()}
                             </p>
                           </div>
                           <button
