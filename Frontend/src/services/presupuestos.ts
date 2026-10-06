@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import { calcularSubtotal } from '../utils/materiales';
 import type {
   Presupuesto,
   PresupuestoBackendDTO,
@@ -73,7 +74,6 @@ interface MaterialItem {
   cantidad: number;
   precio?: number;  // Backend returns "Precio", not "precioUnitario"
   Precio?: number;
-  subtotal: number;
 }
 
 // ============================================================================
@@ -82,13 +82,16 @@ interface MaterialItem {
 
 function mapMateriales(dto: MaterialItem[] | undefined): Material[] {
   const values = dto || [];
-  return values.map(m => ({
-    id: m.id,
-    descripcion: m.descripcion,
-    cantidad: m.cantidad,
-    precioUnitario: m.precio || m.Precio || 0,
-    subtotal: m.subtotal,
-  }));
+  return values.map(m => {
+    const precioUnitario = m.precio || m.Precio || 0;
+    return {
+      id: m.id,
+      descripcion: m.descripcion,
+      cantidad: m.cantidad,
+      precioUnitario,
+      subtotal: calcularSubtotal(m.cantidad, precioUnitario),
+    };
+  });
 }
 
 function mapCliente(dto: ClienteBackendDTO | null | undefined): Cliente | null {

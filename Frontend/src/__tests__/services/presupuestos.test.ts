@@ -63,7 +63,7 @@ function detalleDTO(overrides: Record<string, unknown> = {}) {
     total: 48000,
     cliente: clienteDetalle(),
     materiales: [
-      { id: 1, descripcion: 'Filtro de aceite', cantidad: 2, precio: 1500, subtotal: 3000 },
+      { id: 1, descripcion: 'Filtro de aceite', cantidad: 2, precio: 1500 },
     ],
     ...overrides,
   };
@@ -157,13 +157,65 @@ describe('presupuestosService', () => {
     it('usa el campo Precio (mayúscula) como precioUnitario cuando precio no viene', async () => {
       mockedGet.mockResolvedValue({
         data: detalleDTO({
-          materiales: [{ id: 1, descripcion: 'Insumo', cantidad: 1, Precio: 2500, subtotal: 2500 }],
+          materiales: [{ id: 1, descripcion: 'Insumo', cantidad: 1, Precio: 2500 }],
         }),
       });
 
       const presupuesto = await presupuestosService.obtenerDetalle(2);
 
       expect(presupuesto.materiales[0]?.precioUnitario).toBe(2500);
+      expect(presupuesto.materiales[0]?.subtotal).toBe(2500);
+    });
+
+    it('calcula el subtotal en el frontend (cantidad decimal, sin ruido de punto flotante)', async () => {
+      mockedGet.mockResolvedValue({
+        data: detalleDTO({
+          materiales: [{ id: 1, descripcion: 'Insumo', cantidad: 0.1, Precio: 3 }],
+        }),
+      });
+
+      const presupuesto = await presupuestosService.obtenerDetalle(2);
+
+      expect(presupuesto.materiales[0]?.subtotal).toBe(0.3);
+    });
+
+    it('subtotal 0 cuando el precio es 0', async () => {
+      mockedGet.mockResolvedValue({
+        data: detalleDTO({
+          materiales: [{ id: 1, descripcion: 'Insumo', cantidad: 3, precio: 0 }],
+        }),
+      });
+
+      const presupuesto = await presupuestosService.obtenerDetalle(2);
+
+      expect(presupuesto.materiales[0]?.precioUnitario).toBe(0);
+      expect(presupuesto.materiales[0]?.subtotal).toBe(0);
+    });
+
+    it('subtotal 0 cuando la cantidad es 0', async () => {
+      mockedGet.mockResolvedValue({
+        data: detalleDTO({
+          materiales: [{ id: 1, descripcion: 'Insumo', cantidad: 0, Precio: 500 }],
+        }),
+      });
+
+      const presupuesto = await presupuestosService.obtenerDetalle(2);
+
+      expect(presupuesto.materiales[0]?.precioUnitario).toBe(500);
+      expect(presupuesto.materiales[0]?.subtotal).toBe(0);
+    });
+
+    it('precioUnitario y subtotal 0 cuando no viene ningún campo de precio', async () => {
+      mockedGet.mockResolvedValue({
+        data: detalleDTO({
+          materiales: [{ id: 1, descripcion: 'Insumo', cantidad: 2 }],
+        }),
+      });
+
+      const presupuesto = await presupuestosService.obtenerDetalle(2);
+
+      expect(presupuesto.materiales[0]?.precioUnitario).toBe(0);
+      expect(presupuesto.materiales[0]?.subtotal).toBe(0);
     });
 
     it('mapea cliente con referencia circular ($ref) al fallback con idCliente', async () => {
