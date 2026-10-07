@@ -185,7 +185,9 @@ namespace ShopMGR.WebApi.Aplicacion
             var app = builder.Build();
 
             var rutaImagenes = Path.Combine(Directory.GetCurrentDirectory(), "imagenes");
+            var rutaHealthCheck = Path.Combine(rutaImagenes, ".health");
             Directory.CreateDirectory(rutaImagenes);
+            Directory.CreateDirectory(rutaHealthCheck);
 
             app.UseDefaultFiles();
             app.UseStaticFiles(); //para servir desde wwwroot

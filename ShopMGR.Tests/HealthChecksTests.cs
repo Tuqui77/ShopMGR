@@ -30,9 +30,10 @@ public class HealthChecksTests
     #region StorageHealthCheck
 
     [Fact]
-    public async Task StorageHealthCheck_DeberiaRetornarHealthyYCrearDirectorioCuandoNoExiste()
+    public async Task StorageHealthCheck_DeberiaRetornarUnhealthyCuandoElDirectorioNoExiste()
     {
-        // Arrange
+        // Arrange: el directorio .health lo crea el startup; si no existe es porque
+        // el volumen no está montado (o nadie lo creó) -> readiness en Unhealthy.
         var basePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         try
         {
@@ -42,8 +43,8 @@ public class HealthChecksTests
             var resultado = await check.CheckHealthAsync(CrearContexto());
 
             // Assert
-            resultado.Status.Should().Be(HealthStatus.Healthy);
-            Directory.Exists(Path.Combine(basePath, "imagenes", ".health")).Should().BeTrue();
+            resultado.Status.Should().Be(HealthStatus.Unhealthy);
+            resultado.Description.Should().Contain(Path.Combine(basePath, "imagenes", ".health"));
         }
         finally
         {
@@ -55,7 +56,7 @@ public class HealthChecksTests
     }
 
     [Fact]
-    public async Task StorageHealthCheck_DeberiaRetornarHealthyCuandoDirectorioHealthCheckYaExisteConArchivos()
+    public async Task StorageHealthCheck_DeberiaRetornarHealthyCuandoElDirectorioExisteYEsLegible()
     {
         // Arrange
         var basePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -72,41 +73,13 @@ public class HealthChecksTests
 
             // Assert
             resultado.Status.Should().Be(HealthStatus.Healthy);
+            resultado.Description.Should().Contain("1 archivos");
         }
         finally
         {
             if (Directory.Exists(basePath))
             {
                 Directory.Delete(basePath, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public async Task StorageHealthCheck_DeberiaRetornarUnhealthyCuandoNoPuedeCrearElDirectorio()
-    {
-        // Arrange: usar un ARCHIVO existente como base path hace que
-        // Directory.CreateDirectory(.../imagenes/.health) lance IOException de forma portable
-        // (sin requerir permisos root ni manipular el entorno).
-        var archivo = Path.GetTempFileName();
-        try
-        {
-            var check = new StorageHealthCheck(archivo);
-
-            // Act
-            var resultado = await check.CheckHealthAsync(CrearContexto());
-
-            // Assert
-            resultado.Status.Should().Be(HealthStatus.Unhealthy);
-            resultado.Description.Should().NotBeNullOrWhiteSpace();
-            resultado.Description.Should().Contain(archivo);
-            resultado.Exception.Should().NotBeNull();
-        }
-        finally
-        {
-            if (File.Exists(archivo))
-            {
-                File.Delete(archivo);
             }
         }
     }
