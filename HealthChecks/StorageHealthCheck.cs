@@ -20,8 +20,6 @@ public class StorageHealthCheck : IHealthCheck
         CancellationToken cancellationToken = default
     )
     {
-        // El directorio .health lo crea Program.cs al arrancar: este chequeo es solo lectura
-        // (corre cada ~10 segundos por pod, no se hace I/O de escritura durante el probe).
         var carpetaImagenes = Path.Combine(_basePath, "imagenes");
         var carpetaHealthCheck = Path.Combine(carpetaImagenes, ".health");
         var existeDirectorio = Directory.Exists(carpetaHealthCheck);
@@ -37,7 +35,6 @@ public class StorageHealthCheck : IHealthCheck
 
         try
         {
-            // Count() fuerza la enumeración real del directorio (lectura).
             var archivos = Directory.EnumerateFiles(carpetaHealthCheck).Count();
 
             return Task.FromResult(
