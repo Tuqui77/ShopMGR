@@ -24,8 +24,36 @@ jobs:
       - name: Build
         run: dotnet build ShopMGR.sln --no-restore
 
-      - name: Ejecutar tests de backend
-        run: dotnet test ShopMGR.sln --no-build
+      - name: Ejecutar tests de backend (incluye cobertura)
+        run: dotnet test ShopMGR.sln --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+
+      - name: Verificar Test Coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE=$(find TestResults -name "coverage.cobertura.xml" | head -1)
+          python3 - "$FILE" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          tree = ET.parse(sys.argv[1]); root = tree.getroot()
+          excl = {'ShopMGR.Contexto', 'Middleware'}
+          covered = valid = 0
+          for pkg in root.iter('package'):
+              name = pkg.get('name', '')
+              if any(name.startswith(e) for e in excl):
+                  continue
+              for cls in pkg.iter('class'):
+                  lines = cls.find('lines')
+                  if lines is None: continue
+                  for l in lines.iter('line'):
+                      valid += 1
+                      if int(l.get('hits', 0)) > 0: covered += 1
+          rate = covered / valid if valid else 0
+          print(f"Cobertura gate backend: {covered}/{valid} = {rate:.2%}")
+          if rate < 0.60:
+              print("::error::Umbral de cobertura backend no alcanzado (mínimo 60%)")
+              sys.exit(1)
+          PY
+
 
   test-frontend:
     runs-on: ubuntu-latest
@@ -45,5 +73,5 @@ jobs:
         working-directory: Frontend
 
       - name: Ejecutar tests de frontend
-        run: npm test --watch=false
+        run: npm run test:coverage
         working-directory: Frontend
