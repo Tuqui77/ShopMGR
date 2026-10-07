@@ -5,6 +5,7 @@ import type { MovimientoBalance, TipoMovimiento } from '../types';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { useMovimientosCliente, useModificarMovimiento, useEliminarMovimiento } from '../hooks/useMovimientosCliente';
 import { useStore } from '../store';
+import { LoadingState } from './LoadingState';
 
 interface Props {
   clienteId: number;
@@ -153,9 +154,7 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
-            </div>
+            <LoadingState variant="block" />
           ) : error ? (
             <div className="text-center py-12">
               <p style={{ color: 'var(--color-danger)' }}>Error al cargar movimientos</p>

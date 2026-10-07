@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Fingerprint, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Fingerprint, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useModal } from '../hooks/useModal';
 import { usePasskeys, useEliminarPasskey } from '../hooks/usePasskeys';
 import { ConfirmDialog } from './ConfirmDialog';
 import { PasskeyRegisterModal } from './PasskeyRegisterModal';
 import { PasskeyRenameModal } from './PasskeyRenameModal';
+import { LoadingState } from './LoadingState';
 import type { PasskeyCredencial } from '../types';
 
 const MENSAJE_ERROR_LISTAR = 'No se pudieron cargar tus passkeys. Revisá tu conexión e intentá de nuevo.';
@@ -79,10 +80,7 @@ export function PasskeySection({ embedded = false }: PasskeySectionProps) {
       </div>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 mt-4">
-          <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--color-muted)' }} />
-          <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Cargando passkeys...</span>
-        </div>
+        <LoadingState variant="inline" label="Cargando passkeys…" />
       ) : error ? (
         <p className="text-sm mt-3" style={{ color: 'var(--color-danger)' }} role="alert">
           {MENSAJE_ERROR_LISTAR}

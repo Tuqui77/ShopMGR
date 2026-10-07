@@ -72,7 +72,7 @@ export function PasskeyRegisterModal({ isOpen, onClose }: Props) {
           <p className="text-sm mt-2" style={{ color: 'var(--color-muted)' }}>
             Usá tu huella, rostro o PIN para crear el passkey.
           </p>
-          <Loader2 className="w-5 h-5 animate-spin mx-auto mt-5" style={{ color: 'var(--color-muted)' }} />
+          <Loader2 className="w-5 h-5 animate-spin mx-auto mt-5" style={{ color: 'var(--color-accent)' }} />
         </div>
       </ModalWrapper>
     );

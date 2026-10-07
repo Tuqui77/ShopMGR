@@ -4,6 +4,7 @@ import type { HorasDeTrabajo } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { useModificarHoras, useEliminarHoras } from '../hooks/useTrabajos';
 import { useStore } from '../store';
+import { LoadingState } from './LoadingState';
 
 interface Props {
   trabajoId: number;
@@ -134,9 +135,7 @@ export function HorasTrabajoModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
-            </div>
+            <LoadingState variant="block" />
           ) : !sortedHoras || sortedHoras.length === 0 ? (
             <div className="text-center py-12">
               <p style={{ color: 'var(--color-muted)' }}>No hay horas registradas</p>

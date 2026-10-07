@@ -6,6 +6,7 @@ import { useCrearTrabajo, useModificarTrabajo, useTrabajo, useCambiarPresupuesto
 import { movimientosService, type TipoMovimiento } from '../services/movimientos';
 import type { EstadoTrabajo, Cliente, Presupuesto } from '../types';
 import { Loader2, X, Check, Banknote, FileText, Trash2 } from 'lucide-react';
+import { LoadingState } from './LoadingState';
 import clsx from 'clsx';
 
 interface Props {
@@ -225,9 +226,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
-            </div>
+            <LoadingState variant="block" />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Título */}
