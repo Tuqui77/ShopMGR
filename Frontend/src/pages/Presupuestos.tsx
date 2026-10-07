@@ -4,8 +4,9 @@ import clsx from 'clsx';
 import type { EstadoPresupuesto } from '../types';
 import { usePresupuestos, usePresupuestosPorCliente } from '../hooks/usePresupuestos';
 import { useCliente } from '../hooks/useClientes';
-import { Clipboard, Clock, Loader2, ArrowLeft } from 'lucide-react';
+import { Clipboard, Clock, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
+import { SkeletonList } from '../components/Skeleton';
 
 type FilterType = 'todos' | 'pendientes' | 'aceptados' | 'rechazados';
 
@@ -51,14 +52,6 @@ export function Presupuestos() {
     }
   };
   
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
@@ -99,7 +92,8 @@ export function Presupuestos() {
               onClick={() => setFilter(f.key)}
               className={clsx('filter-pill', filter === f.key && 'active')}
             >
-              {f.label} ({counts[f.key]})
+              {f.label}
+              {!isLoading && ` (${counts[f.key]})`}
             </button>
           ))}
         </div>
@@ -107,44 +101,50 @@ export function Presupuestos() {
       
       {/* List */}
       <section className="px-4 space-y-3">
-        {filtered.map(presupuesto => (
-          <Link 
-            key={presupuesto.id} 
-            to={`/presupuestos/${presupuesto.id}`}
-            className="block"
-          >
-            <div className="card hover:bg-[var(--color-hover)] transition-colors duration-200">
-              <div className="flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</h3>
-                  {clienteId === undefined && (
-                    <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{presupuesto.cliente?.nombreCompleto || 'Sin cliente'}</p>
-                  )}
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="font-mono text-sm" style={{ color: 'var(--color-accent)' }}>{formatCurrency(presupuesto.total)}</span>
-                    <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--color-muted)' }}><Clock className="w-3 h-3" /> {presupuesto.horasEstimadas}h</span>
+        {isLoading ? (
+          <SkeletonList count={4} label="Cargando presupuestos…" />
+        ) : (
+          <>
+            {filtered.map(presupuesto => (
+              <Link
+                key={presupuesto.id}
+                to={`/presupuestos/${presupuesto.id}`}
+                className="block"
+              >
+                <div className="card hover:bg-[var(--color-hover)] transition-colors duration-200">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{presupuesto.titulo}</h3>
+                      {clienteId === undefined && (
+                        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>{presupuesto.cliente?.nombreCompleto || 'Sin cliente'}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="font-mono text-sm" style={{ color: 'var(--color-accent)' }}>{formatCurrency(presupuesto.total)}</span>
+                        <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--color-muted)' }}><Clock className="w-3 h-3" /> {presupuesto.horasEstimadas}h</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {getStatusBadge(presupuesto.estado)}
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1 shrink-0">
-                  {getStatusBadge(presupuesto.estado)}
-                </div>
+              </Link>
+            ))}
+
+            {filtered.length === 0 && clienteId !== undefined && (
+              <div className="text-center py-12">
+                <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
+                <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos para este cliente</p>
               </div>
-            </div>
-          </Link>
-        ))}
-        
-        {filtered.length === 0 && clienteId !== undefined && (
-          <div className="text-center py-12">
-            <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-            <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos para este cliente</p>
-          </div>
-        )}
-        
-        {filtered.length === 0 && clienteId === undefined && (
-          <div className="text-center py-12">
-            <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-            <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos</p>
-          </div>
+            )}
+
+            {filtered.length === 0 && clienteId === undefined && (
+              <div className="text-center py-12">
+                <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
+                <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos</p>
+              </div>
+            )}
+          </>
         )}
       </section>
 

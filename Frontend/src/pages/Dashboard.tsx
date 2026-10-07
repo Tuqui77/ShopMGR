@@ -8,6 +8,8 @@ import { usePresupuestosPorEstado, useAceptarPresupuesto, useRechazarPresupuesto
 import { MetricCardComparativo } from '../components/MetricCardComparativo';
 import { MetricasGrid } from '../components/MetricasGrid';
 import { metricasGridConfig } from '../components/metricasGridConfig';
+import { SkeletonHero, SkeletonMetricGrid } from '../components/Skeleton';
+import { LoadingState } from '../components/LoadingState';
 import { formatCurrency } from '../utils/dateFormat';
 import { formatPeriodo, nombreMes, periodoAnterior } from '../utils/periodos';
 import type { Trabajo } from '../types';
@@ -91,11 +93,7 @@ export function Dashboard() {
       {/* ================================================================= */}
       <section className="px-4 mb-3">
         {isLoadingMetricas ? (
-          <div className="card !p-5">
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
-            </div>
-          </div>
+          <SkeletonHero />
         ) : (
           <Link
             to={`/metricas?periodo=${formatPeriodo(anioActual, mesActual)}`}
@@ -121,15 +119,7 @@ export function Dashboard() {
       {/* ================================================================= */}
       <section className="px-4 mb-4">
         {isLoadingMetricas ? (
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="card !p-3">
-                <div className="flex justify-center py-3">
-                  <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--color-accent)' }} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <SkeletonMetricGrid />
         ) : (
           <MetricasGrid>
             {metricasGridConfig.map((m) => (
@@ -172,9 +162,7 @@ export function Dashboard() {
             </div>
 
             {isLoadingTrabajos ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--color-accent)' }} />
-              </div>
+              <LoadingState variant="inline" />
             ) : trabajosActivos && trabajosActivos.length > 0 ? (
               <div className="space-y-1.5">
                 {trabajosActivos.map((trabajo) => (
@@ -259,9 +247,7 @@ export function Dashboard() {
             </div>
 
             {isLoadingPresupuestos ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--color-accent)' }} />
-              </div>
+              <LoadingState variant="inline" />
             ) : presupuestosPendientes && presupuestosPendientes.length > 0 ? (
               <div className="space-y-1.5">
                 {presupuestosPendientes.map((presupuesto) => (

@@ -1,12 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, TrendingUp, Loader2 } from 'lucide-react';
+import { ArrowLeft, TrendingUp } from 'lucide-react';
 import { useMetricasMes, usePeriodosMetricas } from '../hooks/useMetricas';
 import { MetricCardComparativo } from '../components/MetricCardComparativo';
 import { MetricasGrid } from '../components/MetricasGrid';
 import { PeriodoSelector } from '../components/PeriodoSelector';
 import { metricasGridConfig } from '../components/metricasGridConfig';
+import { SkeletonHero, SkeletonMetricGrid } from '../components/Skeleton';
 import {
   aniosFallback,
   agruparPorAnio,
@@ -145,6 +146,11 @@ export function Metricas() {
           onIrAlMesActual={() => handleCambioPeriodo(anioActual, mesActual)}
           disabled={isLoadingPeriodos}
         />
+        {isLoadingPeriodos && (
+          <span role="status" aria-live="polite" aria-busy="true" className="sr-only">
+            Cargando períodos disponibles…
+          </span>
+        )}
       </section>
 
       {/* ================================================================= */}
@@ -152,20 +158,8 @@ export function Metricas() {
       {/* ================================================================= */}
       {isLoading ? (
         <div className="space-y-3 px-4">
-          <div className="card !p-5">
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-accent)' }} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="card !p-3">
-                <div className="flex justify-center py-3">
-                  <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--color-accent)' }} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <SkeletonHero />
+          <SkeletonMetricGrid />
         </div>
       ) : isError ? (
         <div className="px-4">

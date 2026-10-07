@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { Search, User, Phone, MapPin, Wrench, FileText, Loader2 } from 'lucide-react';
+import { Search, User, Phone, MapPin, Wrench, FileText } from 'lucide-react';
 import { useClientes } from '../hooks/useClientes';
 import { formatCurrency } from '../utils/dateFormat';
+import { SkeletonList } from '../components/Skeleton';
 
 type FilterType = 'todos' | 'conDeuda';
 
@@ -87,14 +88,6 @@ export function Clientes() {
     return 'al día';
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
@@ -147,20 +140,26 @@ export function Clientes() {
       </header>
       
       <section className="px-4 space-y-3">
-        {filtered.map(cliente => (
-          <ClienteListItem 
-            key={cliente.id} 
-            cliente={cliente}
-            formatBalance={formatBalance}
-            getBalanceLabel={getBalanceLabel}
-          />
-        ))}
-        
-        {filtered.length === 0 && (
-          <div className="text-center py-12">
-            <User className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-            <p style={{ color: 'var(--color-muted)' }}>No se encontraron clientes</p>
-          </div>
+        {isLoading ? (
+          <SkeletonList count={4} label="Cargando clientes…" />
+        ) : (
+          <>
+            {filtered.map(cliente => (
+              <ClienteListItem 
+                key={cliente.id} 
+                cliente={cliente}
+                formatBalance={formatBalance}
+                getBalanceLabel={getBalanceLabel}
+              />
+            ))}
+            
+            {filtered.length === 0 && (
+              <div className="text-center py-12">
+                <User className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
+                <p style={{ color: 'var(--color-muted)' }}>No se encontraron clientes</p>
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>

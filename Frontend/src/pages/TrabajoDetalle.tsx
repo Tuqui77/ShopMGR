@@ -1,7 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx'; 
 import { 
-  Loader2, 
   ArrowLeft, 
   Edit, 
   Trash2, 
@@ -25,6 +24,7 @@ import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { TrabajoForm } from '../components/TrabajoForm';
 import { ImageUpload } from '../components/ImageUpload';
 import { HorasTrabajoModal } from '../components/HorasTrabajoModal';
+import { LoadingState } from '../components/LoadingState';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -284,11 +284,7 @@ useEffect(() => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (error || !trabajo) {
