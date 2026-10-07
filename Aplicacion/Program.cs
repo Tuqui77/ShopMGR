@@ -10,9 +10,11 @@ using AspNetCoreRateLimit;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -170,6 +172,16 @@ namespace ShopMGR.WebApi.Aplicacion
                 options.Origins = builder.Configuration.GetSection("fido2:origins").Get<HashSet<string>>();
             });
 
+            builder
+                .Services.AddHealthChecks()
+                .AddCheck<LivenessHealthCheck>("Liveness", failureStatus: HealthStatus.Unhealthy, tags: ["live"])
+                .AddDbContextCheck<ShopMGRDbContexto>(
+                    "Database",
+                    failureStatus: HealthStatus.Unhealthy,
+                    tags: ["ready"]
+                )
+                .AddCheck<StorageHealthCheck>("Storage", failureStatus: HealthStatus.Unhealthy, tags: ["ready"]);
+
             var app = builder.Build();
 
             var rutaImagenes = Path.Combine(Directory.GetCurrentDirectory(), "imagenes");
@@ -204,6 +216,34 @@ namespace ShopMGR.WebApi.Aplicacion
 
             app.UseRateLimiter();
             app.UseAuthorization();
+
+            app.MapHealthChecks(
+                "/health",
+                new HealthCheckOptions
+                {
+                    Predicate = healthCheck => healthCheck.Tags.Contains("live"),
+                    ResultStatusCodes =
+                    {
+                        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+                        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+                        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
+                    },
+                }
+            );
+
+            app.MapHealthChecks(
+                "/ready",
+                new HealthCheckOptions
+                {
+                    Predicate = healthCheck => healthCheck.Tags.Contains("ready"),
+                    ResultStatusCodes =
+                    {
+                        [HealthStatus.Healthy] = StatusCodes.Status200OK,
+                        [HealthStatus.Degraded] = StatusCodes.Status200OK,
+                        [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable,
+                    },
+                }
+            );
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
