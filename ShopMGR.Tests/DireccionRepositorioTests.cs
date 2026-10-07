@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ShopMGR.Contexto;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
+using ShopMGR.Tests.TestBuilders;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -27,17 +28,16 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            IdCliente = cliente.Id,
-        };
+        var direccion = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act
         var resultado = await repositorio.CrearAsync(direccion);
@@ -58,13 +58,12 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var direccion = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            IdCliente = 999,
-        };
+        var direccion = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithIdCliente(999)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.CrearAsync(direccion)).Should().ThrowAsync<KeyNotFoundException>();
@@ -81,17 +80,16 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            IdCliente = cliente.Id,
-        };
+        var direccion = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
 
@@ -125,17 +123,16 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            IdCliente = cliente.Id,
-        };
+        var direccion = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
 
@@ -159,34 +156,18 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente1 = new Cliente { NombreCompleto = "Juan Perez" };
-        var cliente2 = new Cliente { NombreCompleto = "Maria Lopez" };
+        var cliente1 = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
+        var cliente2 = TestDataFactory.Cliente.WithNombre("Maria Lopez").CreateValid();
         await contexto.Clientes.AddRangeAsync(cliente1, cliente2);
         await contexto.SaveChangesAsync();
 
-        await contexto.Direccion.AddRangeAsync(
-            new Direccion
-            {
-                Calle = "Calle 1",
-                Altura = "10",
-                Ciudad = "Buenos Aires",
-                IdCliente = cliente1.Id,
-            },
-            new Direccion
-            {
-                Calle = "Calle 2",
-                Altura = "20",
-                Ciudad = "Buenos Aires",
-                IdCliente = cliente1.Id,
-            },
-            new Direccion
-            {
-                Calle = "Calle 3",
-                Altura = "30",
-                Ciudad = "Buenos Aires",
-                IdCliente = cliente2.Id,
-            }
-        );
+        var direcciones = new List<Direccion>
+        {
+            TestDataFactory.Direccion.WithCalle("Calle 1").WithAltura("10").WithCiudad("Buenos Aires").WithIdCliente(cliente1.Id).CreateValid(),
+            TestDataFactory.Direccion.WithCalle("Calle 2").WithAltura("20").WithCiudad("Buenos Aires").WithIdCliente(cliente1.Id).CreateValid(),
+            TestDataFactory.Direccion.WithCalle("Calle 3").WithAltura("30").WithCiudad("Buenos Aires").WithIdCliente(cliente2.Id).CreateValid()
+        };
+        await contexto.Direccion.AddRangeAsync(direcciones);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -207,17 +188,16 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            IdCliente = cliente.Id,
-        };
+        var direccion = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
 
@@ -254,17 +234,16 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion = new Direccion
-        {
-            Calle = "Calle Original",
-            Altura = "100",
-            Ciudad = "Buenos Aires",
-            IdCliente = cliente.Id,
-        };
+        var direccion = TestDataFactory.Direccion
+            .WithCalle("Calle Original")
+            .WithAltura("100")
+            .WithCiudad("Buenos Aires")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
 
@@ -292,17 +271,16 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion = new Direccion
-        {
-            Calle = "Para Eliminar",
-            Altura = "999",
-            Ciudad = "Buenos Aires",
-            IdCliente = cliente.Id,
-        };
+        var direccion = TestDataFactory.Direccion
+            .WithCalle("Para Eliminar")
+            .WithAltura("999")
+            .WithCiudad("Buenos Aires")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Direccion.AddAsync(direccion);
         await contexto.SaveChangesAsync();
 
@@ -336,29 +314,27 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion1 = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            Piso = null,
-            IdCliente = cliente.Id,
-        };
+        var direccion1 = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithPiso(null)
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Direccion.AddAsync(direccion1);
         await contexto.SaveChangesAsync();
 
-        var direccion2 = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            Piso = null,
-            IdCliente = cliente.Id,
-        };
+        var direccion2 = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithPiso(null)
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.Validar(direccion2)).Should().ThrowAsync<InvalidOperationException>();
@@ -371,29 +347,27 @@ public class DireccionRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new DireccionRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var direccion1 = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            Piso = null,
-            IdCliente = cliente.Id,
-        };
+        var direccion1 = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithPiso(null)
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Direccion.AddAsync(direccion1);
         await contexto.SaveChangesAsync();
 
-        var direccion2 = new Direccion
-        {
-            Calle = "Av. Principal",
-            Ciudad = "Buenos Aires",
-            Altura = "123",
-            Piso = "1",
-            IdCliente = cliente.Id,
-        };
+        var direccion2 = TestDataFactory.Direccion
+            .WithCalle("Av. Principal")
+            .WithCiudad("Buenos Aires")
+            .WithAltura("123")
+            .WithPiso("1")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.Validar(direccion2)).Should().NotThrowAsync<InvalidOperationException>();

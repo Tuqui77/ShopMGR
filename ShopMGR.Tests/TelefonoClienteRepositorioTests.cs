@@ -3,6 +3,7 @@ using ShopMGR.Contexto;
 using ShopMGR.Repositorios;
 using ShopMGR.Dominio.Modelo;
 using FluentAssertions;
+using ShopMGR.Tests.TestBuilders;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -27,16 +28,15 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act
         var resultado = await repositorio.CrearAsync(telefono);
@@ -57,12 +57,11 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = 999
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(999)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.CrearAsync(telefono))
@@ -76,25 +75,23 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono1 = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono1 = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.TelefonoCliente.AddAsync(telefono1);
         await contexto.SaveChangesAsync();
 
-        var telefono2 = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Otro",
-            IdCliente = cliente.Id
-        };
+        var telefono2 = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Otro")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.CrearAsync(telefono2))
@@ -108,16 +105,15 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "12345",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("12345")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.CrearAsync(telefono))
@@ -135,16 +131,15 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.TelefonoCliente.AddAsync(telefono);
         await contexto.SaveChangesAsync();
 
@@ -179,16 +174,15 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.TelefonoCliente.AddAsync(telefono);
         await contexto.SaveChangesAsync();
 
@@ -212,16 +206,18 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente1 = new Cliente { NombreCompleto = "Juan Perez" };
-        var cliente2 = new Cliente { NombreCompleto = "Maria Lopez" };
+        var cliente1 = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
+        var cliente2 = TestDataFactory.Cliente.WithNombre("Maria Lopez").CreateValid();
         await contexto.Clientes.AddRangeAsync(cliente1, cliente2);
         await contexto.SaveChangesAsync();
 
-        await contexto.TelefonoCliente.AddRangeAsync(
-            new TelefonoCliente { Telefono = "1111111111", Descripcion = "Celular", IdCliente = cliente1.Id },
-            new TelefonoCliente { Telefono = "2222222222", Descripcion = "Fijo", IdCliente = cliente1.Id },
-            new TelefonoCliente { Telefono = "3333333333", Descripcion = "Celular", IdCliente = cliente2.Id }
-        );
+        var telefonos = new List<TelefonoCliente>
+        {
+            TestDataFactory.Telefono.WithTelefono("1111111111").WithDescripcion("Celular").WithIdCliente(cliente1.Id).CreateValid(),
+            TestDataFactory.Telefono.WithTelefono("2222222222").WithDescripcion("Fijo").WithIdCliente(cliente1.Id).CreateValid(),
+            TestDataFactory.Telefono.WithTelefono("3333333333").WithDescripcion("Celular").WithIdCliente(cliente2.Id).CreateValid()
+        };
+        await contexto.TelefonoCliente.AddRangeAsync(telefonos);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -242,16 +238,15 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.TelefonoCliente.AddAsync(telefono);
         await contexto.SaveChangesAsync();
 
@@ -288,16 +283,15 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.TelefonoCliente.AddAsync(telefono);
         await contexto.SaveChangesAsync();
 
@@ -323,16 +317,15 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.TelefonoCliente.AddAsync(telefono);
         await contexto.SaveChangesAsync();
 
@@ -367,12 +360,11 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var telefono = new TelefonoCliente
-        {
-            Telefono = "12345",
-            Descripcion = "Celular",
-            IdCliente = 1
-        };
+        var telefono = TestDataFactory.Telefono
+            .WithTelefono("12345")
+            .WithDescripcion("Celular")
+            .WithIdCliente(1)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.Validar(telefono))
@@ -386,25 +378,23 @@ public class TelefonoClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TelefonoClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var telefono1 = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Celular",
-            IdCliente = cliente.Id
-        };
+        var telefono1 = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Celular")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.TelefonoCliente.AddAsync(telefono1);
         await contexto.SaveChangesAsync();
 
-        var telefono2 = new TelefonoCliente
-        {
-            Telefono = "1234567890",
-            Descripcion = "Otro",
-            IdCliente = cliente.Id
-        };
+        var telefono2 = TestDataFactory.Telefono
+            .WithTelefono("1234567890")
+            .WithDescripcion("Otro")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act & Assert
         await repositorio.Invoking(r => r.Validar(telefono2))

@@ -4,6 +4,7 @@ using ShopMGR.Repositorios;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Dominio.Enums;
 using FluentAssertions;
+using ShopMGR.Tests.TestBuilders;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -28,11 +29,14 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var nuevoTrabajo = new Trabajo("Reparación de Motor", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        var nuevoTrabajo = TestDataFactory.Trabajo
+            .WithTitulo("Reparación de Motor")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act
         var resultado = await repositorio.CrearAsync(nuevoTrabajo);
@@ -54,15 +58,17 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        await contexto.Trabajos.AddRangeAsync(
-            new Trabajo("Trabajo 1", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null),
-            new Trabajo("Trabajo 2", null, cliente.Id, EstadoTrabajo.Iniciado, null, null, null),
-            new Trabajo("Trabajo 3", null, cliente.Id, EstadoTrabajo.Terminado, null, null, null)
-        );
+        var trabajos = new List<Trabajo>
+        {
+            TestDataFactory.Trabajo.WithTitulo("Trabajo 1").WithIdCliente(cliente.Id).WithEstado(EstadoTrabajo.Pendiente).CreateValid(),
+            TestDataFactory.Trabajo.WithTitulo("Trabajo 2").WithIdCliente(cliente.Id).WithEstado(EstadoTrabajo.Iniciado).CreateValid(),
+            TestDataFactory.Trabajo.WithTitulo("Trabajo 3").WithIdCliente(cliente.Id).WithEstado(EstadoTrabajo.Terminado).CreateValid()
+        };
+        await contexto.Trabajos.AddRangeAsync(trabajos);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -84,11 +90,14 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo("Reparación", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        var trabajo = TestDataFactory.Trabajo
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
         var id = trabajo.Id;
@@ -125,11 +134,14 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo("Reparación Completa", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        var trabajo = TestDataFactory.Trabajo
+            .WithTitulo("Reparación Completa")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         trabajo.AgregarFotos(new List<Foto> { new Foto(1, "/fotos/foto1.jpg") });
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
@@ -155,16 +167,18 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente1 = new Cliente { NombreCompleto = "Cliente 1" };
-        var cliente2 = new Cliente { NombreCompleto = "Cliente 2" };
+        var cliente1 = TestDataFactory.Cliente.WithNombre("Cliente 1").CreateValid();
+        var cliente2 = TestDataFactory.Cliente.WithNombre("Cliente 2").CreateValid();
         await contexto.Clientes.AddRangeAsync(cliente1, cliente2);
         await contexto.SaveChangesAsync();
 
-        await contexto.Trabajos.AddRangeAsync(
-            new Trabajo("Trabajo Cliente 1 - 1", null, cliente1.Id, EstadoTrabajo.Pendiente, null, null, null),
-            new Trabajo("Trabajo Cliente 1 - 2", null, cliente1.Id, EstadoTrabajo.Terminado, null, null, null),
-            new Trabajo("Trabajo Cliente 2", null, cliente2.Id, EstadoTrabajo.Pendiente, null, null, null)
-        );
+        var trabajos = new List<Trabajo>
+        {
+            TestDataFactory.Trabajo.WithTitulo("Trabajo Cliente 1 - 1").WithIdCliente(cliente1.Id).CreateValid(),
+            TestDataFactory.Trabajo.WithTitulo("Trabajo Cliente 1 - 2").WithIdCliente(cliente1.Id).WithEstado(EstadoTrabajo.Terminado).CreateValid(),
+            TestDataFactory.Trabajo.WithTitulo("Trabajo Cliente 2").WithIdCliente(cliente2.Id).CreateValid()
+        };
+        await contexto.Trabajos.AddRangeAsync(trabajos);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -187,15 +201,17 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        await contexto.Trabajos.AddRangeAsync(
-            new Trabajo("Trabajo Pendiente", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null),
-            new Trabajo("Otro Pendiente", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null),
-            new Trabajo("Trabajo Terminado", null, cliente.Id, EstadoTrabajo.Terminado, null, null, null)
-        );
+        var trabajos = new List<Trabajo>
+        {
+            TestDataFactory.Trabajo.WithTitulo("Trabajo Pendiente").WithIdCliente(cliente.Id).WithEstado(EstadoTrabajo.Pendiente).CreateValid(),
+            TestDataFactory.Trabajo.WithTitulo("Otro Pendiente").WithIdCliente(cliente.Id).WithEstado(EstadoTrabajo.Pendiente).CreateValid(),
+            TestDataFactory.Trabajo.WithTitulo("Trabajo Terminado").WithIdCliente(cliente.Id).WithEstado(EstadoTrabajo.Terminado).CreateValid()
+        };
+        await contexto.Trabajos.AddRangeAsync(trabajos);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -218,11 +234,14 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo("Reparación", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        var trabajo = TestDataFactory.Trabajo
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
 
@@ -254,11 +273,14 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo("Reparación", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        var trabajo = TestDataFactory.Trabajo
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
 
@@ -289,11 +311,14 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo("Título Original", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        var trabajo = TestDataFactory.Trabajo
+            .WithTitulo("Título Original")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
 
@@ -320,11 +345,14 @@ public class TrabajoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new TrabajoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var trabajo = new Trabajo("Trabajo", null, cliente.Id, EstadoTrabajo.Pendiente, null, null, null);
+        var trabajo = TestDataFactory.Trabajo
+            .WithTitulo("Trabajo")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Trabajos.AddAsync(trabajo);
         await contexto.SaveChangesAsync();
         var id = trabajo.Id;

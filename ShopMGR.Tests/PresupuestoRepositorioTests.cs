@@ -4,6 +4,7 @@ using ShopMGR.Repositorios;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Dominio.Enums;
 using FluentAssertions;
+using ShopMGR.Tests.TestBuilders;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -28,11 +29,14 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto("Reparación", null, [], 0, cliente.Id);
+        var presupuesto = TestDataFactory.Presupuesto
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
         // Act
         var resultado = await repositorio.CrearAsync(presupuesto);
@@ -53,19 +57,16 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto(
-            "Reparación", null,
-            [
-                new Material { Descripcion = "Tornillos", Precio = 100, Cantidad = 5 },
-                new Material { Descripcion = "Clavos", Precio = 50, Cantidad = 10 }
-            ],
-            0,
-            cliente.Id
-        );
+        var materiales = TestDataFactory.CreateMateriales(2);
+        var presupuesto = TestDataFactory.Presupuesto
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .WithMateriales(materiales)
+            .CreateValid();
 
         // Act
         var resultado = await repositorio.CrearAsync(presupuesto);
@@ -89,11 +90,14 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto("Reparación", null, [], 0, cliente.Id);
+        var presupuesto = TestDataFactory.Presupuesto
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 
@@ -128,16 +132,16 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto(
-            "Reparación", null,
-            [new Material { Descripcion = "Tornillos", Precio = 100, Cantidad = 5 }],
-            0,
-            cliente.Id
-        );
+        var materiales = new List<Material> { TestDataFactory.Material.CreateValid() };
+        var presupuesto = TestDataFactory.Presupuesto
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .WithMateriales(materiales)
+            .CreateValid();
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 
@@ -161,16 +165,18 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente1 = new Cliente { NombreCompleto = "Juan Perez" };
-        var cliente2 = new Cliente { NombreCompleto = "Maria Lopez" };
+        var cliente1 = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
+        var cliente2 = TestDataFactory.Cliente.WithNombre("Maria Lopez").CreateValid();
         await contexto.Clientes.AddRangeAsync(cliente1, cliente2);
         await contexto.SaveChangesAsync();
 
-        await contexto.Presupuestos.AddRangeAsync(
-            new Presupuesto("Presupuesto 1", null, [], 0, cliente1.Id),
-            new Presupuesto("Presupuesto 2", null, [], 0, cliente1.Id),
-            new Presupuesto("Presupuesto 3", null, [], 0, cliente2.Id)
-        );
+        var presupuestos = new List<Presupuesto>
+        {
+            TestDataFactory.Presupuesto.WithTitulo("Presupuesto 1").WithIdCliente(cliente1.Id).CreateValid(),
+            TestDataFactory.Presupuesto.WithTitulo("Presupuesto 2").WithIdCliente(cliente1.Id).CreateValid(),
+            TestDataFactory.Presupuesto.WithTitulo("Presupuesto 3").WithIdCliente(cliente2.Id).CreateValid()
+        };
+        await contexto.Presupuestos.AddRangeAsync(presupuestos);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -191,16 +197,25 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var pendiente = new Presupuesto("Presupuesto 1", null, [], 0, cliente.Id);
+        var pendiente = TestDataFactory.Presupuesto
+            .WithTitulo("Presupuesto 1")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
-        var aceptado1 = new Presupuesto("Presupuesto 2", null, [], 0, cliente.Id);
+        var aceptado1 = TestDataFactory.Presupuesto
+            .WithTitulo("Presupuesto 2")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         aceptado1.AceptarPresupuesto();
 
-        var aceptado2 = new Presupuesto("Presupuesto 3", null, [], 0, cliente.Id);
+        var aceptado2 = TestDataFactory.Presupuesto
+            .WithTitulo("Presupuesto 3")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         aceptado2.AceptarPresupuesto();
 
         await contexto.Presupuestos.AddRangeAsync(pendiente, aceptado1, aceptado2);
@@ -225,13 +240,19 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var p1 = new Presupuesto("Presupuesto 1", null, [], 0, cliente.Id);
+        var p1 = TestDataFactory.Presupuesto
+            .WithTitulo("Presupuesto 1")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
 
-        var p2 = new Presupuesto("Presupuesto 2", null, [], 0, cliente.Id);
+        var p2 = TestDataFactory.Presupuesto
+            .WithTitulo("Presupuesto 2")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         p2.AceptarPresupuesto();
 
         await contexto.Presupuestos.AddRangeAsync(p1, p2);
@@ -255,15 +276,17 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto("Reparación", null, [], 0, cliente.Id);
+        var presupuesto = TestDataFactory.Presupuesto
+            .WithTitulo("Reparación")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 
-        // Usar métodos de dominio en lugar de asignación directa
         presupuesto.Editar(cliente.Id, "Título Actualizado", "", 0, [], 0);
         presupuesto.AceptarPresupuesto();
 
@@ -288,11 +311,14 @@ public class PresupuestoRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new PresupuestoRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
-        var presupuesto = new Presupuesto("Para Eliminar", null, [], 0, cliente.Id);
+        var presupuesto = TestDataFactory.Presupuesto
+            .WithTitulo("Para Eliminar")
+            .WithIdCliente(cliente.Id)
+            .CreateValid();
         await contexto.Presupuestos.AddAsync(presupuesto);
         await contexto.SaveChangesAsync();
 

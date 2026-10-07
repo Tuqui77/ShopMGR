@@ -4,6 +4,7 @@ using ShopMGR.Contexto;
 using ShopMGR.Dominio.Enums;
 using ShopMGR.Dominio.Modelo;
 using ShopMGR.Repositorios;
+using ShopMGR.Tests.TestBuilders;
 using Xunit;
 
 namespace ShopMGR.Tests;
@@ -28,18 +29,18 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var nuevoCliente = TestDataFactory.Cliente.CreateValid();
 
         // Act
         var resultado = await repositorio.CrearAsync(nuevoCliente);
 
         // Assert
         resultado.Should().NotBeNull();
-        resultado.NombreCompleto.Should().Be("Juan Perez");
+        resultado.NombreCompleto.Should().Be("Cliente Test");
         resultado.Id.Should().BeGreaterThan(0);
 
         var clienteEnDb = await contexto.Clientes.FirstOrDefaultAsync(c =>
-            c.NombreCompleto == "Juan Perez"
+            c.NombreCompleto == "Cliente Test"
         );
         clienteEnDb.Should().NotBeNull();
     }
@@ -51,11 +52,11 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var clienteExistente = new Cliente { NombreCompleto = "Juan Perez" };
+        var clienteExistente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(clienteExistente);
         await contexto.SaveChangesAsync();
 
-        var nuevoCliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var nuevoCliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
 
         // Act & Assert
         var accion = () => repositorio.CrearAsync(nuevoCliente);
@@ -76,11 +77,8 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        await contexto.Clientes.AddRangeAsync(
-            new Cliente { NombreCompleto = "Cliente 1" },
-            new Cliente { NombreCompleto = "Cliente 2" },
-            new Cliente { NombreCompleto = "Cliente 3" }
-        );
+        var clientes = TestDataFactory.CreateClientes(3);
+        await contexto.Clientes.AddRangeAsync(clientes);
         await contexto.SaveChangesAsync();
 
         // Act
@@ -102,7 +100,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
         var id = cliente.Id;
@@ -141,18 +139,17 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente
-        {
-            NombreCompleto = "Juan Perez",
-            Telefono = new List<TelefonoCliente>
+        var cliente = TestDataFactory.Cliente
+            .WithNombre("Juan Perez")
+            .WithTelefonos(new List<TelefonoCliente>
             {
-                new TelefonoCliente { Telefono = "1234567890" },
-            },
-            Direccion = new List<Direccion>
+                TestDataFactory.CreateTelefono("1234567890")
+            })
+            .WithDirecciones(new List<Direccion>
             {
-                new Direccion { Calle = "Calle Falsa", Altura = "123", Ciudad = "Buenos Aires" },
-            },
-        };
+                TestDataFactory.CreateDireccion("Calle Falsa")
+            })
+            .CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
         var id = cliente.Id;
@@ -177,7 +174,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
@@ -215,20 +212,19 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        await contexto.Clientes.AddRangeAsync(
-            new Cliente { NombreCompleto = "Cliente Positivo" },
-            new Cliente { NombreCompleto = "Cliente Negativo" },
-            new Cliente { NombreCompleto = "Cliente Cero" },
-            new Cliente { NombreCompleto = "Cliente Muy Negativo" }
-        );
+        var clientes = new List<Cliente>
+        {
+            TestDataFactory.Cliente.WithNombre("Cliente Positivo").CreateValid(),
+            TestDataFactory.Cliente.WithNombre("Cliente Negativo").CreateValid(),
+            TestDataFactory.Cliente.WithNombre("Cliente Cero").CreateValid(),
+            TestDataFactory.Cliente.WithNombre("Cliente Muy Negativo").CreateValid()
+        };
+        await contexto.Clientes.AddRangeAsync(clientes);
         await contexto.SaveChangesAsync();
 
         // Agregar movimientos para que el balance se calcule correctamente
-        // El constructor de MovimientoBalance aplica invariantes de signo automáticamente:
-        //   - Créditos (Pago/Anticipo): montos negativos → se niegan (quedan positivos)
-        //   - Débitos (Cargo/Compra):  montos positivos → se niegan (quedan negativos)
-        var clientes = await contexto.Clientes.ToListAsync();
-        foreach (var c in clientes)
+        var clientesEnDb = await contexto.Clientes.ToListAsync();
+        foreach (var c in clientesEnDb)
         {
             var (tipo, monto) = c.NombreCompleto switch
             {
@@ -238,7 +234,7 @@ public class ClienteRepositorioTests
                 _ => (TipoMovimiento.Pago, 0m),
             };
 
-            var movimiento = new MovimientoBalance(tipo, monto, "Test", DateOnly.FromDateTime(DateTime.Today), c.Id);
+            var movimiento = TestDataFactory.CreateMovimiento(tipo, monto, c.Id);
             await contexto.MovimientoBalance.AddAsync(movimiento);
         }
         await contexto.SaveChangesAsync();
@@ -262,7 +258,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
 
@@ -287,7 +283,7 @@ public class ClienteRepositorioTests
         using var contexto = CreateDbContext();
         var repositorio = new ClienteRepositorio(contexto);
 
-        var cliente = new Cliente { NombreCompleto = "Juan Perez" };
+        var cliente = TestDataFactory.Cliente.WithNombre("Juan Perez").CreateValid();
         await contexto.Clientes.AddAsync(cliente);
         await contexto.SaveChangesAsync();
         var id = cliente.Id;
