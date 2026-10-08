@@ -723,14 +723,14 @@ public class TrabajoApiTests : ApiTestsBase
     }
 
     [Fact]
-    public async Task ObtenerListaTrabajos_ConDatos_DevuelveLosTrabajos()
+    public async Task ListarTrabajos_ConDatos_DevuelveLosTrabajos()
     {
         using var client = await CrearClienteAutenticadoAsync();
         var idCliente = await CrearClienteAsync(client);
         var titulo = $"Trabajo {Guid.NewGuid():N}";
         await CrearTrabajoAsync(client, idCliente, titulo);
 
-        var respuesta = await client.GetAsync("/api/Trabajos/ObtenerListaTrabajos");
+        var respuesta = await client.GetAsync("/api/Trabajos/ListarTrabajos");
 
         respuesta.StatusCode.Should().Be(HttpStatusCode.OK);
         using var doc = JsonDocument.Parse(await respuesta.Content.ReadAsStringAsync());

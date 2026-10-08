@@ -30,7 +30,7 @@ La suite debe:
 |---|---|---|
 | **Auth** | `POST /api/Auth/IniciarSesion`, `POST /api/Auth/Refrescar`, `POST /api/Auth/CerrarSesion`, `GET /api/Auth` (AuthorizedOnly), `POST /api/Auth/RegistrarUsuario` | **Crítica** (P0) |
 | **Clientes** | `CrearCliente`, `ObtenerListaClientes`, `ObtenerClientePorId`, `ObtenerDetallePorId`, `ObtenerClientePorNombre`, `ModificarCliente`, `EliminarCliente`, `BuscarSaldosNegativos`, movimientos | **Alta** (P1) |
-| **Trabajos** | `CrearTrabajo`, `ObtenerListaTrabajos`, `ObtenerTrabajoPorId`, `ObtenerDetallePorId`, `ObtenerTrabajosPorCliente`, `ObtenerTrabajosPorEstado`, `IniciarTrabajo`, `TerminarTrabajo`, `ModificarTrabajo`, `EliminarTrabajo` | **Alta** (P1) |
+| **Trabajos** | `CrearTrabajo`, `ListarTrabajos`, `ObtenerTrabajoPorId`, `ObtenerDetallePorId`, `ObtenerTrabajosPorCliente`, `ObtenerTrabajosPorEstado`, `IniciarTrabajo`, `TerminarTrabajo`, `ModificarTrabajo`, `EliminarTrabajo` | **Alta** (P1) |
 | **Presupuestos** | `CrearPresupuesto`, `ListarPresupuestos`, `ObtenerPresupuestoPorId`, `ObtenerDetallePresupuesto`, `ObtenerPresupuestosPorCliente`, `ObtenerPresupuestosEstado`, `AceptarPresupuesto`, `RechazarPresupuesto`, `ActualizarPresupuesto`, `EliminarPresupuesto`, `ObtenerCostoHoraDeTrabajo` | **Alta** (P1) |
 
 ### Out of scope (justificado)
@@ -65,7 +65,7 @@ Cada assert de la suite se deriva del código real verificado en el repo (2026-0
 | V12 | Repositorios | `TrabajoRepositorio.CrearAsync` y `PresupuestoRepositorio.CrearAsync` **no validan** que el `IdCliente` exista | Con SQLite: FK violada → SqliteException → 500. Con InMemory: se crea (no hay constraints). **Comportamiento a documentar, no a afirmar** (caso exploratory, §6 test-cases) |
 | V13 | `ShopMGR.Tests.csproj` | Ya referencia `Microsoft.AspNetCore.Mvc.Testing` 9.0.0, `Microsoft.EntityFrameworkCore.InMemory`, `Microsoft.EntityFrameworkCore.Sqlite`; coverlet activado (`CollectCoverage=true`, formato cobertura) | **Cero dependencias nuevas necesarias** — la infraestructura está lista |
 | V14 | `Program.cs` | `ReferenceHandler.IgnoreCycles` → JSON con `$id`/`$values` | Los asserts de body deben parsear con `JsonDocument`, no deserializar tipado directo a `List<T>` (salvo `IgnoreCycles` no previsto) |
-| V15 | `AGENTS.md` | Documenta como gap `GET /api/Trabajos/ObtenerListaTrabajos` | **Desactualizado**: el endpoint YA existe en `TrabajosController` (se cubre en la suite). Hallazgo info (no bloquea) |
+| V15 | `AGENTS.md` | Documenta como gap `GET /api/Trabajos/ListarTrabajos` | **Desactualizado**: el endpoint YA existe en `TrabajosController` (se cubre en la suite). Hallazgo info (no bloquea) |
 
 ---
 
