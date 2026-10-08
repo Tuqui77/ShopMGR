@@ -40,8 +40,8 @@ namespace ShopMGR.WebApi.Controllers
 
         [Authorize]
         [HttpGet]
-        [Route("ObtenerListaTrabajos")]
-        public async Task<IActionResult> ObtenerListaTrabajos()
+        [Route("ListarTrabajos")]
+        public async Task<IActionResult> ListarTrabajos()
         {
             var trabajos = await administrarTrabajos.ListarTodosAsync();
             return Ok(trabajos);
