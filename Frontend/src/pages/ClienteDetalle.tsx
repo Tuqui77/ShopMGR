@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useState, useRef, useEffect } from 'react';
-import { User, Phone, MapPin, Wrench, FileText, Loader2, ArrowLeft, Edit, Trash2, ChevronRight, Plus, MoreVertical } from 'lucide-react';
+import { User, Phone, MapPin, Wrench, FileText, ArrowLeft, Edit, Trash2, ChevronRight, Plus, MoreVertical } from 'lucide-react';
 import { useClienteDetalle, useEliminarCliente } from '../hooks/useClientes';
 import { useStore } from '../store';
 import { formatDate, formatCurrency } from '../utils/dateFormat';
@@ -9,6 +9,7 @@ import { ClienteForm } from '../components/ClienteForm';
 import { DireccionModal } from '../components/DireccionModal';
 import { TelefonoModal } from '../components/TelefonoModal';
 import { MovimientosClienteModal } from '../components/MovimientosClienteModal';
+import { LoadingState } from '../components/LoadingState';
 import type { DireccionItem, TelefonoCompleto } from '../types';
 
 export function ClienteDetalle() {
@@ -94,11 +95,7 @@ export function ClienteDetalle() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (error || !cliente) {

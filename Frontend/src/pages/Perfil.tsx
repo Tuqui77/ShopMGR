@@ -8,6 +8,7 @@ import {
   obtenerIdUsuarioDesdeToken,
 } from '../utils/jwt';
 import { PasskeySection } from '../components/PasskeySection';
+import { LoadingState } from '../components/LoadingState';
 import { authService, extractAuthErrorMessage } from '../services/auth';
 import { useStore } from '../store';
 import type { RolUsuario } from '../types';
@@ -406,9 +407,7 @@ export function Perfil() {
           </div>
 
           {isLoadingUsuarios ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-5 h-5 animate-spin" style={{ color: 'var(--color-muted)' }} />
-            </div>
+            <LoadingState variant="inline" label="Cargando usuarios…" />
           ) : isErrorUsuarios ? (
             <p role="alert" className="text-xs flex items-center gap-1.5" style={{ color: 'var(--color-danger)' }}>
               <AlertCircle className="w-4 h-4 shrink-0" />

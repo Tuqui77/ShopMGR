@@ -5,7 +5,7 @@ import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { FAB } from './components/FAB';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { LoadingSpinner } from './components/LoadingSpinner';
+import { LoadingState } from './components/LoadingState';
 import { HoursModal } from './components/HoursModal';
 import { ClienteForm } from './components/ClienteForm';
 import { PresupuestoForm } from './components/PresupuestoForm';
@@ -86,7 +86,7 @@ function ProtectedLayout() {
     <div className="main-content with-sidebar">
       <Sidebar />
       <div className="flex-1 min-h-screen min-w-0 pb-24 lg:pb-8">
-        <Suspense fallback={<LoadingSpinner message="Cargando…" />}>
+        <Suspense fallback={<LoadingState variant="page" />}>
           <Outlet />
         </Suspense>
       </div>
@@ -125,7 +125,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={
-              <Suspense fallback={<LoadingSpinner message="Cargando…" />}>
+              <Suspense fallback={<LoadingState variant="page" />}>
                 <LoginPage />
               </Suspense>
             } />

@@ -3,8 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useTrabajos, useTrabajosPorCliente } from '../hooks/useTrabajos';
 import { useCliente } from '../hooks/useClientes';
 import { TrabajoCard } from '../components/TrabajoCard';
+import { SkeletonList } from '../components/Skeleton';
 import clsx from 'clsx';
-import { Wrench, Loader2, ArrowLeft } from 'lucide-react';
+import { Wrench, ArrowLeft } from 'lucide-react';
 
 type FilterType = 'todos' | 'activos' | 'pendientes' | 'terminados';
 
@@ -40,16 +41,7 @@ export function Trabajos() {
   const activeTrabajos = filtered.filter(t => t.estado === 'Iniciado');
   const pendingTrabajos = filtered.filter(t => t.estado === 'Pendiente');
   const completedTrabajos = filtered.filter(t => t.estado === 'Terminado');
-  
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
-      </div>
-    );
-  }
-  
+
   // Error state
   if (error) {
     return (
@@ -95,7 +87,8 @@ export function Trabajos() {
               onClick={() => setFilter(f.key)}
               className={clsx('filter-pill', filter === f.key && 'active')}
             >
-              {f.label} ({counts[f.key]})
+              {f.label}
+              {!isLoading && ` (${counts[f.key]})`}
             </button>
           ))}
         </div>
@@ -103,7 +96,9 @@ export function Trabajos() {
       
       {/* Jobs List */}
       <section className="px-4 space-y-6">
-        {filter === 'todos' ? (
+        {isLoading ? (
+          <SkeletonList count={4} label="Cargando trabajos…" />
+        ) : filter === 'todos' ? (
           <>
             {activeTrabajos.length > 0 && (
               <>

@@ -1,7 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Loader2, 
   ArrowLeft, 
   Edit, 
   Trash2, 
@@ -23,6 +22,7 @@ import { useStore } from '../store';
 import { PresupuestoForm } from '../components/PresupuestoForm';
 import { useClienteDetalle } from '../hooks/useClientes';
 import { usePresupuestoDetalle } from '../hooks/usePresupuestos';
+import { LoadingState } from '../components/LoadingState';
 
 export function PresupuestoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -166,11 +166,7 @@ export function PresupuestoDetalle() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen pb-24 lg:pb-8 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-accent)' }} />
-      </div>
-    );
+    return <LoadingState variant="page" />;
   }
 
   if (error || !presupuesto) {
