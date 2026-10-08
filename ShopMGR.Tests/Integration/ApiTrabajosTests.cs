@@ -115,7 +115,7 @@ public class ApiTrabajosTests : ApiTestsBase, IAsyncLifetime
         );
         Assert.Equal(HttpStatusCode.OK, crear.StatusCode);
 
-        var respuesta = await client.GetAsync("/api/Trabajos/ObtenerListaTrabajos");
+        var respuesta = await client.GetAsync("/api/Trabajos/ListarTrabajos");
 
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
         using var doc = JsonDocument.Parse(await respuesta.Content.ReadAsStringAsync());
