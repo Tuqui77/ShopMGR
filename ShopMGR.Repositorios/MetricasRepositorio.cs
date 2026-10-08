@@ -17,6 +17,7 @@ namespace ShopMGR.Repositorios
                 .MovimientoBalance.Where(m =>
                     m.Tipo == Dominio.Enums.TipoMovimiento.Pago && m.Fecha.Year == anio && m.Fecha.Month == mes
                 )
+                .AsNoTracking()
                 .ToListAsync();
 
             return ingresosMes.Count() > 0
@@ -29,6 +30,7 @@ namespace ShopMGR.Repositorios
             var (mes, anio) = ObtenerPeríodo(fecha);
             var horasTrabajadasMes = await _contexto
                 .HorasYDescripcion.Where(h => h.Fecha.Month == mes && h.Fecha.Year == anio)
+                .AsNoTracking()
                 .ToListAsync();
 
             return horasTrabajadasMes.Count() > 0
@@ -43,6 +45,7 @@ namespace ShopMGR.Repositorios
                 .Trabajos.Where(t =>
                     t.FechaFin.HasValue && t.FechaFin.Value.Month == mes && t.FechaFin.Value.Year == anio
                 )
+                .AsNoTracking()
                 .ToListAsync();
 
             return trabajosTerminadosMes.Count() > 0
@@ -55,6 +58,7 @@ namespace ShopMGR.Repositorios
             var (mes, anio) = ObtenerPeríodo(fecha);
             var presupuestosCreadosMes = await _contexto
                 .Presupuestos.Where(p => p.Fecha.Month == mes && p.Fecha.Year == anio)
+                .AsNoTracking()
                 .ToListAsync();
 
             return presupuestosCreadosMes.Count > 0
@@ -69,6 +73,7 @@ namespace ShopMGR.Repositorios
                 .Presupuestos.Where(p =>
                     p.FechaAceptado.HasValue && p.FechaAceptado.Value.Month == mes && p.FechaAceptado.Value.Year == anio
                 )
+                .AsNoTracking()
                 .ToListAsync();
 
             return presupuestosAceptadosMes.Count() > 0

@@ -68,12 +68,12 @@ describe('trabajosService', () => {
   });
 
   describe('listar', () => {
-    it('hace GET a ObtenerListaTrabajos y mapea el DTO al modelo frontend', async () => {
+    it('hace GET a ListarTrabajos y mapea el DTO al modelo frontend', async () => {
       mockedGet.mockResolvedValue({ data: [trabajoBackendDTO()] });
 
       const [trabajo] = await trabajosService.listar();
 
-      expect(mockedGet).toHaveBeenCalledWith('/Trabajos/ObtenerListaTrabajos');
+      expect(mockedGet).toHaveBeenCalledWith('/Trabajos/ListarTrabajos');
       expect(trabajo).toMatchObject({
         id: 3,
         titulo: 'Cambio de aceite',

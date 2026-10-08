@@ -92,7 +92,7 @@ El valor primario de la suite es el **contrato HTTP** (cada endpoint del alcance
 | `DELETE /api/Cliente/EliminarCliente` (ok + 404) | ✅ cubierto |
 | `POST /api/Cliente/CrearMovimiento` | ✅ cubierto |
 | `POST /api/Trabajos/CrearTrabajo` (ok + 400 + 401) | ✅ cubierto |
-| `GET /api/Trabajos/ObtenerListaTrabajos` | ✅ cubierto |
+| `GET /api/Trabajos/ListarTrabajos` | ✅ cubierto |
 | `GET /api/Trabajos/ObtenerTrabajoPorId` (404) | ✅ cubierto |
 | `GET /api/Trabajos/ObtenerTrabajosPorCliente` (404) | ✅ cubierto |
 | `GET /api/Trabajos/ObtenerTrabajosPorEstado` (404) | ✅ cubierto |
@@ -155,7 +155,7 @@ El valor primario de la suite es el **contrato HTTP** (cada endpoint del alcance
 | TC-EXP-01 (FK sin validar en creación de trabajo/presupuesto) | **BUG confirmado** | H3: `CrearTrabajo` idCliente inexistente → **500** (debería 400/404). **Issue #126** abierto (`bug`, `severity: medium`, evidencia + fix sugerido). `CrearPresupuesto` → 404 anticipado (falla antes del FK por config de costo hora) |
 | `ActualizarPresupuesto` sin test dedicado | Resuelto | **TC-PRE-08** dedicado agregado y pasando |
 | Auth administrativo (roles, cambiar contraseña) | Ampliación | Iteración v1.1 del plan si el dueño lo prioriza |
-| `AGENTS.md` desactualizado (endpoint `ObtenerListaTrabajos` ya existe) | Resuelto | `AGENTS.md` actualizado el 2026-08-09: gaps históricos eliminados; quedan solo los activos (issue #126: FK sin validar en creación de trabajo/presupuesto) |
+| `AGENTS.md` desactualizado (endpoint `ListarTrabajos` ya existe) | Resuelto | `AGENTS.md` actualizado el 2026-08-09: gaps históricos eliminados; quedan solo los activos (issue #126: FK sin validar en creación de trabajo/presupuesto) |
 | HS512 key-length gotcha (`IDX10720`) | Nota de infraestructura de test | `Claves.JwtToken` de prueba debe tener ≥512 bits (clave aprobada por PM, 536 bits). No es un bug de producción si el secreto real cumple la longitud |
 | `ValorHoraDeTrabajo` no sembrada por Bootstrap | Gap funcional | Presupuestos y `AgregarHorasDeTrabajo` (trabajo sin presupuesto) fallan con 404 hasta configurarla vía `PATCH ActualizarCostoHoraDeTrabajo`. Considerar seed en Bootstrap |
 | Rate limiter y suites compartidas | Nota de diseño | Single-partition (TestServer → 127.0.0.1): clases con ≥6 logins/min o ≥2 registros/min reciben 429. Mitigado con `TokenCompartido` + factories aislados por test de rate-limit |

@@ -120,7 +120,7 @@ export const trabajosService = {
    * Obtiene todos los trabajos
    */
   async listar(): Promise<Trabajo[]> {
-    const response = await apiClient.get<TrabajoBackendDTO[]>('/Trabajos/ObtenerListaTrabajos');
+    const response = await apiClient.get<TrabajoBackendDTO[]>('/Trabajos/ListarTrabajos');
     const rawValues = response.data;
     
     return rawValues

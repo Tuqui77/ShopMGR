@@ -66,7 +66,7 @@
 | TC-TRA-01 | Crear trabajo válido | Happy | Cliente existente | `POST /api/Trabajos/CrearTrabajo` body `{"titulo":"Trabajo <guid>","idCliente":<id>,"estado":"Pendiente"}` | **200** body con el trabajo (id > 0, estado `Pendiente`). Persistido |
 | TC-TRA-02 | Crear trabajo sin título → 400 | Negative | Cliente | `POST CrearTrabajo` con `{"idCliente":<id>}` | **400** ProblemDetails (`[Required]` título — V6) |
 | TC-TRA-03 | Crear trabajo sin token → 401 | Negative | — | `POST CrearTrabajo` sin Authorization | **401** |
-| TC-TRA-04 | Listar trabajos | Happy | ≥1 trabajo | `GET /api/Trabajos/ObtenerListaTrabajos` | **200** array; incluye `cliente` (Include verificado). **NOTA**: este endpoint figuraba como gap en `AGENTS.md` — verificado: YA existe (V15) |
+| TC-TRA-04 | Listar trabajos | Happy | ≥1 trabajo | `GET /api/Trabajos/ListarTrabajos` | **200** array; incluye `cliente` (Include verificado). **NOTA**: este endpoint figuraba como gap en `AGENTS.md` — verificado: YA existe (V15) |
 | TC-TRA-05 | Obtener trabajo por id inexistente → 404 | Negative | — | `GET ObtenerTrabajoPorId?idTrabajo=999999` | **404** `{ error: "No existe un trabajo con el Id 999999" }` (V5/V11) |
 | TC-TRA-06 | Obtener trabajos por cliente sin datos → 404 | Negative | Cliente sin trabajos | `GET ObtenerTrabajosPorCliente?idCliente=<id>` | **404** `"No se encontraron trabajos para el cliente con ID <id>."` (controller) |
 | TC-TRA-07 | Obtener trabajos por estado sin datos → 404 | Negative | — | `GET ObtenerTrabajosPorEstado?estado=Terminado` (sin trabajos terminados) | **404** `"No se encontro ningun trabajo Terminado."` |

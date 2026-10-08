@@ -144,7 +144,7 @@ export class ApiClient {
    * endpoint dedicado (la creación siempre nace Pendiente en el backend).
    *
    * OJO: `CrearTrabajo` NO incluye el id en la respuesta, así que se busca por
-   * título contra la lista (ObtenerListaTrabajos).
+   * título contra la lista (ListarTrabajos).
    */
   async crearTrabajo(
     titulo: string,
@@ -240,7 +240,7 @@ export class ApiClient {
   }
 
   async listarTrabajos(): Promise<TrabajoCreado[]> {
-    const raw = await this.get<unknown>('/api/Trabajos/ObtenerListaTrabajos');
+    const raw = await this.get<unknown>('/api/Trabajos/ListarTrabajos');
     return this.unwrapList<TrabajoCreado>(raw);
   }
 
