@@ -26,7 +26,7 @@ namespace ShopMGR.Repositorios
 
         public async Task<List<Trabajo>> ListarTodosAsync()
         {
-            var trabajos = await _contexto.Trabajos.Include(t => t.Cliente).ToListAsync();
+            var trabajos = await _contexto.Trabajos.Include(t => t.Cliente).AsNoTracking().ToListAsync();
 
             return trabajos;
         }

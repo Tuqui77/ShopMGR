@@ -27,6 +27,7 @@ namespace ShopMGR.Repositorios
                 .Clientes.Include(c => c.Trabajos)
                 .Include(c => c.Presupuestos)
                 .Include(c => c.MovimientosBalance)
+                .AsNoTracking()
                 .ToListAsync();
 
             return clientes;
