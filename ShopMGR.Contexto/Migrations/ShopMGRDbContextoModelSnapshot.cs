@@ -44,6 +44,8 @@ namespace ShopMGR.Contexto.Migrations
                     b.HasIndex("Id")
                         .IsUnique();
 
+                    b.HasIndex("NombreCompleto");
+
                     b.ToTable("Clientes");
                 });
 
@@ -229,8 +231,8 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.Property<string>("Descripcion")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateOnly>("Fecha")
                         .HasColumnType("date");
@@ -400,6 +402,8 @@ namespace ShopMGR.Contexto.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Estado");
+
                     b.HasIndex("Id")
                         .IsUnique();
 
@@ -517,6 +521,8 @@ namespace ShopMGR.Contexto.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Estado");
 
                     b.HasIndex("Id")
                         .IsUnique();
