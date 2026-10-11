@@ -10,6 +10,7 @@ import { DireccionModal } from '../components/DireccionModal';
 import { TelefonoModal } from '../components/TelefonoModal';
 import { MovimientosClienteModal } from '../components/MovimientosClienteModal';
 import { LoadingState } from '../components/LoadingState';
+import { EmptyState } from '../components/EmptyState';
 import type { DireccionItem, TelefonoCompleto } from '../types';
 
 export function ClienteDetalle() {
@@ -309,11 +310,11 @@ export function ClienteDetalle() {
 
         {/* Recent Items - each item is its own card */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {hasTrabajos && (
-            <div>
-              <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                Trabajos Recientes
-              </h3>
+          <div>
+            <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+              Trabajos Recientes
+            </h3>
+            {hasTrabajos ? (
               <div className="space-y-2">
                 {cliente.trabajosRecientes!.map((trabajo) => (
                   <Link
@@ -331,14 +332,21 @@ export function ClienteDetalle() {
                   </Link>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <EmptyState
+                variant="contextual"
+                size="compact"
+                icon={Wrench}
+                title="Sin trabajos todavía"
+              />
+            )}
+          </div>
 
-          {hasPresupuestos && (
-            <div>
-              <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
-                Presupuestos Recientes
-              </h3>
+          <div>
+            <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+              Presupuestos Recientes
+            </h3>
+            {hasPresupuestos ? (
               <div className="space-y-2">
                 {cliente.presupuestosRecientes!.map((presupuesto) => (
                   <Link
@@ -357,8 +365,15 @@ export function ClienteDetalle() {
                   </Link>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <EmptyState
+                variant="contextual"
+                size="compact"
+                icon={FileText}
+                title="Sin presupuestos todavía"
+              />
+            )}
+          </div>
         </div>
       </section>
       

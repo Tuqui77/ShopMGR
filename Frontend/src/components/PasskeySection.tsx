@@ -6,6 +6,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { PasskeyRegisterModal } from './PasskeyRegisterModal';
 import { PasskeyRenameModal } from './PasskeyRenameModal';
 import { LoadingState } from './LoadingState';
+import { EmptyState } from './EmptyState';
 import type { PasskeyCredencial } from '../types';
 
 const MENSAJE_ERROR_LISTAR = 'No se pudieron cargar tus passkeys. Revisá tu conexión e intentá de nuevo.';
@@ -86,11 +87,23 @@ export function PasskeySection({ embedded = false }: PasskeySectionProps) {
           {MENSAJE_ERROR_LISTAR}
         </p>
       ) : passkeys.length === 0 ? (
-        <p className="text-xs mt-3" style={{ color: 'var(--color-muted)' }}>
-          {soportado
-            ? 'Todavía no registraste ningún passkey.'
-            : 'Tu navegador no soporta passkeys. Probá con otro dispositivo o navegador.'}
-        </p>
+        soportado ? (
+          <EmptyState
+            variant="contextual"
+            size="compact"
+            icon={Fingerprint}
+            title="Todavía no registraste ningún passkey"
+            action={{ label: 'Registrar passkey', onClick: modal.open }}
+          />
+        ) : (
+          <EmptyState
+            variant="contextual"
+            size="compact"
+            icon={Fingerprint}
+            title="Todavía no registraste ningún passkey"
+            description="Tu navegador no soporta passkeys. Probá con otro dispositivo o navegador."
+          />
+        )
       ) : (
         <ul className="mt-4 space-y-2">
           {passkeys.map((passkey) => (

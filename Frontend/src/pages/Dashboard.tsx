@@ -1,4 +1,4 @@
-import { UserRound, Loader2, Clock, TrendingUp, Check, X, Play } from 'lucide-react';
+import { UserRound, Loader2, Clock, TrendingUp, Check, X, Play, Wrench, FileText } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStore } from '../store';
@@ -10,6 +10,7 @@ import { MetricasGrid } from '../components/MetricasGrid';
 import { metricasGridConfig } from '../components/metricasGridConfig';
 import { SkeletonHero, SkeletonMetricGrid } from '../components/Skeleton';
 import { LoadingState } from '../components/LoadingState';
+import { EmptyState } from '../components/EmptyState';
 import { formatCurrency } from '../utils/dateFormat';
 import { formatPeriodo, nombreMes, periodoAnterior } from '../utils/periodos';
 import type { Trabajo } from '../types';
@@ -216,16 +217,13 @@ export function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-3" style={{ color: 'var(--color-muted)' }}>
-                <p className="text-xs">Sin trabajos activos</p>
-                <button
-                  className="text-xs font-medium mt-1.5 hover:bg-[var(--color-hover)] px-2 py-1 rounded-lg transition-colors duration-200"
-                  style={{ color: 'var(--color-accent)' }}
-                  onClick={() => navigate('/trabajos')}
-                >
-                  Crear uno
-                </button>
-              </div>
+              <EmptyState
+                variant="contextual"
+                size="compact"
+                icon={Wrench}
+                title="Sin trabajos activos"
+                action={{ label: 'Ver todos', onClick: () => navigate('/trabajos') }}
+              />
             )}
           </div>
 
@@ -305,16 +303,13 @@ export function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-3" style={{ color: 'var(--color-muted)' }}>
-                <p className="text-xs">Sin presupuestos pendientes</p>
-                <button
-                  className="text-xs font-medium mt-1.5 hover:bg-[var(--color-hover)] px-2 py-1 rounded-lg transition-colors duration-200"
-                  style={{ color: 'var(--color-accent)' }}
-                  onClick={() => navigate('/presupuestos')}
-                >
-                  Crear uno
-                </button>
-              </div>
+              <EmptyState
+                variant="contextual"
+                size="compact"
+                icon={FileText}
+                title="Sin presupuestos pendientes"
+                action={{ label: 'Ver todos', onClick: () => navigate('/presupuestos') }}
+              />
             )}
           </div>
         </div>

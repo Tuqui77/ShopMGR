@@ -25,6 +25,7 @@ import { TrabajoForm } from '../components/TrabajoForm';
 import { ImageUpload } from '../components/ImageUpload';
 import { HorasTrabajoModal } from '../components/HorasTrabajoModal';
 import { LoadingState } from '../components/LoadingState';
+import { EmptyState } from '../components/EmptyState';
 
 export function TrabajoDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -534,12 +535,14 @@ useEffect(() => {
             </div>
           </div>
         ) : (
-          <div className="card">
-            <p className="text-sm text-center py-4" style={{ color: 'var(--color-muted)' }}>
-              Sin fotos
-            </p>
+          <EmptyState
+            variant="contextual"
+            size="compact"
+            icon={Camera}
+            title="Sin fotos todavía"
+          >
             <ImageUpload onUpload={handleUploadPhotos} />
-          </div>
+          </EmptyState>
         )}
 
         {/* Gallery modal - fullscreen with thumbnails + navigation */}
