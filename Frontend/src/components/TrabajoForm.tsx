@@ -7,6 +7,7 @@ import { movimientosService, type TipoMovimiento } from '../services/movimientos
 import type { EstadoTrabajo, Cliente, Presupuesto } from '../types';
 import { Loader2, X, Check, Banknote, FileText, Trash2 } from 'lucide-react';
 import { LoadingState } from './LoadingState';
+import { EmptyState } from './EmptyState';
 import clsx from 'clsx';
 
 interface Props {
@@ -56,6 +57,18 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
     }
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [isEditing, trabajoOriginal]);
+
+  /* eslint-disable react-hooks/set-state-in-effect */   // mismo par que usa el efecto de edición (líneas 47–57)
+  // Preselección desde empty contextual (?cliente=) — issue #68 (Q3)
+  useEffect(() => {
+    if (!isOpen || isEditing) return;                    // edición: manda trabajoOriginal, no aplica
+    const inicial = useStore.getState().trabajoFormClienteInicial;
+    if (inicial !== null) {
+      setClienteId(inicial);
+      useStore.getState().setTrabajoFormClienteInicial(null);  // consumir UNA sola vez
+    }
+  }, [isOpen, isEditing]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Anticipo
   const [registrarAnticipo, setRegistrarAnticipo] = useState(false);
@@ -488,12 +501,12 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
               </div>
 
               {presupuestosDelCliente.filter((p: Presupuesto) => p.estado === 'Aceptado' || p.estado === 'Pendiente').length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--color-muted)' }} />
-                  <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                    No hay presupuestos disponibles para este cliente
-                  </p>
-                </div>
+                <EmptyState
+                  variant="contextual"
+                  size="compact"
+                  icon={FileText}
+                  title="No hay presupuestos disponibles para este cliente"
+                />
               ) : (
                 <div className="space-y-1">
                   {presupuestosDelCliente

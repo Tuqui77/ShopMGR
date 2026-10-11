@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
 import type { EstadoPresupuesto } from '../types';
 import { usePresupuestos, usePresupuestosPorCliente } from '../hooks/usePresupuestos';
 import { useCliente } from '../hooks/useClientes';
+import { useStore } from '../store';
 import { Clipboard, Clock, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
 import { SkeletonList } from '../components/Skeleton';
+import { EmptyState } from '../components/EmptyState';
 
 type FilterType = 'todos' | 'pendientes' | 'aceptados' | 'rechazados';
 
@@ -24,6 +26,9 @@ export function Presupuestos() {
   const error = clienteId !== undefined ? clientPresupuestosQuery.error : allPresupuestosQuery.error;
   
   const [filter, setFilter] = useState<FilterType>('todos');
+
+  const { setShowPresupuestoForm, setPresupuestoFormClienteInicial } = useStore();
+  const todosPillRef = useRef<HTMLButtonElement>(null);
   
   // Filter by status (backend already filters by client if clienteId is provided)
   const filtered = presupuestos?.filter(p => {
@@ -40,7 +45,40 @@ export function Presupuestos() {
     aceptados: allData.filter(p => p.estado === 'Aceptado').length,
     rechazados: allData.filter(p => p.estado === 'Rechazado').length,
   };
-  
+
+  const totalItems = presupuestos?.length ?? 0;
+
+  // Preselección de cliente desde empty contextual (?cliente=) — issue #68 (Q3b)
+  const handleCrearPresupuestoContextual = () => {
+    if (clienteId === undefined) return;
+    setPresupuestoFormClienteInicial(clienteId);
+    setShowPresupuestoForm(true);
+  };
+
+  const handleQuitarFiltro = () => {
+    setFilter('todos');
+    todosPillRef.current?.focus();
+  };
+
+  // E4: lista realmente vacía (default/contextual) vs. filtro sin resultados (no-results)
+  const emptyState = clienteId !== undefined ? (
+    <EmptyState
+      variant="contextual"
+      icon={Clipboard}
+      title="Este cliente todavía no tiene presupuestos"
+      description="Creá el primer presupuesto para cotizarle un trabajo."
+      action={{ label: 'Crear Presupuesto', onClick: handleCrearPresupuestoContextual }}
+    />
+  ) : (
+    <EmptyState
+      variant="default"
+      icon={Clipboard}
+      title="Todavía no hay presupuestos"
+      description="Creá el primer presupuesto para enviarle una cotización a un cliente."
+      action={{ label: 'Crear Presupuesto', onClick: () => setShowPresupuestoForm(true) }}
+    />
+  );
+
   const getStatusBadge = (estado: EstadoPresupuesto) => {
     switch (estado) {
       case 'Pendiente':
@@ -89,6 +127,7 @@ export function Presupuestos() {
           ] as { key: FilterType; label: string }[]).map(f => (
             <button
               key={f.key}
+              ref={f.key === 'todos' ? todosPillRef : undefined}
               onClick={() => setFilter(f.key)}
               className={clsx('filter-pill', filter === f.key && 'active')}
             >
@@ -131,19 +170,17 @@ export function Presupuestos() {
               </Link>
             ))}
 
-            {filtered.length === 0 && clienteId !== undefined && (
-              <div className="text-center py-12">
-                <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos para este cliente</p>
-              </div>
-            )}
-
-            {filtered.length === 0 && clienteId === undefined && (
-              <div className="text-center py-12">
-                <Clipboard className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                <p style={{ color: 'var(--color-muted)' }}>No hay presupuestos</p>
-              </div>
-            )}
+            {totalItems === 0
+              ? emptyState
+              : filtered.length === 0 && (
+                  <EmptyState
+                    variant="no-results"
+                    icon={Clipboard}
+                    title="No hay presupuestos con este filtro"
+                    description='Volvé a "Todos" o probá con otro filtro.'
+                    secondaryAction={{ label: 'Quitar filtro', onClick: handleQuitarFiltro }}
+                  />
+                )}
           </>
         )}
       </section>
