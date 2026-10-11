@@ -1,11 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useStore } from '../store';
 import { useTrabajos, useAgregarHoras } from '../hooks/useTrabajos';
+import { useClientes } from '../hooks/useClientes';
 import { useCostoHora } from '../hooks/useCostoHora';
 import clsx from 'clsx';
 import type { Trabajo } from '../types';
-import { X, ArrowLeft, Search, CheckCircle, Loader2 } from 'lucide-react';
+import { X, ArrowLeft, Search, CheckCircle, Loader2, Wrench } from 'lucide-react';
 import { formatCurrency } from '../utils/dateFormat';
+import { EmptyState } from './EmptyState';
 
 export function HoursModal() {
   const { 
@@ -13,11 +15,16 @@ export function HoursModal() {
     setShowHoursModal, 
     lastTrabajoId, 
     setSelectedTrabajo, 
-    selectedTrabajo 
+    selectedTrabajo,
+    hoursModalClienteInicial,
+    setHoursModalClienteInicial,
   } = useStore();
   
   // Obtener trabajos de la API
   const { data: trabajos = [] } = useTrabajos();
+
+  // Clientes: para resolver el nombre del filtro contextual (issue #68)
+  const { data: clientes = [] } = useClientes();
   
   // Obtener costo hora de la configuración
   const { data: costoHora, isLoading: costoHoraLoading } = useCostoHora();
@@ -33,15 +40,31 @@ export function HoursModal() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
 
+  // Cliente en contexto desde el FAB (/clientes/:id) — filtra la lista de trabajos.
+  // null = sin filtro. Se consume una vez al abrir (issue #68).
+  const [clienteContexto, setClienteContexto] = useState<number | null>(null);
+
   const handleClose = useCallback(() => {
     setShowHoursModal(false);
     setHours(0.5);
     setDescription('');
     setShowSuccess(false);
     setSelectedDate(new Date().toISOString().split('T')[0]);
+    setClienteContexto(null);
     // Limpiar selectedTrabajo para que la próxima apertura sea limpia
     setSelectedTrabajo(null);
-  }, [setShowHoursModal, setHours, setDescription, setShowSuccess, setSelectedTrabajo]);
+  }, [setShowHoursModal, setHours, setDescription, setShowSuccess, setSelectedDate, setClienteContexto, setSelectedTrabajo]);
+
+  // Al abrir: tomar la preselección del store y consumirla una sola vez.
+  useEffect(() => {
+    if (!showHoursModal) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (hoursModalClienteInicial !== null) {
+      setClienteContexto(hoursModalClienteInicial);
+      setHoursModalClienteInicial(null);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [showHoursModal, hoursModalClienteInicial, setHoursModalClienteInicial]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -81,9 +104,15 @@ export function HoursModal() {
   };
   
   const activeTrabajos = trabajos.filter(t => t.estado !== 'Terminado');
-  const lastTrabajo = lastTrabajoId 
-    ? trabajos.find(t => t.id === lastTrabajoId) 
-    : activeTrabajos[0];
+  // Con contexto de cliente (/clientes/:id) solo se listan sus trabajos activos.
+  const trabajosVisibles = clienteContexto !== null
+    ? activeTrabajos.filter(t => t.clienteId === clienteContexto)
+    : activeTrabajos;
+  const lastTrabajo = trabajosVisibles.find(t => t.id === lastTrabajoId) ?? trabajosVisibles[0];
+
+  const clienteContextoNombre = clienteContexto !== null
+    ? clientes.find(c => c.id === clienteContexto)?.nombreCompleto ?? null
+    : null;
   
   return (
     <>
@@ -116,8 +145,10 @@ export function HoursModal() {
             />
           ) : step === 'select' ? (
             <SelectTrabajoView 
-              trabajos={activeTrabajos}
+              trabajos={trabajosVisibles}
               lastTrabajo={lastTrabajo}
+              clienteContextoNombre={clienteContextoNombre}
+              onQuitarContexto={() => setClienteContexto(null)}
               onSelect={handleSelectTrabajo}
               onContinue={() => lastTrabajo && handleSelectTrabajo(lastTrabajo)}
             />
@@ -143,28 +174,59 @@ export function HoursModal() {
 }
 
 function SelectTrabajoView({ 
-  trabajos, 
-  lastTrabajo, 
-  onSelect, 
-  onContinue 
+  trabajos,
+  lastTrabajo,
+  clienteContextoNombre,
+  onQuitarContexto,
+  onSelect,
+  onContinue
 }: { 
   trabajos: Trabajo[];
   lastTrabajo: Trabajo | undefined;
+  clienteContextoNombre: string | null;
+  onQuitarContexto: () => void;
   onSelect: (t: Trabajo) => void;
   onContinue: () => void;
 }) {
   const [search, setSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const filtered = trabajos.filter(t => 
     t.titulo.toLowerCase().includes(search.toLowerCase()) ||
     t.cliente?.nombreCompleto.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleLimpiarBusqueda = () => {
+    setSearch('');
+    searchInputRef.current?.focus();
+  };
   
   return (
     <div className="animate-fade-in">
+      {clienteContextoNombre !== null && (
+        <div className="flex items-center gap-2 mb-4">
+          <span
+            className="inline-flex items-center gap-2 rounded-full pl-3 pr-1 py-1 text-sm font-medium"
+            style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text)' }}
+          >
+            {clienteContextoNombre}
+            <button
+              type="button"
+              onClick={onQuitarContexto}
+              aria-label="Quitar filtro"
+              className="inline-flex items-center justify-center w-6 h-6 rounded-full transition-colors duration-200 hover:bg-[var(--color-hover)]"
+              style={{ color: 'var(--color-muted)' }}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </span>
+        </div>
+      )}
+
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--color-muted)' }} />
         <input
+          ref={searchInputRef}
           type="text"
           placeholder="Buscar trabajo..."
           value={search}
@@ -192,12 +254,21 @@ function SelectTrabajoView({
             </div>
           </button>
         ))}
-        
-        {filtered.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-sm" style={{ color: 'var(--color-muted)' }}>No hay trabajos activos</p>
-          </div>
-        )}
+
+        {trabajos.length === 0 ? (
+          <EmptyState
+            variant="default"
+            icon={Wrench}
+            title="Sin trabajos activos"
+          />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            variant="no-results"
+            icon={Wrench}
+            title="No hay trabajos activos con esa búsqueda"
+            secondaryAction={{ label: 'Limpiar búsqueda', onClick: handleLimpiarBusqueda }}
+          />
+        ) : null}
       </div>
       
       <button

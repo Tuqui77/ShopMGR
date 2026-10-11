@@ -5,6 +5,7 @@ import { formatDate } from '../utils/dateFormat';
 import { useModificarHoras, useEliminarHoras } from '../hooks/useTrabajos';
 import { useStore } from '../store';
 import { LoadingState } from './LoadingState';
+import { EmptyState } from './EmptyState';
 
 interface Props {
   trabajoId: number;
@@ -137,9 +138,12 @@ export function HorasTrabajoModal({
           {isLoading ? (
             <LoadingState variant="block" />
           ) : !sortedHoras || sortedHoras.length === 0 ? (
-            <div className="text-center py-12">
-              <p style={{ color: 'var(--color-muted)' }}>No hay horas registradas</p>
-            </div>
+            <EmptyState
+              variant="contextual"
+              size="compact"
+              icon={Clock}
+              title="No hay horas registradas"
+            />
           ) : (
             <div className="space-y-2">
               {sortedHoras.map((h) =>

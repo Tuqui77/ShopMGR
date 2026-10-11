@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTrabajos, useTrabajosPorCliente } from '../hooks/useTrabajos';
 import { useCliente } from '../hooks/useClientes';
+import { useStore } from '../store';
 import { TrabajoCard } from '../components/TrabajoCard';
 import { SkeletonList } from '../components/Skeleton';
+import { EmptyState } from '../components/EmptyState';
 import clsx from 'clsx';
 import { Wrench, ArrowLeft } from 'lucide-react';
 
@@ -22,6 +24,9 @@ export function Trabajos() {
   const error = clienteId !== undefined ? clientTrabajosQuery.error : allTrabajosQuery.error;
   
   const [filter, setFilter] = useState<FilterType>('todos');
+
+  const { setShowTrabajoForm, setTrabajoFormClienteInicial } = useStore();
+  const todosPillRef = useRef<HTMLButtonElement>(null);
   
   // Apply status filter only (backend already filters by client when clienteId is set)
   const filtered = trabajos.filter(t => {
@@ -41,6 +46,37 @@ export function Trabajos() {
   const activeTrabajos = filtered.filter(t => t.estado === 'Iniciado');
   const pendingTrabajos = filtered.filter(t => t.estado === 'Pendiente');
   const completedTrabajos = filtered.filter(t => t.estado === 'Terminado');
+
+  // Preselección de cliente desde empty contextual (?cliente=) — issue #68 (Q3)
+  const handleCrearTrabajoContextual = () => {
+    if (clienteId === undefined) return;
+    setTrabajoFormClienteInicial(clienteId);
+    setShowTrabajoForm(true);
+  };
+
+  const handleQuitarFiltro = () => {
+    setFilter('todos');
+    todosPillRef.current?.focus();
+  };
+
+  // E4: lista realmente vacía (default/contextual) vs. filtro sin resultados (no-results)
+  const emptyState = clienteId !== undefined ? (
+    <EmptyState
+      variant="contextual"
+      icon={Wrench}
+      title="Este cliente todavía no tiene trabajos"
+      description="Creá el primer trabajo para este cliente."
+      action={{ label: 'Crear Trabajo', onClick: handleCrearTrabajoContextual }}
+    />
+  ) : (
+    <EmptyState
+      variant="default"
+      icon={Wrench}
+      title="Todavía no hay trabajos"
+      description="Creá el primer trabajo para empezar a llevar el registro del taller."
+      action={{ label: 'Crear Trabajo', onClick: () => setShowTrabajoForm(true) }}
+    />
+  );
 
   // Error state
   if (error) {
@@ -84,6 +120,7 @@ export function Trabajos() {
           ] as { key: FilterType; label: string }[]).map(f => (
             <button
               key={f.key}
+              ref={f.key === 'todos' ? todosPillRef : undefined}
               onClick={() => setFilter(f.key)}
               className={clsx('filter-pill', filter === f.key && 'active')}
             >
@@ -151,22 +188,7 @@ export function Trabajos() {
               </>
             )}
             
-            {filtered.length === 0 && clienteId !== undefined && (
-              <div className="text-center py-12">
-                <Wrench className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                <p style={{ color: 'var(--color-muted)' }}>No hay trabajos para este cliente</p>
-              </div>
-            )}
-            
-            {trabajos.length === 0 && clienteId === undefined && (
-              <div className="text-center py-12">
-                <Wrench className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                <p style={{ color: 'var(--color-muted)' }}>No hay trabajos</p>
-                <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
-                  Crea uno desde un cliente
-                </p>
-              </div>
-            )}
+            {trabajos.length === 0 && emptyState}
           </>
         ) : (
           <div className="space-y-3">
@@ -178,12 +200,17 @@ export function Trabajos() {
               />
             ))}
             
-            {filtered.length === 0 && (
-              <div className="text-center py-12">
-                <Wrench className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                <p style={{ color: 'var(--color-muted)' }}>No hay trabajos</p>
-              </div>
-            )}
+            {trabajos.length === 0
+              ? emptyState
+              : filtered.length === 0 && (
+                  <EmptyState
+                    variant="no-results"
+                    icon={Wrench}
+                    title="No hay trabajos con este filtro"
+                    description='Volvé a "Todos" o probá con otro filtro.'
+                    secondaryAction={{ label: 'Quitar filtro', onClick: handleQuitarFiltro }}
+                  />
+                )}
           </div>
         )}
       </section>

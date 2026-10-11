@@ -1,12 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useStore } from '../store';
 import { useClientes } from '../hooks/useClientes';
 import { useCrearPresupuesto, useModificarPresupuesto, usePresupuestoDetalle } from '../hooks/usePresupuestos';
 import type { Cliente, MaterialRequest } from '../types';
-import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft, Calculator } from 'lucide-react';
+import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft, Calculator, User } from 'lucide-react';
 import clsx from 'clsx';
 import { calcularSubtotal } from '../utils/materiales';
 import { CalculatorModal } from './CalculatorModal';
+import { EmptyState } from './EmptyState';
+
+// Referencia estable: evita recrear `[]` en cada render y el bailout del React Compiler.
+const CLIENTES_VACIOS: Cliente[] = [];
 
 interface Props {
   presupuestoId?: number;
@@ -35,7 +39,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
   }, [onCloseProp, setShowPresupuestoForm]);
 
   // Queries y mutations
-  const { data: clientes = [] } = useClientes();
+  const { data: clientes = CLIENTES_VACIOS } = useClientes();
   const { data: presupuestoOriginal } = usePresupuestoDetalle(presupuestoId);
   const { data: presupuestoDuplicado } = usePresupuestoDetalle(presupuestoDuplicadoId);
   const crearPresupuesto = useCrearPresupuesto();
@@ -44,6 +48,9 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
   const [step, setStep] = useState<'cliente' | 'datos'>('cliente');
   const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
   const [search, setSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  // Preselección desde empty contextual (?cliente=) — issue #68 (Q3b): id pendiente a resolver
+  const [clienteInicial, setClienteInicial] = useState<number | null>(null);
 
   // Datos del presupuesto - initialize with presupuestoOriginal if editing.
   // El modo duplicado se puebla por effect cuando carga el detalle del origen.
@@ -125,6 +132,30 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [esDuplicado, presupuestoDuplicado]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */   // mismo par que usan los efectos de edición/duplicado
+  // Preselección desde empty contextual (?cliente=) — issue #68 (Q3b)
+  // Fase 1: capturar y consumir el valor del store al abrir (UNA sola vez)
+  useEffect(() => {
+    if (!isOpen || isEditing || esDuplicado) return;      // edición/duplicado: manda presupuestoOriginal / presupuestoDuplicado
+    const inicial = useStore.getState().presupuestoFormClienteInicial;
+    if (inicial !== null) {
+      setClienteInicial(inicial);
+      useStore.getState().setPresupuestoFormClienteInicial(null);  // consumir: el store nunca retiene el valor
+    }
+  }, [isOpen, isEditing, esDuplicado]);
+
+  // Fase 2: resolver el objeto Cliente y saltar a 'datos' cuando la lista esté disponible
+  useEffect(() => {
+    if (!isOpen) { setClienteInicial(null); return; }     // al cerrar: limpiar pendiente (anti-stale)
+    if (clienteInicial === null) return;
+    const encontrado = clientes.find((c) => c.id === clienteInicial);
+    if (!encontrado) return;                             // lista aún no cargó → re-intenta cuando `clientes` cambie
+    setClienteSeleccionado(encontrado);
+    setStep('datos');
+    setClienteInicial(null);                             // aplicar UNA sola vez
+  }, [isOpen, clientes, clienteInicial]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   // Estado para la calculadora
   const [calculatorField, setCalculatorField] = useState<'cantidad' | 'precio' | 'editCantidad' | 'editPrecio' | null>(null);
   const [calculatorPosition, setCalculatorPosition] = useState({ x: 0, y: 0 });
@@ -169,6 +200,12 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
   const handleSelectCliente = (cliente: Cliente) => {
     setClienteSeleccionado(cliente);
     setStep('datos');
+  };
+
+  // Empty no-results del selector de cliente: limpiar search y devolver el foco (issue #68, C2)
+  const handleLimpiarBusqueda = () => {
+    setSearch('');
+    searchInputRef.current?.focus();
   };
 
   const validate = (): boolean => {
@@ -386,6 +423,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
               <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--color-muted)' }} />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   placeholder="Buscar cliente..."
                   value={search}
@@ -420,11 +458,20 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
                 ))}
 
                 {filteredClientes.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
-                      {search ? 'No se encontraron clientes' : 'No hay clientes registrados'}
-                    </p>
-                  </div>
+                  search ? (
+                    <EmptyState
+                      variant="no-results"
+                      icon={User}
+                      title="No se encontraron clientes"
+                      secondaryAction={{ label: 'Limpiar búsqueda', onClick: handleLimpiarBusqueda }}
+                    />
+                  ) : (
+                    <EmptyState
+                      variant="default"
+                      icon={User}
+                      title="No hay clientes registrados"
+                    />
+                  )
                 )}
               </div>
             </div>

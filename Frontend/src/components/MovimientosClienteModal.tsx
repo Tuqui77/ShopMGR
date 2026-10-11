@@ -6,6 +6,7 @@ import { formatDate, formatCurrency } from '../utils/dateFormat';
 import { useMovimientosCliente, useModificarMovimiento, useEliminarMovimiento } from '../hooks/useMovimientosCliente';
 import { useStore } from '../store';
 import { LoadingState } from './LoadingState';
+import { EmptyState } from './EmptyState';
 
 interface Props {
   clienteId: number;
@@ -163,9 +164,12 @@ export function MovimientosClienteModal({ clienteId, nombreCliente, isOpen, onCl
               </p>
             </div>
           ) : !movimientos || movimientos.length === 0 ? (
-            <div className="text-center py-12">
-              <p style={{ color: 'var(--color-muted)' }}>No hay movimientos registrados</p>
-            </div>
+            <EmptyState
+              variant="contextual"
+              size="compact"
+              icon={ArrowUpRight}
+              title="No hay movimientos registrados"
+            />
           ) : (
             <div className="space-y-2">
               {movimientos.map((mov) =>

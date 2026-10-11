@@ -21,6 +21,13 @@ interface AppState {
   isDetailModalOpen: boolean;
   selectedTrabajo: Trabajo | null;
   lastTrabajoId: number | null;
+
+  // Preselección de cliente desde empty contextual (?cliente=X) — issue #68 (Q3/Q3b).
+  // null = SIN preselección. Se setea justo antes de abrir el form y se consume una vez.
+  trabajoFormClienteInicial: number | null;
+  presupuestoFormClienteInicial: number | null;
+  hoursModalClienteInicial: number | null;
+  movimientoModalClienteInicial: number | null;
   
   // Edit mode state
   editingCliente: Cliente | null;
@@ -44,6 +51,10 @@ interface AppState {
   setEditingCliente: (cliente: Cliente | null) => void;
   setEditingTrabajoId: (id: number | null) => void;
   setEditingPresupuestoId: (id: number | null) => void;
+  setTrabajoFormClienteInicial: (clienteId: number | null) => void;
+  setPresupuestoFormClienteInicial: (clienteId: number | null) => void;
+  setHoursModalClienteInicial: (clienteId: number | null) => void;
+  setMovimientoModalClienteInicial: (clienteId: number | null) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -63,6 +74,10 @@ export const useStore = create<AppState>()(
       isDetailModalOpen: false,
       selectedTrabajo: null,
       lastTrabajoId: null,
+      trabajoFormClienteInicial: null,
+      presupuestoFormClienteInicial: null,
+      hoursModalClienteInicial: null,
+      movimientoModalClienteInicial: null,
       editingCliente: null,
       editingTrabajoId: null,
       editingPresupuestoId: null,
@@ -104,6 +119,14 @@ export const useStore = create<AppState>()(
       setEditingTrabajoId: (id) => set({ editingTrabajoId: id }),
       
       setEditingPresupuestoId: (id) => set({ editingPresupuestoId: id }),
+
+      setTrabajoFormClienteInicial: (clienteId) => set({ trabajoFormClienteInicial: clienteId }),
+
+      setPresupuestoFormClienteInicial: (clienteId) => set({ presupuestoFormClienteInicial: clienteId }),
+
+      setHoursModalClienteInicial: (clienteId) => set({ hoursModalClienteInicial: clienteId }),
+
+      setMovimientoModalClienteInicial: (clienteId) => set({ movimientoModalClienteInicial: clienteId }),
     }),
     {
       name: 'shopmgr-storage',

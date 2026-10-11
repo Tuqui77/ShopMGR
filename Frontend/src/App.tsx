@@ -37,8 +37,13 @@ const queryClient = new QueryClient({
 
 function ProtectedLayout() {
   const [fabOpen, setFabOpen] = useState(false);
-  const { accessToken, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen, isDetailModalOpen } = useStore();
+  const { accessToken, setShowHoursModal, setShowClienteForm, setShowPresupuestoForm, setShowTrabajoForm, setShowMovimientoModal, imageFullscreenOpen, isDetailModalOpen, setTrabajoFormClienteInicial, setPresupuestoFormClienteInicial, setHoursModalClienteInicial, setMovimientoModalClienteInicial } = useStore();
   const location = useLocation();
+
+  // Cliente en contexto de ruta (/clientes/:id) para precargar el FAB — issue #68.
+  // null si no estamos en el detalle de un cliente.
+  const matchClienteContexto = location.pathname.match(/^\/clientes\/(\d+)/);
+  const clienteContextoId = matchClienteContexto ? Number(matchClienteContexto[1]) : null;
   
   // Body scroll lock when any modal is open (must be before early return for hooks rule)
   const isModalOpen = useStore(s =>
@@ -70,14 +75,18 @@ function ProtectedLayout() {
   const handleFabAction = (action: 'hours' | 'trabajo' | 'cliente' | 'presupuesto' | 'movimiento') => {
     setFabOpen(false); // Close FAB first
     if (action === 'hours') {
+      if (clienteContextoId !== null) setHoursModalClienteInicial(clienteContextoId);
       setShowHoursModal(true);
     } else if (action === 'trabajo') {
+      if (clienteContextoId !== null) setTrabajoFormClienteInicial(clienteContextoId);
       setShowTrabajoForm(true);
     } else if (action === 'cliente') {
       setShowClienteForm(true);
     } else if (action === 'presupuesto') {
+      if (clienteContextoId !== null) setPresupuestoFormClienteInicial(clienteContextoId);
       setShowPresupuestoForm(true);
     } else if (action === 'movimiento') {
+      if (clienteContextoId !== null) setMovimientoModalClienteInicial(clienteContextoId);
       setShowMovimientoModal(true);
     }
   };

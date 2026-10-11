@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { Search, User, Phone, MapPin, Wrench, FileText } from 'lucide-react';
 import { useClientes } from '../hooks/useClientes';
+import { useStore } from '../store';
 import { formatCurrency } from '../utils/dateFormat';
 import { SkeletonList } from '../components/Skeleton';
+import { EmptyState } from '../components/EmptyState';
 
 type FilterType = 'todos' | 'conDeuda';
 
@@ -75,6 +77,9 @@ export function Clientes() {
   const { data: clientes, isLoading, error } = useClientes();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterType>('todos');
+
+  const { setShowClienteForm } = useStore();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   const formatBalance = (balance: number) => {
     if (balance > 0) return { text: formatCurrency(balance), class: 'text-[var(--color-success)]' };
@@ -108,6 +113,33 @@ export function Clientes() {
     if (filter === 'conDeuda') return matchesSearch && c.balance < 0;
     return matchesSearch;
   });
+
+  const noHayClientes = (clientes ?? []).length === 0;
+
+  const handleLimpiarBusqueda = () => {
+    setSearch('');
+    setFilter('todos');
+    searchInputRef.current?.focus();
+  };
+
+  // E4: lista realmente vacía (default) vs. búsqueda/filtro sin resultados (no-results)
+  const emptyState = noHayClientes ? (
+    <EmptyState
+      variant="default"
+      icon={User}
+      title="Todavía no hay clientes"
+      description="Creá un cliente para registrar sus trabajos y presupuestos."
+      action={{ label: 'Crear Cliente', onClick: () => setShowClienteForm(true) }}
+    />
+  ) : (
+    <EmptyState
+      variant="no-results"
+      icon={User}
+      title="No se encontraron clientes"
+      description="Revisá lo que escribiste o quitá los filtros."
+      secondaryAction={{ label: 'Limpiar búsqueda y filtros', onClick: handleLimpiarBusqueda }}
+    />
+  );
   
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
@@ -117,6 +149,7 @@ export function Clientes() {
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--color-muted)' }} />
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Buscar cliente..."
             value={search}
@@ -153,12 +186,7 @@ export function Clientes() {
               />
             ))}
             
-            {filtered.length === 0 && (
-              <div className="text-center py-12">
-                <User className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--color-muted)', opacity: 0.5 }} />
-                <p style={{ color: 'var(--color-muted)' }}>No se encontraron clientes</p>
-              </div>
-            )}
+            {filtered.length === 0 && emptyState}
           </>
         )}
       </section>

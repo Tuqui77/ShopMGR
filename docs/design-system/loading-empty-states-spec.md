@@ -6,12 +6,12 @@
 |---|---|
 | Issues | [#69 — fix: estandarizar loading states en todas las páginas](https://github.com/ShopMGR/ShopMGR/issues/69) · [#68 — feat: implementar empty states en listas vacías](https://github.com/ShopMGR/ShopMGR/issues/68) |
 | Fecha | 2026-10-07 |
-| Estado | **Q1–Q5 + Q3b respondidas por el dueño** (sección 1.4) · **copy final aprobado** en `loading-empty-states-copy.md` (E-AC10 satisfecha; conflictos C1–C3 integrados en v1.2.0) |
+| Estado | **Q1–Q5 + Q3b + Q7 respondidas por el dueño** (secciones 1.4 y 6.6) · **copy final aprobado** en `loading-empty-states-copy.md` (E-AC10 satisfecha; conflictos C1–C3 integrados en v1.2.0) |
 | Consumidor | Subagente Frontend (React 18 + TS + Tailwind v4) · Copywriter (`loading-empty-states-copy.md` es la fuente del texto) |
 | Orden | **#69 primero → #68 después** (tocan los mismos archivos: `Trabajos.tsx`, `Presupuestos.tsx`, `Clientes.tsx`; además `Dashboard.tsx`, `store/index.ts`, `TrabajoForm.tsx`) |
 | Alcance | **P0 (páginas) + P1 (modales/componentes) en los mismos issues** — decide Q1, sección 1.4 |
-| Decisiones | UX (este documento) · Dueño: Q1–Q5 + Q3b (sección 1.4) · Copy: **final** en `loading-empty-states-copy.md` — ese documento prevalece sobre cualquier string de la sección 5 |
-| Versionado | **v1.2.0** (semver) — historial: v1.0.0 (auditoría + patrones) · v1.1.0 (Q1–Q5) · **v1.2.0** (Q3b + conflictos C1/C2/C3 con el copy) |
+| Decisiones | UX (este documento) · Dueño: Q1–Q5 + Q3b (sección 1.4) y Q7 (§6.6) · Copy: **final** en `loading-empty-states-copy.md` — ese documento prevalece sobre cualquier string de la sección 5 |
+| Versionado | **v1.3.0** (semver) — historial: v1.0.0 (auditoría + patrones) · v1.1.0 (Q1–Q5) · v1.2.0 (Q3b + conflictos C1/C2/C3 con el copy) · **v1.3.0** (Q7: FAB consciente del contexto de ruta — §6.6 + E-AC17/E-AC18) |
 
 ---
 
@@ -488,7 +488,8 @@ useEffect(() => {
 | Escenario | Resultado esperado |
 |---|---|
 | CTA desde `Trabajos?cliente=X` (empty contextual) | Form abierto con el cliente ya seleccionado; `usePresupuestosPorCliente(clienteId)` se dispara solo (TrabajoForm.tsx:65) |
-| FAB / CTA global (sin `?cliente=`) | **Sin** preselección (`clienteId` null) |
+| FAB / CTA global (sin `?cliente=`) — **fuera** de `/clientes/:id` | **Sin** preselección (`clienteId` null) |
+| FAB **estando** en `/clientes/:id` | Preselecciona el cliente de la ruta (decisión Q7 · §6.6) |
 | Reabrir el form después de usar la preselección | Sin cliente stale (el valor se **consumió** al abrir) |
 | Cerrar sin crear y reabrir | `onCloseCallback` (líneas 76–87) ya resetea `clienteId` a `null` → doble protección |
 | Editar trabajo existente (instancia inline de TrabajoDetalle) | Manda `trabajoOriginal.clienteId` (guard `isEditing`) |
@@ -525,7 +526,7 @@ const handleCrearPresupuestoContextual = () => {
 };
 ```
 
-El CTA **global** (FAB: `App.tsx:78–79`, y el `default` de 5.1) sigue siendo solo `setShowPresupuestoForm(true)` → sin preselección.
+El CTA **global** (FAB: `App.tsx:78–79`, y el `default` de 5.1) sigue siendo solo `setShowPresupuestoForm(true)` → sin preselección **fuera de** `/clientes/:id`. **Excepción (Q7):** estando en el detalle de un cliente, el FAB sí precarga el cliente de la ruta (ver §6.6).
 
 **3. Quién la consume — `PresupuestoForm.tsx`, estado local + 2 efectos** (NO el initializer de `useState`: la instancia global ya está montada al arrancar la app). El estado nuevo va junto a `step`/`clienteSeleccionado`/`search` (líneas 44–46):
 
@@ -565,13 +566,40 @@ useEffect(() => {
 | Escenario | Resultado esperado |
 |---|---|
 | CTA desde `Presupuestos?cliente=X` (empty contextual) | Form abierto en `step='datos'` con `clienteSeleccionado` = objeto de ese cliente; `Cambiar` (444–453) vuelve al selector |
-| FAB / CTA default (sin `?cliente=`) | `step='cliente'`, **sin** preselección |
+| FAB / CTA default (sin `?cliente=` y **fuera** de `/clientes/:id`) | `step='cliente'`, **sin** preselección |
+| FAB estando en `/clientes/:id` | Preselecciona el cliente de la ruta (decisión Q7 · §6.6) |
 | Clientes con query en curso (cache fría) | Fase 2 aplica cuando `clientes` resuelve: sin perder el valor ni aplicarlo doble |
 | Id de cliente inexistente | Fallback a `step='cliente'` (comportamiento actual), sin bloqueo; el pendiente se limpia al cerrar |
 | Reabrir después de usar la preselección | Sin stale: valor consumido en fase 1 + pendiente limpiado al cerrar |
 | Editar presupuesto (inline de `PresupuestoDetalle`: `editingPresupuestoId` → prop `presupuestoId`) | Guard `isEditing` → manda `presupuestoOriginal.cliente` (89–106) |
 | Duplicar presupuesto (`presupuestoDuplicadoId`) | Guard `esDuplicado` → manda `presupuestoDuplicado.cliente` (109–126) |
 | Validación | `validate()` (177) pide `clienteSeleccionado` → con preselección ya pasa |
+
+### 6.6 FAB consciente del contexto de ruta — decisión Q7 (extensión de Q3/Q3b)
+
+**Origen.** La UAT de #68 detectó que el FAB no precargaba el cliente estando en el detalle de un cliente. Decisión del dueño (2026-10-10): el FAB debe ser **consciente del contexto** en las **4 acciones que admiten un cliente**.
+
+**Emisor — `App.tsx` (`ProtectedLayout`).** Ya dispone de `location`; deriva el id del pathname:
+
+```ts
+const match = location.pathname.match(/^\/clientes\/(\d+)/);
+const clienteContextoId = match ? Number(match[1]) : null;
+```
+
+| Acción FAB | Con `clienteContextoId` (en `/clientes/:id`) | Sin contexto (resto de rutas) |
+|---|---|---|
+| `trabajo` → `TrabajoForm` | `setTrabajoFormClienteInicial(id)` + abrir (§6.5.1) | abrir sin preselección |
+| `presupuesto` → `PresupuestoForm` | `setPresupuestoFormClienteInicial(id)` + abrir (§6.5.2) | abrir sin preselección |
+| `hours` → `HoursModal` | `setHoursModalClienteInicial(id)` + abrir | lista completa de trabajos activos |
+| `movimiento` → `MovimientoModal` | `setMovimientoModalClienteInicial(id)` + abrir | selector de cliente vacío |
+| `cliente` → `ClienteForm` | sin cambios | sin cambios |
+
+**Consumidores** (mismo patrón que §6.5: capturar al abrir → consumir una sola vez → limpiar al cerrar; los 2 campos nuevos viven en `store/index.ts`):
+
+- **`HoursModal`** — no tiene selector de cliente: su primer paso lista trabajos activos. El contexto **filtra** `activeTrabajos` por `Trabajo.clienteId`; el fallback `lastTrabajo` se resuelve **dentro del conjunto filtrado**. UI del chip: en el paso de selección (arriba del buscador) se muestra el **nombre del cliente** (dato) + `<button aria-label="Quitar filtro">` con icono `X`, que libera el filtro y vuelve a la lista completa. Sin strings nuevas: si el filtro deja la lista vacía se mantiene el `EmptyState` "Sin trabajos activos".
+- **`MovimientoModal`** — sí tiene `<select>` de clientes: el contexto precarga `idCliente` (y `idTrabajo = null`); `useTrabajosPorCliente(idCliente)` habilita el selector de trabajo.
+
+**Regla.** La única fuente del contexto es la **ruta**. Se captura al abrir, se consume una vez (`…ClienteInicial → null`) y se limpia al cerrar ⇒ sin preselección pegada. No existe estado global de "cliente en contexto".
 
 ---
 
@@ -614,6 +642,8 @@ useEffect(() => {
 | E-AC14 | **Preselección de cliente (Q3, mecánica 6.5.1):** desde `/trabajos?cliente=X` con empty contextual, el CTA "Crear Trabajo" abre `TrabajoForm` con el cliente preseleccionado. Sin regresiones: FAB/global → **sin** preselección; tras cerrar y reabrir → sin cliente stale (`trabajoFormClienteInicial` vuelve a `null` tras consumirse); editar trabajo → manda `trabajoOriginal`; `store/index.ts` solo tiene los campos nuevos | QA funcional de los 5 escenarios de la tabla de la sección 6.5.1; `grep -n "trabajoFormClienteInicial" Frontend/src` → solo `store/index.ts`, `Trabajos.tsx`, `TrabajoForm.tsx` |
 | E-AC15 | **Componentes P1 (Q1):** los 7 componentes de la tabla 6.3 (`HoursModal`, `HorasTrabajoModal`, `MovimientosClienteModal`, `PresupuestoForm`, `TrabajoForm`, `TrabajoDetalle` fotos, `PasskeySection`) renderizan `EmptyState` en sus bloques vacíos; `HoursModal` distingue `search ≠ ''` (no-results + "Limpiar búsqueda") de vacío real; `PresupuestoForm` **idem con `secondaryAction` "Limpiar búsqueda"** en `no-results` y sin acción en `default` (decisión C2 — 4.1); `PasskeySection` sin action cuando el navegador no soporta passkeys | `grep -ln "EmptyState" Frontend/src/components/{HoursModal,HorasTrabajoModal,MovimientosClienteModal,PresupuestoForm,TrabajoForm,PasskeySection}.tsx Frontend/src/pages/TrabajoDetalle.tsx` → 7/7 archivos; `grep -n "text-center py-8\|text-center py-12" ` en esos bloques vacíos → migrados (los `py-8` restantes solo en estados de éxito `animate-scale-in`, fuera de alcance); QA funcional de HoursModal y de PresupuestoForm con search → "Limpiar búsqueda" limpia y devuelve el foco al `search-input` |
 | E-AC16 | **Preselección de cliente en `PresupuestoForm` (Q3b, mecánica 6.5.2):** desde `/presupuestos?cliente=X` con empty contextual, el CTA "Crear Presupuesto" abre el wizard **en `step='datos'`** con el cliente resuelto (objeto de `useClientes()`). Sin regresiones: FAB/CTA default → `step='cliente'` sin preselección; lista de clientes aún cargando → la fase 2 aplica cuando `clientes` resuelve (no se pierde, no se duplica); id inexistente → fallback al paso cliente; editar → manda `presupuestoOriginal`; duplicar → manda `presupuestoDuplicado`; tras cerrar → sin stale (`presupuestoFormClienteInicial` y el pendiente local vuelven a `null`) | QA funcional de los 8 escenarios de la tabla de la sección 6.5.2; `grep -n "presupuestoFormClienteInicial" Frontend/src` → solo `store/index.ts`, `Presupuestos.tsx`, `PresupuestoForm.tsx` |
+| E-AC17 | **FAB consciente del contexto (Q7):** estando en `/clientes/:id`, `handleFabAction` precarga el cliente en las 4 acciones — `trabajo`/`presupuesto` (form + consumir, §6.5), `hours` (`HoursModal` filtra a los trabajos activos del cliente **y** muestra chip con su nombre + un `X` que libera el filtro) y `movimiento` (`MovimientoModal` con el `<select>` de cliente ya elegido + sus trabajos). `App.tsx` deriva el id con `location.pathname.match(/^\/clientes\/(\d+)/`) | QA funcional: en `/clientes/5` abrir el FAB en las 4 acciones → el form/modal ya viene con el cliente; `grep -n "clienteContextoId" Frontend/src/App.tsx` → 1 definición + 4 usos |
+| E-AC18 | **FAB sin contexto y sin `stale`:** fuera de `/clientes/:id` (`/`, `/trabajos`, `/clientes`, `/presupuestos`) el FAB **no** preselecciona nada; el campo del store se consume al abrir y no arrastra cliente al reabrir desde otra ruta | QA funcional en `/trabajos` y `/presupuestos`; `grep -rn "hoursModalClienteInicial\|movimientoModalClienteInicial" Frontend/src` → solo `store/index.ts`, `App.tsx`, `HoursModal.tsx`, `MovimientoModal.tsx` |
 
 ---
 
