@@ -11,7 +11,12 @@ function todayString(): string {
 }
 
 export function MovimientoModal() {
-  const { showMovimientoModal, setShowMovimientoModal } = useStore();
+  const {
+    showMovimientoModal,
+    setShowMovimientoModal,
+    movimientoModalClienteInicial,
+    setMovimientoModalClienteInicial,
+  } = useStore();
 
   const [idCliente, setIdCliente] = useState<number | null>(null);
   const [idTrabajo, setIdTrabajo] = useState<number | null>(null);
@@ -77,6 +82,19 @@ export function MovimientoModal() {
     setIdCliente(value);
     setIdTrabajo(null); // Reset trabajo cuando cambia el cliente
   };
+
+  // Preselección de cliente desde el FAB (/clientes/:id) — issue #68.
+  // Se consume una sola vez al abrir el modal.
+  useEffect(() => {
+    if (!showMovimientoModal) return;
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (movimientoModalClienteInicial !== null) {
+      setIdCliente(movimientoModalClienteInicial);
+      setIdTrabajo(null);
+      setMovimientoModalClienteInicial(null);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [showMovimientoModal, movimientoModalClienteInicial, setMovimientoModalClienteInicial]);
 
   // Handle Escape key
   useEffect(() => {
