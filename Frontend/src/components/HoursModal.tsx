@@ -108,9 +108,7 @@ export function HoursModal() {
   const trabajosVisibles = clienteContexto !== null
     ? activeTrabajos.filter(t => t.clienteId === clienteContexto)
     : activeTrabajos;
-  const lastTrabajo = lastTrabajoId 
-    ? trabajosVisibles.find(t => t.id === lastTrabajoId) 
-    : trabajosVisibles[0];
+  const lastTrabajo = trabajosVisibles.find(t => t.id === lastTrabajoId) ?? trabajosVisibles[0];
 
   const clienteContextoNombre = clienteContexto !== null
     ? clientes.find(c => c.id === clienteContexto)?.nombreCompleto ?? null

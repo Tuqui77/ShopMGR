@@ -73,6 +73,23 @@ describe('HoursModal — filtro por cliente en contexto (issue #68)', () => {
     expect(useStore.getState().hoursModalClienteInicial).toBeNull();
   });
 
+  it('habilita "Continuar" con un lastTrabajoId de otro cliente usando el primer trabajo filtrado', () => {
+    useStore.setState({
+      showHoursModal: true,
+      hoursModalClienteInicial: 5,
+      selectedTrabajo: null,
+      // 2 pertenece al cliente 7 → no está en trabajosVisibles (cliente 5)
+      lastTrabajoId: 2,
+    });
+
+    render(<HoursModal />);
+
+    // El CTA cae al primer trabajo visible (Trabajo de Ana) en lugar de quedar deshabilitado
+    expect(screen.getByText('Trabajo de Ana')).toBeInTheDocument();
+    expect(screen.queryByText('Trabajo de Beto')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeEnabled();
+  });
+
   it('al quitar el filtro vuelve a mostrar todos los trabajos activos', () => {
     useStore.setState({
       showHoursModal: true,
