@@ -31,6 +31,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
                 .IsRequired(true)
                 .HasConversion<string>()
                 .HasMaxLength(10);
+            builder.HasIndex(t => t.Estado);
 
             builder.Property(t => t.FechaInicio)
                 .IsRequired(false)
@@ -51,6 +52,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
             builder.HasOne(t => t.Cliente)
                  .WithMany(c => c.Trabajos)
                  .HasForeignKey("IdCliente");
+            builder.HasIndex(t => t.IdCliente);
 
             builder.HasOne(t => t.Presupuesto)
                 .WithOne(p => p.Trabajo)

@@ -58,6 +58,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
                 .IsRequired(true)
                 .HasConversion<string>()
                 .HasMaxLength(10);
+            builder.HasIndex(p => p.Estado);
 
 
             //Relaciones

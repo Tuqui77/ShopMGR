@@ -23,6 +23,7 @@ namespace ShopMGR.Contexto.Configuracion_entidades
             builder.Property(c => c.NombreCompleto)
                 .IsRequired(true)
                 .HasMaxLength(100);
+            builder.HasIndex(c => c.NombreCompleto);
 
             builder.Property(c => c.Cuit)
                 .IsRequired(false)
