@@ -6,6 +6,7 @@ import {
   Trash2, 
   Clock, 
   User,
+  AlertTriangle,
   Check,
   X,
   Package,
@@ -183,6 +184,12 @@ export function PresupuestoDetalle() {
     );
   }
 
+  // Materiales sin precio (mismo fallback que el render del material): si hay
+  // al menos uno, el TOTAL parcial no los incluye → aviso "Presupuesto parcial".
+  const materialesSinPrecio = (presupuesto.materiales || []).filter(
+    material => (material.precioUnitario || 0) === 0,
+  ).length;
+
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
       <header className="p-4 safe-area-top lg:pt-8 sticky top-0 z-10" style={{ backgroundColor: 'var(--color-page)' }}>
@@ -347,15 +354,15 @@ export function PresupuestoDetalle() {
               <span style={{ color: 'var(--color-text)' }}>{presupuesto.horasEstimadas}h</span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: 'var(--color-muted)' }}>Costo materiales + insumos</span>
+              <span style={{ color: 'var(--color-muted)' }}>Materiales</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                {formatCurrency((presupuesto.costoMateriales || 0) + (presupuesto.costoInsumos || 0))}
+                {formatCurrency(presupuesto.costoMateriales || 0)}
               </span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: 'var(--color-muted)' }}>Costo mano de obra</span>
+              <span style={{ color: 'var(--color-muted)' }}>Mano de obra + insumos</span>
               <span className="font-mono" style={{ color: 'var(--color-text)' }}>
-                {formatCurrency(presupuesto.costoLabor || 0)}
+                {formatCurrency((presupuesto.costoLabor || 0) + (presupuesto.costoInsumos || 0))}
               </span>
             </div>
             <div
@@ -367,6 +374,34 @@ export function PresupuestoDetalle() {
                 {formatCurrency((presupuesto.total) || 0)}
               </span>
             </div>
+
+            {materialesSinPrecio > 0 && (
+              <div
+                role="status"
+                data-testid="aviso-presupuesto-parcial"
+                className="flex items-start gap-2 rounded-lg p-3 border-l-4"
+                style={{
+                  backgroundColor: 'var(--color-surface)',
+                  borderColor: 'var(--color-warning)',
+                }}
+              >
+                <AlertTriangle
+                  className="w-4 h-4 shrink-0 mt-0.5"
+                  aria-hidden="true"
+                  style={{ color: 'var(--color-warning)' }}
+                />
+                <div className="flex-1">
+                  <p className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                    Presupuesto parcial
+                  </p>
+                  <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
+                    {materialesSinPrecio === 1
+                      ? '1 material sin precio: el total no lo incluye.'
+                      : `${materialesSinPrecio} materiales sin precio: el total no los incluye.`}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
