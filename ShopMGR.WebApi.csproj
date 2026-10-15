@@ -59,7 +59,6 @@
     <PackageReference Include="Fido2" Version="4.0.1" />
     <PackageReference Include="Fido2.AspNet" Version="4.0.1" />
     <PackageReference Include="FluentAssertions" Version="8.2.0" />
-    <PackageReference Include="Google.Apis.Drive.v3" Version="1.70.0.3893" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
@@ -81,6 +80,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="NSwag.Annotations" Version="14.3.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.1.17" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
 
