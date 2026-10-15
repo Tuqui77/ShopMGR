@@ -303,4 +303,73 @@ describe('PresupuestoDetalle (caracterización)', () => {
     expect(screen.getByText(/\$5[.,]200/)).toBeInTheDocument();
   });
 
+  // ── Issue #143: aviso "Presupuesto parcial" ──────────────
+
+  it('muestra el aviso "Presupuesto parcial" en singular con un material sin precio', async () => {
+    apiGetMock.mockResolvedValue({
+      data: {
+        ...dtoRaw,
+        materiales: [{ id: 1, descripcion: 'Sin precio', cantidad: 1, precio: 0 }],
+      },
+    });
+
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    const aviso = screen.getByTestId('aviso-presupuesto-parcial');
+    expect(aviso).toHaveAttribute('role', 'status');
+    expect(screen.getByText('Presupuesto parcial')).toBeInTheDocument();
+    expect(screen.getByText('1 material sin precio: el total no lo incluye.')).toBeInTheDocument();
+  });
+
+  it('muestra el aviso en plural con dos materiales sin precio', async () => {
+    apiGetMock.mockResolvedValue({
+      data: {
+        ...dtoRaw,
+        materiales: [
+          { id: 1, descripcion: 'Sin precio A', cantidad: 1, precio: 0 },
+          { id: 2, descripcion: 'Sin precio B', cantidad: 3, precio: 0 },
+        ],
+      },
+    });
+
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    expect(screen.getByTestId('aviso-presupuesto-parcial')).toBeInTheDocument();
+    expect(screen.getByText('2 materiales sin precio: el total no los incluye.')).toBeInTheDocument();
+  });
+
+  it('NO muestra el aviso si todos los materiales tienen precio > 0', async () => {
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    // dtoRaw: "Aceite" cantidad 2 precio 500 → ninguno sin precio
+    expect(screen.queryByTestId('aviso-presupuesto-parcial')).toBeNull();
+  });
+
+  it('NO muestra el aviso si el presupuesto no tiene materiales', async () => {
+    apiGetMock.mockResolvedValue({ data: { ...dtoRaw, materiales: [] } });
+
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    expect(screen.queryByTestId('aviso-presupuesto-parcial')).toBeNull();
+  });
+
+  it('mantiene el aviso visible con el presupuesto en estado Aceptado', async () => {
+    apiGetMock.mockResolvedValue({
+      data: {
+        ...dtoRaw,
+        estado: 'Aceptado',
+        materiales: [{ id: 1, descripcion: 'Sin precio', cantidad: 1, precio: 0 }],
+      },
+    });
+
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    expect(screen.getByText('Aceptado')).toBeInTheDocument();
+    expect(screen.getByTestId('aviso-presupuesto-parcial')).toBeInTheDocument();
+  });
 });
