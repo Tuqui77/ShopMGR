@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useStore } from '../../store';
@@ -150,9 +150,18 @@ describe('PresupuestoDetalle (caracterización)', () => {
     expect(screen.getByText('Aceite')).toBeInTheDocument();
     expect(screen.getByText('2 x $500')).toBeInTheDocument();
 
-    // El subtotal se renderiza con el monto calculado y no como $0.
+    // El subtotal del material se renderiza con el monto calculado y no como $0.
     // Locale-tolerante: $1.000 (es-AR) o $1,000 (en-US).
-    expect(screen.getByText(/\$1[.,]000/)).toBeInTheDocument();
+    // Scoped al card de materiales: `$1.000` también aparece en el card de
+    // totales (fila "Materiales", #142) porque en el fixture ambos coinciden.
+    const materialesCard = screen.getByText('Aceite').closest('.card');
+    expect(materialesCard).not.toBeNull();
+    expect(within(materialesCard as HTMLElement).getByText(/\$1[.,]000/)).toBeInTheDocument();
+
+    // Card de totales (#142): la fila "Materiales" muestra costoMateriales ($1.000).
+    const totalesCard = screen.getByText('Mano de obra + insumos').closest('.card');
+    expect(within(totalesCard as HTMLElement).getByText(/\$1[.,]000/)).toBeInTheDocument();
+
     expect(screen.queryByText('$0')).toBeNull();
   });
 
@@ -268,4 +277,30 @@ describe('PresupuestoDetalle (caracterización)', () => {
     expect(screen.getByRole('button', { name: 'Duplicar' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Editar' })).toBeInTheDocument();
   });
+
+  // ── Issue #142: desglose reagrupado ──────────────────────
+
+  it('reagrupa el desglose: muestra "Materiales" y "Mano de obra + insumos" y no los labels viejos', async () => {
+    // Fixture con material cargado; el label "Materiales" aparece 2 veces
+    // (header de la card de materiales y fila de totales) → scoped al card de totales.
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    const totalesCard = screen.getByText('Mano de obra + insumos').closest('.card');
+    expect(totalesCard).not.toBeNull();
+
+    expect(within(totalesCard as HTMLElement).getByText('Materiales')).toBeInTheDocument();
+    expect(within(totalesCard as HTMLElement).getByText('Mano de obra + insumos')).toBeInTheDocument();
+    expect(screen.queryByText('Costo materiales + insumos')).toBeNull();
+    expect(screen.queryByText('Costo mano de obra')).toBeNull();
+  });
+
+  it('muestra el valor agrupado de mano de obra + insumos (5000 + 200 = $5.200)', async () => {
+    render(<PresupuestoDetalle />, { wrapper });
+    await screen.findByText('Presupuesto detalle');
+
+    // locale-tolerante: $5.200 (es-AR) o $5,200 (en-US)
+    expect(screen.getByText(/\$5[.,]200/)).toBeInTheDocument();
+  });
+
 });
