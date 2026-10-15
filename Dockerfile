@@ -13,10 +13,8 @@ RUN npm run build
 # Construir backend
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-backend
 WORKDIR /app
-COPY *.csproj ./
-RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore
 COPY . ./
-RUN dotnet publish ShopMGR.WebApi.csproj -c Release -o out
+RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish ShopMGR.WebApi.csproj -c Release -o out
 # RUN dotnet publish DBSeeder/DBSeeder.csproj -c Release -o dbseed-out
 
 #Construye la imagen de runtime
