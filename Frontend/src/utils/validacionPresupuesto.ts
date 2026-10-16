@@ -13,15 +13,22 @@ export const MENSAJE_HORAS_ESTIMADAS = `El campo horas estimadas tiene que estar
 /**
  * Valida el valor crudo del input de horas estimadas.
  *
+ * El `min` es configurable porque el DTO de **modificación** no tiene `[Range]`:
+ * al editar no se debe bloquear un registro existente con `0` horas (decisión de
+ * producto pendiente); al crear se respeta el contrato del DTO (`[Range(1, 1000)]`).
+ * En ambos casos se siguen rechazando vacío, valores no numéricos y negativos.
+ *
+ * @param opciones.min - Mínimo aceptado (por defecto `LIMITES_HORAS_ESTIMADAS.min`).
  * @returns `null` si es válido; el mensaje de error si no lo es.
  */
-export function validarHorasEstimadas(valor: string): string | null {
+export function validarHorasEstimadas(valor: string, opciones?: { min?: number }): string | null {
+  const min = opciones?.min ?? LIMITES_HORAS_ESTIMADAS.min;
   const normalizado = valor.trim();
   if (normalizado.length === 0) return MENSAJE_HORAS_ESTIMADAS;
 
   const numero = Number(normalizado);
   if (!Number.isFinite(numero)) return MENSAJE_HORAS_ESTIMADAS;
-  if (numero < LIMITES_HORAS_ESTIMADAS.min || numero > LIMITES_HORAS_ESTIMADAS.max) {
+  if (numero < min || numero > LIMITES_HORAS_ESTIMADAS.max) {
     return MENSAJE_HORAS_ESTIMADAS;
   }
 

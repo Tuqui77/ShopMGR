@@ -43,4 +43,14 @@ describe('validarHorasEstimadas', () => {
     expect(validarHorasEstimadas('2.5')).toBeNull();
     expect(validarHorasEstimadas('999.99')).toBeNull();
   });
+
+  it('con { min: 0 } acepta 0 y decimales, y sigue rechazando negativos/no numéricos/máximo', () => {
+    expect(validarHorasEstimadas('0', { min: 0 })).toBeNull();
+    expect(validarHorasEstimadas('2.5', { min: 0 })).toBeNull();
+
+    expect(validarHorasEstimadas('-1', { min: 0 })).toBe(MENSAJE_HORAS_ESTIMADAS);
+    expect(validarHorasEstimadas('', { min: 0 })).toBe(MENSAJE_HORAS_ESTIMADAS);
+    expect(validarHorasEstimadas('abc', { min: 0 })).toBe(MENSAJE_HORAS_ESTIMADAS);
+    expect(validarHorasEstimadas('1001', { min: 0 })).toBe(MENSAJE_HORAS_ESTIMADAS);
+  });
 });

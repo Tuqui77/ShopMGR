@@ -171,34 +171,110 @@ export function getApiErrorInfo(error: unknown): ApiErrorInfo {
   }
 }
 
+/** Mapa slot-del-form → claves (alias) que puede usar el backend para ese campo. */
+export type CamposConAlias = Record<string, readonly string[]>;
+
+interface CampoBackend {
+  /** Clave del backend normalizada a camelCase, conservando el path anidado. */
+  clave: string;
+  /** Mensajes no vacíos del campo, en orden de aparición. */
+  mensajes: string[];
+}
+
 /**
- * Conveniencia para los formularios: separa los errores por campo (solo los que
- * tienen slot en el form) del mensaje a mostrar en el bloque de submit.
+ * Extrae del body del error los campos con **todos** sus mensajes (no solo el
+ * primero). Nunca lanza: ante una entrada inesperada devuelve `[]`.
+ */
+function extraerCamposDelBackend(error: unknown): CampoBackend[] {
+  try {
+    const { data } = extraerRespuesta(error);
+    if (!esObjeto(data)) return [];
+
+    const errorsRaw = data['errors'];
+    if (!esObjeto(errorsRaw)) return [];
+
+    const campos: CampoBackend[] = [];
+    for (const [clave, valor] of Object.entries(errorsRaw)) {
+      const mensajes = mensajesDeCampo(valor);
+      if (mensajes.length === 0) continue;
+      campos.push({ clave: normalizarCampo(clave), mensajes });
+    }
+    return campos;
+  } catch {
+    return [];
+  }
+}
+
+/** Último segmento de una clave anidada (`Direccion[0].Calle` → `Calle`). */
+function ultimoSegmentoDeClave(clave: string): string {
+  const ultimoPunto = clave.lastIndexOf('.');
+  return ultimoPunto === -1 ? clave : clave.slice(ultimoPunto + 1);
+}
+
+/**
+ * Busca el slot del form cuya lista de alias coincide con la clave del backend.
+ * Primero prueba coincidencia exacta case-insensitive; si falla, compara el
+ * último segmento de la clave (paths anidados como `Direccion[0].Calle`).
+ */
+function buscarSlot(clave: string, campos: CamposConAlias): string | null {
+  const claveNormalizada = clave.toLowerCase();
+  const sufijoNormalizado = ultimoSegmentoDeClave(clave).toLowerCase();
+
+  for (const [slot, alias] of Object.entries(campos)) {
+    if (alias.some((a) => a.toLowerCase() === claveNormalizada)) return slot;
+  }
+  for (const [slot, alias] of Object.entries(campos)) {
+    if (alias.some((a) => a.toLowerCase() === sufijoNormalizado)) return slot;
+  }
+  return null;
+}
+
+/**
+ * Conveniencia para los formularios: reparte los errores del backend entre los
+ * slots del form y el bloque de submit.
  *
- * Si el backend devuelve errores de campos que el form no puede mostrar, el
- * primero de ellos se usa como mensaje de submit para no perder información.
+ * Garantías:
+ * - Cada mensaje se muestra **una sola vez**: no se duplica entre un input y el
+ *   bloque de submit, ni entre dos slots.
+ * - Ningún mensaje se pierde: los campos sin slot (o con más de un error) van a
+ *   `submit`, junto al mensaje general.
+ *
+ * Con `campos = {}` (form sin slots con alias) se mantiene el comportamiento
+ * histórico: `submit = generalMessage ?? allMessages[0]`.
  */
 export function splitApiErrors(
   error: unknown,
-  knownFields: readonly string[],
+  campos: CamposConAlias,
 ): { fieldErrors: Record<string, string>; submit: string | null } {
-  const { fieldErrors: todos, generalMessage, allMessages } = getApiErrorInfo(error);
-  const camposConocidos = new Set(knownFields);
-  const fieldErrors: Record<string, string> = {};
-  let hayCamposSinSlot = false;
+  const { generalMessage, allMessages } = getApiErrorInfo(error);
 
-  for (const [campo, mensaje] of Object.entries(todos)) {
-    if (camposConocidos.has(campo)) {
-      fieldErrors[campo] = mensaje;
+  if (Object.keys(campos).length === 0) {
+    return { fieldErrors: {}, submit: generalMessage ?? allMessages[0] ?? null };
+  }
+
+  const fieldErrors: Record<string, string> = {};
+  const consumidos = new Set<string>();
+  const restos: string[] = [];
+
+  for (const { clave, mensajes } of extraerCamposDelBackend(error)) {
+    const slot = buscarSlot(clave, campos);
+    if (slot !== null && !(slot in fieldErrors)) {
+      fieldErrors[slot] = mensajes[0];
+      consumidos.add(mensajes[0]);
+      restos.push(...mensajes.slice(1));
     } else {
-      hayCamposSinSlot = true;
+      restos.push(...mensajes);
     }
   }
 
-  let submit: string | null = generalMessage;
-  if (submit === null && hayCamposSinSlot) {
-    submit = allMessages[0] ?? null;
-  }
+  const partes: string[] = [];
+  const agregar = (mensaje: string | null) => {
+    if (!mensaje || consumidos.has(mensaje) || partes.includes(mensaje)) return;
+    partes.push(mensaje);
+  };
 
-  return { fieldErrors, submit };
+  agregar(generalMessage);
+  for (const resto of restos) agregar(resto);
+
+  return { fieldErrors, submit: partes.length > 0 ? partes.join('\n') : null };
 }

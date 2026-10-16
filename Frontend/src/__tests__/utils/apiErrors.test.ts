@@ -207,7 +207,10 @@ describe('splitApiErrors', () => {
       errors: { HorasEstimadas: ['El campo horas estimadas tiene que estar entre 1 y 1000'] },
     });
 
-    const { fieldErrors, submit } = splitApiErrors(error, ['titulo', 'horasEstimadas']);
+    const { fieldErrors, submit } = splitApiErrors(error, {
+      titulo: ['titulo'],
+      horasEstimadas: ['horasEstimadas'],
+    });
 
     expect(fieldErrors).toEqual({
       horasEstimadas: 'El campo horas estimadas tiene que estar entre 1 y 1000',
@@ -218,14 +221,14 @@ describe('splitApiErrors', () => {
   it('manda al submit el mensaje de un campo sin slot', () => {
     const error = axiosError(400, { errors: { CampoDesconocido: ['Mensaje del backend'] } });
 
-    const { fieldErrors, submit } = splitApiErrors(error, ['titulo']);
+    const { fieldErrors, submit } = splitApiErrors(error, { titulo: ['titulo'] });
 
     expect(fieldErrors).toEqual({});
     expect(submit).toBe('Mensaje del backend');
   });
 
   it('prefiere el mensaje general cuando existe', () => {
-    const { fieldErrors, submit } = splitApiErrors(axiosError(409, { error: 'Conflicto' }), []);
+    const { fieldErrors, submit } = splitApiErrors(axiosError(409, { error: 'Conflicto' }), {});
 
     expect(fieldErrors).toEqual({});
     expect(submit).toBe('Conflicto');
@@ -234,7 +237,7 @@ describe('splitApiErrors', () => {
   it('no setea submit cuando todos los campos tienen slot', () => {
     const { fieldErrors, submit } = splitApiErrors(
       axiosError(400, { errors: { HorasEstimadas: ['fuera de rango'] } }),
-      ['horasEstimadas'],
+      { horasEstimadas: ['horasEstimadas'] },
     );
 
     expect(fieldErrors).toEqual({ horasEstimadas: 'fuera de rango' });
@@ -242,11 +245,103 @@ describe('splitApiErrors', () => {
   });
 
   it('nunca lanza con entradas inesperadas', () => {
-    expect(() => splitApiErrors(undefined, ['titulo'])).not.toThrow();
-    expect(splitApiErrors({}, [])).toEqual({
+    expect(() => splitApiErrors(undefined, { titulo: ['titulo'] })).not.toThrow();
+    expect(splitApiErrors({}, {})).toEqual({
       fieldErrors: {},
       submit: MENSAJE_ERROR_CONEXION,
     });
+  });
+
+  // ── Regresión #148: ningún mensaje se pierde ni se duplica ──
+
+  const A = 'El titulo es requerido';
+  const B = 'Material invalido';
+
+  it.each([
+    { errors: { Titulo: [A], Materiales: [B] } },
+    { errors: { Materiales: [B], Titulo: [A] } },
+  ])('campo con slot + campo sin slot: A junto al input y B (y solo B) en submit', ({ errors }) => {
+    const { fieldErrors, submit } = splitApiErrors(
+      axiosError(400, { errors }),
+      { titulo: ['titulo'] },
+    );
+
+    expect(fieldErrors).toEqual({ titulo: A });
+    expect(submit).toContain(B);
+    expect(submit).not.toContain(A);
+  });
+
+  it('generalMessage + campos sin slot: no pierde ni duplica ningún mensaje', () => {
+    const { fieldErrors, submit } = splitApiErrors(
+      axiosError(400, { error: 'Mensaje general', errors: { Titulo: [A], Materiales: [B] } }),
+      { titulo: ['titulo'] },
+    );
+
+    expect(fieldErrors).toEqual({ titulo: A });
+    expect(submit).toContain('Mensaje general');
+    expect(submit).toContain(B);
+    expect(submit).not.toContain(A);
+    // Cada mensaje aparece exactamente una vez, en orden.
+    expect(submit?.split('\n')).toEqual(['Mensaje general', B]);
+  });
+
+  it('matchea alias del backend (PascalCase) contra el slot del form', () => {
+    expect(
+      splitApiErrors(axiosError(400, { errors: { NombreCompleto: ['requerido'] } }), {
+        nombre: ['NombreCompleto'],
+      }).fieldErrors,
+    ).toEqual({ nombre: 'requerido' });
+
+    expect(
+      splitApiErrors(axiosError(400, { errors: { IdCliente: ['requerido'] } }), {
+        clienteId: ['IdCliente', 'clienteId'],
+      }).fieldErrors,
+    ).toEqual({ clienteId: 'requerido' });
+
+    // La variante camelCase también matchea.
+    expect(
+      splitApiErrors(axiosError(400, { errors: { idCliente: ['requerido'] } }), {
+        clienteId: ['IdCliente'],
+      }).fieldErrors,
+    ).toEqual({ clienteId: 'requerido' });
+  });
+
+  it('matchea claves anidadas por su último segmento (Direccion[0].Calle → calle)', () => {
+    const { fieldErrors, submit } = splitApiErrors(
+      axiosError(400, { errors: { 'Direccion[0].Calle': ['La calle es requerida'] } }),
+      { calle: ['calle'] },
+    );
+
+    expect(fieldErrors).toEqual({ calle: 'La calle es requerida' });
+    expect(submit).toBeNull();
+  });
+
+  it('submit null cuando todos los mensajes fueron consumidos por un slot', () => {
+    const { fieldErrors, submit } = splitApiErrors(
+      axiosError(400, { errors: { Titulo: [A], Materiales: [B] } }),
+      { titulo: ['titulo'], materiales: ['materiales'] },
+    );
+
+    expect(fieldErrors).toEqual({ titulo: A, materiales: B });
+    expect(submit).toBeNull();
+  });
+
+  it('con campos vacío mantiene submit = generalMessage ?? allMessages[0]', () => {
+    expect(
+      splitApiErrors(axiosError(400, { error: 'General', errors: { Titulo: [A] } }), {}).submit,
+    ).toBe('General');
+
+    expect(splitApiErrors(axiosError(400, { errors: { Titulo: [A] } }), {}).submit).toBe(A);
+  });
+
+  it('los mensajes extra de un mismo campo van al submit', () => {
+    const { fieldErrors, submit } = splitApiErrors(
+      axiosError(400, { errors: { Titulo: [A, B] } }),
+      { titulo: ['titulo'] },
+    );
+
+    expect(fieldErrors).toEqual({ titulo: A });
+    expect(submit).toBe(B);
   });
 });
 

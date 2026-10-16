@@ -175,8 +175,8 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
         });
       } catch (error) {
         console.error('Error al registrar anticipo:', error);
-        const { submit } = splitApiErrors(error, []);
-        setErrors({ submit: submit ?? 'Error al registrar anticipo. Intenta de nuevo.' });
+        const { submit } = splitApiErrors(error, {});
+        if (submit) setErrors({ submit });
         setCreandoAnticipo(false);
         return;
       }
@@ -208,7 +208,11 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       onCloseCallback();
     } catch (error) {
       console.error('Error al guardar trabajo:', error);
-      const { fieldErrors, submit } = splitApiErrors(error, ['titulo', 'clienteId', 'montoAnticipo']);
+      const { fieldErrors, submit } = splitApiErrors(error, {
+        titulo: ['titulo'],
+        clienteId: ['IdCliente', 'clienteId'],
+        montoAnticipo: ['montoAnticipo'],
+      });
       setErrors({ ...fieldErrors, ...(submit ? { submit } : {}) });
     }
   };
@@ -440,7 +444,7 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
 
               {/* Error de submit */}
               {errors.submit && (
-                <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
+                <p className="text-sm text-center whitespace-pre-line" style={{ color: 'var(--color-danger)' }}>
                   {errors.submit}
                 </p>
               )}

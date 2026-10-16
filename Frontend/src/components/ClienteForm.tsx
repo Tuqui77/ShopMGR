@@ -163,14 +163,14 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     } catch (error) {
       console.error('Error al guardar cliente:', error);
 
-      const { fieldErrors, submit } = splitApiErrors(error, [
-        'nombre',
-        'cuit',
-        'telefono',
-        'calle',
-        'altura',
-        'ciudad',
-      ]);
+      const { fieldErrors, submit } = splitApiErrors(error, {
+        nombre: ['NombreCompleto'],
+        cuit: ['Cuit'],
+        telefono: ['Telefono'],
+        calle: ['Calle'],
+        altura: ['Altura'],
+        ciudad: ['Ciudad'],
+      });
       setErrors({ ...fieldErrors, ...(submit ? { submit } : {}) });
     }
   };
@@ -387,7 +387,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
 
               {/* Submit error */}
               {errors.submit && (
-                <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
+                <p className="text-sm text-center whitespace-pre-line" style={{ color: 'var(--color-danger)' }}>
                   {errors.submit}
                 </p>
               )}

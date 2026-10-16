@@ -221,7 +221,9 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
       newErrors.titulo = 'El título es requerido';
     }
 
-    const errorHoras = validarHorasEstimadas(horasEstimadas);
+    // Al editar se permite conservar 0 horas (el DTO de modificación no tiene
+    // `[Range]`): el mínimo 1 solo se exige al crear.
+    const errorHoras = validarHorasEstimadas(horasEstimadas, isEditing ? { min: 0 } : undefined);
     if (errorHoras) {
       newErrors.horasEstimadas = errorHoras;
     }
@@ -345,7 +347,10 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
     } catch (error) {
       console.error('Error al guardar presupuesto:', error);
 
-      const { fieldErrors, submit } = splitApiErrors(error, ['titulo', 'horasEstimadas']);
+      const { fieldErrors, submit } = splitApiErrors(error, {
+        titulo: ['titulo'],
+        horasEstimadas: ['horasEstimadas'],
+      });
       setErrors({ ...fieldErrors, ...(submit ? { submit } : {}) });
     }
   };
@@ -534,7 +539,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
                   type="number"
                   value={horasEstimadas}
                   onChange={(e) => setHorasEstimadas(e.target.value)}
-                  min={LIMITES_HORAS_ESTIMADAS.min}
+                  min={isEditing ? 0 : LIMITES_HORAS_ESTIMADAS.min}
                   step={0.5}
                   className={clsx('input', errors.horasEstimadas && 'input-error')}
                 />
@@ -727,7 +732,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
 
               {/* Submit error */}
               {errors.submit && (
-                <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
+                <p className="text-sm text-center whitespace-pre-line" style={{ color: 'var(--color-danger)' }}>
                   {errors.submit}
                 </p>
               )}

@@ -356,4 +356,21 @@ describe('PresupuestoForm (caracterización)', () => {
     ).toBeInTheDocument();
     expect(crearMutateAsync).not.toHaveBeenCalled();
   });
+
+  it('#148: editar permite conservar 0 horas (no bloquea por validación cliente)', async () => {
+    const presupuestoSinHoras: Presupuesto = { ...presupuestoOriginal, horasEstimadas: 0 };
+    usePresupuestoDetalleMock.mockReturnValue({ data: presupuestoSinHoras });
+    render(<PresupuestoForm presupuestoId={10} />);
+
+    const botonActualizar = await screen.findByRole('button', { name: 'Actualizar' });
+    const horasInput = screen.getAllByRole('spinbutton')[0];
+    expect(horasInput).toHaveValue(0);
+    expect(horasInput).toHaveAttribute('min', '0');
+
+    fireEvent.click(botonActualizar);
+
+    await waitFor(() => expect(modificarMutateAsync).toHaveBeenCalledTimes(1));
+    const args = modificarMutateAsync.mock.calls[0] as [{ presupuesto: { horasEstimadas: number } }];
+    expect(args[0].presupuesto.horasEstimadas).toBe(0);
+  });
 });
