@@ -306,6 +306,55 @@ describe('PresupuestoForm (caracterización)', () => {
     expect(screen.getAllByRole('spinbutton')[0]).toHaveClass('input-error');
   });
 
+  it('#148 (regresión de wiring): HorasEstimadas y Titulo llegan a su campo y no al bloque de submit', async () => {
+    const MENSAJE_HORAS = 'El campo horas estimadas tiene que estar entre 1 y 1000';
+    const MENSAJE_TITULO = 'Ya existe un presupuesto con ese título';
+
+    // Claves reales del ModelState (PascalCase): aunque acá el match funcione por
+    // case-insensitivity, el test falla igual si se rompe la declaración de alias
+    // del form (p. ej. eliminar la entrada `horasEstimadas: [...]`).
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          errors: {
+            HorasEstimadas: [MENSAJE_HORAS],
+            Titulo: [MENSAJE_TITULO],
+          },
+        },
+      },
+    });
+    const { container } = render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    // Válido en el cliente para que el error por campo lo devuelva el backend.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    // Slot `horasEstimadas`.
+    const mensajeHoras = await screen.findByText(MENSAJE_HORAS);
+    const inputHoras = screen.getAllByRole('spinbutton')[0];
+    expect(inputHoras).toHaveClass('input-error');
+    expect(inputHoras.parentElement).toContainElement(mensajeHoras);
+
+    // Slot `titulo`.
+    const mensajeTitulo = await screen.findByText(MENSAJE_TITULO);
+    const inputTitulo = screen.getByPlaceholderText('Reparación de motor');
+    expect(inputTitulo).toHaveClass('input-error');
+    expect(inputTitulo.parentElement).toContainElement(mensajeTitulo);
+
+    // Cada mensaje se muestra UNA sola vez y ninguno cae en el bloque general.
+    expect(screen.getAllByText(MENSAJE_HORAS)).toHaveLength(1);
+    expect(screen.getAllByText(MENSAJE_TITULO)).toHaveLength(1);
+    const bloqueSubmit = container.querySelector('p.whitespace-pre-line');
+    expect(bloqueSubmit?.textContent ?? '').not.toContain(MENSAJE_HORAS);
+    expect(bloqueSubmit?.textContent ?? '').not.toContain(MENSAJE_TITULO);
+  });
+
   it('#148: 500 sin body muestra el fallback específico del servidor', async () => {
     crearMutateAsync.mockRejectedValueOnce({
       isAxiosError: true,

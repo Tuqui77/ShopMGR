@@ -301,6 +301,33 @@ describe('TrabajoForm (caracterización)', () => {
     ).toBeNull();
   });
 
+  it('#148 (regresión de wiring): IdCliente llega al campo clienteId y no al bloque de submit', async () => {
+    const MENSAJE = 'El cliente seleccionado no existe';
+
+    // Clave real del ModelState: `IdCliente` (el slot del form es `clienteId`).
+    // Va por el camino de guardado normal (no por el del anticipo, que usa
+    // `splitApiErrors(error, {})`).
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: { errors: { IdCliente: [MENSAJE] } },
+      },
+    });
+    const { container } = render(<TrabajoForm />);
+
+    await seleccionarClienteYEnviar();
+
+    const mensaje = await screen.findByText(MENSAJE);
+    const selectCliente = screen.getAllByRole('combobox')[0];
+    expect(selectCliente).toHaveClass('input-error');
+    expect(selectCliente.parentElement).toContainElement(mensaje);
+    // Se muestra una sola vez y no se duplica en el bloque general.
+    expect(screen.getAllByText(MENSAJE)).toHaveLength(1);
+    const bloqueSubmit = container.querySelector('p.whitespace-pre-line');
+    expect(bloqueSubmit?.textContent ?? '').not.toContain(MENSAJE);
+  });
+
   it('editar: puebla desde el trabajo y envía payload sin idPresupuesto', async () => {
     useTrabajoMock.mockReturnValue({ data: trabajoOriginal, isLoading: false });
     usePresupuestosPorClienteMock.mockReturnValue({ data: [presupuestoAceptado] });

@@ -211,7 +211,6 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       const { fieldErrors, submit } = splitApiErrors(error, {
         titulo: ['titulo'],
         clienteId: ['IdCliente', 'clienteId'],
-        montoAnticipo: ['montoAnticipo'],
       });
       setErrors({ ...fieldErrors, ...(submit ? { submit } : {}) });
     }
