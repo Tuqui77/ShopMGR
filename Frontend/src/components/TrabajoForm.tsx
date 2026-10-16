@@ -4,6 +4,7 @@ import { useClientes } from '../hooks/useClientes';
 import { usePresupuestosPorCliente, usePresupuesto } from '../hooks/usePresupuestos';
 import { useCrearTrabajo, useModificarTrabajo, useTrabajo, useCambiarPresupuesto, useEliminarPresupuesto } from '../hooks/useTrabajos';
 import { movimientosService, type TipoMovimiento } from '../services/movimientos';
+import { splitApiErrors } from '../utils/apiErrors';
 import type { EstadoTrabajo, Cliente, Presupuesto } from '../types';
 import { Loader2, X, Check, Banknote, FileText, Trash2 } from 'lucide-react';
 import { LoadingState } from './LoadingState';
@@ -174,7 +175,8 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
         });
       } catch (error) {
         console.error('Error al registrar anticipo:', error);
-        setErrors({ submit: 'Error al registrar anticipo. Intenta de nuevo.' });
+        const { submit } = splitApiErrors(error, []);
+        setErrors({ submit: submit ?? 'Error al registrar anticipo. Intenta de nuevo.' });
         setCreandoAnticipo(false);
         return;
       }
@@ -206,7 +208,8 @@ export function TrabajoForm({ trabajoId, isOpen: isOpenProp, onClose: onClosePro
       onCloseCallback();
     } catch (error) {
       console.error('Error al guardar trabajo:', error);
-      setErrors({ submit: 'Error al guardar. Intenta de nuevo.' });
+      const { fieldErrors, submit } = splitApiErrors(error, ['titulo', 'clienteId', 'montoAnticipo']);
+      setErrors({ ...fieldErrors, ...(submit ? { submit } : {}) });
     }
   };
 

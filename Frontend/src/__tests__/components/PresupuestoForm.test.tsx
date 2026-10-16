@@ -107,13 +107,16 @@ describe('PresupuestoForm (caracterización)', () => {
     fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
       target: { value: 'Cambio de aceite' },
     });
+    // #148: el default del campo sigue siendo '0', pero ahora es inválido y
+    // bloquea el submit; se completa con un valor válido para caracterizar el envío.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
 
     const payload = await obtenerPayloadCrear();
     expect(payload).toEqual({
       titulo: 'Cambio de aceite',
       descripcion: undefined,
-      horasEstimadas: 0,
+      horasEstimadas: 1,
       idCliente: 1,
       materiales: [],
     });
@@ -247,6 +250,8 @@ describe('PresupuestoForm (caracterización)', () => {
     fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
       target: { value: 'Cambio de aceite' },
     });
+    // #148: '0' ya no es válido; se completa el campo antes de enviar.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
 
     // Flush microtasks: mutateAsync resuelto → setShowSuccess(true)
@@ -260,5 +265,95 @@ describe('PresupuestoForm (caracterización)', () => {
 
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(useStore.getState().showPresupuestoForm).toBe(false);
+  });
+
+  // ── #148: errores de validación del backend ──────────────────────────────
+  // El backend responde 400 con un ValidationProblemDetails:
+  //   { errors: { HorasEstimadas: ["El campo horas estimadas tiene que estar entre 1 y 1000"] } }
+  // El form debe mostrar ESE mensaje en el campo, no el fallback genérico.
+
+  it('#148: 400 con errors.HorasEstimadas muestra el mensaje del backend y no el genérico', async () => {
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          errors: {
+            HorasEstimadas: ['El campo horas estimadas tiene que estar entre 1 y 1000'],
+          },
+        },
+      },
+    });
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    // Válido en el cliente para que el submit llegue al servicio y sea el
+    // backend quien devuelva el error por campo.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('El campo horas estimadas tiene que estar entre 1 y 1000'),
+    ).toBeInTheDocument();
+    // El fallback genérico de 400 NO se muestra cuando el backend manda mensaje.
+    expect(
+      screen.queryByText('Revisá los datos ingresados: hay campos inválidos.'),
+    ).toBeNull();
+    // El input de horas queda marcado como inválido.
+    expect(screen.getAllByRole('spinbutton')[0]).toHaveClass('input-error');
+  });
+
+  it('#148: 500 sin body muestra el fallback específico del servidor', async () => {
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 500, data: {} },
+    });
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('Ocurrió un error en el servidor. Intentá de nuevo en unos minutos.'),
+    ).toBeInTheDocument();
+  });
+
+  it('#148: horas vacías bloquean el submit en el cliente (no llama al servicio)', async () => {
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('El campo horas estimadas tiene que estar entre 1 y 1000'),
+    ).toBeInTheDocument();
+    expect(crearMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('#148: horas = 0 se validan en el cliente y no llaman al servicio', async () => {
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '0' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('El campo horas estimadas tiene que estar entre 1 y 1000'),
+    ).toBeInTheDocument();
+    expect(crearMutateAsync).not.toHaveBeenCalled();
   });
 });

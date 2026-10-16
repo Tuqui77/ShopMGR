@@ -119,4 +119,24 @@ describe('ClienteForm - teléfono único con descripción en creación (issue #1
     expect(screen.queryAllByPlaceholderText('Descripción (ej: Celular, Trabajo)')).toHaveLength(1);
     expect(screen.getByText('Teléfono (opcional)')).toBeInTheDocument();
   });
+
+  it('#148: 400 con errors.Cuit muestra el mensaje del backend en el campo CUIT', async () => {
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: { errors: { Cuit: ['El CUIT ya está registrado'] } },
+      },
+    });
+    render(<ClienteForm />);
+    completarNombre();
+
+    clickCrearCliente();
+
+    expect(await screen.findByText('El CUIT ya está registrado')).toBeInTheDocument();
+    // No se muestra el fallback genérico de 400 cuando el backend manda mensaje.
+    expect(
+      screen.queryByText('Revisá los datos ingresados: hay campos inválidos.'),
+    ).toBeNull();
+  });
 });

@@ -6,6 +6,8 @@ import type { Cliente, MaterialRequest } from '../types';
 import { Loader2, X, Check, Plus, Trash2, Search, ArrowLeft, Calculator, User } from 'lucide-react';
 import clsx from 'clsx';
 import { calcularSubtotal } from '../utils/materiales';
+import { splitApiErrors } from '../utils/apiErrors';
+import { LIMITES_HORAS_ESTIMADAS, validarHorasEstimadas } from '../utils/validacionPresupuesto';
 import { CalculatorModal } from './CalculatorModal';
 import { EmptyState } from './EmptyState';
 
@@ -219,8 +221,9 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
       newErrors.titulo = 'El título es requerido';
     }
 
-    if (parseFloat(horasEstimadas) < 0) {
-      newErrors.horasEstimadas = 'Las horas deben ser positivas';
+    const errorHoras = validarHorasEstimadas(horasEstimadas);
+    if (errorHoras) {
+      newErrors.horasEstimadas = errorHoras;
     }
 
     setErrors(newErrors);
@@ -309,6 +312,10 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
   const handleSubmit = async () => {
     if (!validate() || !clienteSeleccionado) return;
 
+    // `validate()` ya corrió: el valor es numérico y está dentro del rango,
+    // por eso se parsea UNA sola vez (sin enmascarar vacío/NaN con `|| 0`).
+    const horas = Number(horasEstimadas);
+
     try {
       if (isEditing && presupuestoOriginal) {
         await modificarPresupuesto.mutateAsync({
@@ -316,7 +323,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
           presupuesto: {
             titulo: titulo.trim(),
             descripcion: descripcion.trim() || null,
-            horasEstimadas: parseFloat(horasEstimadas) || 0,
+            horasEstimadas: horas,
             idCliente: clienteSeleccionado.id,
             materiales: materiales.length > 0 ? materiales : [],
           },
@@ -325,7 +332,7 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
         await crearPresupuesto.mutateAsync({
           titulo: titulo.trim(),
           descripcion: descripcion.trim() || undefined,
-          horasEstimadas: parseFloat(horasEstimadas) || 0,
+          horasEstimadas: horas,
           idCliente: clienteSeleccionado.id,
           materiales: materiales.length > 0 ? materiales : [],
         });
@@ -338,22 +345,8 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
     } catch (error) {
       console.error('Error al guardar presupuesto:', error);
 
-      let errorMessage = 'Error al guardar el presupuesto';
-
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
-        if (axiosError.response?.data?.error) {
-          errorMessage = axiosError.response.data.error;
-        } else if (axiosError.response?.status === 500) {
-          errorMessage = 'Error interno del servidor';
-        } else if (axiosError.response?.status === 404) {
-          errorMessage = 'Recurso no encontrado';
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      setErrors({ submit: errorMessage });
+      const { fieldErrors, submit } = splitApiErrors(error, ['titulo', 'horasEstimadas']);
+      setErrors({ ...fieldErrors, ...(submit ? { submit } : {}) });
     }
   };
 
@@ -541,9 +534,9 @@ export function PresupuestoForm({ presupuestoId, presupuestoDuplicadoId, isOpen:
                   type="number"
                   value={horasEstimadas}
                   onChange={(e) => setHorasEstimadas(e.target.value)}
-                  min={0}
+                  min={LIMITES_HORAS_ESTIMADAS.min}
                   step={0.5}
-                  className="input"
+                  className={clsx('input', errors.horasEstimadas && 'input-error')}
                 />
                 {errors.horasEstimadas && (
                   <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>

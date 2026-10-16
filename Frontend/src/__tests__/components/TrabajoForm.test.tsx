@@ -259,8 +259,11 @@ describe('TrabajoForm (caracterización)', () => {
     expect(crearMutateAsync).not.toHaveBeenCalled();
   });
 
-  it('crear: si falla el anticipo muestra error y no crea el trabajo', async () => {
-    movimientosCrearMock.mockRejectedValue(new Error('boom'));
+  it('crear: si falla el anticipo muestra el mensaje del backend y no crea el trabajo', async () => {
+    movimientosCrearMock.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 400, data: { error: 'Saldo insuficiente' } },
+    });
     render(<TrabajoForm />);
 
     fireEvent.change(screen.getByPlaceholderText('Ej: Cambio de aceite'), {
@@ -273,8 +276,29 @@ describe('TrabajoForm (caracterización)', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Crear' }));
 
-    expect(await screen.findByText('Error al registrar anticipo. Intenta de nuevo.')).toBeInTheDocument();
+    // #148: se muestra el mensaje real del backend, no un genérico.
+    expect(await screen.findByText('Saldo insuficiente')).toBeInTheDocument();
     expect(crearMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('#148: 400 con errors.Titulo muestra el mensaje del backend en el campo título', async () => {
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: { errors: { Titulo: ['El título ya está en uso'] } },
+      },
+    });
+    render(<TrabajoForm />);
+
+    await seleccionarClienteYEnviar();
+
+    expect(await screen.findByText('El título ya está en uso')).toBeInTheDocument();
+    // El campo con error queda marcado (y no aparece el fallback genérico de 400).
+    expect(screen.getByPlaceholderText('Ej: Cambio de aceite')).toHaveClass('input-error');
+    expect(
+      screen.queryByText('Revisá los datos ingresados: hay campos inválidos.'),
+    ).toBeNull();
   });
 
   it('editar: puebla desde el trabajo y envía payload sin idPresupuesto', async () => {
