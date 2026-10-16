@@ -1,5 +1,6 @@
 import { apiClient } from './api';
 import { calcularSubtotal } from '../utils/materiales';
+import { getApiErrorStatus, parseApiErrorBody } from '../utils/apiErrors';
 import type {
   Presupuesto,
   PresupuestoBackendDTO,
@@ -23,45 +24,19 @@ export interface ModificarPresupuestoRequest {
   materiales?: MaterialRequest[];
 }
 
-// Helper to extract error message from backend response
+// Helper to extract error message from backend response.
+// El parseo de formatos ({ error }, { detail }, { message }, { errors }) vive
+// en `utils/apiErrors`; acá se conserva el contrato histórico de `aceptar()` y
+// `rechazar()`: siempre lanza `Error` con un mensaje.
 async function handleApiError(error: unknown): Promise<never> {
-  if (error && typeof error === 'object' && 'response' in error) {
-    const axiosError = error as { response?: { data?: unknown; status?: number } };
-    const responseData = axiosError.response?.data;
-    
-    // Try to extract message from various error formats
-    if (responseData && typeof responseData === 'object') {
-      const data = responseData as Record<string, unknown>;
-      
-      // Format: { "error": "..." } - used by our middleware
-      if (data.error && typeof data.error === 'string') {
-        throw new Error(data.error);
-      }
-      // Format: { "title": "...", "status": ..., "detail": "..." }
-      if (data.detail && typeof data.detail === 'string') {
-        throw new Error(data.detail);
-      }
-      // Format: { "message": "..." }
-      if (data.message && typeof data.message === 'string') {
-        throw new Error(data.message);
-      }
-      // Format: { "errors": { ... } }
-      if (data.errors && typeof data.errors === 'object') {
-        const errors = data.errors as Record<string, unknown>;
-        const firstError = Object.values(errors).flat()[0];
-        if (typeof firstError === 'string') {
-          throw new Error(firstError);
-        }
-      }
-    }
-    
-    // Fallback to status text
-    if (axiosError.response?.status) {
-      throw new Error(`Error ${axiosError.response.status}`);
-    }
-  }
-  
-  throw new Error('Error de conexión');
+  const body = parseApiErrorBody(error);
+  const mensaje = body.generalMessage ?? body.allMessages[0];
+  if (mensaje) throw new Error(mensaje);
+
+  // Sin mensaje explícito del backend: se mantienen los fallbacks históricos
+  // para no cambiar el comportamiento observable de aceptar()/rechazar().
+  const status = getApiErrorStatus(error);
+  throw new Error(status !== null ? `Error ${status}` : 'Error de conexión');
 }
 
 // ============================================================================

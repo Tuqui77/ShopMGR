@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { useStore } from '../store';
 import { useCrearCliente, useModificarCliente } from '../hooks/useClientes';
+import { splitApiErrors } from '../utils/apiErrors';
 import type { Cliente } from '../types';
 import { Loader2, X, Check } from 'lucide-react';
 
@@ -162,22 +163,15 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
     } catch (error) {
       console.error('Error al guardar cliente:', error);
 
-      let errorMessage = isEditing ? 'Error al modificar el cliente' : 'Error al crear el cliente';
-
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { data?: { error?: string }; status?: number } };
-        if (axiosError.response?.data?.error) {
-          errorMessage = axiosError.response.data.error;
-        } else if (axiosError.response?.status === 500) {
-          errorMessage = 'Error interno del servidor';
-        } else if (axiosError.response?.status === 404) {
-          errorMessage = 'Recurso no encontrado';
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      setErrors({ submit: errorMessage });
+      const { fieldErrors, submit } = splitApiErrors(error, {
+        nombre: ['NombreCompleto'],
+        cuit: ['Cuit'],
+        telefono: ['Telefono'],
+        calle: ['Calle'],
+        altura: ['Altura'],
+        ciudad: ['Ciudad'],
+      });
+      setErrors({ ...fieldErrors, ...(submit ? { submit } : {}) });
     }
   };
 
@@ -393,7 +387,7 @@ export function ClienteForm({ cliente }: ClienteFormProps) {
 
               {/* Submit error */}
               {errors.submit && (
-                <p className="text-sm text-center" style={{ color: 'var(--color-danger)' }}>
+                <p className="text-sm text-center whitespace-pre-line" style={{ color: 'var(--color-danger)' }}>
                   {errors.submit}
                 </p>
               )}

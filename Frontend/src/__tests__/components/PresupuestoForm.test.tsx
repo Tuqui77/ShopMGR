@@ -107,13 +107,16 @@ describe('PresupuestoForm (caracterización)', () => {
     fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
       target: { value: 'Cambio de aceite' },
     });
+    // #148: el default del campo sigue siendo '0', pero ahora es inválido y
+    // bloquea el submit; se completa con un valor válido para caracterizar el envío.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
 
     const payload = await obtenerPayloadCrear();
     expect(payload).toEqual({
       titulo: 'Cambio de aceite',
       descripcion: undefined,
-      horasEstimadas: 0,
+      horasEstimadas: 1,
       idCliente: 1,
       materiales: [],
     });
@@ -247,6 +250,8 @@ describe('PresupuestoForm (caracterización)', () => {
     fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
       target: { value: 'Cambio de aceite' },
     });
+    // #148: '0' ya no es válido; se completa el campo antes de enviar.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
 
     // Flush microtasks: mutateAsync resuelto → setShowSuccess(true)
@@ -260,5 +265,161 @@ describe('PresupuestoForm (caracterización)', () => {
 
     expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(useStore.getState().showPresupuestoForm).toBe(false);
+  });
+
+  // ── #148: errores de validación del backend ──────────────────────────────
+  // El backend responde 400 con un ValidationProblemDetails:
+  //   { errors: { HorasEstimadas: ["El campo horas estimadas tiene que estar entre 1 y 1000"] } }
+  // El form debe mostrar ESE mensaje en el campo, no el fallback genérico.
+
+  it('#148: 400 con errors.HorasEstimadas muestra el mensaje del backend y no el genérico', async () => {
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          errors: {
+            HorasEstimadas: ['El campo horas estimadas tiene que estar entre 1 y 1000'],
+          },
+        },
+      },
+    });
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    // Válido en el cliente para que el submit llegue al servicio y sea el
+    // backend quien devuelva el error por campo.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('El campo horas estimadas tiene que estar entre 1 y 1000'),
+    ).toBeInTheDocument();
+    // El fallback genérico de 400 NO se muestra cuando el backend manda mensaje.
+    expect(
+      screen.queryByText('Revisá los datos ingresados: hay campos inválidos.'),
+    ).toBeNull();
+    // El input de horas queda marcado como inválido.
+    expect(screen.getAllByRole('spinbutton')[0]).toHaveClass('input-error');
+  });
+
+  it('#148 (regresión de wiring): HorasEstimadas y Titulo llegan a su campo y no al bloque de submit', async () => {
+    const MENSAJE_HORAS = 'El campo horas estimadas tiene que estar entre 1 y 1000';
+    const MENSAJE_TITULO = 'Ya existe un presupuesto con ese título';
+
+    // Claves reales del ModelState (PascalCase): aunque acá el match funcione por
+    // case-insensitivity, el test falla igual si se rompe la declaración de alias
+    // del form (p. ej. eliminar la entrada `horasEstimadas: [...]`).
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          errors: {
+            HorasEstimadas: [MENSAJE_HORAS],
+            Titulo: [MENSAJE_TITULO],
+          },
+        },
+      },
+    });
+    const { container } = render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    // Válido en el cliente para que el error por campo lo devuelva el backend.
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    // Slot `horasEstimadas`.
+    const mensajeHoras = await screen.findByText(MENSAJE_HORAS);
+    const inputHoras = screen.getAllByRole('spinbutton')[0];
+    expect(inputHoras).toHaveClass('input-error');
+    expect(inputHoras.parentElement).toContainElement(mensajeHoras);
+
+    // Slot `titulo`.
+    const mensajeTitulo = await screen.findByText(MENSAJE_TITULO);
+    const inputTitulo = screen.getByPlaceholderText('Reparación de motor');
+    expect(inputTitulo).toHaveClass('input-error');
+    expect(inputTitulo.parentElement).toContainElement(mensajeTitulo);
+
+    // Cada mensaje se muestra UNA sola vez y ninguno cae en el bloque general.
+    expect(screen.getAllByText(MENSAJE_HORAS)).toHaveLength(1);
+    expect(screen.getAllByText(MENSAJE_TITULO)).toHaveLength(1);
+    const bloqueSubmit = container.querySelector('p.whitespace-pre-line');
+    expect(bloqueSubmit?.textContent ?? '').not.toContain(MENSAJE_HORAS);
+    expect(bloqueSubmit?.textContent ?? '').not.toContain(MENSAJE_TITULO);
+  });
+
+  it('#148: 500 sin body muestra el fallback específico del servidor', async () => {
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: { status: 500, data: {} },
+    });
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('Ocurrió un error en el servidor. Intentá de nuevo en unos minutos.'),
+    ).toBeInTheDocument();
+  });
+
+  it('#148: horas vacías bloquean el submit en el cliente (no llama al servicio)', async () => {
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('El campo horas estimadas tiene que estar entre 1 y 1000'),
+    ).toBeInTheDocument();
+    expect(crearMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('#148: horas = 0 se validan en el cliente y no llaman al servicio', async () => {
+    render(<PresupuestoForm />);
+
+    fireEvent.click(screen.getByText('Cliente A'));
+    fireEvent.change(screen.getByPlaceholderText('Reparación de motor'), {
+      target: { value: 'Cambio de aceite' },
+    });
+    fireEvent.change(screen.getAllByRole('spinbutton')[0], { target: { value: '0' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Crear Presupuesto' }));
+
+    expect(
+      await screen.findByText('El campo horas estimadas tiene que estar entre 1 y 1000'),
+    ).toBeInTheDocument();
+    expect(crearMutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('#148: editar permite conservar 0 horas (no bloquea por validación cliente)', async () => {
+    const presupuestoSinHoras: Presupuesto = { ...presupuestoOriginal, horasEstimadas: 0 };
+    usePresupuestoDetalleMock.mockReturnValue({ data: presupuestoSinHoras });
+    render(<PresupuestoForm presupuestoId={10} />);
+
+    const botonActualizar = await screen.findByRole('button', { name: 'Actualizar' });
+    const horasInput = screen.getAllByRole('spinbutton')[0];
+    expect(horasInput).toHaveValue(0);
+    expect(horasInput).toHaveAttribute('min', '0');
+
+    fireEvent.click(botonActualizar);
+
+    await waitFor(() => expect(modificarMutateAsync).toHaveBeenCalledTimes(1));
+    const args = modificarMutateAsync.mock.calls[0] as [{ presupuesto: { horasEstimadas: number } }];
+    expect(args[0].presupuesto.horasEstimadas).toBe(0);
   });
 });

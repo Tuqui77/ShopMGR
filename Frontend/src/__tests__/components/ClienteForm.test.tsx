@@ -119,4 +119,71 @@ describe('ClienteForm - teléfono único con descripción en creación (issue #1
     expect(screen.queryAllByPlaceholderText('Descripción (ej: Celular, Trabajo)')).toHaveLength(1);
     expect(screen.getByText('Teléfono (opcional)')).toBeInTheDocument();
   });
+
+  it('#148: 400 con errors.Cuit muestra el mensaje del backend en el campo CUIT', async () => {
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: { errors: { Cuit: ['El CUIT ya está registrado'] } },
+      },
+    });
+    render(<ClienteForm />);
+    completarNombre();
+
+    clickCrearCliente();
+
+    expect(await screen.findByText('El CUIT ya está registrado')).toBeInTheDocument();
+    // No se muestra el fallback genérico de 400 cuando el backend manda mensaje.
+    expect(
+      screen.queryByText('Revisá los datos ingresados: hay campos inválidos.'),
+    ).toBeNull();
+  });
+
+  // Regresión de wiring (revisión del PR #149): este test valida la DECLARACIÓN
+  // de alias del propio form, no el helper. Si `nombre: ['NombreCompleto']` se
+  // revierte a `['nombre']`, el mensaje cae en el bloque de submit y este test
+  // falla (los tests de `apiErrors.test.ts` no lo detectan porque hardcodean los alias).
+  it('#148 (regresión de wiring): las claves PascalCase del ModelState llegan a su campo y no al bloque de submit', async () => {
+    const MENSAJE_NOMBRE = 'Ya existe un cliente con ese nombre';
+    const MENSAJE_CALLE = 'La calle supera el largo máximo';
+
+    // Claves reales del `errors` del backend: la del DTO (`NombreCompleto`) y la
+    // anidada de la dirección (`Direccion[0].Calle`, se matchea por último segmento).
+    crearMutateAsync.mockRejectedValueOnce({
+      isAxiosError: true,
+      response: {
+        status: 400,
+        data: {
+          errors: {
+            NombreCompleto: [MENSAJE_NOMBRE],
+            'Direccion[0].Calle': [MENSAJE_CALLE],
+          },
+        },
+      },
+    });
+    const { container } = render(<ClienteForm />);
+    completarNombre();
+
+    clickCrearCliente();
+
+    // Slot `nombre` (alias 'NombreCompleto'): el mensaje vive junto a su input.
+    const mensajeNombre = await screen.findByText(MENSAJE_NOMBRE);
+    const inputNombre = screen.getByPlaceholderText('Juan Pérez');
+    expect(inputNombre).toHaveClass('input-error');
+    expect(inputNombre.parentElement).toContainElement(mensajeNombre);
+
+    // Slot `calle` por match del último segmento ('Direccion[0].Calle' → 'Calle').
+    const mensajeCalle = await screen.findByText(MENSAJE_CALLE);
+    const inputCalle = screen.getByPlaceholderText('Calle *');
+    expect(inputCalle).toHaveClass('input-error');
+    expect(inputCalle.parentElement).toContainElement(mensajeCalle);
+
+    // Cada mensaje se muestra UNA sola vez y ninguno cae en el bloque general.
+    expect(screen.getAllByText(MENSAJE_NOMBRE)).toHaveLength(1);
+    expect(screen.getAllByText(MENSAJE_CALLE)).toHaveLength(1);
+    const bloqueSubmit = container.querySelector('p.whitespace-pre-line');
+    expect(bloqueSubmit?.textContent ?? '').not.toContain(MENSAJE_NOMBRE);
+    expect(bloqueSubmit?.textContent ?? '').not.toContain(MENSAJE_CALLE);
+  });
 });
